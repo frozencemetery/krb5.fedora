@@ -7,7 +7,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.3.4
-Release: 2
+Release: 7
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/www/dist/krb5/1.3/krb5-1.3.4.tar
 Source0: krb5-%{version}.tar.gz
@@ -46,7 +46,6 @@ Patch15: krb5-1.3-check.patch
 Patch16: krb5-1.3.3-no-rpath.patch
 Patch17: krb5-1.3-pass-by-address.patch
 Patch18: krb5-1.2.7-reject-bad-transited.patch
-Patch19: krb5-1.2.7-krb524d-double-free.patch
 Patch20: krb5-1.3.1-varargs.patch
 Patch21: krb5-selinux.patch
 Patch22: krb5-1.3.1-32.patch
@@ -55,8 +54,8 @@ Patch24: krb5-1.3.1-server-sort.patch
 Patch25: krb5-1.3.1-null.patch
 Patch26: krb5-1.3.2-efence.patch
 Patch27: krb5-1.3.3-rcp-sendlarge.patch
-Patch28: http://web.mit.edu/kerberos/advisories/MITKRB5-SA-2004-001-an_to_ln.txt
-
+Patch28: http://web.mit.edu/kerberos/advisories/2004-002-dblfree_patch.txt
+Patch29: http://web.mit.edu/kerberos/advisories/2004-003-patch_1.3.4.txt
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -119,6 +118,24 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Tue Aug 31 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.4-7
+- rebuild
+
+* Tue Aug 24 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.4-6
+- rebuild
+
+* Tue Aug 24 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.4-5
+- incorporate revised fixes from Tom Yu for CAN-2004-0642, CAN-2004-0644,
+  CAN-2004-0772
+
+* Mon Aug 23 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.4-4
+- rebuild
+
+* Mon Aug 23 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.4-3
+- incorporate fixes from Tom Yu for CAN-2004-0642, CAN-2004-0772
+  (MITKRB5-SA-2004-002, #130732)
+- incorporate fixes from Tom Yu for CAN-2004-0644 (MITKRB5-SA-2004-003, #130732)
+
 * Tue Jul 27 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.4-2
 - fix indexing error in server sorting patch (#127336)
 
@@ -705,7 +722,8 @@ workstation.
 # Hopefully no longer needed to work around compiler bug.
 # %patch17 -p1 -b .pass-by-address
 %patch18 -p1 -b .reject-bad-transited
-%patch19 -p1 -b .double-free
+# Obsoleted by 2004-002-dblfree_patch, below.
+# %patch19 -p1 -b .double-free
 %patch20 -p1 -b .varargs
 %if %{WITH_SELINUX}
 %patch21 -p1 -b .selinux
@@ -718,6 +736,8 @@ workstation.
 # Removes a malloc(0) case, nothing more.
 # %patch26 -p1 -b .efence
 %patch27 -p1 -b .rcp-sendlarge
+%patch28 -p0 -b .dblfree-2004-002
+%patch29 -p0 -b .asn1buf-2004-003
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
