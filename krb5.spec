@@ -3,7 +3,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.2.2
-Release: 14
+Release: 15
 Source0: krb5-%{version}.tar.gz
 Source1: kpropd.init
 Source2: krb524d.init
@@ -49,6 +49,7 @@ Patch22: krb5-1.2.2-logauth.patch
 Patch23: krb5-1.2.2-size.patch
 Patch24: http://web.mit.edu/kerberos/www/advisories/telnetd_122_patch.txt
 Patch25: http://web.mit.edu/kerberos/www/advisories/2002-001-xdr_array_patch.txt
+Patch26: http://web.mit.edu/kerberos/www/advisories/MITKRB5-SA-2002-002-kadm4.txt
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -110,6 +111,10 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Wed Oct 23 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-15
+- add patch from Tom Yu for exploitable bugs in kadmind4
+- remove raw keys from the default kdc.conf
+ 
 * Fri Aug  2 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-14
 - add patch from Tom Yu for exploitable bugs in rpc code used in kadmind
 
@@ -453,6 +458,9 @@ pushd src/appl/telnet/telnetd
 popd
 pushd src/lib/rpc
 %patch25 -p0 -b .xdr
+popd
+pushd src/kadmin/v4server
+%patch26 -p0 -b .kadmind
 popd
 cp $RPM_SOURCE_DIR/statglue.c src/util/profile/statglue.c
 find . -type f -name "*.fixinfo" -exec rm -fv "{}" ";"
