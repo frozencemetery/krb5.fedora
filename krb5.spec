@@ -124,6 +124,7 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+# - XXX krb5_init_ets is gone now, what to do?
 * Thu Feb 24 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4-1
 - update to 1.4
   - v1.4 kadmin client requires a v1.4 kadmind on the server, or use the "-O"
