@@ -54,6 +54,7 @@ Patch24: krb5-1.3.1-server-sort.patch
 Patch25: krb5-1.3.1-null.patch
 Patch26: krb5-1.3.2-efence.patch
 Patch27: krb5-1.3.3-rcp-sendlarge.patch
+Patch28: krb5-1.3.5-gethostbyname_r.patch
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -116,14 +117,17 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
-* Mon Sep 13 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.5-1
-- rebuild
+* Mon Nov  1 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.5-1
+- fix segfault in telnet due to incorrect checking of gethostbyname_r result
+  codes (#129059)
 
-* Fri Sep 10 2004 Nalin Dahyabhai <nalin@redhat.com>
-- update to 1.3.5 final
-
-* Wed Sep  8 2004 Nalin Dahyabhai <nalin@redhat.com>
-- update to 1.3.5 beta 1
+* Fri Oct 15 2004 Nalin Dahyabhai <nalin@redhat.com>
+- remove rc4-hmac:norealm and rc4-hmac:onlyrealm from the default list of
+  supported keytypes in kdc.conf -- they produce exactly the same keys as
+  rc4-hmac:normal because rc4 string-to-key ignores salts
+- nuke kdcrotate -- there are better ways to balance the load on KDCs, and
+  the SELinux policy for it would have been scary-looking
+- update to 1.3.5, mainly to include MITKRB5SA 2004-002 and 2004-003
 
 * Tue Aug 31 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.4-7
 - rebuild
@@ -741,6 +745,7 @@ workstation.
 # Removes a malloc(0) case, nothing more.
 # %patch26 -p1 -b .efence
 %patch27 -p1 -b .rcp-sendlarge
+%patch28 -p1 -b .gethostbyname_r
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
@@ -815,7 +820,9 @@ install -m 755 $RPM_SOURCE_DIR/krb5kdc.init $RPM_BUILD_ROOT/etc/rc.d/init.d/krb5
 install -m 755 $RPM_SOURCE_DIR/kadmind.init $RPM_BUILD_ROOT/etc/rc.d/init.d/kadmin
 install -m 755 $RPM_SOURCE_DIR/kpropd.init $RPM_BUILD_ROOT/etc/rc.d/init.d/kprop
 install -m 755 $RPM_SOURCE_DIR/krb524d.init $RPM_BUILD_ROOT/etc/rc.d/init.d/krb524
-install -m 755 $RPM_SOURCE_DIR/kdcrotate $RPM_BUILD_ROOT/etc/rc.d/init.d/
+# There are better ways to balance the load, and writing policy for this
+# script is painful.
+#install -m 755 $RPM_SOURCE_DIR/kdcrotate $RPM_BUILD_ROOT/etc/rc.d/init.d/
 
 # Xinetd configuration files.
 mkdir -p $RPM_BUILD_ROOT/etc/xinetd.d/
@@ -1025,7 +1032,7 @@ fi
 
 %files libs
 %defattr(-,root,root)
-%config /etc/rc.d/init.d/kdcrotate
+#%config /etc/rc.d/init.d/kdcrotate
 %config(noreplace) /etc/krb5.conf
 %{_libdir}/lib*.so.*
 %{krb5prefix}/share
