@@ -3,7 +3,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.2.2
-Release: 11
+Release: 13
 Source0: krb5-%{version}.tar.gz
 Source1: kpropd.init
 Source2: krb524d.init
@@ -47,6 +47,7 @@ Patch20: krb5-1.2.2-by-address.patch
 Patch21: http://lite.mit.edu/krb5-1.2.2-ktany.patch
 Patch22: krb5-1.2.2-logauth.patch
 Patch23: krb5-1.2.2-size.patch
+Patch24: http://web.mit.edu/kerberos/www/advisories/telnetd_122_patch.txt
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -60,15 +61,15 @@ which can improve your network's security by eliminating the insecure
 practice of cleartext passwords.
 
 %package devel
-Summary: Development files needed for compiling Kerberos 5 programs.
+Summary: Development files needed to compile Kerberos 5 programs.
 Group: Development/Libraries
 Requires: %{name}-libs = %{version}-%{release}
 
 %description devel
-Kerberos is a network authentication system.  The krb5-devel package
+Kerberos is a network authentication system. The krb5-devel package
 contains the header files and libraries needed for compiling Kerberos
-5 programs. If you want to develop Kerberos-aware programs, you'll
-need to install this package.
+5 programs. If you want to develop Kerberos-aware programs, you need
+to install this package.
 
 %package libs
 Summary: The shared libraries used by Kerberos 5.
@@ -77,9 +78,9 @@ Prereq: grep, /sbin/ldconfig, sh-utils
 Obsoletes: krb5-configs
 
 %description libs
-Kerberos is a network authentication system.  The krb5-libs package
-contains the shared libraries needed by Kerberos 5.  If you're using
-Kerberos, you'll need to install this package.
+Kerberos is a network authentication system. The krb5-libs package
+contains the shared libraries needed by Kerberos 5. If you are using
+Kerberos, you need to install this package.
 
 %package server
 Group: System Environment/Daemons
@@ -88,9 +89,9 @@ Requires: %{name}-libs = %{version}-%{release}, %{name}-workstation = %{version}
 Prereq: grep, /sbin/install-info, /bin/sh, sh-utils
 
 %description server
-Kerberos is a network authentication system.  The krb5-server package
+Kerberos is a network authentication system. The krb5-server package
 contains the programs that must be installed on a Kerberos 5 server.
-If you're installing a Kerberos 5 server, you need to install this
+If you are installing a Kerberos 5 server, you need to install this
 package (in other words, most people should NOT install this
 package).
 
@@ -101,13 +102,19 @@ Requires: %{name}-libs = %{version}-%{release}
 Prereq: grep, /sbin/install-info, /bin/sh, sh-utils
 
 %description workstation
-Kerberos is a network authentication system.  The krb5-workstation
+Kerberos is a network authentication system. The krb5-workstation
 package contains the basic Kerberos programs (kinit, klist, kdestroy,
-kpasswd) as well as kerberized versions of Telnet and FTP.  If your
+kpasswd) as well as kerberized versions of Telnet and FTP. If your
 network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Fri Aug  3 2001 Nalin Dahyabhai <nalin@redhat.com>
+- bump release number and rebuild
+
+* Wed Aug  1 2001 Nalin Dahyabhai <nalin@redhat.com>
+- add patch to fix telnetd vulnerability
+
 * Fri Jul 20 2001 Nalin Dahyabhai <nalin@redhat.com>
 - tweak statglue.c to fix stat/stat64 aliasing problems
 - be cleaner in use of gcc to build shlibs
@@ -437,6 +444,9 @@ popd
 %patch21 -p1 -b .ktany
 %patch22 -p1 -b .logauth
 %patch23 -p1 -b .size
+pushd src/appl/telnet/telnetd
+%patch24 -p1 -b .telnetd
+popd
 cp $RPM_SOURCE_DIR/statglue.c src/util/profile/statglue.c
 find . -type f -name "*.fixinfo" -exec rm -fv "{}" ";"
 gzip doc/*.ps
