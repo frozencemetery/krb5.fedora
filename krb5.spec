@@ -6,10 +6,10 @@
 
 Summary: The Kerberos network authentication system.
 Name: krb5
-Version: 1.3.3
-Release: 8
+Version: 1.3.4
+Release: 1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/www/dist/krb5/1.3/krb5-1.3.3.tar
+# http://web.mit.edu/kerberos/www/dist/krb5/1.3/krb5-1.3.4.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -119,6 +119,16 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Tue Jun 15 2004 Elliot Lee <sopwith@redhat.com>
+- rebuilt
+
+* Mon Jun 14 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.4-0.1
+- update to 1.3.4 final
+
+* Mon Jun  7 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.4-0
+- update to 1.3.4 beta1
+- remove MITKRB5-SA-2004-001, included in 1.3.4
+
 * Mon Jun  7 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.3-8
 - rebuild
 
@@ -705,9 +715,6 @@ workstation.
 # Removes a malloc(0) case, nothing more.
 # %patch26 -p1 -b .efence
 %patch27 -p1 -b .rcp-sendlarge
-pushd src/lib/krb5/os
-%patch28 -p0 -b .MITKRB5-SA-2004-001
-popd
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
