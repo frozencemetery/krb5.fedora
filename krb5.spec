@@ -3,7 +3,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.2.2
-Release: 15
+Release: 24
 Source0: krb5-%{version}.tar.gz
 Source1: kpropd.init
 Source2: krb524d.init
@@ -23,6 +23,8 @@ Source15: kshell.xinetd
 Source16: krb5-telnet.xinetd
 Source17: gssftp.xinetd
 Source19: statglue.c
+Source20: http://web.mit.edu/kerberos/www/advisories/2003-004-krb4_patchkit.tar.gz
+Source21: http://web.mit.edu/kerberos/www/advisories/2003-004-krb4_patchkit.sig
 Patch0: krb5-1.1-db.patch
 Patch1: krb5-1.1.1-tiocgltc.patch
 Patch2: krb5-1.1.1-libpty.patch
@@ -50,6 +52,20 @@ Patch23: krb5-1.2.2-size.patch
 Patch24: http://web.mit.edu/kerberos/www/advisories/telnetd_122_patch.txt
 Patch25: http://web.mit.edu/kerberos/www/advisories/2002-001-xdr_array_patch.txt
 Patch26: http://web.mit.edu/kerberos/www/advisories/MITKRB5-SA-2002-002-kadm4.txt
+Patch27: gssftp-patch
+Patch28: krb5-1.2.6-dnsparse.patch
+Patch29: krb5-1.2.7-errno.patch
+Patch30: krb5-SA-2003-001-1.patch
+Patch31: krb5-SA-2003-001-2-1.2.2.patch
+Patch32: krb5-SA-2003-001-4.patch
+Patch34: krb5-1.2.2-gssapi-glib.patch
+Patch35: krb5-1.2.2-kadmin-at.patch
+Patch36: krb5-1.2.7-reject-bad-transited.patch
+Patch37: krb5-crawford.patch
+Patch38: krb5-1.2.4-princ_size.patch
+Patch39: krb5-1.2.7-underrun.patch
+Patch40: http://web.mit.edu/kerberos/www/advisories/MITKRB5-SA-2003-003-xdr.txt
+Patch41: krb5-1.2.2-krb524-double-free.patch
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -111,6 +127,48 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Fri Mar 21 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-24
+- fix double-free of enc_part2 in krb524d
+- update to latest patch kit for MITKRB5-SA-2003-004
+
+* Thu Mar 20 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-23
+- make the default kdc.conf list the same enctypes we use for 1.2.7
+
+* Wed Mar 19 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-22
+- add patch included in MITKRB5-SA-2003-003 (CAN-2003-0028)
+
+* Mon Mar 17 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-21
+- add patches from patchkit from MITKRB5-SA-2003-004 (CAN-2003-0138 and
+  CAN-2003-0139)
+
+* Thu Mar  6 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-20
+- fix buffer underrun in unparsing certain principals (CAN-2003-0082)
+
+* Wed Feb 26 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-19
+- add patch to fix server-side crashes when principals have no
+  components (CAN-2003-0072)
+
+* Mon Feb 24 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-18
+- add patch from Matt Crawford for encoding transited realms properly
+
+* Wed Feb  5 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-17
+- sync compiler flags for configure and make with other versions
+
+* Tue Feb  4 2003 Nalin Dahyabhai <nalin@redhat.com>
+- add patch to document the reject-bad-transited option in kdc.conf
+- add backported symbol namespacing fix from 1.2.3 to clear up clashes with glib
+- add backported fix for hangs in kadmin client when principal contains an
+  escaped @ symbol
+
+* Thu Jan 30 2003 Nalin Dahyabhai <nalin@redhat.com>
+- add candidate backports for CAN-2002-0036, CAN-2002-058, CAN-2002-059
+  (CAN-2002-060 was fixed in 1.1.1-7 or so)
+
+* Thu Jan 23 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-16
+- add patch from Mark Cox for exploitable bugs in ftp client
+- add patch to avoid buffer read overruns when configuring via DNS
+- add patch to properly include <errno.h>
+
 * Wed Oct 23 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-15
 - add patch from Tom Yu for exploitable bugs in kadmind4
 - remove raw keys from the default kdc.conf
@@ -426,7 +484,7 @@ workstation.
 - added --force to makeinfo commands to skip errors during build
 
 %prep
-%setup -q
+%setup -q -a 20
 %patch0  -p0 -b .db
 %patch1  -p0 -b .tciogltc
 %patch2  -p0 -b .libpty
@@ -462,6 +520,24 @@ popd
 pushd src/kadmin/v4server
 %patch26 -p0 -b .kadmind
 popd
+%patch27 -p1 -b .gssftp-patch
+%patch28 -p1 -b .dnsparse
+%patch29 -p1 -b .errno
+%patch30 -p1 -b .krb5-SA-2003-001-1
+%patch31 -p1 -b .krb5-SA-2003-001-2
+%patch32 -p1 -b .krb5-SA-2003-001-4
+%patch34 -p1 -b .gssapi-glib
+%patch35 -p1 -b .kadmin-at
+%patch36 -p1 -b .reject-bad-transited
+%patch37 -p1 -b .crawford
+%patch38 -p1 -b .princ_size
+%patch39 -p1 -b .underrun
+patch -sp0 -b -z .2003-004-krb4 < 2003-004-krb4_patchkit/patch.1.2.0
+pushd src/lib/rpc
+%patch40 -p0 -b .2003-003
+popd
+%patch41 -p1 -b .double-free
+
 cp $RPM_SOURCE_DIR/statglue.c src/util/profile/statglue.c
 find . -type f -name "*.fixinfo" -exec rm -fv "{}" ";"
 gzip doc/*.ps
@@ -489,7 +565,11 @@ DEFINES="-D_FILE_OFFSET_BITS=64" ; export DEFINES
 	--with-netlib=-lresolv \
 	--with-tcl=%{_prefix} \
 	%{_target_platform}
-make LDCOMBINE='%{__cc} -shared -Wl,-soname=lib$(LIB)$(SHLIBSEXT) $(CFLAGS)'
+# Now build it.  Override the CC_LINK variable to exclude the rpath, and
+# override LDCOMBINE to use gcc instead of ld to build shared libraries.
+make \
+	CC_LINK='$(CC) $(PROG_LIBPATH)' \
+	LDCOMBINE='%{__cc} -shared -Wl,-soname=lib$(LIB)$(SHLIBSEXT) $(CFLAGS)'
 
 # Run the test suite.  Won't run in the build system because /dev/pts is
 # not available for telnet tests and so on.
