@@ -58,6 +58,8 @@ Patch28: krb5-1.3.5-gethostbyname_r.patch
 Patch29: krb5-1.3.5-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch31: krb5-1.3.5-krsh-deadlock.patch
+Patch32: http://web.mit.edu/kerberos/advisories/2004-004-patch_1.3.5.txt
+Patch33: http://web.mit.edu/kerberos/advisories/2004-004-patch_1.3.5.txt.asc
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -122,7 +124,10 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
-* Fri Dec 20 2004 Martin Stransky <stransky@redhat.com> 1.3.5-7
+* Mon Dec 20 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.5-8
+- apply fix from Tom Yu for MITKRB5-SA-2004-004 (CAN-2004-1189)
+
+* Fri Dec 17 2004 Martin Stransky <stransky@redhat.com> 1.3.5-7
 - fix deadlock during file transfer via rsync/krsh
 - thanks goes to James Antil for hint
 
@@ -771,6 +776,9 @@ workstation.
 %patch29 -p1 -b .kprop-mktemp
 %patch30 -p1 -b .send-pr-tempfile
 %patch31 -p1 -b .krsh-deadlock
+pushd src/lib/kadm5/srv
+%patch32 -p0 -b .2004-004
+popd
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
