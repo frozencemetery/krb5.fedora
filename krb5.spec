@@ -4,7 +4,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.2.7
-Release: 13
+Release: 14
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -58,6 +58,7 @@ Patch28: krb5-1.2.7-princ_size.patch
 Patch29: krb5-1.2.7-reject-bad-transited.patch
 Patch30: krb5-1.2.7-underrun.patch
 Patch31: http://web.mit.edu/kerberos/www/advisories/MITKRB5-SA-2003-003-xdr.txt
+Patch32: krb5-1.2.7-krb524d-double-free.patch
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -119,6 +120,9 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Mon Mar 31 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.7-14
+- fix double-free of enc_part2 in krb524d
+
 * Fri Mar 21 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.7-13
 - update to latest patch kit for MITKRB5-SA-2003-004
 
@@ -599,6 +603,7 @@ popd
 pushd src/lib/rpc
 %patch31 -p0 -b .2003-003
 popd
+%patch32 -p1 -b .double-free
 
 cp src/krb524/README README.krb524
 
