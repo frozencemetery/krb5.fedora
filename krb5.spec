@@ -6,10 +6,10 @@
 
 Summary: The Kerberos network authentication system.
 Name: krb5
-Version: 1.3.6
-Release: 3
+Version: 1.4
+Release: 1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/www/dist/krb5/1.3/krb5-1.3.5.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.4/krb5-1.4-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -29,6 +29,9 @@ Source15: klogin.xinetd
 Source16: kshell.xinetd
 Source17: krb5-telnet.xinetd
 Source18: gssftp.xinetd
+Source19: krb5kdc.sysconfig
+Source20: kadmin.sysconfig
+Source21: krb524.sysconfig
 
 Patch0: krb5-1.3-gcc33.patch
 Patch1: krb5-1.3-info-dir.patch
@@ -39,19 +42,18 @@ Patch5: krb5-1.3-ksu-access.patch
 Patch6: krb5-1.3-ksu-path.patch
 Patch9: krb5-1.1.1-brokenrev.patch
 Patch11: krb5-1.2.1-passive.patch
-Patch12: krb5-1.3-ktany.patch
+Patch12: krb5-1.4-ktany.patch
 Patch13: krb5-1.3-large-file.patch
 Patch14: krb5-1.3-ftp-glob.patch
 Patch15: krb5-1.3-check.patch
 Patch16: krb5-1.3.3-no-rpath.patch
 Patch17: krb5-1.3-pass-by-address.patch
 Patch18: krb5-1.2.7-reject-bad-transited.patch
-Patch20: krb5-1.3.1-varargs.patch
 Patch21: krb5-selinux.patch
 Patch22: krb5-1.3.1-32.patch
 Patch23: krb5-1.3.1-dns.patch
-Patch24: krb5-1.3.1-server-sort.patch
-Patch25: krb5-1.3.1-null.patch
+Patch24: krb5-1.4-server-sort.patch
+Patch25: krb5-1.4-null.patch
 Patch26: krb5-1.3.2-efence.patch
 Patch27: krb5-1.3.3-rcp-sendlarge.patch
 Patch28: krb5-1.3.5-gethostbyname_r.patch
@@ -122,6 +124,25 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Thu Feb 24 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4-1
+- update to 1.4
+  - v1.4 kadmin client requires a v1.4 kadmind on the server, or use the "-O"
+    flag to specify that it should communicate with the server using the older
+    protocol
+  - new libkrb5support library
+  - v5passwdd and kadmind4 are gone
+  - versioned symbols
+- pick up $KRB5KDC_ARGS from /etc/sysconfig/krb5kdc, if it exists, and pass
+  it on to krb5kdc
+- pick up $KADMIND_ARGS from /etc/sysconfig/kadmin, if it exists, and pass
+  it on to kadmind
+- pick up $KRB524D_ARGS from /etc/sysconfig/krb524, if it exists, and pass
+  it on to krb524d *instead of* "-m"
+- set "forwardable" in [libdefaults] in the default krb5.conf to match the
+  default setting which we supply for pam_krb5
+- set a default of 24h for "ticket_lifetime" in [libdefaults], reflecting the
+  compiled-in default
+
 * Mon Dec 20 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.6-3
 - rebuild
 
@@ -748,7 +769,7 @@ workstation.
 - added --force to makeinfo commands to skip errors during build
 
 %prep
-%setup -q -n %{name}-%{version}
+%setup -q
 # No longer necessary with e2fsprogs >= 1.35, it seems.
 # %patch0  -p1 -b .gcc33
 %patch1  -p1 -b .info-dir
@@ -767,7 +788,6 @@ workstation.
 # Hopefully no longer needed to work around compiler bug.
 # %patch17 -p1 -b .pass-by-address
 %patch18 -p1 -b .reject-bad-transited
-%patch20 -p1 -b .varargs
 %if %{WITH_SELINUX}
 %patch21 -p1 -b .selinux
 %endif
@@ -857,9 +877,10 @@ install -m 755 $RPM_SOURCE_DIR/krb5kdc.init $RPM_BUILD_ROOT/etc/rc.d/init.d/krb5
 install -m 755 $RPM_SOURCE_DIR/kadmind.init $RPM_BUILD_ROOT/etc/rc.d/init.d/kadmin
 install -m 755 $RPM_SOURCE_DIR/kpropd.init $RPM_BUILD_ROOT/etc/rc.d/init.d/kprop
 install -m 755 $RPM_SOURCE_DIR/krb524d.init $RPM_BUILD_ROOT/etc/rc.d/init.d/krb524
-# There are better ways to balance the load, and writing policy for this
-# script is painful.
-#install -m 755 $RPM_SOURCE_DIR/kdcrotate $RPM_BUILD_ROOT/etc/rc.d/init.d/
+mkdir -p $RPM_BUILD_ROOT/etc/sysconfig
+install -m 644 $RPM_SOURCE_DIR/krb5kdc.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/krb5kdc
+install -m 644 $RPM_SOURCE_DIR/kadmin.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/kadmin
+install -m 644 $RPM_SOURCE_DIR/krb524.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/krb524
 
 # Xinetd configuration files.
 mkdir -p $RPM_BUILD_ROOT/etc/xinetd.d/
@@ -993,8 +1014,6 @@ fi
 %{krb5prefix}/man/man1/tmac.doc*
 %attr(0755,root,root) %{krb5prefix}/bin/v4rcp
 %{krb5prefix}/man/man1/v4rcp.1*
-%{krb5prefix}/bin/v5passwd
-%{krb5prefix}/man/man1/v5passwd.1*
 %{krb5prefix}/bin/sim_client
 %{krb5prefix}/bin/uuclient
 %{krb5prefix}/sbin/login.krb5
@@ -1021,6 +1040,9 @@ fi
 %config /etc/rc.d/init.d/kadmin
 %config /etc/rc.d/init.d/krb524
 %config /etc/rc.d/init.d/kprop
+%config(noreplace) /etc/sysconfig/krb5kdc
+%config(noreplace) /etc/sysconfig/kadmin
+%config(noreplace) /etc/sysconfig/krb524
 
 %doc doc/admin*.ps.gz doc/krb5-admin*.html
 %doc doc/krb425*.ps.gz doc/krb425*.html
@@ -1048,7 +1070,6 @@ fi
 %{krb5prefix}/man/man8/kadmin.local.8*
 %{krb5prefix}/sbin/kadmind
 %{krb5prefix}/man/man8/kadmind.8*
-%{krb5prefix}/sbin/kadmind4
 %{krb5prefix}/sbin/kdb5_util
 %{krb5prefix}/man/man8/kdb5_util.8*
 %{krb5prefix}/sbin/kprop
@@ -1056,10 +1077,10 @@ fi
 %{krb5prefix}/sbin/kpropd
 %{krb5prefix}/man/man8/kpropd.8*
 %{krb5prefix}/sbin/krb524d
+%{krb5prefix}/man/man8/krb524d.8*
 %{krb5prefix}/sbin/krb5kdc
 %{krb5prefix}/man/man8/krb5kdc.8*
 %{krb5prefix}/sbin/sim_server
-%{krb5prefix}/sbin/v5passwdd
 # This is here for people who want to test their server, and also 
 # included in devel package for similar reasons.
 %{krb5prefix}/bin/sclient
@@ -1100,6 +1121,7 @@ fi
 
 %{krb5prefix}/bin/krb5-config
 %{krb5prefix}/bin/sclient
+%{krb5prefix}/man/man1/krb5-config.1*
 %{krb5prefix}/man/man1/sclient.1*
 %{krb5prefix}/man/man8/sserver.8*
 %{krb5prefix}/sbin/sserver
