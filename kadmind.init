@@ -8,6 +8,7 @@
 #              server, which should only be run on the master server for a \
 #              realm.
 # processname: kadmind
+# config: /etc/sysconfig/kadmin
 #
 
 # Get config.

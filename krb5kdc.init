@@ -7,6 +7,7 @@
 #	       This script starts and stops the server that Kerberos IV and 5 \
 #	       clients need to connect to in order to obtain credentials.
 # processname: krb5kdc
+# config: /etc/sysconfig/krb5kdc
 #
 
 # Get config.
