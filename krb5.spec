@@ -1,10 +1,13 @@
-%define prefix %{_prefix}/kerberos
-%define statglue 0
+%if %{?WITH_SELINUX:0}%{!?WITH_SELINUX:1}
+%define WITH_SELINUX 0
+%endif
+
+%define krb5prefix %{_prefix}/kerberos
 
 Summary: The Kerberos network authentication system.
 Name: krb5
-Version: 1.2.7
-Release: 14
+Version: 1.3.1
+Release: 6
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -24,47 +27,38 @@ Source15: klogin.xinetd
 Source16: kshell.xinetd
 Source17: krb5-telnet.xinetd
 Source18: gssftp.xinetd
-Source19: statglue.c
-Source20: http://web.mit.edu/kerberos/www/advisories/2003-004-krb4_patchkit.tar.gz
-Source21: http://web.mit.edu/kerberos/www/advisories/2003-004-krb4_patchkit.sig
-Patch0: krb5-1.1-db.patch
-Patch1: krb5-1.1.1-tiocgltc.patch
-Patch2: krb5-1.1.1-libpty.patch
-Patch3: krb5-1.1.1-fixinfo.patch
-Patch4: krb5-1.1.1-manpages.patch
-Patch5: krb5-1.1.1-netkitr.patch
-Patch6: krb5-1.2-rlogind.patch
-Patch7: krb5-1.2-ksu.patch
-Patch8: krb5-1.2-ksu.options.patch
-Patch9: krb5-1.2-ksu.man.patch
-Patch10: krb5-1.2-quiet.patch
-Patch11: krb5-1.1.1-brokenrev.patch
-Patch12: krb5-1.2-spelling.patch
-Patch13: krb5-1.2.1-term.patch
-Patch14: krb5-1.2.1-passive.patch
-Patch15: krb5-1.2.1-forward.patch
-Patch16: krb5-1.2.1-heap.patch
-Patch17: krb5-1.2.2-wragg.patch
-Patch18: krb5-1.2.2-statglue.patch
-Patch20: krb5-1.2.2-by-address.patch
-Patch21: http://lite.mit.edu/krb5-1.2.2-ktany.patch
-Patch22: krb5-1.2.2-logauth.patch
-Patch23: krb5-1.2.2-size.patch
-Patch24: krb5-1.2.5-db2-configure.patch
-Patch25: krb5-1.2.7-namelength.patch
-Patch26: krb5-1.2.7-errno.patch
-Patch27: gssftp-patch
-Patch28: krb5-1.2.7-princ_size.patch
-Patch29: krb5-1.2.7-reject-bad-transited.patch
-Patch30: krb5-1.2.7-underrun.patch
-Patch31: http://web.mit.edu/kerberos/www/advisories/MITKRB5-SA-2003-003-xdr.txt
-Patch32: krb5-1.2.7-krb524d-double-free.patch
+
+Patch0: krb5-1.3-gcc33.patch
+Patch1: krb5-1.3-info-dir.patch
+Patch2: krb5-1.3-manpage-paths.patch
+Patch3: krb5-1.3-netkit-rsh.patch
+Patch4: krb5-1.3-rlogind-environ.patch
+Patch5: krb5-1.3-ksu-access.patch
+Patch6: krb5-1.3-ksu-path.patch
+Patch7: krb5-1.1.1-tiocgltc.patch
+Patch8: krb5-1.1.1-libpty.patch
+Patch9: krb5-1.1.1-brokenrev.patch
+Patch10: krb5-1.2.1-term.patch
+Patch11: krb5-1.2.1-passive.patch
+Patch12: krb5-1.3-ktany.patch
+Patch13: krb5-1.3-large-file.patch
+Patch14: krb5-1.3-ftp-glob.patch
+Patch15: krb5-1.3-check.patch
+Patch16: krb5-1.3-no-rpath.patch
+Patch17: krb5-1.3-pass-by-address.patch
+Patch18: krb5-1.2.7-reject-bad-transited.patch
+Patch19: krb5-1.2.7-krb524d-double-free.patch
+Patch20: krb5-1.3.1-varargs.patch
+Patch21: krb5-selinux.patch
+Patch22: krb5-1.3.1-32.patch
+
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-root
 Prereq: grep, info, sh-utils, /sbin/install-info
-BuildPrereq: bison, e2fsprogs-devel, flex, gzip, libtermcap-devel, rsh, texinfo, tar
+BuildPrereq: bison, e2fsprogs-devel >= 1.33, flex
+BuildPrereq: gzip, libtermcap-devel, rsh, texinfo, tar
 
 %description
 Kerberos V5 is a trusted-third-party network authentication system,
@@ -74,7 +68,7 @@ practice of cleartext passwords.
 %package devel
 Summary: Development files needed to compile Kerberos 5 programs.
 Group: Development/Libraries
-Requires: %{name}-libs = %{version}-%{release}
+Requires: %{name}-libs = %{version}-%{release}, e2fsprogs-devel
 
 %description devel
 Kerberos is a network authentication system. The krb5-devel package
@@ -120,6 +114,57 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Thu Sep 25 2003 Nalin Dahyabhai <nalin@redhat.com> 1.3.1-6
+- fix bug in patch to make rlogind start login with a clean environment a la
+  netkit rlogin, spotted and fixed by Scott McClung
+
+* Tue Sep 23 2003 Nalin Dahyabhai <nalin@redhat.com> 1.3.1-5
+- include profile.d scriptlets in krb5-devel so that krb5-config will be in
+  the path, reported by Kir Kolyshkin
+
+* Mon Sep  8 2003 Nalin Dahyabhai <nalin@redhat.com>
+- add more etypes (arcfour) to the default enctype list in kdc.conf
+- don't apply previous patch, refused upstream
+
+* Fri Sep  5 2003 Nalin Dahyabhai <nalin@redhat.com> 1.3.1-4
+- fix 32/64-bit bug storing and retrieving the issue_date in v4 credentials
+
+* Wed Sep 3 2003 Dan Walsh <dwalsh@redhat.com> 1.3.1-3
+- Don't check for write access on /etc/krb5.conf if SELinux
+
+* Tue Aug 26 2003 Nalin Dahyabhai <nalin@redhat.com> 1.3.1-2
+- fixup some int/pointer varargs wackiness
+
+* Tue Aug  5 2003 Nalin Dahyabhai <nalin@redhat.com> 1.3.1-1
+- rebuild
+
+* Mon Aug  4 2003 Nalin Dahyabhai <nalin@redhat.com> 1.3.1-0
+- update to 1.3.1
+
+* Thu Jul 24 2003 Nalin Dahyabhai <nalin@redhat.com> 1.3-2
+- pull fix for non-compliant encoding of salt field in etype-info2 preauth
+  data from 1.3.1 beta 1, until 1.3.1 is released.
+
+* Mon Jul 21 2003 Nalin Dahyabhai <nalin@redhat.com> 1.3-1
+- update to 1.3
+
+* Mon Jul  7 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.8-4
+- correctly use stdargs
+
+* Wed Jun 18 2003 Nalin Dahyabhai <nalin@redhat.com> 1.3-0.beta.4
+- test update to 1.3 beta 4
+- ditch statglue build option
+- krb5-devel requires e2fsprogs-devel, which now provides libss and libcom_err
+
+* Wed Jun 04 2003 Elliot Lee <sopwith@redhat.com>
+- rebuilt
+
+* Wed May 21 2003 Jeremy Katz <katzj@redhat.com> 1.2.8-2
+- gcc 3.3 doesn't implement varargs.h, include stdarg.h instead
+
+* Wed Apr  9 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.8-1
+- update to 1.2.8
+
 * Mon Mar 31 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.7-14
 - fix double-free of enc_part2 in krb524d
 
@@ -564,96 +609,72 @@ workstation.
 - added --force to makeinfo commands to skip errors during build
 
 %prep
-%setup -q -a 20
-%patch0  -p0 -b .db
-%patch1  -p0 -b .tciogltc
-%patch2  -p0 -b .libpty
-%patch3  -p0 -b .fixinfo
-%patch4  -p0 -b .manpages
-%patch5  -p0 -b .netkitr
-%patch6  -p1 -b .rlogind
-%patch7  -p1 -b .ksu
-%patch8 -p1 -b .ksu-options
-%patch9 -p1 -b .ksu-man
-%patch10 -p1 -b .quiet
-%patch11 -p1 -b .brokenrev
-%patch12 -p1 -b .spelling
-%patch13 -p1 -b .term
-%patch14 -p1 -b .passive
-%patch15 -p1 -b .forward
-%patch16 -p1 -b .heap
-%patch17 -p1 -b .wragg
-%if %{statglue}
-%patch18 -p1 -b .statglue
+%setup -q -n %{name}-%{version}
+%patch0  -p1 -b .gcc33
+%patch1  -p1 -b .info-dir
+%patch2  -p1 -b .manpage-paths
+%patch3  -p1 -b .netkit-rsh
+%patch4  -p1 -b .rlogind-environ
+%patch5  -p1 -b .ksu-access
+%patch6  -p1 -b .ksu-path
+%patch7  -p0 -b .tciogltc
+%patch8  -p0 -b .libpty
+%patch9  -p1 -b .brokenrev
+%patch10 -p1 -b .term
+%patch11 -p1 -b .passive
+%patch12 -p1 -b .ktany
+%patch13 -p1 -b .large-file
+%patch14 -p1 -b .ftp-glob
+%patch15 -p1 -b .check
+%patch16 -p1 -b .no-rpath
+%patch17 -p1 -b .pass-by-address
+%patch18 -p1 -b .reject-bad-transited
+%patch19 -p1 -b .double-free
+%patch20 -p1 -b .varargs
+%if %{WITH_SELINUX}
+%patch21 -p1 -b .selinux
 %endif
-%patch20 -p0 -b .by-address
-%patch21 -p1 -b .ktany
-%patch22 -p1 -b .logauth
-%patch23 -p1 -b .size
-%patch24 -p1 -b .db2-configure
-%patch25 -p1 -b .namelength
-%patch26 -p1 -b .errno
-%patch27 -p1 -b .gssftp-patch
-%patch28 -p1 -b .princ_size.patch
-%patch29 -p1 -b .reject-bad-transited.patch
-%patch30 -p1 -b .underrun
-pushd src
-patch -sp0 -b -z .2003-004-krb4 < ../2003-004-krb4_patchkit/patch.1.2.7
-popd
-pushd src/lib/rpc
-%patch31 -p0 -b .2003-003
-popd
-%patch32 -p1 -b .double-free
+# Removed, per http://mailman.mit.edu/pipermail/krb5-bugs/2003-September/001735.html
+# %patch22 -p1 -b .32
 
 cp src/krb524/README README.krb524
-
-(cd src/util/db2; autoconf )
-%if %{statglue}
-cp $RPM_SOURCE_DIR/statglue.c src/util/profile/statglue.c
-%endif
-find . -type f -name "*.fixinfo" -exec rm -fv "{}" ";"
+find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
 
 %build
 cd src
-libtoolize --copy --force
-cp config.{guess,sub} config/
-cp config.{guess,sub} util/autoconf/
-
-# Get LFS support on systems that need it which aren't already 64-bit.
-%ifarch %{ix86} s390 ppc sparc
-DEFINES="-D_FILE_OFFSET_BITS=64" ; export DEFINES
-%endif
-# Can't use %%configure because we don't use the default mandir.
-./configure \
-	--with-cc=%{__cc} \
-	--with-ccopts="$RPM_OPT_FLAGS $ARCH_OPT_FLAGS $DEFINES -fPIC" \
+INCLUDES=-I%{_includedir}/et
+CFLAGS="`echo $RPM_OPT_FLAGS $ARCH_OPT_FLAGS $DEFINES $INCLUDES -fPIC`"
+%configure \
+	CC=%{__cc} \
+	CFLAGS="$CFLAGS" \
+	CPPFLAGS="$DEFINES $INCLUDES" \
 	--enable-shared --enable-static \
-	--prefix=%{prefix} \
-	--infodir=%{_infodir} \
-	--libdir=%{prefix}/%{_lib} \
+	--bindir=%{krb5prefix}/bin \
+	--mandir=%{krb5prefix}/man \
+	--sbindir=%{krb5prefix}/sbin \
+	--datadir=%{krb5prefix}/share \
 	--localstatedir=%{_var}/kerberos \
 	--with-krb4 \
+	--with-system-et \
+	--with-system-ss \
 	--with-netlib=-lresolv \
 	--without-tcl \
-	--enable-dns \
-	%{_target_platform}
-# Now build it.  Override the CC_LINK variable to exclude the rpath, and
+	--enable-dns
+# Now build it.  Override the RPATH_FLAG and PROG_LIBPATH to drop the rpath, and
 # override LDCOMBINE to use gcc instead of ld to build shared libraries.
-make \
-	CC_LINK='$(CC) $(PROG_LIBPATH)' \
+make	RPATH_FLAG= PROG_RPATH= \
 	LDCOMBINE='%{__cc} -shared -Wl,-soname=lib$(LIB)$(SHLIBSEXT) $(CFLAGS)'
 
-# Run the test suite.  Won't run in the build system because /dev/pts is
-# not available for telnet tests and so on.
-# make check TMPDIR=%{_tmppath}
+# Run the test suite.
+: make	RPATH_FLAG= PROG_RPATH= check TMPDIR=%{_tmppath}
 
 %install
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 
 # Shell scripts wrappers for Kerberized rsh and rlogin.
-mkdir -p $RPM_BUILD_ROOT%{prefix}/bin
-install -m 755 $RPM_SOURCE_DIR/{krsh,krlogin} $RPM_BUILD_ROOT/%{prefix}/bin/
+mkdir -p $RPM_BUILD_ROOT%{krb5prefix}/bin
+install -m 755 $RPM_SOURCE_DIR/{krsh,krlogin} $RPM_BUILD_ROOT/%{krb5prefix}/bin/
 
 # Info docs.
 mkdir -p $RPM_BUILD_ROOT%{_infodir}
@@ -691,23 +712,19 @@ done
 make -C src DESTDIR=$RPM_BUILD_ROOT install
 
 # Fixup permissions on header files.
-find $RPM_BUILD_ROOT/%{prefix}/include -type d | xargs chmod 755
-find $RPM_BUILD_ROOT/%{prefix}/include -type f | xargs chmod 644
+find $RPM_BUILD_ROOT/%{_includedir} -type d | xargs chmod 755
+find $RPM_BUILD_ROOT/%{_includedir} -type f | xargs chmod 644
 
 # Fixup strange shared library permissions.
-chmod 755 $RPM_BUILD_ROOT%{prefix}/%{_lib}/*.so*
+chmod 755 $RPM_BUILD_ROOT%{_libdir}/*.so*
 
 # Munge the krb5-config script to remove rpaths.
-sed "s|^CC_LINK=.*|CC_LINK='\$(CC) \$(PROG_LIBPATH)'|g" src/krb5-config > $RPM_BUILD_ROOT%{prefix}/bin/krb5-config
+sed "s|^CC_LINK=.*|CC_LINK='\$(CC) \$(PROG_LIBPATH)'|g" src/krb5-config > $RPM_BUILD_ROOT%{krb5prefix}/bin/krb5-config
 
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 
-%post libs
-if ! grep -q '^%{prefix}/%{_lib}$' /etc/ld.so.conf ; then
-	echo %{prefix}/%{_lib} >> /etc/ld.so.conf
-fi
-/sbin/ldconfig
+%post libs -p /sbin/ldconfig
 
 %postun libs -p /sbin/ldconfig
 
@@ -767,72 +784,75 @@ fi
 
 %config(noreplace) /etc/xinetd.d/*
 
-%doc doc/user*.html doc/user*.ps.gz src/config-files/services.append
+%doc doc/krb5-user*.html doc/user*.ps.gz src/config-files/services.append
+%doc doc/{ftp,kdestroy,kinit,klist,kpasswd,ksu,rcp,rlogin,rsh,telnet}.html
 %attr(0755,root,root) %doc src/config-files/convert-config-files
 %{_infodir}/krb5-user.info*
 
-%dir %{prefix}
-%dir %{prefix}/bin
-%dir %{prefix}/man
-%dir %{prefix}/man/man1
-%dir %{prefix}/man/man5
-%dir %{prefix}/man/man8
-%dir %{prefix}/sbin
+%dir %{krb5prefix}
+%dir %{krb5prefix}/bin
+%dir %{krb5prefix}/man
+%dir %{krb5prefix}/man/man1
+%dir %{krb5prefix}/man/man5
+%dir %{krb5prefix}/man/man8
+%dir %{krb5prefix}/sbin
 
-%{prefix}/bin/ftp
-%{prefix}/man/man1/ftp.1*
-%{prefix}/bin/gss-client
-%{prefix}/bin/kdestroy
-%{prefix}/man/man1/kdestroy.1*
-%{prefix}/man/man1/kerberos.1*
-%{prefix}/bin/kinit
-%{prefix}/man/man1/kinit.1*
-%{prefix}/bin/klist
-%{prefix}/man/man1/klist.1*
-%{prefix}/bin/kpasswd
-%{prefix}/man/man1/kpasswd.1*
-%{prefix}/bin/krb524init
-%{prefix}/sbin/kadmin
-%{prefix}/man/man8/kadmin.8*
-%{prefix}/sbin/ktutil
-%{prefix}/man/man8/ktutil.8*
-%attr(0755,root,root) %{prefix}/bin/ksu
-%{prefix}/man/man1/ksu.1*
-%{prefix}/bin/kvno
-%{prefix}/man/man1/kvno.1*
-%{prefix}/bin/rcp
-%{prefix}/man/man1/rcp.1*
-%{prefix}/bin/krlogin
-%{prefix}/bin/rlogin
-%{prefix}/man/man1/rlogin.1*
-%{prefix}/bin/krsh
-%{prefix}/bin/rsh
-%{prefix}/man/man1/rsh.1*
-%{prefix}/bin/telnet
-%{prefix}/man/man1/telnet.1*
-%{prefix}/man/man1/tmac.doc*
-%attr(0755,root,root) %{prefix}/bin/v4rcp
-%{prefix}/man/man1/v4rcp.1*
-%{prefix}/bin/v5passwd
-%{prefix}/man/man1/v5passwd.1*
-%{prefix}/bin/sim_client
-%{prefix}/bin/uuclient
-%{prefix}/sbin/login.krb5
-%{prefix}/man/man8/login.krb5.8*
-%{prefix}/sbin/ftpd
-%{prefix}/man/man8/ftpd.8*
-%{prefix}/sbin/gss-server
-%{prefix}/sbin/klogind
-%{prefix}/man/man8/klogind.8*
-%{prefix}/sbin/krb5-send-pr
-%{prefix}/man/man1/krb5-send-pr.1*
-%{prefix}/sbin/kshd
-%{prefix}/man/man8/kshd.8*
-%{prefix}/sbin/telnetd
-%{prefix}/man/man8/telnetd.8*
-%{prefix}/sbin/uuserver
-%{prefix}/man/man5/.k5login.5*
-%{prefix}/man/man5/krb5.conf.5*
+%{krb5prefix}/bin/ftp
+%{krb5prefix}/man/man1/ftp.1*
+%{krb5prefix}/bin/gss-client
+%{krb5prefix}/bin/kdestroy
+%{krb5prefix}/man/man1/kdestroy.1*
+%{krb5prefix}/man/man1/kerberos.1*
+%{krb5prefix}/bin/kinit
+%{krb5prefix}/man/man1/kinit.1*
+%{krb5prefix}/bin/klist
+%{krb5prefix}/man/man1/klist.1*
+%{krb5prefix}/bin/kpasswd
+%{krb5prefix}/man/man1/kpasswd.1*
+%{krb5prefix}/bin/krb524init
+%{krb5prefix}/sbin/k5srvutil
+%{krb5prefix}/man/man8/k5srvutil.8*
+%{krb5prefix}/sbin/kadmin
+%{krb5prefix}/man/man8/kadmin.8*
+%{krb5prefix}/sbin/ktutil
+%{krb5prefix}/man/man8/ktutil.8*
+%attr(0755,root,root) %{krb5prefix}/bin/ksu
+%{krb5prefix}/man/man1/ksu.1*
+%{krb5prefix}/bin/kvno
+%{krb5prefix}/man/man1/kvno.1*
+%{krb5prefix}/bin/rcp
+%{krb5prefix}/man/man1/rcp.1*
+%{krb5prefix}/bin/krlogin
+%{krb5prefix}/bin/rlogin
+%{krb5prefix}/man/man1/rlogin.1*
+%{krb5prefix}/bin/krsh
+%{krb5prefix}/bin/rsh
+%{krb5prefix}/man/man1/rsh.1*
+%{krb5prefix}/bin/telnet
+%{krb5prefix}/man/man1/telnet.1*
+%{krb5prefix}/man/man1/tmac.doc*
+%attr(0755,root,root) %{krb5prefix}/bin/v4rcp
+%{krb5prefix}/man/man1/v4rcp.1*
+%{krb5prefix}/bin/v5passwd
+%{krb5prefix}/man/man1/v5passwd.1*
+%{krb5prefix}/bin/sim_client
+%{krb5prefix}/bin/uuclient
+%{krb5prefix}/sbin/login.krb5
+%{krb5prefix}/man/man8/login.krb5.8*
+%{krb5prefix}/sbin/ftpd
+%{krb5prefix}/man/man8/ftpd.8*
+%{krb5prefix}/sbin/gss-server
+%{krb5prefix}/sbin/klogind
+%{krb5prefix}/man/man8/klogind.8*
+%{krb5prefix}/sbin/krb5-send-pr
+%{krb5prefix}/man/man1/krb5-send-pr.1*
+%{krb5prefix}/sbin/kshd
+%{krb5prefix}/man/man8/kshd.8*
+%{krb5prefix}/sbin/telnetd
+%{krb5prefix}/man/man8/telnetd.8*
+%{krb5prefix}/sbin/uuserver
+%{krb5prefix}/man/man5/.k5login.5*
+%{krb5prefix}/man/man5/krb5.conf.5*
 
 %files server
 %defattr(-,root,root)
@@ -842,9 +862,9 @@ fi
 %config /etc/rc.d/init.d/krb524
 %config /etc/rc.d/init.d/kprop
 
-%doc doc/admin*.ps.gz doc/admin*.html
+%doc doc/admin*.ps.gz doc/krb5-admin*.html
 %doc doc/krb425*.ps.gz doc/krb425*.html
-%doc doc/install*.ps.gz doc/install*.html
+%doc doc/install*.ps.gz doc/krb5-install*.html
 %doc README.krb524
 
 %{_infodir}/krb5-admin.info*
@@ -856,47 +876,50 @@ fi
 %config(noreplace) %{_var}/kerberos/krb5kdc/kdc.conf
 %config(noreplace) %{_var}/kerberos/krb5kdc/kadm5.acl
 
-%dir %{prefix}/bin
-%dir %{prefix}/man
-%dir %{prefix}/man/man1
-%dir %{prefix}/man/man5
-%dir %{prefix}/man/man8
-%dir %{prefix}/sbin
+%dir %{krb5prefix}/bin
+%dir %{krb5prefix}/man
+%dir %{krb5prefix}/man/man1
+%dir %{krb5prefix}/man/man5
+%dir %{krb5prefix}/man/man8
+%dir %{krb5prefix}/sbin
 
-%{prefix}/man/man5/kdc.conf.5*
-%{prefix}/sbin/kadmin.local
-%{prefix}/man/man8/kadmin.local.8*
-%{prefix}/sbin/kadmind
-%{prefix}/man/man8/kadmind.8*
-%{prefix}/sbin/kadmind4
-%{prefix}/sbin/kdb5_util
-%{prefix}/man/man8/kdb5_util.8*
-%{prefix}/sbin/kprop
-%{prefix}/man/man8/kprop.8*
-%{prefix}/sbin/kpropd
-%{prefix}/man/man8/kpropd.8*
-%{prefix}/sbin/krb524d
-%{prefix}/sbin/krb5kdc
-%{prefix}/man/man8/krb5kdc.8*
-%{prefix}/sbin/sim_server
-%{prefix}/sbin/v5passwdd
+%{krb5prefix}/man/man5/kdc.conf.5*
+%{krb5prefix}/sbin/kadmin.local
+%{krb5prefix}/man/man8/kadmin.local.8*
+%{krb5prefix}/sbin/kadmind
+%{krb5prefix}/man/man8/kadmind.8*
+%{krb5prefix}/sbin/kadmind4
+%{krb5prefix}/sbin/kdb5_util
+%{krb5prefix}/man/man8/kdb5_util.8*
+%{krb5prefix}/sbin/kprop
+%{krb5prefix}/man/man8/kprop.8*
+%{krb5prefix}/sbin/kpropd
+%{krb5prefix}/man/man8/kpropd.8*
+%{krb5prefix}/sbin/krb524d
+%{krb5prefix}/sbin/krb5kdc
+%{krb5prefix}/man/man8/krb5kdc.8*
+%{krb5prefix}/sbin/sim_server
+%{krb5prefix}/sbin/v5passwdd
 # This is here for people who want to test their server, and also 
 # included in devel package for similar reasons.
-%{prefix}/bin/sclient
-%{prefix}/man/man1/sclient.1*
-%{prefix}/sbin/sserver
-%{prefix}/man/man8/sserver.8*
+%{krb5prefix}/bin/sclient
+%{krb5prefix}/man/man1/sclient.1*
+%{krb5prefix}/sbin/sserver
+%{krb5prefix}/man/man8/sserver.8*
 
 %files libs
 %defattr(-,root,root)
 %config /etc/rc.d/init.d/kdcrotate
 %config(noreplace) /etc/krb5.conf
-%dir %{prefix}/%{_lib}
-%{prefix}/%{_lib}/lib*.so.*
-%{prefix}/share
+%{_libdir}/lib*.so.*
+%{krb5prefix}/share
 
 %files devel
 %defattr(-,root,root)
+
+%config /etc/profile.d/krb5.sh
+%config /etc/profile.d/krb5.csh
+
 %doc doc/api
 %doc doc/implement
 %doc doc/kadm5
@@ -904,19 +927,19 @@ fi
 %doc doc/krb5-protocol
 %doc doc/rpc
 
-%dir %{prefix}
-%dir %{prefix}/bin
-%dir %{prefix}/man
-%dir %{prefix}/man/man1
-%dir %{prefix}/man/man8
-%dir %{prefix}/sbin
+%dir %{krb5prefix}
+%dir %{krb5prefix}/bin
+%dir %{krb5prefix}/man
+%dir %{krb5prefix}/man/man1
+%dir %{krb5prefix}/man/man8
+%dir %{krb5prefix}/sbin
 
-%{prefix}/include
-%{prefix}/%{_lib}/lib*.a
-%{prefix}/%{_lib}/lib*.so
+%{_includedir}/*
+%{_libdir}/lib*.a
+%{_libdir}/lib*.so
 
-%{prefix}/bin/krb5-config
-%{prefix}/bin/sclient
-%{prefix}/man/man1/sclient.1*
-%{prefix}/man/man8/sserver.8*
-%{prefix}/sbin/sserver
+%{krb5prefix}/bin/krb5-config
+%{krb5prefix}/bin/sclient
+%{krb5prefix}/man/man1/sclient.1*
+%{krb5prefix}/man/man8/sserver.8*
+%{krb5prefix}/sbin/sserver
