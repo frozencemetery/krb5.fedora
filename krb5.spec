@@ -60,13 +60,14 @@ Patch28: krb5-1.3.5-gethostbyname_r.patch
 Patch29: krb5-1.3.5-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch31: krb5-1.3.5-krsh-deadlock.patch
+Patch32: krb5-1.4-ncurses.patch
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
-BuildRoot: %{_tmppath}/%{name}-root
+BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Prereq: grep, info, sh-utils, /sbin/install-info
 BuildPrereq: bison, e2fsprogs-devel >= 1.33, flex
-BuildPrereq: gzip, libtermcap-devel, rsh, texinfo, tar
+BuildPrereq: gzip, ncurses-devel, rsh, texinfo, tar
 
 %description
 Kerberos V5 is a trusted-third-party network authentication system,
@@ -125,6 +126,10 @@ workstation.
 
 %changelog
 # - XXX krb5_init_ets is gone now, what to do?
+* Tue Mar 15 2005 Nalin Dahyabhai <nalin@redhat.com>
+- use libncurses instead of libtermcap for the telnet client, because it
+  provides setupterm(), which we can use instead of the internal version
+
 * Thu Feb 24 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4-1
 - update to 1.4
   - v1.4 kadmin client requires a v1.4 kadmind on the server, or use the "-O"
@@ -804,6 +809,7 @@ workstation.
 %patch29 -p1 -b .kprop-mktemp
 %patch30 -p1 -b .send-pr-tempfile
 %patch31 -p1 -b .krsh-deadlock
+%patch32 -p1 -b .ncurses
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
