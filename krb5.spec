@@ -769,7 +769,7 @@ workstation.
 %patch27 -p1 -b .rcp-sendlarge
 %patch28 -p1 -b .gethostbyname_r
 %patch29 -p1 -b .kprop-mktemp
-%patch30 -p1 -b .-send-pr-tempfile
+%patch30 -p1 -b .send-pr-tempfile
 %patch31 -p1 -b .krsh-deadlock
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
