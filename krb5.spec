@@ -1,9 +1,10 @@
 %define prefix %{_prefix}/kerberos
+%define statglue 1
 
 Summary: The Kerberos network authentication system.
 Name: krb5
-Version: 1.2.2
-Release: 24
+Version: 1.2.3
+Release: 5
 Source0: krb5-%{version}.tar.gz
 Source1: kpropd.init
 Source2: krb524d.init
@@ -23,8 +24,6 @@ Source15: kshell.xinetd
 Source16: krb5-telnet.xinetd
 Source17: gssftp.xinetd
 Source19: statglue.c
-Source20: http://web.mit.edu/kerberos/www/advisories/2003-004-krb4_patchkit.tar.gz
-Source21: http://web.mit.edu/kerberos/www/advisories/2003-004-krb4_patchkit.sig
 Patch0: krb5-1.1-db.patch
 Patch1: krb5-1.1.1-tiocgltc.patch
 Patch2: krb5-1.1.1-libpty.patch
@@ -44,28 +43,10 @@ Patch15: krb5-1.2.1-forward.patch
 Patch16: krb5-1.2.1-heap.patch
 Patch17: krb5-1.2.2-wragg.patch
 Patch18: krb5-1.2.2-statglue.patch
-Patch19: http://web.mit.edu/kerberos/www/advisories/ftpbuf_122_patch.txt
 Patch20: krb5-1.2.2-by-address.patch
 Patch21: http://lite.mit.edu/krb5-1.2.2-ktany.patch
 Patch22: krb5-1.2.2-logauth.patch
 Patch23: krb5-1.2.2-size.patch
-Patch24: http://web.mit.edu/kerberos/www/advisories/telnetd_122_patch.txt
-Patch25: http://web.mit.edu/kerberos/www/advisories/2002-001-xdr_array_patch.txt
-Patch26: http://web.mit.edu/kerberos/www/advisories/MITKRB5-SA-2002-002-kadm4.txt
-Patch27: gssftp-patch
-Patch28: krb5-1.2.6-dnsparse.patch
-Patch29: krb5-1.2.7-errno.patch
-Patch30: krb5-SA-2003-001-1.patch
-Patch31: krb5-SA-2003-001-2-1.2.2.patch
-Patch32: krb5-SA-2003-001-4.patch
-Patch34: krb5-1.2.2-gssapi-glib.patch
-Patch35: krb5-1.2.2-kadmin-at.patch
-Patch36: krb5-1.2.7-reject-bad-transited.patch
-Patch37: krb5-crawford.patch
-Patch38: krb5-1.2.4-princ_size.patch
-Patch39: krb5-1.2.7-underrun.patch
-Patch40: http://web.mit.edu/kerberos/www/advisories/MITKRB5-SA-2003-003-xdr.txt
-Patch41: krb5-1.2.2-krb524-double-free.patch
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -103,8 +84,8 @@ Kerberos, you need to install this package.
 %package server
 Group: System Environment/Daemons
 Summary: The server programs for Kerberos 5.
-Requires: %{name}-libs = %{version}-%{release}, %{name}-workstation = %{version}-%{release}
-Prereq: grep, /sbin/install-info, /bin/sh, sh-utils
+Requires: %{name}-libs = %{version}-%{release}
+Prereq: grep, /sbin/install-info, /bin/sh, sh-utils, /sbin/chkconfig
 
 %description server
 Kerberos is a network authentication system. The krb5-server package
@@ -127,56 +108,40 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
-* Fri Mar 21 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-24
-- fix double-free of enc_part2 in krb524d
-- update to latest patch kit for MITKRB5-SA-2003-004
+* Wed Feb 20 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.3-5
+- rebuild in new environment
+- reenable statglue
 
-* Thu Mar 20 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-23
-- make the default kdc.conf list the same enctypes we use for 1.2.7
+* Sat Jan 26 2002 Florian La Roche <Florian.LaRoche@redhat.de>
+- prereq chkconfig for the server subpackage
 
-* Wed Mar 19 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-22
-- add patch included in MITKRB5-SA-2003-003 (CAN-2003-0028)
+* Wed Jan 16 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.3-3
+- build without -g3, which gives us large static libraries in -devel
 
-* Mon Mar 17 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-21
-- add patches from patchkit from MITKRB5-SA-2003-004 (CAN-2003-0138 and
-  CAN-2003-0139)
+* Tue Jan 15 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.3-2
+- reintroduce ld.so.conf munging in the -libs %%post
 
-* Thu Mar  6 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-20
-- fix buffer underrun in unparsing certain principals (CAN-2003-0082)
+* Thu Jan 10 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.3-1
+- rename the krb5 package back to krb5-libs; the previous rename caused
+  something of an uproar
+- update to 1.2.3, which includes the FTP and telnetd fixes
+- configure without --enable-dns-for-kdc --enable-dns-for-realm, which now set
+  the default behavior instead of enabling the feature (the feature is enabled
+  by --enable-dns, which we still use)
+- reenable optimizations on Alpha
+- support more encryption types in the default kdc.conf (heads-up from post
+  to comp.protocols.kerberos by Jason Heiss)
 
-* Wed Feb 26 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-19
-- add patch to fix server-side crashes when principals have no
-  components (CAN-2003-0072)
+* Fri Aug  3 2001 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-14
+- rename the krb5-libs package to krb5 (naming a subpackage -libs when there
+  is no main package is silly)
+- move defaults for PAM to the appdefaults section of krb5.conf -- this is
+  the area where the krb5_appdefault_* functions look for settings)
+- disable statglue (warning: breaks binary compatibility with previous
+  packages, but has to be broken at some point to work correctly with
+  unpatched versions built with newer versions of glibc)
 
-* Mon Feb 24 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-18
-- add patch from Matt Crawford for encoding transited realms properly
-
-* Wed Feb  5 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-17
-- sync compiler flags for configure and make with other versions
-
-* Tue Feb  4 2003 Nalin Dahyabhai <nalin@redhat.com>
-- add patch to document the reject-bad-transited option in kdc.conf
-- add backported symbol namespacing fix from 1.2.3 to clear up clashes with glib
-- add backported fix for hangs in kadmin client when principal contains an
-  escaped @ symbol
-
-* Thu Jan 30 2003 Nalin Dahyabhai <nalin@redhat.com>
-- add candidate backports for CAN-2002-0036, CAN-2002-058, CAN-2002-059
-  (CAN-2002-060 was fixed in 1.1.1-7 or so)
-
-* Thu Jan 23 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-16
-- add patch from Mark Cox for exploitable bugs in ftp client
-- add patch to avoid buffer read overruns when configuring via DNS
-- add patch to properly include <errno.h>
-
-* Wed Oct 23 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-15
-- add patch from Tom Yu for exploitable bugs in kadmind4
-- remove raw keys from the default kdc.conf
- 
-* Fri Aug  2 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-14
-- add patch from Tom Yu for exploitable bugs in rpc code used in kadmind
-
-* Fri Aug  3 2001 Nalin Dahyabhai <nalin@redhat.com>
+* Fri Aug  3 2001 Nalin Dahyabhai <nalin@redhat.com> 1.2.2-13
 - bump release number and rebuild
 
 * Wed Aug  1 2001 Nalin Dahyabhai <nalin@redhat.com>
@@ -479,12 +444,12 @@ workstation.
 - fixed server package so that it works now
 
 * Sat May 15 1999 Nalin Dahyabhai <nsdahya1@eos.ncsu.edu>
-- started changelog
+- started changelog (previous package from zedz.net)
 - updated existing 1.0.5 RPM from Eos Linux to krb5 1.0.6
 - added --force to makeinfo commands to skip errors during build
 
 %prep
-%setup -q -a 20
+%setup -q
 %patch0  -p0 -b .db
 %patch1  -p0 -b .tciogltc
 %patch2  -p0 -b .libpty
@@ -503,42 +468,16 @@ workstation.
 %patch15 -p1 -b .forward
 %patch16 -p1 -b .heap
 %patch17 -p1 -b .wragg
+%if %{statglue}
 %patch18 -p1 -b .statglue
-pushd src/appl/gssftp/ftpd
-%patch19 -p0 -b .ftpd
-popd
+%endif
 %patch20 -p0 -b .by-address
 %patch21 -p1 -b .ktany
 %patch22 -p1 -b .logauth
 %patch23 -p1 -b .size
-pushd src/appl/telnet/telnetd
-%patch24 -p1 -b .telnetd
-popd
-pushd src/lib/rpc
-%patch25 -p0 -b .xdr
-popd
-pushd src/kadmin/v4server
-%patch26 -p0 -b .kadmind
-popd
-%patch27 -p1 -b .gssftp-patch
-%patch28 -p1 -b .dnsparse
-%patch29 -p1 -b .errno
-%patch30 -p1 -b .krb5-SA-2003-001-1
-%patch31 -p1 -b .krb5-SA-2003-001-2
-%patch32 -p1 -b .krb5-SA-2003-001-4
-%patch34 -p1 -b .gssapi-glib
-%patch35 -p1 -b .kadmin-at
-%patch36 -p1 -b .reject-bad-transited
-%patch37 -p1 -b .crawford
-%patch38 -p1 -b .princ_size
-%patch39 -p1 -b .underrun
-patch -sp0 -b -z .2003-004-krb4 < 2003-004-krb4_patchkit/patch.1.2.0
-pushd src/lib/rpc
-%patch40 -p0 -b .2003-003
-popd
-%patch41 -p1 -b .double-free
-
+%if %{statglue}
 cp $RPM_SOURCE_DIR/statglue.c src/util/profile/statglue.c
+%endif
 find . -type f -name "*.fixinfo" -exec rm -fv "{}" ";"
 gzip doc/*.ps
 
@@ -546,10 +485,6 @@ gzip doc/*.ps
 cd src
 libtoolize --copy --force
 cp config.{guess,sub} config/
-
-%ifarch alpha
-ARCH_OPT_FLAGS=-O0
-%endif
 
 # Can't use %%configure because we don't use the default mandir.
 DEFINES="-D_FILE_OFFSET_BITS=64" ; export DEFINES
@@ -561,9 +496,9 @@ DEFINES="-D_FILE_OFFSET_BITS=64" ; export DEFINES
 	--infodir=%{_infodir} \
 	--localstatedir=%{_var}/kerberos \
 	--with-krb4 \
-	--enable-dns --enable-dns-for-kdc --enable-dns-for-realm \
 	--with-netlib=-lresolv \
 	--with-tcl=%{_prefix} \
+	--enable-dns \
 	%{_target_platform}
 # Now build it.  Override the CC_LINK variable to exclude the rpath, and
 # override LDCOMBINE to use gcc instead of ld to build shared libraries.
@@ -582,18 +517,6 @@ make \
 mkdir -p $RPM_BUILD_ROOT%{prefix}/bin
 install -m 755 $RPM_SOURCE_DIR/{krsh,krlogin} $RPM_BUILD_ROOT/%{prefix}/bin/
 
-%if 1
-# Extra headers which are not installed by default.
-mkdir -p $RPM_BUILD_ROOT%{prefix}/include
-(cd src/include
- find kadm5 krb5 gssrpc gssapi -name "*.h" | \
- cpio -pdm  $RPM_BUILD_ROOT/%{prefix}/include )
-sed 's^k5-int^krb5/kdb^g' < $RPM_BUILD_ROOT/%{prefix}/include/kadm5/admin.h \
-			  > $RPM_BUILD_ROOT/%{prefix}/include/kadm5/admin.h2 &&\
-mv $RPM_BUILD_ROOT/%{prefix}/include/kadm5/admin.h2 \
-   $RPM_BUILD_ROOT/%{prefix}/include/kadm5/admin.h
-%endif
-
 # Info docs.
 mkdir -p $RPM_BUILD_ROOT%{_infodir}
 install -m 644 doc/*.info* $RPM_BUILD_ROOT%{_infodir}/
@@ -606,7 +529,7 @@ mkdir -p $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc
 install -m 644 $RPM_SOURCE_DIR/kdc.conf  $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc/
 install -m 644 $RPM_SOURCE_DIR/kadm5.acl $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc/
 
-# Sample client config files and login-time scriptlets.
+# Login-time scriptlets to fix the PATH variable.
 mkdir -p $RPM_BUILD_ROOT/etc/profile.d
 install -m 644 $RPM_SOURCE_DIR/krb5.conf $RPM_BUILD_ROOT/etc/krb5.conf
 install -m 755 $RPM_SOURCE_DIR/krb5.{sh,csh} $RPM_BUILD_ROOT/etc/profile.d/
@@ -626,11 +549,8 @@ for xinetd in eklogin klogin kshell krb5-telnet gssftp ; do
 	$RPM_BUILD_ROOT/etc/xinetd.d/${xinetd}
 done
 
-# The rest of the binaries and libraries and docs.
-cd src
-make prefix=$RPM_BUILD_ROOT%{prefix} \
-	localstatedir=$RPM_BUILD_ROOT%{_var}/kerberos \
-	infodir=$RPM_BUILD_ROOT%{_infodir} install
+# The rest of the binaries, headers, libraries, and docs.
+make -C src DESTDIR=$RPM_BUILD_ROOT install
 
 # Fixup permissions on header files.
 find $RPM_BUILD_ROOT/%{prefix}/include -type d | xargs chmod 755
@@ -639,11 +559,16 @@ find $RPM_BUILD_ROOT/%{prefix}/include -type f | xargs chmod 644
 # Fixup strange shared library permissions.
 chmod 755 $RPM_BUILD_ROOT%{prefix}/lib/*.so*
 
+# Munge the krb5-config script to remove rpaths.
+sed "s|^CC_LINK=.*|CC_LINK='\$(CC) \$(PROG_LIBPATH)'|g" src/krb5-config > $RPM_BUILD_ROOT%{prefix}/bin/krb5-config
+
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 
 %post libs
-grep -q %{prefix}/lib /etc/ld.so.conf 2> /dev/null || echo %{prefix}/lib >> /etc/ld.so.conf
+if ! grep -q '^%{prefix}/lib$' /etc/ld.so.conf ; then
+	echo %{prefix}/lib >> /etc/ld.so.conf
+fi
 /sbin/ldconfig
 
 %postun libs -p /sbin/ldconfig
@@ -827,7 +752,6 @@ fi
 %defattr(-,root,root)
 %config /etc/rc.d/init.d/kdcrotate
 %config(noreplace) /etc/krb5.conf
-%dir %{prefix}
 %dir %{prefix}/lib
 %{prefix}/lib/lib*.so.*.*
 %{prefix}/share
@@ -840,19 +764,19 @@ fi
 %doc doc/kadmin
 %doc doc/krb5-protocol
 %doc doc/rpc
-%{prefix}/include
 
 %dir %{prefix}
 %dir %{prefix}/bin
-%dir %{prefix}/lib
 %dir %{prefix}/man
 %dir %{prefix}/man/man1
 %dir %{prefix}/man/man8
 %dir %{prefix}/sbin
 
+%{prefix}/include
 %{prefix}/lib/lib*.a
 %{prefix}/lib/lib*.so
 
+%{prefix}/bin/krb5-config
 %{prefix}/bin/sclient
 %{prefix}/man/man1/sclient.1*
 %{prefix}/man/man8/sserver.8*
