@@ -3,8 +3,8 @@
 
 Summary: The Kerberos network authentication system.
 Name: krb5
-Version: 1.2.5
-Release: 15
+Version: 1.2.7
+Release: 8
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -25,8 +25,6 @@ Source16: kshell.xinetd
 Source17: krb5-telnet.xinetd
 Source18: gssftp.xinetd
 Source19: statglue.c
-Source20: http://web.mit.edu/kerberos/www/advisories/2003-004-krb4_patchkit.tar.gz
-Source21: http://web.mit.edu/kerberos/www/advisories/2003-004-krb4_patchkit.sig
 Patch0: krb5-1.1-db.patch
 Patch1: krb5-1.1.1-tiocgltc.patch
 Patch2: krb5-1.1.1-libpty.patch
@@ -51,23 +49,17 @@ Patch21: http://lite.mit.edu/krb5-1.2.2-ktany.patch
 Patch22: krb5-1.2.2-logauth.patch
 Patch23: krb5-1.2.2-size.patch
 Patch24: krb5-1.2.5-db2-configure.patch
-Patch25: http://web.mit.edu/kerberos/www/advisories/2002-001-xdr_array_patch.txt
-Patch26: http://web.mit.edu/kerberos/www/advisories/MITKRB5-SA-2002-002-kadm4.txt
+Patch25: krb5-1.2.7-namelength.patch
+Patch26: krb5-1.2.7-errno.patch
 Patch27: gssftp-patch
-Patch28: krb5-1.2.6-dnsparse.patch
-Patch29: krb5-1.2.7-errno.patch
-Patch31: krb5-1.2.7-reject-bad-transited.patch
-Patch32: krb5-crawford.patch
-Patch33: krb5-1.2.5-princ_size.patch
-Patch34: krb5-1.2.7-underrun.patch
-Patch35: http://web.mit.edu/kerberos/www/advisories/MITKRB5-SA-2003-003-xdr.txt
-Patch36: krb5-1.2.2-krb524-double-free.patch
+Patch28: krb5-1.2.7-princ_size.patch
+Patch29: krb5-1.2.7-reject-bad-transited.patch
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-root
 Prereq: grep, info, sh-utils, /sbin/install-info
-BuildPrereq: bison, e2fsprogs-devel, flex, gzip, libtermcap-devel, rsh, texinfo, tar, tcl
+BuildPrereq: bison, e2fsprogs-devel, flex, gzip, libtermcap-devel, rsh, texinfo, tar
 
 %description
 Kerberos V5 is a trusted-third-party network authentication system,
@@ -123,42 +115,67 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
-* Fri Mar 21 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-15
-- fix double-free of enc_part2 in krb524d
-- update to latest patch kit for MITKRB5-SA-2003-004
-
-* Wed Mar 19 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-14
-- add patch included in MITKRB5-SA-2003-003 (CAN-2003-0028)
-
-* Mon Mar 17 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-13
-- add patches from patchkit from MITKRB5-SA-2003-004 (CAN-2003-0138 and
-  CAN-2003-0139)
-
-* Thu Mar  6 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-12
-- fix buffer underrun in unparsing certain principals (CAN-2003-0082)
-
-* Wed Feb 26 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-11
-- add patch to fix server-side crashes when principals have no
-  components (CAN-2003-0072)
-
-* Mon Feb 24 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-10
-- add patch from Matt Crawford for encoding transited realms properly
-
-* Wed Feb  5 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-9
-- sync compiler flags for configure and make with other versions
-
-* Tue Feb  4 2003 Nalin Dahyabhai <nalin@redhat.com>
+* Tue Feb  4 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.7-8
 - add patch to document the reject-bad-transited option in kdc.conf
 
-* Thu Jan 23 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-8
-- add patch from Mark Cox for exploitable bugs in ftp client
-- add patch to avoid buffer read overruns when configuring via DNS
-- add patch to properly include <errno.h>
+* Mon Feb  3 2003 Nalin Dahyabhai <nalin@redhat.com>
+- add patch to fix server-side crashes when principals have no components
 
-* Wed Oct 23 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-7
-- add patch from Tom Yu for exploitable bugs in kadmind4
-- remove raw keys from the default kdc.conf
- 
+* Thu Jan 23 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.7-7
+- add patch from Mark Cox for exploitable bugs in ftp client
+
+* Wed Jan 22 2003 Tim Powers <timp@redhat.com>
+- rebuilt
+
+* Wed Jan 15 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.7-5
+- use PICFLAGS when building code from the ktany patch
+
+* Thu Jan  9 2003 Bill Nottingham <notting@redhat.com> 1.2.7-4
+- debloat
+
+* Tue Jan  7 2003 Jeremy Katz <katzj@redhat.com> 1.2.7-3
+- include .so.* symlinks as well as .so.*.*
+
+* Mon Dec  9 2002 Jakub Jelinek <jakub@redhat.com> 1.2.7-2
+- always #include <errno.h> to access errno, never do it directly
+- enable LFS on a bunch of other 32-bit arches
+
+* Wed Dec  4 2002 Nalin Dahyabhai <nalin@redhat.com>
+- increase the maximum name length allowed by kuserok() to the higher value
+  used in development versions
+
+* Mon Dec  2 2002 Nalin Dahyabhai <nalin@redhat.com>
+- install src/krb524/README as README.krb524 in the -servers package,
+  includes information about converting for AFS principals
+
+* Fri Nov 15 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.7-1
+- update to 1.2.7
+- disable use of tcl
+
+* Mon Nov 11 2002 Nalin Dahyabhai <nalin@redhat.com>
+- update to 1.2.7-beta2 (internal only, not for release), dropping dnsparse
+  and kadmind4 fixes
+
+* Wed Oct 23 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.6-5
+- add patch for buffer overflow in kadmind4 (not used by default)
+
+* Fri Oct 11 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.6-4
+- drop a hunk from the dnsparse patch which is actually redundant (thanks to
+  Tom Yu)
+
+* Wed Oct  9 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.6-3
+- patch to handle truncated dns responses
+
+* Mon Oct  7 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.6-2
+- remove hashless key types from the default kdc.conf, they're not supposed to
+  be there, noted by Sam Hartman on krbdev
+
+* Fri Sep 27 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.6-1
+- update to 1.2.6
+
+* Fri Sep 13 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-7
+- use %%{_lib} for the sake of multilib systems
+
 * Fri Aug  2 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-6
 - add patch from Tom Yu for exploitable bugs in rpc code used in kadmind
 
@@ -522,7 +539,7 @@ workstation.
 - added --force to makeinfo commands to skip errors during build
 
 %prep
-%setup -q -a 20
+%setup -q
 %patch0  -p0 -b .db
 %patch1  -p0 -b .tciogltc
 %patch2  -p0 -b .libpty
@@ -549,24 +566,13 @@ workstation.
 %patch22 -p1 -b .logauth
 %patch23 -p1 -b .size
 %patch24 -p1 -b .db2-configure
-pushd src/lib/rpc
-%patch25 -p0 -b .xdr
-popd
-pushd src/kadmin/v4server
-%patch26 -p0 -b .kadmind
-popd
+%patch25 -p1 -b .namelength
+%patch26 -p1 -b .errno
 %patch27 -p1 -b .gssftp-patch
-%patch28 -p1 -b .dnsparse
-%patch29 -p1 -b .errno
-%patch31 -p1 -b .reject-bad-transit
-%patch32 -p1 -b .crawford
-%patch33 -p1 -b .princ_size
-%patch34 -p1 -b .underrun
-patch -sp0 -b -z .2003-004-krb4 < 2003-004-krb4_patchkit/patch.1.2.0
-pushd src/lib/rpc
-%patch35 -p0 -b .2003-003
-popd
-%patch36 -p1 -b .double-free
+%patch28 -p1 -b .princ_size.patch
+%patch29 -p1 -b .reject-bad-transited.patch
+
+cp src/krb524/README README.krb524
 
 (cd src/util/db2; autoconf )
 %if %{statglue}
@@ -579,19 +585,24 @@ gzip doc/*.ps
 cd src
 libtoolize --copy --force
 cp config.{guess,sub} config/
+cp config.{guess,sub} util/autoconf/
 
-# Can't use %%configure because we don't use the default mandir.
+# Get LFS support on systems that need it which aren't already 64-bit.
+%ifarch %{ix86} s390 ppc sparc
 DEFINES="-D_FILE_OFFSET_BITS=64" ; export DEFINES
+%endif
+# Can't use %%configure because we don't use the default mandir.
 ./configure \
 	--with-cc=%{__cc} \
 	--with-ccopts="$RPM_OPT_FLAGS $ARCH_OPT_FLAGS $DEFINES -fPIC" \
 	--enable-shared --enable-static \
 	--prefix=%{prefix} \
 	--infodir=%{_infodir} \
+	--libdir=%{prefix}/%{_lib} \
 	--localstatedir=%{_var}/kerberos \
 	--with-krb4 \
 	--with-netlib=-lresolv \
-	--with-tcl=%{_prefix} \
+	--without-tcl \
 	--enable-dns \
 	%{_target_platform}
 # Now build it.  Override the CC_LINK variable to exclude the rpath, and
@@ -651,7 +662,7 @@ find $RPM_BUILD_ROOT/%{prefix}/include -type d | xargs chmod 755
 find $RPM_BUILD_ROOT/%{prefix}/include -type f | xargs chmod 644
 
 # Fixup strange shared library permissions.
-chmod 755 $RPM_BUILD_ROOT%{prefix}/lib/*.so*
+chmod 755 $RPM_BUILD_ROOT%{prefix}/%{_lib}/*.so*
 
 # Munge the krb5-config script to remove rpaths.
 sed "s|^CC_LINK=.*|CC_LINK='\$(CC) \$(PROG_LIBPATH)'|g" src/krb5-config > $RPM_BUILD_ROOT%{prefix}/bin/krb5-config
@@ -660,8 +671,8 @@ sed "s|^CC_LINK=.*|CC_LINK='\$(CC) \$(PROG_LIBPATH)'|g" src/krb5-config > $RPM_B
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 
 %post libs
-if ! grep -q '^%{prefix}/lib$' /etc/ld.so.conf ; then
-	echo %{prefix}/lib >> /etc/ld.so.conf
+if ! grep -q '^%{prefix}/%{_lib}$' /etc/ld.so.conf ; then
+	echo %{prefix}/%{_lib} >> /etc/ld.so.conf
 fi
 /sbin/ldconfig
 
@@ -801,6 +812,7 @@ fi
 %doc doc/admin*.ps.gz doc/admin*.html
 %doc doc/krb425*.ps.gz doc/krb425*.html
 %doc doc/install*.ps.gz doc/install*.html
+%doc README.krb524
 
 %{_infodir}/krb5-admin.info*
 %{_infodir}/krb5-install.info*
@@ -846,8 +858,8 @@ fi
 %defattr(-,root,root)
 %config /etc/rc.d/init.d/kdcrotate
 %config(noreplace) /etc/krb5.conf
-%dir %{prefix}/lib
-%{prefix}/lib/lib*.so.*.*
+%dir %{prefix}/%{_lib}
+%{prefix}/%{_lib}/lib*.so.*
 %{prefix}/share
 
 %files devel
@@ -867,8 +879,8 @@ fi
 %dir %{prefix}/sbin
 
 %{prefix}/include
-%{prefix}/lib/lib*.a
-%{prefix}/lib/lib*.so
+%{prefix}/%{_lib}/lib*.a
+%{prefix}/%{_lib}/lib*.so
 
 %{prefix}/bin/krb5-config
 %{prefix}/bin/sclient
