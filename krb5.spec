@@ -6,10 +6,10 @@
 
 Summary: The Kerberos network authentication system.
 Name: krb5
-Version: 1.3.1
-Release: 7
+Version: 1.3.2
+Release: 1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/www/dist/krb5/1.3/krb5-1.3.1.tar
+# http://web.mit.edu/kerberos/www/dist/krb5/1.3/krb5-1.3.2.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -37,10 +37,7 @@ Patch3: krb5-1.3-netkit-rsh.patch
 Patch4: krb5-1.3-rlogind-environ.patch
 Patch5: krb5-1.3-ksu-access.patch
 Patch6: krb5-1.3-ksu-path.patch
-Patch7: krb5-1.1.1-tiocgltc.patch
-Patch8: krb5-1.1.1-libpty.patch
 Patch9: krb5-1.1.1-brokenrev.patch
-Patch10: krb5-1.2.1-term.patch
 Patch11: krb5-1.2.1-passive.patch
 Patch12: krb5-1.3-ktany.patch
 Patch13: krb5-1.3-large-file.patch
@@ -54,6 +51,9 @@ Patch20: krb5-1.3.1-varargs.patch
 Patch21: krb5-selinux.patch
 Patch22: krb5-1.3.1-32.patch
 Patch23: krb5-1.3.1-dns.patch
+Patch24: krb5-1.3.1-server-sort.patch
+Patch25: krb5-1.3.1-null.patch
+Patch26: krb5-1.3.2-efence.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -117,8 +117,34 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Wed Mar 10 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.2-1
+- update to 1.3.2
+
+* Mon Mar  8 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.1-12
+- rebuild
+
+* Tue Mar 02 2004 Elliot Lee <sopwith@redhat.com> 1.3.1-11.1
+- rebuilt
+
+* Fri Feb 13 2004 Elliot Lee <sopwith@redhat.com> 1.3.1-11
+- rebuilt
+
+* Mon Feb  9 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.1-10
+- catch krb4 send_to_kdc cases in kdc preference patch
+
+* Mon Feb  2 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.1-9
+- remove patch to set TERM in klogind which, combined with the upstream fix in
+  1.3.1, actually produces the bug now (#114762)
+
+* Mon Jan 19 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.1-8
+- when iterating over lists of interfaces which are "up" from getifaddrs(),
+  skip over those which have no address (#113347)
+
+* Mon Jan 12 2004 Nalin Dahyabhai <nalin@redhat.com>
+- prefer the kdc which last replied to a request when sending requests to kdcs
+
 * Mon Nov 24 2003 Nalin Dahyabhai <nalin@redhat.com> 1.3.1-7
-- fix combination of --with-netlib and --enable-dns
+- fix combination of --with-netlib and --enable-dns (#82176)
 
 * Tue Nov 18 2003 Nalin Dahyabhai <nalin@redhat.com>
 - remove libdefault ticket_lifetime option from the default krb5.conf, it is
@@ -130,7 +156,7 @@ workstation.
 
 * Tue Sep 23 2003 Nalin Dahyabhai <nalin@redhat.com> 1.3.1-5
 - include profile.d scriptlets in krb5-devel so that krb5-config will be in
-  the path, reported by Kir Kolyshkin
+  the path if krb5-workstation isn't installed, reported by Kir Kolyshkin
 
 * Mon Sep  8 2003 Nalin Dahyabhai <nalin@redhat.com>
 - add more etypes (arcfour) to the default enctype list in kdc.conf
@@ -620,24 +646,23 @@ workstation.
 
 %prep
 %setup -q -n %{name}-%{version}
-%patch0  -p1 -b .gcc33
+# No longer necessary with e2fsprogs >= 1.35, it seems.
+# %patch0  -p1 -b .gcc33
 %patch1  -p1 -b .info-dir
 %patch2  -p1 -b .manpage-paths
 %patch3  -p1 -b .netkit-rsh
 %patch4  -p1 -b .rlogind-environ
 %patch5  -p1 -b .ksu-access
 %patch6  -p1 -b .ksu-path
-%patch7  -p0 -b .tciogltc
-%patch8  -p0 -b .libpty
 %patch9  -p1 -b .brokenrev
-%patch10 -p1 -b .term
 %patch11 -p1 -b .passive
 %patch12 -p1 -b .ktany
 %patch13 -p1 -b .large-file
 %patch14 -p1 -b .ftp-glob
 %patch15 -p1 -b .check
 %patch16 -p1 -b .no-rpath
-%patch17 -p1 -b .pass-by-address
+# Hopefully no longer needed to work around compiler bug.
+# %patch17 -p1 -b .pass-by-address
 %patch18 -p1 -b .reject-bad-transited
 %patch19 -p1 -b .double-free
 %patch20 -p1 -b .varargs
@@ -647,11 +672,20 @@ workstation.
 # Removed, per http://mailman.mit.edu/pipermail/krb5-bugs/2003-September/001735.html
 # %patch22 -p1 -b .32
 %patch23 -p1 -b .dns
+%patch24 -p1 -b .server-sort
+%patch25 -p1 -b .null
+# Removes a malloc(0) case, nothing more.
+# %patch26 -p1 -b .efence
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
 cd src
-./util/reconf
+top=`pwd`
+for configurein in `find -name configure.in -type f` ; do
+	pushd `dirname $configurein`
+	autoconf -I "$top"
+	popd
+done
 
 %build
 cd src
@@ -660,6 +694,7 @@ CFLAGS="`echo $RPM_OPT_FLAGS $ARCH_OPT_FLAGS $DEFINES $INCLUDES -fPIC`"
 %configure \
 	CC=%{__cc} \
 	CFLAGS="$CFLAGS" \
+	LDFLAGS="-pie" \
 	CPPFLAGS="$DEFINES $INCLUDES" \
 	--enable-shared --enable-static \
 	--bindir=%{krb5prefix}/bin \

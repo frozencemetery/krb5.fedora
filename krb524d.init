@@ -22,7 +22,7 @@ RETVAL=0
 prog="Kerberos 5-to-4 Server"
 krb524d=/usr/kerberos/sbin/krb524d
 
-# Sheel functions to cut down on useless shell instances.
+# Shell functions to cut down on unnecessary shell invocations.
 start() {
   	if [ ! -f /var/kerberos/krb5kdc/principal ] ; then
 	    exit 0
