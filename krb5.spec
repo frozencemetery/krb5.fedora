@@ -7,9 +7,9 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.3.3
-Release: 3
+Release: 8
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/www/dist/krb5/1.3/krb5-1.3.2.tar
+# http://web.mit.edu/kerberos/www/dist/krb5/1.3/krb5-1.3.3.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -55,6 +55,7 @@ Patch24: krb5-1.3.1-server-sort.patch
 Patch25: krb5-1.3.1-null.patch
 Patch26: krb5-1.3.2-efence.patch
 Patch27: krb5-1.3.3-rcp-sendlarge.patch
+Patch28: http://web.mit.edu/kerberos/advisories/MITKRB5-SA-2004-001-an_to_ln.txt
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -118,6 +119,21 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Mon Jun  7 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.3-8
+- rebuild
+
+* Fri Jun  4 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.3-7
+- rebuild
+
+* Fri Jun  4 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.3-6
+- apply updated patch from MITKRB5-SA-2004-001 (revision 2004-06-02)
+
+* Tue Jun  1 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.3-5
+- rebuild
+
+* Tue Jun  1 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.3-4
+- apply patch from MITKRB5-SA-2004-001 (#125001)
+
 * Wed May 12 2004 Thomas Woerner <twoerner@redhat.com> 1.3.3-3
 - removed rpath
 
@@ -689,6 +705,9 @@ workstation.
 # Removes a malloc(0) case, nothing more.
 # %patch26 -p1 -b .efence
 %patch27 -p1 -b .rcp-sendlarge
+pushd src/lib/krb5/os
+%patch28 -p0 -b .MITKRB5-SA-2004-001
+popd
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
