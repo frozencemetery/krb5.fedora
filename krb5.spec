@@ -7,7 +7,9 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.3.1
-Release: 6
+Release: 7
+# Maybe we should explode from the now-available-to-everybody tarball instead?
+# http://web.mit.edu/kerberos/www/dist/krb5/1.3/krb5-1.3.1.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -51,6 +53,7 @@ Patch19: krb5-1.2.7-krb524d-double-free.patch
 Patch20: krb5-1.3.1-varargs.patch
 Patch21: krb5-selinux.patch
 Patch22: krb5-1.3.1-32.patch
+Patch23: krb5-1.3.1-dns.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -114,6 +117,13 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Mon Nov 24 2003 Nalin Dahyabhai <nalin@redhat.com> 1.3.1-7
+- fix combination of --with-netlib and --enable-dns
+
+* Tue Nov 18 2003 Nalin Dahyabhai <nalin@redhat.com>
+- remove libdefault ticket_lifetime option from the default krb5.conf, it is
+  ignored by libkrb5
+
 * Thu Sep 25 2003 Nalin Dahyabhai <nalin@redhat.com> 1.3.1-6
 - fix bug in patch to make rlogind start login with a clean environment a la
   netkit rlogin, spotted and fixed by Scott McClung
@@ -636,10 +646,12 @@ workstation.
 %endif
 # Removed, per http://mailman.mit.edu/pipermail/krb5-bugs/2003-September/001735.html
 # %patch22 -p1 -b .32
-
+%patch23 -p1 -b .dns
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
+cd src
+./util/reconf
 
 %build
 cd src
