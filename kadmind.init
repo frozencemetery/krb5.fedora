@@ -1,0 +1,79 @@
+#!/bin/sh
+#
+# kadmind      Start and stop the Kerberos 5 administrative server.
+#
+# chkconfig:   - 35 65
+# description: Kerberos 5 is a trusted third-party authentication system.  \
+#	       This script starts and stops the Kerberos 5 administrative \
+#              server, which should only be run on the master server for a \
+#              realm.
+# processname: kadmind
+#
+
+# Get config.
+. /etc/sysconfig/network
+
+# Check that networking is up.
+[ ${NETWORKING} = "no" ] && exit 0
+
+# Source function library.
+. /etc/init.d/functions
+
+RETVAL=0
+
+# Sheel functions to cut down on useless shell instances.
+start() {
+  	if [ ! -f /var/kerberos/krb5kdc/principal ] ; then
+	    exit 0
+	fi
+  	if [ -f /var/kerberos/krb5kdc/kpropd.acl ] ; then
+	    exit 0
+	else
+  	    if [ ! -f /var/kerberos/krb5kdc/kadm5.keytab ] ; then
+		echo "Extracting kadm5 Service Keys"
+		/usr/kerberos/sbin/kadmin.local -q "ktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/admin kadmin/changepw" && success || fail
+		echo
+	    fi
+	fi
+	echo -n "Starting Kerberos 5 Admin Server"
+	daemon /usr/kerberos/sbin/kadmind
+	RETVAL=$?
+	echo
+	[ $RETVAL = 0 ] && touch /var/lock/subsys/kadmin
+}
+stop() {
+	echo -n "Stopping Kerberos 5 Admin Server"
+	killproc kadmind
+	RETVAL=$?
+	echo
+	[ $RETVAL = 0 ] && rm -f /var/lock/subsys/kadmin
+}
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  restart)
+	stop
+	start
+	;;
+  status)
+	status kadmind
+	;;
+  condrestart)
+	if [ -f /var/lock/subsys/kadmin ] ; then
+		stop
+		start
+	fi
+	;;
+  *)
+	echo "Usage: $0 {start|stop|status|condrestart|restart}"
+	RETVAL=1
+	;;
+esac
+
+exit $RETVAL

@@ -1,0 +1,1 @@
+/usr/kerberos/bin/rlogin -x $*
