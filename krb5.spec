@@ -4,7 +4,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.2.5
-Release: 7
+Release: 15
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -25,6 +25,8 @@ Source16: kshell.xinetd
 Source17: krb5-telnet.xinetd
 Source18: gssftp.xinetd
 Source19: statglue.c
+Source20: http://web.mit.edu/kerberos/www/advisories/2003-004-krb4_patchkit.tar.gz
+Source21: http://web.mit.edu/kerberos/www/advisories/2003-004-krb4_patchkit.sig
 Patch0: krb5-1.1-db.patch
 Patch1: krb5-1.1.1-tiocgltc.patch
 Patch2: krb5-1.1.1-libpty.patch
@@ -51,6 +53,15 @@ Patch23: krb5-1.2.2-size.patch
 Patch24: krb5-1.2.5-db2-configure.patch
 Patch25: http://web.mit.edu/kerberos/www/advisories/2002-001-xdr_array_patch.txt
 Patch26: http://web.mit.edu/kerberos/www/advisories/MITKRB5-SA-2002-002-kadm4.txt
+Patch27: gssftp-patch
+Patch28: krb5-1.2.6-dnsparse.patch
+Patch29: krb5-1.2.7-errno.patch
+Patch31: krb5-1.2.7-reject-bad-transited.patch
+Patch32: krb5-crawford.patch
+Patch33: krb5-1.2.5-princ_size.patch
+Patch34: krb5-1.2.7-underrun.patch
+Patch35: http://web.mit.edu/kerberos/www/advisories/MITKRB5-SA-2003-003-xdr.txt
+Patch36: krb5-1.2.2-krb524-double-free.patch
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -112,6 +123,38 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Fri Mar 21 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-15
+- fix double-free of enc_part2 in krb524d
+- update to latest patch kit for MITKRB5-SA-2003-004
+
+* Wed Mar 19 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-14
+- add patch included in MITKRB5-SA-2003-003 (CAN-2003-0028)
+
+* Mon Mar 17 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-13
+- add patches from patchkit from MITKRB5-SA-2003-004 (CAN-2003-0138 and
+  CAN-2003-0139)
+
+* Thu Mar  6 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-12
+- fix buffer underrun in unparsing certain principals (CAN-2003-0082)
+
+* Wed Feb 26 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-11
+- add patch to fix server-side crashes when principals have no
+  components (CAN-2003-0072)
+
+* Mon Feb 24 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-10
+- add patch from Matt Crawford for encoding transited realms properly
+
+* Wed Feb  5 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-9
+- sync compiler flags for configure and make with other versions
+
+* Tue Feb  4 2003 Nalin Dahyabhai <nalin@redhat.com>
+- add patch to document the reject-bad-transited option in kdc.conf
+
+* Thu Jan 23 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-8
+- add patch from Mark Cox for exploitable bugs in ftp client
+- add patch to avoid buffer read overruns when configuring via DNS
+- add patch to properly include <errno.h>
+
 * Wed Oct 23 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-7
 - add patch from Tom Yu for exploitable bugs in kadmind4
 - remove raw keys from the default kdc.conf
@@ -479,7 +522,7 @@ workstation.
 - added --force to makeinfo commands to skip errors during build
 
 %prep
-%setup -q
+%setup -q -a 20
 %patch0  -p0 -b .db
 %patch1  -p0 -b .tciogltc
 %patch2  -p0 -b .libpty
@@ -512,6 +555,18 @@ popd
 pushd src/kadmin/v4server
 %patch26 -p0 -b .kadmind
 popd
+%patch27 -p1 -b .gssftp-patch
+%patch28 -p1 -b .dnsparse
+%patch29 -p1 -b .errno
+%patch31 -p1 -b .reject-bad-transit
+%patch32 -p1 -b .crawford
+%patch33 -p1 -b .princ_size
+%patch34 -p1 -b .underrun
+patch -sp0 -b -z .2003-004-krb4 < 2003-004-krb4_patchkit/patch.1.2.0
+pushd src/lib/rpc
+%patch35 -p0 -b .2003-003
+popd
+%patch36 -p1 -b .double-free
 
 (cd src/util/db2; autoconf )
 %if %{statglue}
