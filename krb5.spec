@@ -7,7 +7,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.4
-Release: 1
+Release: 2
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.4/krb5-1.4-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -126,9 +126,8 @@ workstation.
 
 %changelog
 # - XXX krb5_init_ets is gone now, what to do?
-* Tue Mar 15 2005 Nalin Dahyabhai <nalin@redhat.com>
-- use libncurses instead of libtermcap for the telnet client, because it
-  provides setupterm(), which we can use instead of the internal version
+* Wed Mar 16 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4-2
+- don't include <term.h> into the telnet client when we're not using curses
 
 * Thu Feb 24 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4-1
 - update to 1.4
