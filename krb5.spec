@@ -4,7 +4,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.2.7
-Release: 12
+Release: 13
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -57,8 +57,7 @@ Patch27: gssftp-patch
 Patch28: krb5-1.2.7-princ_size.patch
 Patch29: krb5-1.2.7-reject-bad-transited.patch
 Patch30: krb5-1.2.7-underrun.patch
-Patch31: krb5-2003-004-krb4_patchkit-1.2.7.patch
-Patch32: http://web.mit.edu/kerberos/www/advisories/MITKRB5-SA-2003-003-xdr.txt
+Patch31: http://web.mit.edu/kerberos/www/advisories/MITKRB5-SA-2003-003-xdr.txt
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -120,12 +119,15 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Fri Mar 21 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.7-13
+- update to latest patch kit for MITKRB5-SA-2003-004
+
 * Wed Mar 19 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.7-12
 - add patch included in MITKRB5-SA-2003-003 (CAN-2003-0028)
 
 * Mon Mar 17 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.7-11
-- add patches from patchkit from MITKRB5-SA-2003-004 (CAN-2003-0157 and
-  CAN-2003-0158)
+- add patches from patchkit from MITKRB5-SA-2003-004 (CAN-2003-0138 and
+  CAN-2003-0139)
 
 * Thu Mar  6 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.7-10
 - rebuild
@@ -591,12 +593,11 @@ workstation.
 %patch28 -p1 -b .princ_size.patch
 %patch29 -p1 -b .reject-bad-transited.patch
 %patch30 -p1 -b .underrun
-%patch31 -p0 -b .1.2.7
 pushd src
 patch -sp0 -b -z .2003-004-krb4 < ../2003-004-krb4_patchkit/patch.1.2.7
 popd
 pushd src/lib/rpc
-%patch32 -p0 -b .2003-003
+%patch31 -p0 -b .2003-003
 popd
 
 cp src/krb524/README README.krb524
