@@ -4,7 +4,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.2.5
-Release: 5
+Release: 6
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -49,6 +49,7 @@ Patch21: http://lite.mit.edu/krb5-1.2.2-ktany.patch
 Patch22: krb5-1.2.2-logauth.patch
 Patch23: krb5-1.2.2-size.patch
 Patch24: krb5-1.2.5-db2-configure.patch
+Patch25: http://web.mit.edu/kerberos/www/advisories/2002-001-xdr_array_patch.txt
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -110,6 +111,9 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Fri Aug  2 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-6
+- add patch from Tom Yu for exploitable bugs in rpc code used in kadmind
+
 * Tue Jul 23 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.5-5
 - fix bug in krb5.csh which would cause the path check to always succeed
 
@@ -497,6 +501,9 @@ workstation.
 %patch22 -p1 -b .logauth
 %patch23 -p1 -b .size
 %patch24 -p1 -b .db2-configure
+pushd src/lib/rpc
+%patch25 -p0 -b .xdr
+popd
 
 (cd src/util/db2; autoconf )
 %if %{statglue}
