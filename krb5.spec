@@ -1107,6 +1107,7 @@ fi
 %doc doc/kadmin
 %doc doc/krb5-protocol
 %doc doc/rpc
+%doc doc/threads.txt
 
 %dir %{krb5prefix}
 %dir %{krb5prefix}/bin
