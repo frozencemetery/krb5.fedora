@@ -7,7 +7,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.3.5
-Release: 6
+Release: 7
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/www/dist/krb5/1.3/krb5-1.3.5.tar
 Source0: krb5-%{version}.tar.gz
@@ -57,6 +57,7 @@ Patch27: krb5-1.3.3-rcp-sendlarge.patch
 Patch28: krb5-1.3.5-gethostbyname_r.patch
 Patch29: krb5-1.3.5-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
+Patch31: krb5-1.3.5-krsh-deadlock.patch
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -121,6 +122,10 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Fri Dec 20 2004 Martin Stransky <stransky@redhat.com> 1.3.5-7
+- fix deadlock during file transfer via rsync/krsh
+- thanks goes to James Antil for hint
+
 * Fri Nov 26 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.5-6
 - rebuild
 
@@ -765,6 +770,7 @@ workstation.
 %patch28 -p1 -b .gethostbyname_r
 %patch29 -p1 -b .kprop-mktemp
 %patch30 -p1 -b .-send-pr-tempfile
+%patch31 -p1 -b .krsh-deadlock
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
