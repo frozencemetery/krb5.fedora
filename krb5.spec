@@ -3,8 +3,8 @@
 
 Summary: The Kerberos network authentication system.
 Name: krb5
-Version: 1.2.3
-Release: 5
+Version: 1.2.4
+Release: 1
 Source0: krb5-%{version}.tar.gz
 Source1: kpropd.init
 Source2: krb524d.init
@@ -108,6 +108,9 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Fri Mar  1 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.4-1
+- update to 1.2.4
+
 * Wed Feb 20 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.3-5
 - rebuild in new environment
 - reenable statglue
