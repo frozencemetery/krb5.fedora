@@ -7,7 +7,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.3.3
-Release: 1
+Release: 3
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/www/dist/krb5/1.3/krb5-1.3.2.tar
 Source0: krb5-%{version}.tar.gz
@@ -43,7 +43,7 @@ Patch12: krb5-1.3-ktany.patch
 Patch13: krb5-1.3-large-file.patch
 Patch14: krb5-1.3-ftp-glob.patch
 Patch15: krb5-1.3-check.patch
-Patch16: krb5-1.3-no-rpath.patch
+Patch16: krb5-1.3.3-no-rpath.patch
 Patch17: krb5-1.3-pass-by-address.patch
 Patch18: krb5-1.2.7-reject-bad-transited.patch
 Patch19: krb5-1.2.7-krb524d-double-free.patch
@@ -54,6 +54,7 @@ Patch23: krb5-1.3.1-dns.patch
 Patch24: krb5-1.3.1-server-sort.patch
 Patch25: krb5-1.3.1-null.patch
 Patch26: krb5-1.3.2-efence.patch
+Patch27: krb5-1.3.3-rcp-sendlarge.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -117,6 +118,14 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Wed May 12 2004 Thomas Woerner <twoerner@redhat.com> 1.3.3-3
+- removed rpath
+
+* Thu Apr 15 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.3-2
+- re-enable large file support, fell out in 1.3-1
+- patch rcp to use long long and %%lld format specifiers when reporting file
+  sizes on large files
+
 * Tue Apr 13 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.3-1
 - update to 1.3.3
 
@@ -679,6 +688,7 @@ workstation.
 %patch25 -p1 -b .null
 # Removes a malloc(0) case, nothing more.
 # %patch26 -p1 -b .efence
+%patch27 -p1 -b .rcp-sendlarge
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
@@ -693,6 +703,10 @@ done
 %build
 cd src
 INCLUDES=-I%{_includedir}/et
+# Get LFS support on systems that need it which aren't already 64-bit.
+%ifarch %{ix86} s390 ppc sparc
+DEFINES="-D_FILE_OFFSET_BITS=64" ; export DEFINES
+%endif
 CFLAGS="`echo $RPM_OPT_FLAGS $ARCH_OPT_FLAGS $DEFINES $INCLUDES -fPIC`"
 %configure \
 	CC=%{__cc} \
