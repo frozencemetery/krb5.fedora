@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # kadmind      Start and stop the Kerberos 5 administrative server.
 #
@@ -30,19 +30,19 @@ start() {
 	    exit 0
 	else
   	    if [ ! -f /var/kerberos/krb5kdc/kadm5.keytab ] ; then
-		echo "Extracting kadm5 Service Keys"
+		echo -n $"Extracting kadm5 Service Keys: "
 		/usr/kerberos/sbin/kadmin.local -q "ktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/admin kadmin/changepw" && success || fail
 		echo
 	    fi
 	fi
-	echo -n "Starting Kerberos 5 Admin Server"
+	echo -n $"Starting Kerberos 5 Admin Server: "
 	daemon /usr/kerberos/sbin/kadmind
 	RETVAL=$?
 	echo
 	[ $RETVAL = 0 ] && touch /var/lock/subsys/kadmin
 }
 stop() {
-	echo -n "Stopping Kerberos 5 Admin Server"
+	echo -n $"Stopping Kerberos 5 Admin Server: "
 	killproc kadmind
 	RETVAL=$?
 	echo
@@ -71,7 +71,7 @@ case "$1" in
 	fi
 	;;
   *)
-	echo "Usage: $0 {start|stop|status|condrestart|restart}"
+	echo $"Usage: $0 {start|stop|status|condrestart|restart}"
 	RETVAL=1
 	;;
 esac

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # kpropd.init  Start and stop the Kerberos 5 propagation client.
 #
@@ -22,19 +22,17 @@ RETVAL=0
 
 # Sheel functions to cut down on useless shell instances.
 start() {
-  	if [ ! -f /var/kerberos/krb5kdc/principal ] ; then
-	    exit 0
-	fi
   	if [ ! -f /var/kerberos/krb5kdc/kpropd.acl ] ; then
 	    exit 0
 	fi
-	echo -n "Starting Kerberos 5 Propagation Server:"
+	echo -n $"Starting Kerberos 5 Propagation Server: "
 	daemon /usr/kerberos/sbin/kpropd -S
 	RETVAL=$?
+	echo
 	[ $RETVAL = 0 ] && touch /var/lock/subsys/kprop
 }
 stop() {
-	echo -n "Stopping Kerberos 5 Propagation Server:"
+	echo -n $"Stopping Kerberos 5 Propagation Server: "
 	killproc kpropd
 	RETVAL=$?
 	echo
@@ -63,7 +61,7 @@ case "$1" in
 	fi
 	;;
   *)
-	echo "Usage: $0 {start|stop|status|restart|condrestart}"
+	echo $"Usage: $0 {start|stop|status|restart|condrestart}"
 	RETVAL=1
 	;;
 esac

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # krb5kdc      Start and stop the Kerberos 5 servers.
 #
@@ -25,14 +25,14 @@ start() {
   	if [ ! -f /var/kerberos/krb5kdc/principal ] ; then
 	    exit 0
 	fi
-	echo -n "Starting Kerberos 5 KDC:"
+	echo -n $"Starting Kerberos 5 KDC: "
 	daemon /usr/kerberos/sbin/krb5kdc
 	RETVAL=$?
 	echo
 	[ $RETVAL = 0 ] && touch /var/lock/subsys/krb5kdc
 }
 stop() {
-	echo -n "Stopping Kerberos 5 KDC:"
+	echo -n $"Stopping Kerberos 5 KDC: "
 	killproc krb5kdc
 	RETVAL=$?
 	echo
@@ -61,7 +61,7 @@ case "$1" in
 	fi
 	;;
   *)
-	echo "Usage: $0 {start|stop|status|restart|condrestart}"
+	echo $"Usage: $0 {start|stop|status|restart|condrestart}"
 	RETVAL=1
 	;;
 esac

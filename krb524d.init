@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # krb524       Start and stop the krb524 service.
 #
@@ -25,14 +25,14 @@ start() {
   	if [ ! -f /var/kerberos/krb5kdc/principal ] ; then
 	    exit 0
 	fi
-	echo -n "Starting Kerberos 5-to-4 Server:"
+	echo -n $"Starting Kerberos 5-to-4 Server: "
 	daemon /usr/kerberos/sbin/krb524d -m
 	RETVAL=$?
 	echo
 	[ $RETVAL = 0 ] && touch /var/lock/subsys/krb524
 }
 stop() {
-	echo -n "Stopping Kerberos 5-to-4 Server:"
+	echo -n $"Stopping Kerberos 5-to-4 Server: "
 	killproc krb524d
 	RETVAL=$?
 	echo
@@ -61,7 +61,7 @@ case "$1" in
 	fi
 	;;
   *)
-	echo "Usage: $0 {start|stop|status|restart|condrestart}"
+	echo $"Usage: $0 {start|stop|status|restart|condrestart}"
 	RETVAL=1
 	;;
 esac

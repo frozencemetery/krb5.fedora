@@ -2,9 +2,9 @@
 
 Summary: The Kerberos network authentication system.
 Name: krb5
-Version: 1.2.1
-Release: 8
-Source0: krb5-%{version}.tar
+Version: 1.2.2
+Release: 4
+Source0: krb5-%{version}.tar.gz
 Source1: kpropd.init
 Source2: krb524d.init
 Source3: kadmind.init
@@ -23,6 +23,7 @@ Source15: kshell.xinetd
 Source16: krb5-telnet.xinetd
 Source17: gssftp.xinetd
 Source18: krb5server.init
+Source19: statglue.c
 Patch0: krb5-1.1-db.patch
 Patch1: krb5-1.1.1-tiocgltc.patch
 Patch2: krb5-1.1.1-libpty.patch
@@ -38,12 +39,16 @@ Patch11: krb5-1.1.1-brokenrev.patch
 Patch12: krb5-1.2-spelling.patch
 Patch13: krb5-1.2.1-term.patch
 Patch14: krb5-1.2.1-passive.patch
+Patch15: krb5-1.2.1-forward.patch
+Patch16: krb5-1.2.1-heap.patch
+Patch17: krb5-1.2.2-wragg.patch
+Patch18: krb5-1.2.2-statglue.patch
 Copyright: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-root
 Prereq: grep, info, sh-utils, /sbin/install-info
-BuildPrereq: e2fsprogs-devel, gzip, rsh, tcl, texinfo, tar
+BuildPrereq: bison, e2fsprogs-devel, flex, gzip, libtermcap-devel, rsh, texinfo, tar, tcl
 
 %description
 Kerberos V5 is a trusted-third-party network authentication system,
@@ -65,6 +70,7 @@ need to install this package.
 Summary: The shared libraries used by Kerberos 5.
 Group: System Environment/Libraries
 Prereq: grep, /sbin/ldconfig, sh-utils
+Obsoletes: krb5-configs
 
 %description libs
 Kerberos is a network authentication system.  The krb5-libs package
@@ -75,7 +81,7 @@ Kerberos, you'll need to install this package.
 Group: System Environment/Daemons
 Summary: The server programs for Kerberos 5.
 Requires: %{name}-libs = %{version}, %{name}-workstation = %{version}
-Prereq: grep, /sbin/install-info, /bin/sh, sh-utils, /etc/init.d
+Prereq: grep, /sbin/install-info, /bin/sh, sh-utils
 
 %description server
 Kerberos is a network authentication system.  The krb5-server package
@@ -98,6 +104,66 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Fri Mar 30 2001 Nalin Dahyabhai <nalin@redhat.com>
+- add in glue code to make sure that libkrb5 continues to provide a
+  weak copy of stat()
+
+* Thu Mar 15 2001 Nalin Dahyabhai <nalin@redhat.com>
+- build alpha with -O0 for now
+
+* Thu Mar  8 2001 Nalin Dahyabhai <nalin@redhat.com>
+- fix the kpropd init script
+
+* Mon Mar  5 2001 Nalin Dahyabhai <nalin@redhat.com>
+- update to 1.2.2, which fixes some bugs relating to empty ETYPE-INFO
+- re-enable optimization on Alpha
+
+* Thu Feb  8 2001 Nalin Dahyabhai <nalin@redhat.com>
+- build alpha with -O0 for now
+- own %{_var}/kerberos
+
+* Tue Feb  6 2001 Nalin Dahyabhai <nalin@redhat.com>
+- own the directories which are created for each package (#26342)
+
+* Tue Jan 23 2001 Nalin Dahyabhai <nalin@redhat.com>
+- gettextize init scripts
+
+* Fri Jan 19 2001 Nalin Dahyabhai <nalin@redhat.com>
+- add some comments to the ksu patches for the curious
+- re-enable optimization on alphas
+
+* Mon Jan 15 2001 Nalin Dahyabhai <nalin@redhat.com>
+- fix krb5-send-pr (#18932) and move it from -server to -workstation
+- buildprereq libtermcap-devel
+- temporariliy disable optimization on alphas
+- gettextize init scripts
+
+* Tue Dec  5 2000 Nalin Dahyabhai <nalin@redhat.com>
+- force -fPIC
+
+* Fri Dec  1 2000 Nalin Dahyabhai <nalin@redhat.com>
+- rebuild in new environment
+
+* Tue Oct 31 2000 Nalin Dahyabhai <nalin@redhat.com>
+- add bison as a BuildPrereq (#20091)
+
+* Mon Oct 30 2000 Nalin Dahyabhai <nalin@redhat.com>
+- change /usr/dict/words to /usr/share/dict/words in default kdc.conf (#20000)
+
+* Thu Oct  5 2000 Nalin Dahyabhai <nalin@redhat.com>
+- apply kpasswd bug fixes from David Wragg
+
+* Wed Oct  4 2000 Nalin Dahyabhai <nalin@redhat.com>
+- make krb5-libs obsolete the old krb5-configs package (#18351)
+- don't quit from the kpropd init script if there's no principal database so
+  that you can propagate the first time without running kpropd manually
+- don't complain if /etc/ld.so.conf doesn't exist in the -libs %post
+
+* Tue Sep 12 2000 Nalin Dahyabhai <nalin@redhat.com>
+- fix credential forwarding problem in klogind (goof in KRB5CCNAME handling)
+  (#11588)
+- fix heap corruption bug in FTP client (#14301)
+
 * Wed Aug 16 2000 Nalin Dahyabhai <nalin@redhat.com>
 - fix summaries and descriptions
 - switched the default transfer protocol from PORT to PASV as proposed on
@@ -194,7 +260,8 @@ workstation.
 - fix config_subpackage logic
 
 * Tue May 16 2000 Nalin Dahyabhai <nalin@redhat.com>
-- remove setuid bit on v4rcp and ksu
+- remove setuid bit on v4rcp and ksu in case the checks previously added
+  don't close all of the problems in ksu
 - apply patches from Jeffrey Schiller to fix overruns Chris Evans found
 - reintroduce configs subpackage for use in the errata
 - add PreReq: sh-utils
@@ -306,10 +373,7 @@ workstation.
 - added --force to makeinfo commands to skip errors during build
 
 %prep
-%setup -q -c
-gzip -dc krb5-%{version}.src.tar.gz | tar -xf - -C ..
-gzip -dc krb5-%{version}.crypto.tar.gz | tar -xf - -C ..
-gzip -dc krb5-%{version}.doc.tar.gz | tar -xf - -C ..
+%setup -q
 %patch0  -p0 -b .db
 %patch1  -p0 -b .tciogltc
 %patch2  -p0 -b .libpty
@@ -325,18 +389,24 @@ gzip -dc krb5-%{version}.doc.tar.gz | tar -xf - -C ..
 %patch12 -p1 -b .spelling
 %patch13 -p1 -b .term
 %patch14 -p1 -b .passive
+%patch15 -p1 -b .forward
+%patch16 -p1 -b .heap
+%patch17 -p1 -b .wragg
+%patch18 -p1 -b .statglue
+cp $RPM_SOURCE_DIR/statglue.c src/util/profile/statglue.c
 find . -type f -name "*.fixinfo" -exec rm -fv "{}" ";"
 gzip doc/*.ps
 
 %build
 cd src
 libtoolize --copy --force
-cp config.{guess,sub} config
+cp config.{guess,sub} config/
 
 # Can't use %%configure because we don't use the default mandir.
 LDCOMBINE_TAIL="-lc"; export LDCOMBINE_TAIL
 ./configure \
-	--with-cc=%{__cc} --with-ccopts="-ggdb" \
+	--with-cc=%{__cc} \
+	--with-ccopts="$RPM_OPT_FLAGS -fPIC" \
 	--enable-shared --enable-static \
 	--prefix=%{prefix} \
 	--infodir=%{_infodir} \
@@ -348,7 +418,8 @@ LDCOMBINE_TAIL="-lc"; export LDCOMBINE_TAIL
 	%{_target_platform}
 make
 
-# Run the test suite.
+# Run the test suite.  Won't run in the build system because /dev/pts is
+# not available for telnet tests and so on.
 # make check TMPDIR=%{_tmppath}
 
 %install
@@ -413,8 +484,11 @@ done
 strip $RPM_BUILD_ROOT%{prefix}/bin/* $RPM_BUILD_ROOT%{prefix}/sbin/* || :
 strip -g $RPM_BUILD_ROOT%{prefix}/lib/lib* || :
 
+%clean
+[ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
+
 %post libs
-grep -q %{prefix}/lib /etc/ld.so.conf || echo %{prefix}/lib >> /etc/ld.so.conf
+grep -q %{prefix}/lib /etc/ld.so.conf 2> /dev/null || echo %{prefix}/lib >> /etc/ld.so.conf
 /sbin/ldconfig
 
 %postun libs -p /sbin/ldconfig
@@ -478,6 +552,15 @@ fi
 %doc doc/user*.html doc/user*.ps.gz src/config-files/services.append
 %attr(0755,root,root) %doc src/config-files/convert-config-files
 %{_infodir}/krb5-user.info*
+
+%dir %{prefix}
+%dir %{prefix}/bin
+%dir %{prefix}/man
+%dir %{prefix}/man/man1
+%dir %{prefix}/man/man5
+%dir %{prefix}/man/man8
+%dir %{prefix}/sbin
+
 %{prefix}/bin/ftp
 %{prefix}/man/man1/ftp.1*
 %{prefix}/bin/gss-client
@@ -523,6 +606,8 @@ fi
 %{prefix}/sbin/gss-server
 %{prefix}/sbin/klogind
 %{prefix}/man/man8/klogind.8*
+%{prefix}/sbin/krb5-send-pr
+%{prefix}/man/man1/krb5-send-pr.1*
 %{prefix}/sbin/kshd
 %{prefix}/man/man8/kshd.8*
 %{prefix}/sbin/telnetd
@@ -547,9 +632,17 @@ fi
 %{_infodir}/krb5-install.info*
 %{_infodir}/krb425.info*
 
+%dir %{_var}/kerberos
 %dir %{_var}/kerberos/krb5kdc
 %config(noreplace) %{_var}/kerberos/krb5kdc/kdc.conf
 %config(noreplace) %{_var}/kerberos/krb5kdc/kadm5.acl
+
+%dir %{prefix}/bin
+%dir %{prefix}/man
+%dir %{prefix}/man/man1
+%dir %{prefix}/man/man5
+%dir %{prefix}/man/man8
+%dir %{prefix}/sbin
 
 %{prefix}/man/man5/kdc.conf.5*
 %{prefix}/sbin/kadmin.local
@@ -563,8 +656,6 @@ fi
 %{prefix}/man/man8/kprop.8*
 %{prefix}/sbin/kpropd
 %{prefix}/man/man8/kpropd.8*
-%{prefix}/sbin/krb5-send-pr
-%{prefix}/man/man1/krb5-send-pr.1*
 %{prefix}/sbin/krb524d
 %{prefix}/sbin/krb5kdc
 %{prefix}/man/man8/krb5kdc.8*
@@ -579,9 +670,12 @@ fi
 
 %files libs
 %defattr(-,root,root)
-%{prefix}/lib/lib*.so.*.*
 %config /etc/rc.d/init.d/kdcrotate
 %config(noreplace) /etc/krb5.conf
+%dir %{prefix}
+%dir %{prefix}/lib
+%{prefix}/lib/lib*.so.*.*
+%{prefix}/share
 
 %files devel
 %defattr(-,root,root)
@@ -592,12 +686,19 @@ fi
 %doc doc/krb5-protocol
 %doc doc/rpc
 %{prefix}/include
+
+%dir %{prefix}
+%dir %{prefix}/bin
+%dir %{prefix}/lib
+%dir %{prefix}/man
+%dir %{prefix}/man/man1
+%dir %{prefix}/man/man8
+%dir %{prefix}/sbin
+
 %{prefix}/lib/lib*.a
 %{prefix}/lib/lib*.so
+
 %{prefix}/bin/sclient
 %{prefix}/man/man1/sclient.1*
-%{prefix}/sbin/sserver
 %{prefix}/man/man8/sserver.8*
-
-%clean
-[ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
+%{prefix}/sbin/sserver
