@@ -7,7 +7,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.3.5
-Release: 3
+Release: 4
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/www/dist/krb5/1.3/krb5-1.3.5.tar
 Source0: krb5-%{version}.tar.gz
@@ -121,6 +121,9 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Fri Nov 26 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.5-4
+- rebuild
+
 * Mon Nov 22 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.5-3
 - fix predictable-tempfile-name bug in krb5-send-pr (CAN-2004-0971, #140036)
 
