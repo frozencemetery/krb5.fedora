@@ -33,7 +33,7 @@ start() {
 	else
   	    if [ ! -f /var/kerberos/krb5kdc/kadm5.keytab ] ; then
 		echo -n $"Extracting kadm5 Service Keys: "
-		/usr/kerberos/sbin/kadmin.local -q "ktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/admin kadmin/changepw" && success || fail
+		/usr/kerberos/sbin/kadmin.local -q "ktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/admin kadmin/changepw" && success || failure
 		echo
 	    fi
 	fi

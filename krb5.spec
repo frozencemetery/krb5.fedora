@@ -6,10 +6,10 @@
 
 Summary: The Kerberos network authentication system.
 Name: krb5
-Version: 1.3.4
-Release: 7
+Version: 1.3.5
+Release: 1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/www/dist/krb5/1.3/krb5-1.3.4.tar
+# http://web.mit.edu/kerberos/www/dist/krb5/1.3/krb5-1.3.5.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -54,8 +54,6 @@ Patch24: krb5-1.3.1-server-sort.patch
 Patch25: krb5-1.3.1-null.patch
 Patch26: krb5-1.3.2-efence.patch
 Patch27: krb5-1.3.3-rcp-sendlarge.patch
-Patch28: http://web.mit.edu/kerberos/advisories/2004-002-dblfree_patch.txt
-Patch29: http://web.mit.edu/kerberos/advisories/2004-003-patch_1.3.4.txt
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -118,6 +116,15 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Mon Sep 13 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.5-1
+- rebuild
+
+* Fri Sep 10 2004 Nalin Dahyabhai <nalin@redhat.com>
+- update to 1.3.5 final
+
+* Wed Sep  8 2004 Nalin Dahyabhai <nalin@redhat.com>
+- update to 1.3.5 beta 1
+
 * Tue Aug 31 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.4-7
 - rebuild
 
@@ -722,8 +729,6 @@ workstation.
 # Hopefully no longer needed to work around compiler bug.
 # %patch17 -p1 -b .pass-by-address
 %patch18 -p1 -b .reject-bad-transited
-# Obsoleted by 2004-002-dblfree_patch, below.
-# %patch19 -p1 -b .double-free
 %patch20 -p1 -b .varargs
 %if %{WITH_SELINUX}
 %patch21 -p1 -b .selinux
@@ -736,8 +741,6 @@ workstation.
 # Removes a malloc(0) case, nothing more.
 # %patch26 -p1 -b .efence
 %patch27 -p1 -b .rcp-sendlarge
-%patch28 -p0 -b .dblfree-2004-002
-%patch29 -p0 -b .asn1buf-2004-003
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
