@@ -4,7 +4,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.2.4
-Release: 3
+Release: 4
 Source0: krb5-%{version}.tar.gz
 Source1: kpropd.init
 Source2: krb524d.init
@@ -49,6 +49,9 @@ Patch22: krb5-1.2.2-logauth.patch
 Patch23: krb5-1.2.2-size.patch
 Patch24: http://web.mit.edu/kerberos/www/advisories/2002-001-xdr_array_patch.txt
 Patch25: http://web.mit.edu/kerberos/www/advisories/MITKRB5-SA-2002-002-kadm4.txt
+Patch26: gssftp-patch
+Patch27: krb5-1.2.6-dnsparse.patch
+Patch28: krb5-1.2.7-errno.patch
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -110,6 +113,11 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Thu Jan 23 2003 Nalin Dahyabhai <nalin@redhat.com> 1.2.4-4
+- add patch from Mark Cox for exploitable bugs in ftp client
+- add patch to avoid buffer read overruns when configuring via DNS
+- add patch to properly include <errno.h>
+
 * Wed Oct 23 2002 Nalin Dahyabhai <nalin@redhat.com> 1.2.4-3
 - add patch from Tom Yu for exploitable bugs in kadmind4
 - remove raw keys from the default kdc.conf
@@ -493,6 +501,9 @@ popd
 pushd src/kadmin/v4server
 %patch25 -p0 -b .kadmind
 popd
+%patch26 -p1 -b .gssftp-patch
+%patch27 -p1 -b .dnsparse
+%patch28 -p1 -b .errno
 %if %{statglue}
 cp $RPM_SOURCE_DIR/statglue.c src/util/profile/statglue.c
 %endif
