@@ -19,21 +19,23 @@
 . /etc/rc.d/init.d/functions
 
 RETVAL=0
+prog="Kerberos 5-to-4 Server"
+krb524d=/usr/kerberos/sbin/krb524d
 
 # Sheel functions to cut down on useless shell instances.
 start() {
   	if [ ! -f /var/kerberos/krb5kdc/principal ] ; then
 	    exit 0
 	fi
-	echo -n $"Starting Kerberos 5-to-4 Server: "
-	daemon /usr/kerberos/sbin/krb524d -m
+	echo -n $"Starting $prog: "
+	daemon ${krb524d} -m
 	RETVAL=$?
 	echo
 	[ $RETVAL = 0 ] && touch /var/lock/subsys/krb524
 }
 stop() {
-	echo -n $"Stopping Kerberos 5-to-4 Server: "
-	killproc krb524d
+	echo -n $"Stopping $prog: "
+	killproc ${krb524d}
 	RETVAL=$?
 	echo
 	[ $RETVAL = 0 ] && rm -f /var/lock/subsys/krb524
@@ -52,7 +54,7 @@ case "$1" in
 	start
 	;;
   status)
-	status krb524d
+	status ${krb524d}
 	;;
   condrestart)
 	if [ -f /var/lock/subsys/krb524 ] ; then

@@ -19,24 +19,32 @@
 . /etc/rc.d/init.d/functions
 
 RETVAL=0
+prog="Kerberos 5 KDC"
+krb5kdc=/usr/kerberos/sbin/krb5kdc
 
 # Sheel functions to cut down on useless shell instances.
 start() {
   	if [ ! -f /var/kerberos/krb5kdc/principal ] ; then
 	    exit 0
 	fi
-	echo -n $"Starting Kerberos 5 KDC: "
-	daemon /usr/kerberos/sbin/krb5kdc
+	echo -n $"Starting $prog: "
+	daemon ${krb5kdc}
 	RETVAL=$?
 	echo
 	[ $RETVAL = 0 ] && touch /var/lock/subsys/krb5kdc
 }
 stop() {
-	echo -n $"Stopping Kerberos 5 KDC: "
-	killproc krb5kdc
+	echo -n $"Stopping $prog: "
+	killproc ${krb5kdc}
 	RETVAL=$?
 	echo
 	[ $RETVAL = 0 ] && rm -f /var/lock/subsys/krb5kdc
+}
+reload() {
+	echo -n $"Reopening $prog log file: "
+	killproc ${krb5kdc} -HUP
+        RETVAL=$?
+	echo
 }
 
 # See how we were called.
@@ -51,8 +59,12 @@ case "$1" in
 	stop
 	start
 	;;
+  reload)
+        reload
+        ;;
   status)
-	status krb5kdc
+	status ${krb5kdc}
+        RETVAL=$?
 	;;
   condrestart)
 	if [ -f /var/lock/subsys/krb5kdc ] ; then
@@ -61,7 +73,7 @@ case "$1" in
 	fi
 	;;
   *)
-	echo $"Usage: $0 {start|stop|status|restart|condrestart}"
+	echo $"Usage: $0 {start|stop|status|reload|restart|condrestart}"
 	RETVAL=1
 	;;
 esac

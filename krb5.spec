@@ -3,7 +3,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.2.2
-Release: 7
+Release: 11
 Source0: krb5-%{version}.tar.gz
 Source1: kpropd.init
 Source2: krb524d.init
@@ -22,7 +22,6 @@ Source14: klogin.xinetd
 Source15: kshell.xinetd
 Source16: krb5-telnet.xinetd
 Source17: gssftp.xinetd
-Source18: krb5server.init
 Source19: statglue.c
 Patch0: krb5-1.1-db.patch
 Patch1: krb5-1.1.1-tiocgltc.patch
@@ -45,7 +44,10 @@ Patch17: krb5-1.2.2-wragg.patch
 Patch18: krb5-1.2.2-statglue.patch
 Patch19: http://web.mit.edu/kerberos/www/advisories/ftpbuf_122_patch.txt
 Patch20: krb5-1.2.2-by-address.patch
-Copyright: MIT, freely distributable.
+Patch21: http://lite.mit.edu/krb5-1.2.2-ktany.patch
+Patch22: krb5-1.2.2-logauth.patch
+Patch23: krb5-1.2.2-size.patch
+License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-root
@@ -60,7 +62,7 @@ practice of cleartext passwords.
 %package devel
 Summary: Development files needed for compiling Kerberos 5 programs.
 Group: Development/Libraries
-Requires: %{name}-libs = %{version}
+Requires: %{name}-libs = %{version}-%{release}
 
 %description devel
 Kerberos is a network authentication system.  The krb5-devel package
@@ -82,7 +84,7 @@ Kerberos, you'll need to install this package.
 %package server
 Group: System Environment/Daemons
 Summary: The server programs for Kerberos 5.
-Requires: %{name}-libs = %{version}, %{name}-workstation = %{version}
+Requires: %{name}-libs = %{version}-%{release}, %{name}-workstation = %{version}-%{release}
 Prereq: grep, /sbin/install-info, /bin/sh, sh-utils
 
 %description server
@@ -95,7 +97,7 @@ package).
 %package workstation
 Summary: Kerberos 5 programs for use on workstations.
 Group: System Environment/Base
-Requires: %{name}-libs = %{version}
+Requires: %{name}-libs = %{version}-%{release}
 Prereq: grep, /sbin/install-info, /bin/sh, sh-utils
 
 %description workstation
@@ -106,6 +108,27 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Fri Jul 20 2001 Nalin Dahyabhai <nalin@redhat.com>
+- tweak statglue.c to fix stat/stat64 aliasing problems
+- be cleaner in use of gcc to build shlibs
+
+* Wed Jul 11 2001 Nalin Dahyabhai <nalin@redhat.com>
+- use gcc to build shared libraries
+
+* Wed Jun 27 2001 Nalin Dahyabhai <nalin@redhat.com>
+- add patch to support "ANY" keytab type (i.e.,
+  "default_keytab_name = ANY:FILE:/etc/krb5.keytab,SRVTAB:/etc/srvtab"
+  patch from Gerald Britton, #42551)
+- build with -D_FILE_OFFSET_BITS=64 to get large file I/O in ftpd (#30697)
+- patch ftpd to use long long and %%lld format specifiers to support the SIZE
+  command on large files (also #30697)
+- don't use LOG_AUTH as an option value when calling openlog() in ksu (#45965)
+- implement reload in krb5kdc and kadmind init scripts (#41911)
+- lose the krb5server init script (not using it any more)
+
+* Sun Jun 24 2001 Elliot Lee <sopwith@redhat.com>
+- Bump release + rebuild.
+
 * Tue May 29 2001 Nalin Dahyabhai <nalin@redhat.com>
 - pass some structures by address instead of on the stack in krb5kdc
 
@@ -113,7 +136,7 @@ workstation.
 - rebuild in new environment
 
 * Thu Apr 26 2001 Nalin Dahyabhai <nalin@redhat.com>
-- add patch from Tom Yu to fix ftpd overflows
+- add patch from Tom Yu to fix ftpd overflows (#37731)
 
 * Wed Apr 18 2001 Than Ngo <than@redhat.com>
 - disable optimizations on the alpha again
@@ -411,6 +434,9 @@ pushd src/appl/gssftp/ftpd
 %patch19 -p0 -b .ftpd
 popd
 %patch20 -p0 -b .by-address
+%patch21 -p1 -b .ktany
+%patch22 -p1 -b .logauth
+%patch23 -p1 -b .size
 cp $RPM_SOURCE_DIR/statglue.c src/util/profile/statglue.c
 find . -type f -name "*.fixinfo" -exec rm -fv "{}" ";"
 gzip doc/*.ps
@@ -425,10 +451,10 @@ ARCH_OPT_FLAGS=-O0
 %endif
 
 # Can't use %%configure because we don't use the default mandir.
-LDCOMBINE_TAIL="-lc"; export LDCOMBINE_TAIL
+DEFINES="-D_FILE_OFFSET_BITS=64" ; export DEFINES
 ./configure \
 	--with-cc=%{__cc} \
-	--with-ccopts="$RPM_OPT_FLAGS $ARCH_OPT_FLAGS -fPIC" \
+	--with-ccopts="$RPM_OPT_FLAGS $ARCH_OPT_FLAGS $DEFINES -fPIC" \
 	--enable-shared --enable-static \
 	--prefix=%{prefix} \
 	--infodir=%{_infodir} \
@@ -438,7 +464,7 @@ LDCOMBINE_TAIL="-lc"; export LDCOMBINE_TAIL
 	--with-netlib=-lresolv \
 	--with-tcl=%{_prefix} \
 	%{_target_platform}
-make
+make LDCOMBINE='%{__cc} -shared -Wl,-soname=lib$(LIB)$(SHLIBSEXT) $(CFLAGS)'
 
 # Run the test suite.  Won't run in the build system because /dev/pts is
 # not available for telnet tests and so on.
@@ -447,11 +473,12 @@ make
 %install
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 
-# Our shell scripts.
+# Shell scripts wrappers for Kerberized rsh and rlogin.
 mkdir -p $RPM_BUILD_ROOT%{prefix}/bin
 install -m 755 $RPM_SOURCE_DIR/{krsh,krlogin} $RPM_BUILD_ROOT/%{prefix}/bin/
 
-# Extra headers.
+%if 1
+# Extra headers which are not installed by default.
 mkdir -p $RPM_BUILD_ROOT%{prefix}/include
 (cd src/include
  find kadm5 krb5 gssrpc gssapi -name "*.h" | \
@@ -460,40 +487,32 @@ sed 's^k5-int^krb5/kdb^g' < $RPM_BUILD_ROOT/%{prefix}/include/kadm5/admin.h \
 			  > $RPM_BUILD_ROOT/%{prefix}/include/kadm5/admin.h2 &&\
 mv $RPM_BUILD_ROOT/%{prefix}/include/kadm5/admin.h2 \
    $RPM_BUILD_ROOT/%{prefix}/include/kadm5/admin.h
-find $RPM_BUILD_ROOT/%{prefix}/include -type d | xargs chmod 755
-find $RPM_BUILD_ROOT/%{prefix}/include -type f | xargs chmod 644
+%endif
 
 # Info docs.
 mkdir -p $RPM_BUILD_ROOT%{_infodir}
 install -m 644 doc/*.info* $RPM_BUILD_ROOT%{_infodir}/
+# Forcefully compress the info pages so that we know the right file name to
+# pass to install-info in %%post.
 gzip $RPM_BUILD_ROOT%{_infodir}/*.info*
 
-# KDC config files.
+# Sample KDC config files.
 mkdir -p $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc
 install -m 644 $RPM_SOURCE_DIR/kdc.conf  $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc/
 install -m 644 $RPM_SOURCE_DIR/kadm5.acl $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc/
 
-# Client config files and scripts.
+# Sample client config files and login-time scriptlets.
 mkdir -p $RPM_BUILD_ROOT/etc/profile.d
 install -m 644 $RPM_SOURCE_DIR/krb5.conf $RPM_BUILD_ROOT/etc/krb5.conf
 install -m 755 $RPM_SOURCE_DIR/krb5.{sh,csh} $RPM_BUILD_ROOT/etc/profile.d/
 
-# KDC init script.
+# Server init scripts.
 mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
 install -m 755 $RPM_SOURCE_DIR/krb5kdc.init $RPM_BUILD_ROOT/etc/rc.d/init.d/krb5kdc
 install -m 755 $RPM_SOURCE_DIR/kadmind.init $RPM_BUILD_ROOT/etc/rc.d/init.d/kadmin
 install -m 755 $RPM_SOURCE_DIR/kpropd.init $RPM_BUILD_ROOT/etc/rc.d/init.d/kprop
 install -m 755 $RPM_SOURCE_DIR/krb524d.init $RPM_BUILD_ROOT/etc/rc.d/init.d/krb524
 install -m 755 $RPM_SOURCE_DIR/kdcrotate $RPM_BUILD_ROOT/etc/rc.d/init.d/
-
-# The rest of the binaries and libraries and docs.
-cd src
-make prefix=$RPM_BUILD_ROOT%{prefix} \
-	localstatedir=$RPM_BUILD_ROOT%{_var}/kerberos \
-	infodir=$RPM_BUILD_ROOT%{_infodir} install
-
-# Fixup strange shared library permissions.
-chmod 755 $RPM_BUILD_ROOT%{prefix}/lib/*.so*
 
 # Xinetd configuration files.
 mkdir -p $RPM_BUILD_ROOT/etc/xinetd.d/
@@ -502,9 +521,18 @@ for xinetd in eklogin klogin kshell krb5-telnet gssftp ; do
 	$RPM_BUILD_ROOT/etc/xinetd.d/${xinetd}
 done
 
-# Trim off useless info.
-strip $RPM_BUILD_ROOT%{prefix}/bin/* $RPM_BUILD_ROOT%{prefix}/sbin/* || :
-strip -g $RPM_BUILD_ROOT%{prefix}/lib/lib* || :
+# The rest of the binaries and libraries and docs.
+cd src
+make prefix=$RPM_BUILD_ROOT%{prefix} \
+	localstatedir=$RPM_BUILD_ROOT%{_var}/kerberos \
+	infodir=$RPM_BUILD_ROOT%{_infodir} install
+
+# Fixup permissions on header files.
+find $RPM_BUILD_ROOT/%{prefix}/include -type d | xargs chmod 755
+find $RPM_BUILD_ROOT/%{prefix}/include -type f | xargs chmod 644
+
+# Fixup strange shared library permissions.
+chmod 755 $RPM_BUILD_ROOT%{prefix}/lib/*.so*
 
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT

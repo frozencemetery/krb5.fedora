@@ -19,21 +19,23 @@
 . /etc/init.d/functions
 
 RETVAL=0
+prog="Kerberos 5 Propagation Server"
+kpropd=/usr/kerberos/sbin/kpropd
 
 # Sheel functions to cut down on useless shell instances.
 start() {
   	if [ ! -f /var/kerberos/krb5kdc/kpropd.acl ] ; then
 	    exit 0
 	fi
-	echo -n $"Starting Kerberos 5 Propagation Server: "
-	daemon /usr/kerberos/sbin/kpropd -S
+	echo -n $"Starting $prog: "
+	daemon ${kpropd} -S
 	RETVAL=$?
 	echo
 	[ $RETVAL = 0 ] && touch /var/lock/subsys/kprop
 }
 stop() {
-	echo -n $"Stopping Kerberos 5 Propagation Server: "
-	killproc kpropd
+	echo -n $"Stopping $prog: "
+	killproc ${kpropd}
 	RETVAL=$?
 	echo
 	[ $RETVAL = 0 ] && rm -f /var/lock/subsys/kprop
@@ -52,7 +54,8 @@ case "$1" in
 	start
 	;;
   status)
-	status kpropd
+	status ${kpropd}
+	retval=$?
 	;;
   condrestart)
 	if [ -f /var/lock/subsys/kprop ] ; then
