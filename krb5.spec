@@ -3,7 +3,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.2.2
-Release: 4
+Release: 7
 Source0: krb5-%{version}.tar.gz
 Source1: kpropd.init
 Source2: krb524d.init
@@ -43,6 +43,8 @@ Patch15: krb5-1.2.1-forward.patch
 Patch16: krb5-1.2.1-heap.patch
 Patch17: krb5-1.2.2-wragg.patch
 Patch18: krb5-1.2.2-statglue.patch
+Patch19: http://web.mit.edu/kerberos/www/advisories/ftpbuf_122_patch.txt
+Patch20: krb5-1.2.2-by-address.patch
 Copyright: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -104,6 +106,18 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Tue May 29 2001 Nalin Dahyabhai <nalin@redhat.com>
+- pass some structures by address instead of on the stack in krb5kdc
+
+* Tue May 22 2001 Nalin Dahyabhai <nalin@redhat.com>
+- rebuild in new environment
+
+* Thu Apr 26 2001 Nalin Dahyabhai <nalin@redhat.com>
+- add patch from Tom Yu to fix ftpd overflows
+
+* Wed Apr 18 2001 Than Ngo <than@redhat.com>
+- disable optimizations on the alpha again
+
 * Fri Mar 30 2001 Nalin Dahyabhai <nalin@redhat.com>
 - add in glue code to make sure that libkrb5 continues to provide a
   weak copy of stat()
@@ -393,6 +407,10 @@ workstation.
 %patch16 -p1 -b .heap
 %patch17 -p1 -b .wragg
 %patch18 -p1 -b .statglue
+pushd src/appl/gssftp/ftpd
+%patch19 -p0 -b .ftpd
+popd
+%patch20 -p0 -b .by-address
 cp $RPM_SOURCE_DIR/statglue.c src/util/profile/statglue.c
 find . -type f -name "*.fixinfo" -exec rm -fv "{}" ";"
 gzip doc/*.ps
@@ -402,11 +420,15 @@ cd src
 libtoolize --copy --force
 cp config.{guess,sub} config/
 
+%ifarch alpha
+ARCH_OPT_FLAGS=-O0
+%endif
+
 # Can't use %%configure because we don't use the default mandir.
 LDCOMBINE_TAIL="-lc"; export LDCOMBINE_TAIL
 ./configure \
 	--with-cc=%{__cc} \
-	--with-ccopts="$RPM_OPT_FLAGS -fPIC" \
+	--with-ccopts="$RPM_OPT_FLAGS $ARCH_OPT_FLAGS -fPIC" \
 	--enable-shared --enable-static \
 	--prefix=%{prefix} \
 	--infodir=%{_infodir} \
