@@ -37,12 +37,12 @@ start() {
 	else
   	    if [ ! -f /var/kerberos/krb5kdc/kadm5.keytab ] ; then
 		echo -n $"Extracting kadm5 Service Keys: "
-		/usr/kerberos/sbin/kadmin.local -q "ktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/admin kadmin/changepw" && success || failure
+		/usr/kerberos/sbin/kadmin.local ${KRB5REALM:+-r $KRB5REALM} -q "ktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/admin${KRB5REALM:+@$KRB5REALM} kadmin/changepw${KRB5REALM:+@$KRB5REALM}" && success || failure
 		echo
 	    fi
 	fi
 	echo -n $"Starting $prog: "
-	daemon ${kadmind} $KADMIND_ARGS
+	daemon ${kadmind} ${KRB5REALM:+-r ${KRB5REALM}} $KADMIND_ARGS
 	RETVAL=$?
 	echo
 	[ $RETVAL = 0 ] && touch /var/lock/subsys/kadmin

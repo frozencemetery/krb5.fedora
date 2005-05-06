@@ -6,10 +6,10 @@
 
 Summary: The Kerberos network authentication system.
 Name: krb5
-Version: 1.4
-Release: 3
+Version: 1.4.1
+Release: 1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.4/krb5-1.4-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.4/krb5-1.4.1-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -60,7 +60,6 @@ Patch28: krb5-1.3.5-gethostbyname_r.patch
 Patch29: krb5-1.3.5-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch32: krb5-1.4-ncurses.patch
-Patch33: krb5-MITKRB5SA-2005-001.patch
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -125,7 +124,11 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
-# - XXX krb5_init_ets is gone now, what to do?
+* Fri May  6 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.1-1
+- update to 1.4.1, incorporating fixes for CAN-2005-0468 and CAN-2005-0469
+- when starting the KDC or kadmind, if KRB5REALM is set via the /etc/sysconfig
+  file for the service, pass it as an argument for the -r flag
+
 * Wed Mar 23 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4-3
 - drop krshd patch for now
 
@@ -815,9 +818,6 @@ workstation.
 %patch29 -p1 -b .kprop-mktemp
 %patch30 -p1 -b .send-pr-tempfile
 %patch32 -p1 -b .ncurses
-pushd src/appl/telnet/telnet
-%patch33 -p0 -b .MITKRB5SA-2005-001
-popd
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
@@ -980,7 +980,7 @@ fi
 
 %config(noreplace) /etc/xinetd.d/*
 
-%doc doc/krb5-user*.html doc/user*.ps.gz src/config-files/services.append
+%doc doc/krb5-user/*.html doc/user*.ps.gz src/config-files/services.append
 %doc doc/{ftp,kdestroy,kinit,klist,kpasswd,ksu,rcp,rlogin,rsh,telnet}.html
 %attr(0755,root,root) %doc src/config-files/convert-config-files
 %{_infodir}/krb5-user.info*
@@ -1059,9 +1059,9 @@ fi
 %config(noreplace) /etc/sysconfig/kadmin
 %config(noreplace) /etc/sysconfig/krb524
 
-%doc doc/admin*.ps.gz doc/krb5-admin*.html
-%doc doc/krb425*.ps.gz doc/krb425*.html
-%doc doc/install*.ps.gz doc/krb5-install*.html
+%doc doc/admin*.ps.gz doc/krb5-admin/*.html
+%doc doc/krb425*.ps.gz doc/krb425/*.html
+%doc doc/install*.ps.gz doc/krb5-install/*.html
 %doc README.krb524
 
 %{_infodir}/krb5-admin.info*
