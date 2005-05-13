@@ -7,7 +7,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.4.1
-Release: 2
+Release: 3
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.4/krb5-1.4.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -61,6 +61,7 @@ Patch29: krb5-1.3.5-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch32: krb5-1.4-ncurses.patch
 Patch33: krb5-1.3.4-deadlock.patch
+Patch34: krb5-krshd-lehman.patch
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -125,6 +126,10 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Fri May 13 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.1-3
+- prevent spurious EBADF in krshd when stdin is closed by the client while
+  the command is running (#151111)
+
 * Fri May 13 2005 Martin Stransky <stransky@redhat.com> 1.4.1-2
 - add deadlock patch, removed old patch
 
@@ -823,6 +828,7 @@ workstation.
 %patch30 -p1 -b .send-pr-tempfile
 %patch32 -p1 -b .ncurses
 %patch33 -p1 -b .deadlock
+%patch34 -p0 -b .krshd-lehman
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
