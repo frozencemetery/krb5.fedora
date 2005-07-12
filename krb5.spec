@@ -7,7 +7,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.4.1
-Release: 5
+Release: 6
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.4/krb5-1.4.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -64,6 +64,10 @@ Patch33: krb5-1.3.4-deadlock.patch
 Patch34: krb5-krshd-lehman.patch
 Patch35: krb5-1.4.1-fclose.patch
 Patch36: krb5-1.3.3-rcp-markus.patch
+Patch37: krb5-1.4-MITKRB5-SA-2005-002.patch
+Patch38: krb5-1.4-MITKRB5-SA-2005-003.patch
+Patch39: krb5-1.4.1-api.patch
+Patch40: krb5-1.4.1-telnet-environ.patch
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -128,12 +132,24 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
-* Fri Jun 24 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.1-5
+* Wed Jun 29 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.1-6
 - rebuild
+
+* Wed Jun 29 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.1-5
+- fix telnet client environment variable disclosure the same way NetKit's
+  telnet client did (CAN-2005-0488) (#159305)
+- keep apps which call krb5_principal_compare() or krb5_realm_compare() with
+  malformed or NULL principal structures from crashing outright (Thomas Biege)
+  (#161475)
+
+* Tue Jun 28 2005 Nalin Dahyabhai <nalin@redhat.com>
+- apply fixes from draft of MIT-KRB5-SA-2005-002 (CAN-2005-1174,CAN-2005-1175)
+  (#157104)
+- apply fixes from draft of MIT-KRB5-SA-2005-003 (CAN-2005-1689) (#159755)
 
 * Fri Jun 24 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.1-4
 - fix double-close in keytab handling
-- add port of fixes for CAN-2004-0175 to krb5-aware rcp
+- add port of fixes for CAN-2004-0175 to krb5-aware rcp (#151612)
 
 * Fri May 13 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.1-3
 - prevent spurious EBADF in krshd when stdin is closed by the client while
@@ -840,6 +856,12 @@ workstation.
 %patch34 -p0 -b .krshd-lehman
 %patch35 -p1 -b .fclose
 %patch36 -p1 -b .rcp-markus
+pushd src
+%patch37 -p0 -b .MIT-KRB5-SA-2005-002
+%patch38 -p0 -b .MIT-KRB5-SA-2005-003
+popd
+%patch39 -p1 -b .api
+%patch40 -p1 -b .telnet-environ
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
