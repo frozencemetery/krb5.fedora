@@ -6,10 +6,10 @@
 
 Summary: The Kerberos network authentication system.
 Name: krb5
-Version: 1.4.1
-Release: 6
+Version: 1.4.2
+Release: 1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.4/krb5-1.4.1-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.4/krb5-1.4.2-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -64,8 +64,6 @@ Patch33: krb5-1.3.4-deadlock.patch
 Patch34: krb5-krshd-lehman.patch
 Patch35: krb5-1.4.1-fclose.patch
 Patch36: krb5-1.3.3-rcp-markus.patch
-Patch37: krb5-1.4-MITKRB5-SA-2005-002.patch
-Patch38: krb5-1.4-MITKRB5-SA-2005-003.patch
 Patch39: krb5-1.4.1-api.patch
 Patch40: krb5-1.4.1-telnet-environ.patch
 License: MIT, freely distributable.
@@ -132,6 +130,10 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Thu Aug 11 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.2-1
+- update to 1.4.2, incorporating the fixes for MIT-KRB5-SA-2005-002 and
+  MIT-KRB5-SA-2005-003
+
 * Wed Jun 29 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.1-6
 - rebuild
 
@@ -856,10 +858,6 @@ workstation.
 %patch34 -p0 -b .krshd-lehman
 %patch35 -p1 -b .fclose
 %patch36 -p1 -b .rcp-markus
-pushd src
-%patch37 -p0 -b .MIT-KRB5-SA-2005-002
-%patch38 -p0 -b .MIT-KRB5-SA-2005-003
-popd
 %patch39 -p1 -b .api
 %patch40 -p1 -b .telnet-environ
 cp src/krb524/README README.krb524
