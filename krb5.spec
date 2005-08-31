@@ -130,6 +130,10 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Wed Aug 31 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.2-2
+- change the default configured encryption type for KDC databases to the
+  compiled-in default of des3-hmac-sha1 (#57847)
+
 * Thu Aug 11 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.2-1
 - update to 1.4.2, incorporating the fixes for MIT-KRB5-SA-2005-002 and
   MIT-KRB5-SA-2005-003
