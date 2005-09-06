@@ -7,7 +7,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.4.2
-Release: 2
+Release: 3
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.4/krb5-1.4.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -32,6 +32,7 @@ Source18: gssftp.xinetd
 Source19: krb5kdc.sysconfig
 Source20: kadmin.sysconfig
 Source21: krb524.sysconfig
+Source22: ekrb5-telnet.xinetd
 
 Patch0: krb5-1.3-gcc33.patch
 Patch1: krb5-1.3-info-dir.patch
@@ -130,6 +131,10 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Tue Sep  6 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.2-3
+- add an xinetd configuration file for encryption-only telnetd, parallelling
+  the kshell/ekshell pair (#167535)
+
 * Wed Aug 31 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.2-2
 - change the default configured encryption type for KDC databases to the
   compiled-in default of des3-hmac-sha1 (#57847)
@@ -945,7 +950,7 @@ install -m 644 $RPM_SOURCE_DIR/krb524.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/kr
 
 # Xinetd configuration files.
 mkdir -p $RPM_BUILD_ROOT/etc/xinetd.d/
-for xinetd in eklogin klogin kshell krb5-telnet gssftp ; do
+for xinetd in eklogin klogin kshell ekrb5-telnet krb5-telnet gssftp ; do
 	install -m 644 $RPM_SOURCE_DIR/${xinetd}.xinetd \
 	$RPM_BUILD_ROOT/etc/xinetd.d/${xinetd}
 done
