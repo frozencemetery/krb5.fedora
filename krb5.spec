@@ -131,6 +131,10 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Tue Sep 13 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.2-4
+- mark %%{krb5prefix}/man so that files which are packaged within it are
+  flagged as %%doc (#168163)
+
 * Tue Sep  6 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.2-3
 - add an xinetd configuration file for encryption-only telnetd, parallelling
   the kshell/ekshell pair (#167535)
@@ -1031,6 +1035,7 @@ fi
 
 %config(noreplace) /etc/xinetd.d/*
 
+%docdir %{krb5prefix}/man
 %doc doc/krb5-user/*.html doc/user*.ps.gz src/config-files/services.append
 %doc doc/{ftp,kdestroy,kinit,klist,kpasswd,ksu,rcp,rlogin,rsh,telnet}.html
 %attr(0755,root,root) %doc src/config-files/convert-config-files
@@ -1110,6 +1115,7 @@ fi
 %config(noreplace) /etc/sysconfig/kadmin
 %config(noreplace) /etc/sysconfig/krb524
 
+%docdir %{krb5prefix}/man
 %doc doc/admin*.ps.gz doc/krb5-admin/*.html
 %doc doc/krb425*.ps.gz doc/krb425/*.html
 %doc doc/install*.ps.gz doc/krb5-install/*.html
@@ -1158,6 +1164,7 @@ fi
 %defattr(-,root,root)
 #%config /etc/rc.d/init.d/kdcrotate
 %config(noreplace) /etc/krb5.conf
+%docdir %{krb5prefix}/man
 %{_libdir}/lib*.so.*
 %{krb5prefix}/share
 
@@ -1167,6 +1174,7 @@ fi
 %config /etc/profile.d/krb5.sh
 %config /etc/profile.d/krb5.csh
 
+%docdir %{krb5prefix}/man
 %doc doc/api
 %doc doc/implement
 %doc doc/kadm5
