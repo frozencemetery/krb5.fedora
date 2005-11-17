@@ -4,6 +4,9 @@
 
 %define krb5prefix %{_prefix}/kerberos
 
+# FIXME: is it upstream's intention that the new autoconf macro be installed?
+%define install_macro 0
+
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.4.3
@@ -976,6 +979,12 @@ chmod 755 $RPM_BUILD_ROOT%{_libdir}/*.so*
 # Munge the krb5-config script to remove rpaths.
 sed "s|^CC_LINK=.*|CC_LINK='\$(CC) \$(PROG_LIBPATH)'|g" src/krb5-config > $RPM_BUILD_ROOT%{krb5prefix}/bin/krb5-config
 
+%if %{install_macro}
+# Install the autoconf macro.
+mkdir -p $RPM_BUILD_ROOT/%{_datadir}/aclocal
+install -m644 src/util/ac_check_krb5.m4 $RPM_BUILD_ROOT/%{_datadir}/aclocal/
+%endif
+
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 
@@ -1197,6 +1206,9 @@ fi
 %{_includedir}/*
 %{_libdir}/lib*.a
 %{_libdir}/lib*.so
+%if %{install_macro}
+%{_datadir}/aclocal/*
+%endif
 
 %{krb5prefix}/bin/krb5-config
 %{krb5prefix}/bin/sclient
