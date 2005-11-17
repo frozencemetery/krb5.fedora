@@ -6,8 +6,8 @@
 
 Summary: The Kerberos network authentication system.
 Name: krb5
-Version: 1.4.2
-Release: 4
+Version: 1.4.3
+Release: 1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.4/krb5-1.4.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -131,6 +131,10 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Thu Nov 17 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.3-1
+- update to 1.4.3
+- make ksu setuid again (#137934, others)
+
 * Tue Sep 13 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.2-4
 - mark %%{krb5prefix}/man so that files which are packaged within it are
   flagged as %%doc (#168163)
@@ -1068,7 +1072,7 @@ fi
 %{krb5prefix}/man/man8/kadmin.8*
 %{krb5prefix}/sbin/ktutil
 %{krb5prefix}/man/man8/ktutil.8*
-%attr(0755,root,root) %{krb5prefix}/bin/ksu
+%attr(4755,root,root) %{krb5prefix}/bin/ksu
 %{krb5prefix}/man/man1/ksu.1*
 %{krb5prefix}/bin/kvno
 %{krb5prefix}/man/man1/kvno.1*
