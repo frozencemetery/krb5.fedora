@@ -70,6 +70,7 @@ Patch35: krb5-1.4.1-fclose.patch
 Patch36: krb5-1.3.3-rcp-markus.patch
 Patch39: krb5-1.4.1-api.patch
 Patch40: krb5-1.4.1-telnet-environ.patch
+Patch41: krb5-1.2.7-login-lpass.patch
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -134,6 +135,10 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Thu Dec  1 2005 Nalin Dahyabhai <nalin@redhat.com>
+- login: don't truncate passwords before passing them into crypt(), in
+  case they're significant (#149476)
+
 * Thu Nov 17 2005 Nalin Dahyabhai <nalin@redhat.com> 1.4.3-1
 - update to 1.4.3
 - make ksu setuid again (#137934, others)
@@ -880,6 +885,7 @@ workstation.
 %patch36 -p1 -b .rcp-markus
 %patch39 -p1 -b .api
 %patch40 -p1 -b .telnet-environ
+%patch41 -p1 -b .login-lpass
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
