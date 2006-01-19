@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.4.3
-Release: 1.1
+Release: 2
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.4/krb5-1.4.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -135,6 +135,9 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Thu Jan 19 2006 Matthias Clasen <mclasen@redhat.com> 1.4.3-2
+- Use full paths in krb5.sh to avoid path lookups
+
 * Fri Dec 09 2005 Jesse Keating <jkeating@redhat.com>
 - rebuilt
 
