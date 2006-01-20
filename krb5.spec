@@ -10,9 +10,9 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.4.3
-Release: 2
+Release: 3
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.4/krb5-1.4.2-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.4/krb5-1.4.3-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -71,6 +71,8 @@ Patch36: krb5-1.3.3-rcp-markus.patch
 Patch39: krb5-1.4.1-api.patch
 Patch40: krb5-1.4.1-telnet-environ.patch
 Patch41: krb5-1.2.7-login-lpass.patch
+Patch42: krb5-1.4.3-pthread_np.patch
+Patch43: krb5-1.4.3-kdc_max_dgram_size.patch
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -135,6 +137,10 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Thu Jan 19 2006 Nalin Dahyabhai <nalin@redhat.com> 1.4.3-3
+- rebuild properly when pthread_mutexattr_setrobust_np() is defined but not
+  declared, such as with recent glibc when _GNU_SOURCE isn't being used
+
 * Thu Jan 19 2006 Matthias Clasen <mclasen@redhat.com> 1.4.3-2
 - Use full paths in krb5.sh to avoid path lookups
 
@@ -892,6 +898,9 @@ workstation.
 %patch39 -p1 -b .api
 %patch40 -p1 -b .telnet-environ
 %patch41 -p1 -b .login-lpass
+%patch42 -p1 -b .pthread_np
+# Don't apply this until we hear back from upstream.
+#%patch43 -p1 -b .kdc_max_dgram_size
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
