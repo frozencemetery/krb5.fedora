@@ -74,6 +74,8 @@ Patch41: krb5-1.2.7-login-lpass.patch
 Patch42: krb5-1.4.3-pthread_np.patch
 Patch43: krb5-1.4.3-kdc_max_dgram_size.patch
 Patch44: krb5-1.4.3-enospc.patch
+Patch45: krb5-kinit-man-typo.patch
+
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -138,6 +140,9 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Fri Apr 14 2006 Stepan Kasal <skasal@redhat.com>    - 1.4.3-5
+- Fix formatting typo in kinit.1 (krb5-kinit-man-typo.patch)
+
 * Fri Feb 10 2006 Jesse Keating <jkeating@redhat.com> - 1.4.3-4.1
 - bump again for double-long bug on ppc(64)
 
@@ -910,6 +915,7 @@ workstation.
 # Don't apply this until we hear back from upstream.
 #%patch43 -p1 -b .kdc_max_dgram_size
 %patch44 -p1 -b .enospc
+%patch45 -p1
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
