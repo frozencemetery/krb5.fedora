@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.4.3
-Release: 5
+Release: 6
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.4/krb5-1.4.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -50,7 +50,7 @@ Patch12: krb5-1.4-ktany.patch
 Patch13: krb5-1.3-large-file.patch
 Patch14: krb5-1.3-ftp-glob.patch
 Patch15: krb5-1.3-check.patch
-Patch16: krb5-1.3.3-no-rpath.patch
+Patch16: krb5-1.4.3-no-rpath.patch
 Patch17: krb5-1.3-pass-by-address.patch
 Patch18: krb5-1.2.7-reject-bad-transited.patch
 Patch21: krb5-selinux.patch
@@ -75,6 +75,7 @@ Patch42: krb5-1.4.3-pthread_np.patch
 Patch43: krb5-1.4.3-kdc_max_dgram_size.patch
 Patch44: krb5-1.4.3-enospc.patch
 Patch45: krb5-kinit-man-typo.patch
+Patch46: krb5-1.4.3-int32.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -140,10 +141,19 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
-* Fri Apr 14 2006 Stepan Kasal <skasal@redhat.com>    - 1.4.3-5
+* Fri Apr 28 2006 Nalin Dahyabhai <nalin@redhat.com> 1.4.3-6
+- adjust the patch which removes the use of rpath to also produce a
+  krb5-config which is okay in multilib environments (#190118)
+- make the name-of-the-tempfile comment which compile_et adds to error code
+  headers always list the same file to avoid conflicts on multilib installations
+- strip SIZEOF_LONG out of krb5.h so that it doesn't conflict on multilib boxes
+- strip GSS_SIZEOF_LONG out of gssapi.h so that it doesn't conflict on mulitlib
+  boxes
+
+* Fri Apr 14 2006 Stepan Kasal <skasal@redhat.com> 1.4.3-5
 - Fix formatting typo in kinit.1 (krb5-kinit-man-typo.patch)
 
-* Fri Feb 10 2006 Jesse Keating <jkeating@redhat.com> - 1.4.3-4.1
+* Fri Feb 10 2006 Jesse Keating <jkeating@redhat.com> 1.4.3-4.1
 - bump again for double-long bug on ppc(64)
 
 * Mon Feb  6 2006 Nalin Dahyabhai <nalin@redhat.com> 1.4.3-4
@@ -916,6 +926,7 @@ workstation.
 #%patch43 -p1 -b .kdc_max_dgram_size
 %patch44 -p1 -b .enospc
 %patch45 -p1
+%patch46 -p1 -b .int32
 cp src/krb524/README README.krb524
 find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
@@ -1014,6 +1025,12 @@ chmod 755 $RPM_BUILD_ROOT%{_libdir}/*.so*
 
 # Munge the krb5-config script to remove rpaths.
 sed "s|^CC_LINK=.*|CC_LINK='\$(CC) \$(PROG_LIBPATH)'|g" src/krb5-config > $RPM_BUILD_ROOT%{krb5prefix}/bin/krb5-config
+
+# Munge krb5-config yet again
+sed -i -e "s|^libdir=/usr/lib(64)?|libdir=/usr/\$LIB|g" $RPM_BUILD_ROOT%{krb5prefix}/bin/krb5-config
+
+# Remove the randomly-generated compile-et filename comment from header files.
+sed -i -e 's|^ \* ettmp[^ \t]*\.h:$| * ettmpXXXXXX.h:|g' $RPM_BUILD_ROOT%{_includedir}/*{,/*}.h
 
 %if %{install_macro}
 # Install the autoconf macro.
