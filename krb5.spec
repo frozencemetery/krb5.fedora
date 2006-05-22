@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.4.3
-Release: 6
+Release: 7
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.4/krb5-1.4.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -141,6 +141,11 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Mon May 22 2006 Nalin Dahyabhai <nalin@redhat.com> 1.4.3-7
+- further munge krb5-config so that 'libdir=/usr/lib' is given even on 64-bit
+  architectures, to avoid multilib conflicts; other changes will conspire to
+  strip out the -L flag which uses this, so it should be harmless (#192692)
+
 * Fri Apr 28 2006 Nalin Dahyabhai <nalin@redhat.com> 1.4.3-6
 - adjust the patch which removes the use of rpath to also produce a
   krb5-config which is okay in multilib environments (#190118)
@@ -1026,8 +1031,10 @@ chmod 755 $RPM_BUILD_ROOT%{_libdir}/*.so*
 # Munge the krb5-config script to remove rpaths.
 sed "s|^CC_LINK=.*|CC_LINK='\$(CC) \$(PROG_LIBPATH)'|g" src/krb5-config > $RPM_BUILD_ROOT%{krb5prefix}/bin/krb5-config
 
-# Munge krb5-config yet again
-sed -i -e "s|^libdir=/usr/lib(64)?|libdir=/usr/\$LIB|g" $RPM_BUILD_ROOT%{krb5prefix}/bin/krb5-config
+# Munge krb5-config yet again.  This is totally wrong for 64-bit, but chunks
+# of the no-rpath patch already conspire to strip out /usr/<anything> from the
+# list of link flags.
+sed -r -i -e 's|^libdir=/usr/lib(64)?$|libdir=/usr/lib|g' $RPM_BUILD_ROOT%{krb5prefix}/bin/krb5-config
 
 # Remove the randomly-generated compile-et filename comment from header files.
 sed -i -e 's|^ \* ettmp[^ \t]*\.h:$| * ettmpXXXXXX.h:|g' $RPM_BUILD_ROOT%{_includedir}/*{,/*}.h
