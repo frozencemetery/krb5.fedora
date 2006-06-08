@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.4.3
-Release: 7
+Release: 8
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.4/krb5-1.4.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -82,7 +82,7 @@ URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Prereq: grep, info, sh-utils, /sbin/install-info
-BuildPrereq: bison, e2fsprogs-devel >= 1.33, flex
+BuildPrereq: autoconf, bison, e2fsprogs-devel >= 1.33, flex
 BuildPrereq: gzip, ncurses-devel, rsh, texinfo, tar
 
 %description
@@ -141,6 +141,9 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Thu Jun  8 2006 Nalin Dahyabhai <nalin@redhat.com> 1.4.3-8
+- add buildprereq for autoconf
+
 * Mon May 22 2006 Nalin Dahyabhai <nalin@redhat.com> 1.4.3-7
 - further munge krb5-config so that 'libdir=/usr/lib' is given even on 64-bit
   architectures, to avoid multilib conflicts; other changes will conspire to
