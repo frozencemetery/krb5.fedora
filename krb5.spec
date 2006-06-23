@@ -141,6 +141,9 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Fri Jun 23 2006 Nalin Dahyabhai <nalin@redhat.com> 1.4.3-9
+- mark profile.d config files noreplace (Laurent Rineau, #196447)
+
 * Thu Jun  8 2006 Nalin Dahyabhai <nalin@redhat.com> 1.4.3-8
 - add buildprereq for autoconf
 
@@ -1106,8 +1109,8 @@ fi
 %files workstation
 %defattr(-,root,root)
 
-%config /etc/profile.d/krb5.sh
-%config /etc/profile.d/krb5.csh
+%config(noreplace) /etc/profile.d/krb5.sh
+%config(noreplace) /etc/profile.d/krb5.csh
 
 %config(noreplace) /etc/xinetd.d/*
 
@@ -1247,8 +1250,8 @@ fi
 %files devel
 %defattr(-,root,root)
 
-%config /etc/profile.d/krb5.sh
-%config /etc/profile.d/krb5.csh
+%config(noreplace) /etc/profile.d/krb5.sh
+%config(noreplace) /etc/profile.d/krb5.csh
 
 %docdir %{krb5prefix}/man
 %doc doc/api
