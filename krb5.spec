@@ -9,10 +9,10 @@
 
 Summary: The Kerberos network authentication system.
 Name: krb5
-Version: 1.4.3
-Release: 9
+Version: 1.5
+Release: 0
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.4/krb5-1.4.3-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -37,52 +37,41 @@ Source20: kadmin.sysconfig
 Source21: krb524.sysconfig
 Source22: ekrb5-telnet.xinetd
 
-Patch0: krb5-1.3-gcc33.patch
-Patch1: krb5-1.3-info-dir.patch
 Patch2: krb5-1.3-manpage-paths.patch
 Patch3: krb5-1.3-netkit-rsh.patch
 Patch4: krb5-1.3-rlogind-environ.patch
 Patch5: krb5-1.3-ksu-access.patch
-Patch6: krb5-1.3-ksu-path.patch
-Patch9: krb5-1.1.1-brokenrev.patch
+Patch6: krb5-1.5-ksu-path.patch
+Patch9: krb5-1.5-brokenrev.patch
 Patch11: krb5-1.2.1-passive.patch
 Patch12: krb5-1.4-ktany.patch
 Patch13: krb5-1.3-large-file.patch
 Patch14: krb5-1.3-ftp-glob.patch
 Patch15: krb5-1.3-check.patch
-Patch16: krb5-1.4.3-no-rpath.patch
-Patch17: krb5-1.3-pass-by-address.patch
+Patch16: krb5-1.5-no-rpath.patch
 Patch18: krb5-1.2.7-reject-bad-transited.patch
 Patch21: krb5-selinux.patch
-Patch22: krb5-1.3.1-32.patch
 Patch23: krb5-1.3.1-dns.patch
-Patch24: krb5-1.4-server-sort.patch
 Patch25: krb5-1.4-null.patch
 Patch26: krb5-1.3.2-efence.patch
 Patch27: krb5-1.3.3-rcp-sendlarge.patch
-Patch28: krb5-1.3.5-gethostbyname_r.patch
 Patch29: krb5-1.3.5-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch32: krb5-1.4-ncurses.patch
-Patch33: krb5-1.3.4-deadlock.patch
-Patch34: krb5-krshd-lehman.patch
-Patch35: krb5-1.4.1-fclose.patch
+Patch33: krb5-1.5-rsh-deadlock.patch
+Patch35: krb5-1.5-fclose.patch
 Patch36: krb5-1.3.3-rcp-markus.patch
 Patch39: krb5-1.4.1-api.patch
 Patch40: krb5-1.4.1-telnet-environ.patch
 Patch41: krb5-1.2.7-login-lpass.patch
-Patch42: krb5-1.4.3-pthread_np.patch
-Patch43: krb5-1.4.3-kdc_max_dgram_size.patch
 Patch44: krb5-1.4.3-enospc.patch
-Patch45: krb5-kinit-man-typo.patch
-Patch46: krb5-1.4.3-int32.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Prereq: grep, info, sh-utils, /sbin/install-info
-BuildPrereq: autoconf, bison, e2fsprogs-devel >= 1.33, flex
+BuildPrereq: autoconf, bison, e2fsprogs-devel >= 1.35, flex
 BuildPrereq: gzip, ncurses-devel, rsh, texinfo, tar
 
 %description
@@ -141,6 +130,9 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Wed Jul  5 2006 Nalin Dahyabhai <nalin@redhat.com> 1.5-0
+- update to 1.5
+
 * Fri Jun 23 2006 Nalin Dahyabhai <nalin@redhat.com> 1.4.3-9
 - mark profile.d config files noreplace (Laurent Rineau, #196447)
 
@@ -892,9 +884,6 @@ workstation.
 
 %prep
 %setup -q
-# No longer necessary with e2fsprogs >= 1.35, it seems.
-# %patch0  -p1 -b .gcc33
-%patch1  -p1 -b .info-dir
 %patch2  -p1 -b .manpage-paths
 %patch3  -p1 -b .netkit-rsh
 %patch4  -p1 -b .rlogind-environ
@@ -907,39 +896,26 @@ workstation.
 %patch14 -p1 -b .ftp-glob
 %patch15 -p1 -b .check
 %patch16 -p1 -b .no-rpath
-# Hopefully no longer needed to work around compiler bug.
-# %patch17 -p1 -b .pass-by-address
 %patch18 -p1 -b .reject-bad-transited
 %if %{WITH_SELINUX}
 %patch21 -p1 -b .selinux
 %endif
-# Removed, per http://mailman.mit.edu/pipermail/krb5-bugs/2003-September/001735.html
-# %patch22 -p1 -b .32
 %patch23 -p1 -b .dns
-%patch24 -p1 -b .server-sort
 %patch25 -p1 -b .null
 # Removes a malloc(0) case, nothing more.
 # %patch26 -p1 -b .efence
 %patch27 -p1 -b .rcp-sendlarge
-%patch28 -p1 -b .gethostbyname_r
 %patch29 -p1 -b .kprop-mktemp
 %patch30 -p1 -b .send-pr-tempfile
 %patch32 -p1 -b .ncurses
-%patch33 -p1 -b .deadlock
-%patch34 -p0 -b .krshd-lehman
+%patch33 -p1 -b .rsh-deadlock
 %patch35 -p1 -b .fclose
 %patch36 -p1 -b .rcp-markus
 %patch39 -p1 -b .api
 %patch40 -p1 -b .telnet-environ
 %patch41 -p1 -b .login-lpass
-%patch42 -p1 -b .pthread_np
-# Don't apply this until we hear back from upstream.
-#%patch43 -p1 -b .kdc_max_dgram_size
 %patch44 -p1 -b .enospc
-%patch45 -p1
-%patch46 -p1 -b .int32
 cp src/krb524/README README.krb524
-find . -type f -name "*.info-dir" -exec rm -fv "{}" ";"
 gzip doc/*.ps
 cd src
 top=`pwd`
@@ -956,12 +932,13 @@ INCLUDES=-I%{_includedir}/et
 %ifarch %{ix86} s390 ppc sparc
 DEFINES="-D_FILE_OFFSET_BITS=64" ; export DEFINES
 %endif
-CFLAGS="`echo $RPM_OPT_FLAGS $ARCH_OPT_FLAGS $DEFINES $INCLUDES -fPIC`"
+CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC`"
+CPPFLAGS="`echo $DEFINES $INCLUDES`"
 %configure \
 	CC=%{__cc} \
 	CFLAGS="$CFLAGS" \
 	LDFLAGS="-pie" \
-	CPPFLAGS="$DEFINES $INCLUDES" \
+	CPPFLAGS="$CPPFLAGS" \
 	--enable-shared --enable-static \
 	--bindir=%{krb5prefix}/bin \
 	--mandir=%{krb5prefix}/man \
@@ -977,6 +954,7 @@ CFLAGS="`echo $RPM_OPT_FLAGS $ARCH_OPT_FLAGS $DEFINES $INCLUDES -fPIC`"
 # Now build it.  Override the RPATH_FLAG and PROG_LIBPATH to drop the rpath, and
 # override LDCOMBINE to use gcc instead of ld to build shared libraries.
 make	RPATH_FLAG= PROG_RPATH= \
+	OBJLISTS="OBJS.ST OBJS.SH" \
 	LDCOMBINE='%{__cc} -shared -Wl,-soname=lib$(LIB)$(SHLIBSEXT) $(CFLAGS)'
 
 # Run the test suite.
@@ -1032,7 +1010,7 @@ find $RPM_BUILD_ROOT/%{_includedir} -type d | xargs chmod 755
 find $RPM_BUILD_ROOT/%{_includedir} -type f | xargs chmod 644
 
 # Fixup strange shared library permissions.
-chmod 755 $RPM_BUILD_ROOT%{_libdir}/*.so*
+chmod 755 $RPM_BUILD_ROOT%{_libdir}/*.so{,.*}
 
 # Munge the krb5-config script to remove rpaths.
 sed "s|^CC_LINK=.*|CC_LINK='\$(CC) \$(PROG_LIBPATH)'|g" src/krb5-config > $RPM_BUILD_ROOT%{krb5prefix}/bin/krb5-config
@@ -1141,6 +1119,7 @@ fi
 %{krb5prefix}/bin/kpasswd
 %{krb5prefix}/man/man1/kpasswd.1*
 %{krb5prefix}/bin/krb524init
+%{krb5prefix}/man/man1/krb524init.1*
 %{krb5prefix}/sbin/k5srvutil
 %{krb5prefix}/man/man8/k5srvutil.8*
 %{krb5prefix}/sbin/kadmin
@@ -1210,6 +1189,10 @@ fi
 %config(noreplace) %{_var}/kerberos/krb5kdc/kadm5.acl
 
 %dir %{krb5prefix}/bin
+%dir %{_libdir}/krb5
+%dir %{_libdir}/krb5/plugins
+%dir %{_libdir}/krb5/plugins/kdb
+%{_libdir}/krb5/plugins/kdb/db2.so
 %dir %{krb5prefix}/man
 %dir %{krb5prefix}/man/man1
 %dir %{krb5prefix}/man/man5
@@ -1245,6 +1228,8 @@ fi
 %config(noreplace) /etc/krb5.conf
 %docdir %{krb5prefix}/man
 %{_libdir}/lib*.so.*
+%dir %{_libdir}/krb5
+%dir %{_libdir}/krb5/plugins
 %{krb5prefix}/share
 
 %files devel
