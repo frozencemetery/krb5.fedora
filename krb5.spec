@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.5
-Release: 1.2
+Release: 2
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -58,7 +58,7 @@ Patch27: krb5-1.3.3-rcp-sendlarge.patch
 Patch29: krb5-1.3.5-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch32: krb5-1.4-ncurses.patch
-Patch33: krb5-1.5-rsh-deadlock.patch
+Patch33: krb5-1.5-io.patch
 Patch35: krb5-1.5-fclose.patch
 Patch36: krb5-1.3.3-rcp-markus.patch
 Patch39: krb5-1.4.1-api.patch
@@ -130,6 +130,9 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Fri Jul 21 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-2
+- pull up latest revision of patch to reduce lockups in rsh/rshd
+
 * Mon Jul 17 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-1.2
 - rebuild
 
@@ -917,7 +920,7 @@ workstation.
 %patch29 -p1 -b .kprop-mktemp
 %patch30 -p1 -b .send-pr-tempfile
 %patch32 -p1 -b .ncurses
-%patch33 -p1 -b .rsh-deadlock
+%patch33 -p1 -b .io
 %patch35 -p1 -b .fclose
 %patch36 -p1 -b .rcp-markus
 %patch39 -p1 -b .api
