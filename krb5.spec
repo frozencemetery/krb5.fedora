@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.5
-Release: 2
+Release: 3
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -130,7 +130,10 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
-* Fri Jul 21 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-2
+* Tue Jul 25 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-3
+- rebuild
+
+* Tue Jul 25 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-2
 - pull up latest revision of patch to reduce lockups in rsh/rshd
 
 * Mon Jul 17 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-1.2
