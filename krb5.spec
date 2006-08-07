@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.5
-Release: 3
+Release: 4
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -65,6 +65,7 @@ Patch39: krb5-1.4.1-api.patch
 Patch40: krb5-1.4.1-telnet-environ.patch
 Patch41: krb5-1.2.7-login-lpass.patch
 Patch44: krb5-1.4.3-enospc.patch
+Patch45: krb5-1.5-gssinit.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -130,6 +131,11 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Mon Aug  7 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-4
+- ensure that the gssapi library's been initialized before walking the
+  internal mechanism list in gss_release_oid(), needed if called from
+  gss_release_name() right after a gss_import_name() (#198092)
+
 * Tue Jul 25 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-3
 - rebuild
 
@@ -930,6 +936,7 @@ workstation.
 %patch40 -p1 -b .telnet-environ
 %patch41 -p1 -b .login-lpass
 %patch44 -p1 -b .enospc
+%patch45 -p1 -b .gssinit
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 cd src
