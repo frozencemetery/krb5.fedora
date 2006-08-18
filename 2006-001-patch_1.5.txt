@@ -1,6 +1,6 @@
 Index: appl/gssftp/ftpd/ftpd.c
 ===================================================================
-*** appl/gssftp/ftpd/ftpd.c	(revision 18419)
+*** appl/gssftp/ftpd/ftpd.c	(revision 18440)
 --- appl/gssftp/ftpd/ftpd.c	(working copy)
 ***************
 *** 1367,1373 ****
@@ -61,7 +61,7 @@ Index: appl/gssftp/ftpd/ftpd.c
   		goto pasv_error;
 Index: appl/bsd/v4rcp.c
 ===================================================================
-*** appl/bsd/v4rcp.c	(revision 18419)
+*** appl/bsd/v4rcp.c	(revision 18440)
 --- appl/bsd/v4rcp.c	(working copy)
 ***************
 *** 436,442 ****
@@ -105,7 +105,7 @@ Index: appl/bsd/v4rcp.c
   
 Index: appl/bsd/krcp.c
 ===================================================================
-*** appl/bsd/krcp.c	(revision 18419)
+*** appl/bsd/krcp.c	(revision 18440)
 --- appl/bsd/krcp.c	(working copy)
 ***************
 *** 620,626 ****
@@ -159,7 +159,7 @@ Index: appl/bsd/krcp.c
   		}
 Index: appl/bsd/login.c
 ===================================================================
-*** appl/bsd/login.c	(revision 18419)
+*** appl/bsd/login.c	(revision 18440)
 --- appl/bsd/login.c	(working copy)
 ***************
 *** 1648,1654 ****
@@ -183,7 +183,7 @@ Index: appl/bsd/login.c
       /* This call MUST succeed */
 Index: appl/bsd/krshd.c
 ===================================================================
-*** appl/bsd/krshd.c	(revision 18419)
+*** appl/bsd/krshd.c	(revision 18440)
 --- appl/bsd/krshd.c	(working copy)
 ***************
 *** 1403,1411 ****
@@ -214,26 +214,25 @@ Index: appl/bsd/krshd.c
         char **findtz = environ;
 Index: clients/ksu/main.c
 ===================================================================
-*** clients/ksu/main.c	(revision 18419)
+*** clients/ksu/main.c	(revision 18440)
 --- clients/ksu/main.c	(working copy)
 ***************
-*** 892,900 ****
-      const char * cc_name;
+*** 893,900 ****
       struct stat  st_temp;
   
-!     krb5_seteuid(0);
+      krb5_seteuid(0);
 !     krb5_seteuid(target_uid);
 !     
       cc_name = krb5_cc_get_name(context, cc);
       if ( ! stat(cc_name, &st_temp)){
   	if ((retval = krb5_cc_destroy(context, cc))){
---- 892,903 ----
-      const char * cc_name;
+--- 893,904 ----
       struct stat  st_temp;
   
-!     if (krb5_seteuid(0) < 0 || krb5_seteuid(target_uid) < 0) {
+      krb5_seteuid(0);
+!     if (krb5_seteuid(target_uid) < 0) {
 ! 	com_err(prog_name, errno,
-! 		"while returning to source uid for destroying ccache");
+! 		"while changing to target uid for destroying ccache");
 ! 	exit(1);
 !     }
 ! 
@@ -242,7 +241,7 @@ Index: clients/ksu/main.c
   	if ((retval = krb5_cc_destroy(context, cc))){
 Index: lib/krb4/kuserok.c
 ===================================================================
-*** lib/krb4/kuserok.c	(revision 18419)
+*** lib/krb4/kuserok.c	(revision 18440)
 --- lib/krb4/kuserok.c	(working copy)
 ***************
 *** 159,167 ****
