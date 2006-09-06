@@ -132,6 +132,10 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Wed Sep  6 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-7
+- set SS_LIB at configure-time so that libss-using apps get working readline
+  support (#197044)
+
 * Fri Aug 18 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-6
 - switch to the updated patch for MITKRB-SA-2006-001
 
@@ -971,6 +975,7 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	CFLAGS="$CFLAGS" \
 	LDFLAGS="-pie" \
 	CPPFLAGS="$CPPFLAGS" \
+	SS_LIB="-lss -lcurses" \
 	--enable-shared --enable-static \
 	--bindir=%{krb5prefix}/bin \
 	--mandir=%{krb5prefix}/man \
