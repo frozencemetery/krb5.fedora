@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.5
-Release: 8
+Release: 9
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -75,6 +75,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Prereq: grep, info, sh-utils, /sbin/install-info
 BuildPrereq: autoconf, bison, e2fsprogs-devel >= 1.35, flex
 BuildPrereq: gzip, ncurses-devel, rsh, texinfo, tar
+BuildRequires:	tetex-latex
 
 %description
 Kerberos V5 is a trusted-third-party network authentication system,
@@ -132,6 +133,9 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Mon Oct  9 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-9
+- provide docs in PDF format instead of as tex source (Enrico Scholz, #209943)
+
 * Wed Oct  4 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-8
 - add missing shebang headers to krsh and krlogin wrapper scripts (#209238)
 
@@ -956,6 +960,14 @@ pushd src
 popd
 cp src/krb524/README README.krb524
 gzip doc/*.ps
+sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
+sed -i -e '1c\
+\\documentclass{article}\
+\\usepackage{fixunder}\
+\\usepackage{functions}\
+\\usepackage{fancyheadings}\
+\\usepackage{hyperref}' doc/implement/implement.tex
+
 cd src
 top=`pwd`
 for configurein in `find -name configure.in -type f` ; do
@@ -964,7 +976,29 @@ for configurein in `find -name configure.in -type f` ; do
 	popd
 done
 
+
 %build
+# Usage: mkpdf <dir> <basename> <ist>
+function mkpdf()
+{
+	cd "$1"
+	touch "$2".ind
+	pdflatex "$2"
+	test ! -e "$2".idx || makeindex ${3:+-s "$3".ist} "$2".idx
+	pdflatex "$2"
+	pdflatex "$2"
+	cd -
+}
+
+mkpdf doc/api       library krb5
+mkpdf doc/api	    libdes
+mkpdf doc/implement implement
+mkpdf doc/kadm5	    adb-unit-test
+mkpdf doc/kadm5	    api-unit-test
+mkpdf doc/kadm5	    api-funcspec
+mkpdf doc/kadm5	    api-server-design
+
+
 cd src
 INCLUDES=-I%{_includedir}/et
 # Get LFS support on systems that need it which aren't already 64-bit.
@@ -1279,9 +1313,9 @@ fi
 %config(noreplace) /etc/profile.d/krb5.csh
 
 %docdir %{krb5prefix}/man
-%doc doc/api
-%doc doc/implement
-%doc doc/kadm5
+%doc doc/api/*.pdf
+%doc doc/implement/*.pdf
+%doc doc/kadm5/*.pdf
 %doc doc/kadmin
 %doc doc/krb5-protocol
 %doc doc/rpc
