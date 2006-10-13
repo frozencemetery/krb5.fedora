@@ -972,6 +972,7 @@ cd src
 top=`pwd`
 for configurein in `find -name configure.in -type f` ; do
 	pushd `dirname $configurein`
+	grep -q A._CONFIG_HEADER configure.in && autoheader -I "$top"
 	autoconf -I "$top"
 	popd
 done
