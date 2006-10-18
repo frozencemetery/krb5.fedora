@@ -133,6 +133,9 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Wed Oct 18 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-10
+- way-late application of added error info in kadmind.init (#65853)
+ 
 * Mon Oct  9 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-9
 - provide docs in PDF format instead of as tex source (Enrico Scholz, #209943)
 

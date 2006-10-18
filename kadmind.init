@@ -30,9 +30,11 @@ RETVAL=0
 # Shell functions to cut down on useless shell instances.
 start() {
   	if [ ! -f /var/kerberos/krb5kdc/principal ] ; then
+	    echo -n $"Error. Default principal database does not exist."
 	    exit 0
 	fi
   	if [ -f /var/kerberos/krb5kdc/kpropd.acl ] ; then
+	    echo -n $"Error. This appears to be a slave server, found kpropd.acl"
 	    exit 0
 	else
   	    if [ ! -f /var/kerberos/krb5kdc/kadm5.keytab ] ; then
