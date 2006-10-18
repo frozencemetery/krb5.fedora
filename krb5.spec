@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.5
-Release: 9
+Release: 9.99999
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -134,6 +134,7 @@ workstation.
 
 %changelog
 * Wed Oct 18 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-10
+- rename krb5.sh and krb5.csh so that they don't overlap (#210623)
 - way-late application of added error info in kadmind.init (#65853)
  
 * Mon Oct  9 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-9
@@ -1060,7 +1061,12 @@ install -m 644 $RPM_SOURCE_DIR/kadm5.acl $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc
 # Login-time scriptlets to fix the PATH variable.
 mkdir -p $RPM_BUILD_ROOT/etc/profile.d
 install -m 644 $RPM_SOURCE_DIR/krb5.conf $RPM_BUILD_ROOT/etc/krb5.conf
-install -m 755 $RPM_SOURCE_DIR/krb5.{sh,csh} $RPM_BUILD_ROOT/etc/profile.d/
+for subpackage in devel workstation ; do
+	install -m 755 $RPM_SOURCE_DIR/krb5.sh \
+	$RPM_BUILD_ROOT/etc/profile.d/krb5-${subpackage}.sh
+	install -m 755 $RPM_SOURCE_DIR/krb5.csh \
+	$RPM_BUILD_ROOT/etc/profile.d/krb5-${subpackage}.csh
+done
 
 # Server init scripts.
 mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
@@ -1165,8 +1171,8 @@ fi
 %files workstation
 %defattr(-,root,root)
 
-%config(noreplace) /etc/profile.d/krb5.sh
-%config(noreplace) /etc/profile.d/krb5.csh
+%config(noreplace) /etc/profile.d/krb5-workstation.sh
+%config(noreplace) /etc/profile.d/krb5-workstation.csh
 
 %config(noreplace) /etc/xinetd.d/*
 
@@ -1313,8 +1319,8 @@ fi
 %files devel
 %defattr(-,root,root)
 
-%config(noreplace) /etc/profile.d/krb5.sh
-%config(noreplace) /etc/profile.d/krb5.csh
+%config(noreplace) /etc/profile.d/krb5-devel.sh
+%config(noreplace) /etc/profile.d/krb5-devel.csh
 
 %docdir %{krb5prefix}/man
 %doc doc/api/*.pdf

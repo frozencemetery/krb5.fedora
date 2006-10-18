@@ -1,0 +1,46 @@
+--- krb5-1.5/src/kadmin/cli/kadmin.c.kt_default_name	2006-10-18 14:13:18.000000000 -0400
++++ krb5-1.5/src/kadmin/cli/kadmin.c	2006-10-18 14:13:35.000000000 -0400
+@@ -533,15 +533,6 @@
+ 	 exit(1);
+     }
+ 
+-    /* register the WRFILE keytab type and set it as the default */
+-    {
+-#define DEFAULT_KEYTAB "WRFILE:/etc/krb5.keytab"
+-	 /* XXX krb5_defkeyname is an internal library global and
+-            should go away */
+-	 extern char *krb5_defkeyname;
+-	 krb5_defkeyname = DEFAULT_KEYTAB;
+-    }
+-    
+     return query;
+ }
+ 
+--- krb5-1.5/src/kadmin/cli/keytab.c.kt_default_name	2006-10-18 14:07:36.000000000 -0400
++++ krb5-1.5/src/kadmin/cli/keytab.c	2006-10-18 14:51:21.000000000 -0400
+@@ -69,15 +69,20 @@
+ 		   krb5_keytab *keytab) 
+ {
+      int code;
++     char filename[FILENAME_MAX];
+      
+      if (*keytab_str == NULL) {
+-	  /* XXX krb5_defkeyname is an internal library global and
+-             should go away */
+-	  if (! (*keytab_str = strdup(krb5_defkeyname))) {
+-	       com_err(whoami, ENOMEM, "while creating keytab name");
++	  code = krb5_kt_default_name(my_context, filename, sizeof(filename));
++	  if (code != 0) {
++	       com_err(whoami, code, "while determining default keytab name");
++	       return 1;
++	  }
++	  *keytab_str = strdup(filename);
++	  if (*keytab_str == NULL) {
++	       com_err(whoami, ENOMEM, "while creating default keytab name");
+ 	       return 1;
+ 	  }
+-	  code = krb5_kt_default(my_context, keytab);
++	  code = krb5_kt_resolve(my_context, *keytab_str, keytab);
+ 	  if (code != 0) {
+ 	       com_err(whoami, code, "while opening default keytab");
+ 	       free(*keytab_str);
