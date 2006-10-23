@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.5
-Release: 9.99999
+Release: 11
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -133,6 +133,12 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Mon Oct 23 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-11
+- don't bail from the KDC init script if there's no database, it may be in
+  a different location than the default (fenlason)
+- remove the [kdc] section from the default krb5.conf -- doesn't seem to have
+  been applicable for a while
+
 * Wed Oct 18 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-10
 - rename krb5.sh and krb5.csh so that they don't overlap (#210623)
 - way-late application of added error info in kadmind.init (#65853)
