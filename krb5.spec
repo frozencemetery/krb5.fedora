@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.5
-Release: 11
+Release: 15
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -67,6 +67,8 @@ Patch41: krb5-1.2.7-login-lpass.patch
 Patch44: krb5-1.4.3-enospc.patch
 Patch45: krb5-1.5-gssinit.patch
 Patch46: http://web.mit.edu/kerberos/advisories/2006-001-patch_1.5.txt
+Patch47: http://web.mit.edu/kerberos/advisories/2006-002-patch.txt
+Patch48: http://web.mit.edu/kerberos/advisories/2006-003-patch.txt
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -133,6 +135,10 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
+* Tue Jan  9 2007 Nalin Dahyabhai <nalin@redhat.com> - 1.5-15
+- apply fixes from Tom Yu for MITKRB5-SA-2006-002 (CVE-2006-6143) (#218456)
+- apply fixes from Tom Yu for MITKRB5-SA-2006-003 (CVE-2006-6144) (#218456)
+
 * Mon Oct 23 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-11
 - don't bail from the KDC init script if there's no database, it may be in
   a different location than the default (fenlason)
@@ -968,6 +974,8 @@ workstation.
 pushd src
 %patch46 -p0 -b .2006-001
 popd
+%patch47 -p0 -b .2006-002
+%patch48 -p0 -b .2006-003
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
