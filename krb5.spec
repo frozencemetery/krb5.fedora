@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.5
-Release: 15
+Release: 18
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -36,7 +36,11 @@ Source19: krb5kdc.sysconfig
 Source20: kadmin.sysconfig
 Source21: krb524.sysconfig
 Source22: ekrb5-telnet.xinetd
-
+# The same source files we "check", generated with "krb5-tex-pdf create" and
+# tarred up.
+Source23: krb5-%{version}-pdf.tar.gz
+Source24: krb5-tex-pdf.sh
+Patch1: krb5-1.5.1-1.6-pal.patch
 Patch2: krb5-1.3-manpage-paths.patch
 Patch3: krb5-1.3-netkit-rsh.patch
 Patch4: krb5-1.3-rlogind-environ.patch
@@ -77,7 +81,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Prereq: grep, info, sh-utils, /sbin/install-info
 BuildPrereq: autoconf, bison, e2fsprogs-devel >= 1.35, flex
 BuildPrereq: gzip, ncurses-devel, rsh, texinfo, tar
-BuildRequires:	tetex-latex
+BuildRequires: tetex-latex
 
 %description
 Kerberos V5 is a trusted-third-party network authentication system,
@@ -135,20 +139,36 @@ network uses Kerberos, this package should be installed on every
 workstation.
 
 %changelog
-* Tue Jan  9 2007 Nalin Dahyabhai <nalin@redhat.com> - 1.5-15
+* Mon Jan 22 2007 Nalin Dahyabhai <nalin@redhat.com> - 1.5-18
+- make use of install-info more failsafe (Ville Skyttä, #223704)
+- preserve timestamps on shell scriptlets at %%install-time
+
+* Tue Jan 16 2007 Nalin Dahyabhai <nalin@redhat.com> - 1.5-17
+- move to using pregenerated PDF docs to cure multilib conflicts (#222721)
+
+* Fri Jan 12 2007 Nalin Dahyabhai <nalin@redhat.com> - 1.5-16
+- update backport of the preauth module interface (part of #194654)
+
+* Tue Jan  9 2007 Nalin Dahyabhai <nalin@redhat.com> - 1.5-14
 - apply fixes from Tom Yu for MITKRB5-SA-2006-002 (CVE-2006-6143) (#218456)
 - apply fixes from Tom Yu for MITKRB5-SA-2006-003 (CVE-2006-6144) (#218456)
 
-* Mon Oct 23 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-11
-- don't bail from the KDC init script if there's no database, it may be in
-  a different location than the default (fenlason)
-- remove the [kdc] section from the default krb5.conf -- doesn't seem to have
-  been applicable for a while
+* Wed Dec 20 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-12
+- update backport of the preauth module interface
+
+* Mon Oct 30 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-11
+- update backport of the preauth module interface
+- add proposed patches 4566, 4567
+- add proposed edata reporting interface for KDC
+- add temporary placeholder for module global context fixes
 
 * Wed Oct 18 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-10
 - rename krb5.sh and krb5.csh so that they don't overlap (#210623)
 - way-late application of added error info in kadmind.init (#65853)
  
+* Wed Oct 18 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-9.pal_18695
+- add backport of in-development preauth module interface (#208643)
+
 * Mon Oct  9 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-9
 - provide docs in PDF format instead of as tex source (Enrico Scholz, #209943)
 
@@ -326,7 +346,7 @@ workstation.
 
 * Fri Dec 17 2004 Martin Stransky <stransky@redhat.com> 1.3.5-7
 - fix deadlock during file transfer via rsync/krsh
-- thanks goes to James Antil for hint
+- thanks goes to James Antill for hint
 
 * Fri Nov 26 2004 Nalin Dahyabhai <nalin@redhat.com> 1.3.5-6
 - rebuild
@@ -938,7 +958,9 @@ workstation.
 - added --force to makeinfo commands to skip errors during build
 
 %prep
-%setup -q
+%setup -q -a 23
+%patch1  -p1 -b .pal
+
 %patch2  -p1 -b .manpage-paths
 %patch3  -p1 -b .netkit-rsh
 %patch4  -p1 -b .rlogind-environ
@@ -978,6 +1000,7 @@ popd
 %patch48 -p0 -b .2006-003
 cp src/krb524/README README.krb524
 gzip doc/*.ps
+
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
 sed -i -e '1c\
 \\documentclass{article}\
@@ -986,6 +1009,18 @@ sed -i -e '1c\
 \\usepackage{fancyheadings}\
 \\usepackage{hyperref}' doc/implement/implement.tex
 
+# Check that the PDFs we built earlier match this source tree.
+$RPM_SOURCE_DIR/krb5-tex-pdf.sh check << EOF
+doc/api       library krb5
+doc/api       libdes
+doc/implement implement
+doc/kadm5     adb-unit-test
+doc/kadm5     api-unit-test
+doc/kadm5     api-funcspec
+doc/kadm5     api-server-design
+EOF
+
+# Rebuild the configure scripts.
 cd src
 top=`pwd`
 for configurein in `find -name configure.in -type f` ; do
@@ -995,28 +1030,7 @@ for configurein in `find -name configure.in -type f` ; do
 	popd
 done
 
-
 %build
-# Usage: mkpdf <dir> <basename> <ist>
-function mkpdf()
-{
-	cd "$1"
-	touch "$2".ind
-	pdflatex "$2"
-	test ! -e "$2".idx || makeindex ${3:+-s "$3".ist} "$2".idx
-	pdflatex "$2"
-	pdflatex "$2"
-	cd -
-}
-
-mkpdf doc/api       library krb5
-mkpdf doc/api	    libdes
-mkpdf doc/implement implement
-mkpdf doc/kadm5	    adb-unit-test
-mkpdf doc/kadm5	    api-unit-test
-mkpdf doc/kadm5	    api-funcspec
-mkpdf doc/kadm5	    api-server-design
-
 
 cd src
 INCLUDES=-I%{_includedir}/et
@@ -1076,9 +1090,9 @@ install -m 644 $RPM_SOURCE_DIR/kadm5.acl $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc
 mkdir -p $RPM_BUILD_ROOT/etc/profile.d
 install -m 644 $RPM_SOURCE_DIR/krb5.conf $RPM_BUILD_ROOT/etc/krb5.conf
 for subpackage in devel workstation ; do
-	install -m 755 $RPM_SOURCE_DIR/krb5.sh \
+	install -pm 755 $RPM_SOURCE_DIR/krb5.sh \
 	$RPM_BUILD_ROOT/etc/profile.d/krb5-${subpackage}.sh
-	install -m 755 $RPM_SOURCE_DIR/krb5.csh \
+	install -pm 755 $RPM_SOURCE_DIR/krb5.csh \
 	$RPM_BUILD_ROOT/etc/profile.d/krb5-${subpackage}.csh
 done
 
@@ -1146,6 +1160,7 @@ install -m644 src/util/ac_check_krb5.m4 $RPM_BUILD_ROOT/%{_datadir}/aclocal/
 /sbin/install-info %{_infodir}/krb425.info.gz %{_infodir}/dir
 /sbin/install-info %{_infodir}/krb5-admin.info.gz %{_infodir}/dir
 /sbin/install-info %{_infodir}/krb5-install.info.gz %{_infodir}/dir
+exit 0
 
 %preun server
 if [ "$1" = "0" ] ; then
@@ -1161,6 +1176,7 @@ if [ "$1" = "0" ] ; then
 	/sbin/install-info --delete %{_infodir}/krb5-admin.info.gz %{_infodir}/dir
 	/sbin/install-info --delete %{_infodir}/krb5-install.info.gz %{_infodir}/dir
 fi
+exit 0
 
 %postun server
 if [ "$1" -ge 1 ] ; then
@@ -1178,6 +1194,7 @@ fi
 if [ "$1" = "0" ] ; then
 	/sbin/install-info --delete %{_infodir}/krb5-user.info %{_infodir}/dir
 fi
+exit 0
 
 %postun workstation
 /sbin/service xinetd reload > /dev/null 2>&1 || :
