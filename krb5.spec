@@ -156,11 +156,17 @@ workstation.
 * Wed Dec 20 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-12
 - update backport of the preauth module interface
 
-* Mon Oct 30 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-11
+* Mon Oct 30 2006 Nalin Dahyabhai <nalin@redhat.com>
 - update backport of the preauth module interface
 - add proposed patches 4566, 4567
 - add proposed edata reporting interface for KDC
 - add temporary placeholder for module global context fixes
+
+* Mon Oct 23 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-11
+- don't bail from the KDC init script if there's no database, it may be in
+  a different location than the default (fenlason)
+- remove the [kdc] section from the default krb5.conf -- doesn't seem to have
+  been applicable for a while
 
 * Wed Oct 18 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-10
 - rename krb5.sh and krb5.csh so that they don't overlap (#210623)
