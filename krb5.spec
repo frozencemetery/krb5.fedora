@@ -12,7 +12,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6
-Release: 0
+Release: 1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -184,6 +184,10 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Tue Jan 30 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6-1
+- clean up quoting of command-line arguments passed to the krsh/krlogin
+  wrapper scripts
+
 * Mon Jan 22 2007 Nalin Dahyabhai <nalin@redhat.com>
 - initial update to 1.6, pre-package-reorg
 - move workstation daemons to a new subpackage (#81836, #216356, #217301), and
