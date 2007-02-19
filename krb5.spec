@@ -184,6 +184,9 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Mon Feb 19 2007 Nalin Dahyabhai <nalin@redhat.com>
+- make profile.d scriptlets mode 644 instead of 755 (part of #225974)
+
 * Tue Jan 30 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6-1
 - clean up quoting of command-line arguments passed to the krsh/krlogin
   wrapper scripts
@@ -1147,9 +1150,9 @@ install -pm 644 $RPM_SOURCE_DIR/kadm5.acl $RPM_BUILD_ROOT%{_var}/kerberos/krb5kd
 mkdir -p $RPM_BUILD_ROOT/etc/profile.d
 install -pm 644 $RPM_SOURCE_DIR/krb5.conf $RPM_BUILD_ROOT/etc/krb5.conf
 for subpackage in devel workstation ; do
-	install -pm 755 $RPM_SOURCE_DIR/krb5.sh \
+	install -pm 644 $RPM_SOURCE_DIR/krb5.sh \
 	$RPM_BUILD_ROOT/etc/profile.d/krb5-$subpackage.sh
-	install -pm 755 $RPM_SOURCE_DIR/krb5.csh \
+	install -pm 644 $RPM_SOURCE_DIR/krb5.csh \
 	$RPM_BUILD_ROOT/etc/profile.d/krb5-$subpackage.csh
 done
 
