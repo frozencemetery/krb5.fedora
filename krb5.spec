@@ -9,6 +9,9 @@
 # This'll be made unconditional at some point.
 %define split_workstation 1
 
+# This'll be pulled out at some point.
+%define build_static 0
+
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6
@@ -72,6 +75,7 @@ Patch41: krb5-1.2.7-login-lpass.patch
 Patch44: krb5-1.4.3-enospc.patch
 Patch45: krb5-1.5-gssinit.patch
 Patch46: krb5-1.6-fix-sendto_kdc-memset.dif
+Patch47: krb5-1.6-sort-of-static.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -184,6 +188,10 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Wed Feb 28 2007 Nalin Dahyabhai <nalin@redhat.com>
+- add patch to build semi-useful static libraries, but don't apply it unless
+  we need them
+
 * Mon Feb 19 2007 Nalin Dahyabhai <nalin@redhat.com>
 - make profile.d scriptlets mode 644 instead of 755 (part of #225974)
 
@@ -1054,6 +1062,9 @@ installed on systems which are meant provide these services.
 %patch44 -p1 -b .enospc
 %patch45 -p1 -b .gssinit
 %patch46 -p0 -b .kpasswd
+%if %{build_static}
+%patch47 -p1 -b .sort-of-static
+%endif
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
@@ -1109,6 +1120,9 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	OPENLDAP_PLUGIN="$OPENLDAP_PLUGIN" \
 	SS_LIB="-lss -lcurses" \
 	--enable-shared \
+%if %{build_static}
+	--enable-static \
+%endif
 	--bindir=%{krb5prefix}/bin \
 	--mandir=%{krb5prefix}/man \
 	--sbindir=%{krb5prefix}/sbin \
@@ -1548,6 +1562,10 @@ exit 0
 %{_libdir}/libkrb4.so
 %{_libdir}/libkrb5.so
 %{_libdir}/libkrb5support.so
+
+%if %{build_static}
+%{_libdir}/*.a
+%endif
 
 %{krb5prefix}/bin/krb5-config
 %{krb5prefix}/bin/sclient
