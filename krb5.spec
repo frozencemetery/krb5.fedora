@@ -85,7 +85,8 @@ Prereq: grep, info, sh-utils, /sbin/install-info
 BuildPrereq: autoconf, bison, e2fsprogs-devel >= 1.35, flex
 BuildPrereq: gzip, ncurses-devel, rsh, texinfo, tar
 BuildRequires: tetex-latex
-BuildRequires: keyutils-libs-devel
+# Wait until the merge completes -- keyutils lives in Extras.
+# BuildRequires: keyutils-libs-devel
 
 %if %{WITH_LDAP}
 BuildRequires: openldap-devel
@@ -189,6 +190,9 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Thu Mar 22 2007 Nalin Dahyabhai <nalin@redhat.com>
+- back out buildrequires: keyutils-libs-devel for now
+
 * Thu Mar 22 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6-2
 - add buildrequires: on keyutils-libs-devel to enable use of keyring ccaches,
   dragging keyutils-libs in as a dependency
