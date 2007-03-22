@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6
-Release: 1
+Release: 2
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -85,6 +85,7 @@ Prereq: grep, info, sh-utils, /sbin/install-info
 BuildPrereq: autoconf, bison, e2fsprogs-devel >= 1.35, flex
 BuildPrereq: gzip, ncurses-devel, rsh, texinfo, tar
 BuildRequires: tetex-latex
+BuildRequires: keyutils-libs-devel
 
 %if %{WITH_LDAP}
 BuildRequires: openldap-devel
@@ -188,6 +189,10 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Thu Mar 22 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6-2
+- add buildrequires: on keyutils-libs-devel to enable use of keyring ccaches,
+  dragging keyutils-libs in as a dependency
+
 * Wed Feb 28 2007 Nalin Dahyabhai <nalin@redhat.com>
 - add patch to build semi-useful static libraries, but don't apply it unless
   we need them
