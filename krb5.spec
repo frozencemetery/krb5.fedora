@@ -1497,6 +1497,8 @@ exit 0
 %files server-ldap
 %defattr(-,root,root)
 %docdir %{krb5prefix}/man
+%doc src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
+%doc src/plugins/kdb/ldap/libkdb_ldap/kerberos.schema
 %dir %{_libdir}/krb5
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/kdb
