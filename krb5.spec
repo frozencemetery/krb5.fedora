@@ -193,6 +193,11 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Fri Apr 13 2007 Nalin Dahyabhai <nalin@redhat.com>
+- move the default acl_file, dict_file, and admin_keytab settings to
+  the part of the default/example kdc.conf where they'll actually have
+  an effect (#236417)
+
 * Tue Apr  3 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6-3
 - add patch to correct unauthorized access via krb5-aware telnet
   daemon (#229782, CVE-2007-0956)
