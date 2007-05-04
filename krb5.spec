@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6
-Release: 3
+Release: 4
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -79,6 +79,8 @@ Patch47: krb5-1.6-sort-of-static.patch
 Patch48: krb5-1.6-CVE-2007-0956-prelim.patch
 Patch49: krb5-1.6-CVE-2007-0957-prelim.patch
 Patch50: krb5-1.6-CVE-2007-1216-prelim.patch
+Patch51: krb5-1.6-ldap-init.patch
+Patch52: krb5-1.6-ldap-man.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -193,6 +195,11 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Fri May  4 2007 Nalin Dahyabhai <nalin@redhat.com>
+- fix an uninitialized length value which could cause a crash when parsing
+  key data coming from a directory server
+- correct a typo in the krb5.conf man page ("ldap_server"->"ldap_servers")
+
 * Fri Apr 13 2007 Nalin Dahyabhai <nalin@redhat.com>
 - move the default acl_file, dict_file, and admin_keytab settings to
   the part of the default/example kdc.conf where they'll actually have
@@ -1092,6 +1099,8 @@ installed on systems which are meant provide these services.
 %patch48 -p0 -b .CVE-2007-0956
 %patch49 -p0 -b .CVE-2007-0957
 %patch50 -p0 -b .CVE-2007-1216
+%patch51 -p0 -b .ldap_init
+%patch52 -p0 -b .ldap_man
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
