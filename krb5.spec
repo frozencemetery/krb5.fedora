@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6
-Release: 4
+Release: 5
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -91,7 +91,7 @@ BuildPrereq: autoconf, bison, e2fsprogs-devel >= 1.35, flex
 BuildPrereq: gzip, ncurses-devel, rsh, texinfo, tar
 BuildRequires: tetex-latex
 # Wait until the merge completes -- keyutils lives in Extras.
-# BuildRequires: keyutils-libs-devel
+BuildRequires: keyutils-libs-devel
 
 %if %{WITH_LDAP}
 BuildRequires: openldap-devel
@@ -195,7 +195,11 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
-* Fri May  4 2007 Nalin Dahyabhai <nalin@redhat.com>
+* Fri May  4 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6-5
+- pull in keyutils as a build requirement to get the "KEYRING:" ccache type,
+  because we've merged
+
+* Fri May  4 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6-4
 - fix an uninitialized length value which could cause a crash when parsing
   key data coming from a directory server
 - correct a typo in the krb5.conf man page ("ldap_server"->"ldap_servers")
