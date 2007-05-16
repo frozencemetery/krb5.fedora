@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6
-Release: 5
+Release: 6
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -81,6 +81,7 @@ Patch49: krb5-1.6-CVE-2007-0957-prelim.patch
 Patch50: krb5-1.6-CVE-2007-1216-prelim.patch
 Patch51: krb5-1.6-ldap-init.patch
 Patch52: krb5-1.6-ldap-man.patch
+Patch53: krb5-1.6-nodeplibs.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -195,6 +196,12 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Wed May 16 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6-6
+- omit dependent libraries from the krb5-config --libs output, as using
+  shared libraries (no more static libraries) makes them unnecessary and
+  they're not part of the libkrb5 interface (patch by Rex Dieter, #240220)
+  (strips out libkeyutils, libresolv, libdl)
+
 * Fri May  4 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6-5
 - pull in keyutils as a build requirement to get the "KEYRING:" ccache type,
   because we've merged
@@ -1105,6 +1112,7 @@ installed on systems which are meant provide these services.
 %patch50 -p0 -b .CVE-2007-1216
 %patch51 -p0 -b .ldap_init
 %patch52 -p0 -b .ldap_man
+%patch53 -p1 -b .nodeplibs
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
