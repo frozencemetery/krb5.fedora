@@ -196,6 +196,12 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Fri May 18 2007 Nalin Dahyabhai <nalin@redhat.com>
+- kadmind.init: don't fail outright if the default principal database
+  isn't there if it looks like we might be using the kldap plugin
+- kadmind.init: attempt to extract the key for the host-specific kadmin
+  service when we try to create the keytab
+
 * Wed May 16 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6-6
 - omit dependent libraries from the krb5-config --libs output, as using
   shared libraries (no more static libraries) makes them unnecessary and

@@ -30,7 +30,11 @@ RETVAL=0
 # Shell functions to cut down on useless shell instances.
 start() {
   	if [ ! -f /var/kerberos/krb5kdc/principal ] ; then
-	    echo $"Error. Default principal database does not exist."
+	    # Make an educated guess -- if they're using kldap somewhere,
+	    # then we don't know for sure that this is an error.
+  	    if [ ! grep -q 'db_library.*=.*kldap' /etc/krb5.conf ] ; then
+	        echo $"Error. Default principal database does not exist."
+	    fi
 	    exit 0
 	fi
   	if [ -f /var/kerberos/krb5kdc/kpropd.acl ] ; then
@@ -39,7 +43,10 @@ start() {
 	else
   	    if [ ! -f /var/kerberos/krb5kdc/kadm5.keytab ] ; then
 		echo -n $"Extracting kadm5 Service Keys: "
+		# This should always work.
 		/usr/kerberos/sbin/kadmin.local ${KRB5REALM:+-r $KRB5REALM} -q "ktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/admin${KRB5REALM:+@$KRB5REALM} kadmin/changepw${KRB5REALM:+@$KRB5REALM}" && success || failure
+		# It's probably okay if this fails.
+		/usr/kerberos/sbin/kadmin.local ${KRB5REALM:+-r $KRB5REALM} -q "ktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/`hostname`${KRB5REALM:+@$KRB5REALM}" 2> /dev/null && success
 		echo
 	    fi
 	fi
