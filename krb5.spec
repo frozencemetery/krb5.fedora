@@ -200,6 +200,10 @@ installed on systems which are meant provide these services.
 
 %changelog
 * Fri Jun 22 2007 Nalin Dahyabhai <nalin@redhat.com>
+- preprocess kerberos.ldif into a format FDS will like better, and include
+  that as a doc file as well
+
+* Fri Jun 22 2007 Nalin Dahyabhai <nalin@redhat.com>
 - switch man pages to being generated with the right paths in them
 - drop old, incomplete SELinux patch
 - add patch from Greg Hudson to make srvtab routines report missing-file errors
@@ -1169,6 +1173,15 @@ doc/kadm5     api-funcspec
 doc/kadm5     api-server-design
 EOF
 
+# Generate an FDS-compatible LDIF file.
+inldif=src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
+cat > 60kerberos.ldif << EOF
+# This is a variation on kerberos.ldif which Fedora Directory Server will like.
+dn: cn=schema
+EOF
+egrep -iv '(^$|^dn:|^changetype:|^add:)' $inldif >> 60kerberos.ldif
+touch -r $inldif 60kerberos.ldif
+
 # Rebuild the configure scripts.
 cd src
 top=`pwd`
@@ -1582,6 +1595,7 @@ exit 0
 %docdir %{krb5prefix}/man
 %doc src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
 %doc src/plugins/kdb/ldap/libkdb_ldap/kerberos.schema
+%doc 60kerberos.ldif
 %dir %{_libdir}/krb5
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/kdb
