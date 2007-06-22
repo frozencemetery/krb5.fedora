@@ -1108,7 +1108,7 @@ installed on systems which are meant provide these services.
 %prep
 %setup -q -a 23
 pushd src
-%patch60 -p2 -b .pam
+# %patch60 -p2 -b .pam
 %patch61 -p0 -b .manpaths
 popd
 pushd src/lib/krb5/keytab
