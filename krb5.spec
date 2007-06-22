@@ -1,7 +1,3 @@
-%if %{?WITH_SELINUX:0}%{!?WITH_SELINUX:1}
-%define WITH_SELINUX 0
-%endif
-
 %define WITH_LDAP 1
 
 %define krb5prefix %{_prefix}/kerberos
@@ -11,6 +7,9 @@
 
 # This'll be pulled out at some point.
 %define build_static 0
+
+# For consistency with regular login.
+%define login_pam_service remote
 
 Summary: The Kerberos network authentication system.
 Name: krb5
@@ -45,8 +44,11 @@ Source22: ekrb5-telnet.xinetd
 # and tarred up.
 Source23: krb5-%{version}-pdf.tar.gz
 Source24: krb5-tex-pdf.sh
+Source25: krb5-trunk-manpaths.txt
+Source26: gssftp.pamd
+Source27: kshell.pamd
+Source28: ekshell.pamd
 
-Patch2: krb5-1.6-manpage-paths.patch
 Patch3: krb5-1.3-netkit-rsh.patch
 Patch4: krb5-1.3-rlogind-environ.patch
 Patch5: krb5-1.3-ksu-access.patch
@@ -58,7 +60,6 @@ Patch13: krb5-1.3-large-file.patch
 Patch14: krb5-1.3-ftp-glob.patch
 Patch16: krb5-1.6-buildconf.patch
 Patch18: krb5-1.2.7-reject-bad-transited.patch
-Patch21: krb5-selinux.patch
 Patch23: krb5-1.3.1-dns.patch
 Patch25: krb5-1.4-null.patch
 Patch26: krb5-1.3.2-efence.patch
@@ -82,6 +83,10 @@ Patch55: krb5-1.6.1-empty.patch
 Patch56: krb5-1.6.1-get_opt_fixup.patch
 Patch57: krb5-1.6.1-ftp-nospew.patch
 
+Patch60: krb5-1.6.1-pam.patch
+Patch61: krb5-trunk-manpaths.patch
+Patch62: krb5-any-fixup-patch.txt
+
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -90,7 +95,6 @@ Prereq: grep, info, sh-utils, /sbin/install-info
 BuildPrereq: autoconf, bison, e2fsprogs-devel >= 1.35, flex
 BuildPrereq: gzip, ncurses-devel, rsh, texinfo, tar
 BuildRequires: tetex-latex
-# Wait until the merge completes -- keyutils lives in Extras.
 BuildRequires: keyutils-libs-devel
 
 %if %{WITH_LDAP}
@@ -185,7 +189,7 @@ Group: System Environment/Base
 Requires: %{name}-workstation = %{version}-%{release}
 Prereq: grep, /sbin/install-info, /bin/sh, sh-utils
 # mktemp is used by krb5-send-pr
-Requires: mktemp, xinetd
+Requires: mktemp, xinetd, /etc/pam.d/%{login_pam_service}
 
 %description workstation-servers
 Kerberos is a network authentication system. The krb5-workstation-servers
@@ -195,6 +199,12 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Fri Jun 22 2007 Nalin Dahyabhai <nalin@redhat.com>
+- switch man pages to being generated with the right paths in them
+- drop old, incomplete SELinux patch
+- add patch from Greg Hudson to make srvtab routines report missing-file errors
+  at same point that keytab routines do (#241805)
+
 * Thu May 24 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-2
 - pull patch from svn to undo unintentional chattiness in ftp
 - pull patch from svn to handle NULL krb5_get_init_creds_opt structures
@@ -1087,7 +1097,13 @@ installed on systems which are meant provide these services.
 
 %prep
 %setup -q -a 23
-%patch2  -p1 -b .manpage-paths
+pushd src
+%patch60 -p2 -b .pam
+%patch61 -p0 -b .manpaths
+popd
+pushd src/lib/krb5/keytab
+%patch62 -p0 -b .any-fixup
+popd
 %patch3  -p1 -b .netkit-rsh
 %patch4  -p1 -b .rlogind-environ
 %patch5  -p1 -b .ksu-access
@@ -1099,9 +1115,6 @@ installed on systems which are meant provide these services.
 %patch14 -p1 -b .ftp-glob
 %patch16 -p1 -b .buildconf
 %patch18 -p1 -b .reject-bad-transited
-%if %{WITH_SELINUX}
-%patch21 -p1 -b .selinux
-%endif
 %patch23 -p1 -b .dns
 %patch25 -p1 -b .null
 # Removes a malloc(0) case, nothing more.
@@ -1137,6 +1150,13 @@ sed -i -e '1c\
 \\usepackage{functions}\
 \\usepackage{fancyheadings}\
 \\usepackage{hyperref}' doc/implement/implement.tex
+
+# Rename the man pages so that they'll get generated correctly.
+pushd src
+cat $RPM_SOURCE_DIR/krb5-trunk-manpaths.txt | while read manpage ; do
+	mv "$manpage" "$manpage".in
+done
+popd
 
 # Check that the PDFs we built earlier match this source tree.
 $RPM_SOURCE_DIR/krb5-tex-pdf.sh check << EOF
@@ -1195,7 +1215,9 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--with-system-ss \
 	--with-netlib=-lresolv \
 	--without-tcl \
-	--enable-dns
+	--enable-dns \
+	--with-pam \
+	--with-pam-login-service=%{login_pam_service}
 # Now build it.
 make
 
@@ -1248,6 +1270,13 @@ mkdir -p $RPM_BUILD_ROOT/etc/xinetd.d/
 for xinetd in eklogin klogin kshell ekrb5-telnet krb5-telnet gssftp ; do
 	install -pm 644 $RPM_SOURCE_DIR/${xinetd}.xinetd \
 	$RPM_BUILD_ROOT/etc/xinetd.d/${xinetd}
+done
+
+# PAM configuration files.
+mkdir -p $RPM_BUILD_ROOT/etc/pam.d/
+for pam in kshell ekshell remote gssftp ; do
+	install -pm 644 $RPM_SOURCE_DIR/$pam.pamd \
+	$RPM_BUILD_ROOT/etc/pam.d/$pam
 done
 
 # Plug-in directories.
@@ -1440,6 +1469,7 @@ exit 0
 %endif
 
 %config(noreplace) /etc/xinetd.d/*
+%config(noreplace) /etc/pam.d/*
 
 # Login is used by telnetd and klogind.
 %{krb5prefix}/sbin/login.krb5
