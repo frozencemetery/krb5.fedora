@@ -200,6 +200,12 @@ installed on systems which are meant provide these services.
 
 %changelog
 * Fri Jun 22 2007 Nalin Dahyabhai <nalin@redhat.com>
+- perform PAM account / session management in krshd (#182195,#195922)
+- perform PAM authentication and account / session management in ftpd
+- perform PAM authentication, account / session management, and password-
+  changing in login.krb5 (#182195,#195922)
+
+* Fri Jun 22 2007 Nalin Dahyabhai <nalin@redhat.com>
 - preprocess kerberos.ldif into a format FDS will like better, and include
   that as a doc file as well
 
