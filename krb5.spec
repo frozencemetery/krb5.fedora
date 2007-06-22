@@ -1293,7 +1293,7 @@ done
 
 # PAM configuration files.
 mkdir -p $RPM_BUILD_ROOT/etc/pam.d/
-for pam in kshell ekshell remote gssftp ; do
+for pam in kshell ekshell gssftp ; do
 	install -pm 644 $RPM_SOURCE_DIR/$pam.pamd \
 	$RPM_BUILD_ROOT/etc/pam.d/$pam
 done
