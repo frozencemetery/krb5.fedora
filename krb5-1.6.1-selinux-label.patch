@@ -1,0 +1,736 @@
+SELinux bases access to files mainly on the domain of the requesting
+process and the context applied to the file.
+
+In many cases, applications needn't be SELinux aware to work properly,
+because SELinux can apply a default label to a file based on the label
+of the directory in which it's created.
+
+In the case of files such as /etc/krb5.keytab, however, this isn't
+sufficient, as /etc/krb5.keytab will almost always need given a label
+which differs from that of /etc/issue or /etc/resolv.conf.
+
+To give the file the correct label, we can either force a "restorecon"
+call to fix a file's label after it's created, or create the file with
+the right label, as we do here.
+
+We now label pretty much *every* file at creation-time.  When enabled,
+the libkrb5support library depends on libselinux.
+
+--- krb5-1.6.1/src/krb5-config.in	2006-06-15 20:26:49.000000000 -0400
++++ krb5-1.6.1/src/krb5-config.in	2007-06-22 17:06:27.000000000 -0400
+@@ -39,6 +39,7 @@ LDFLAGS='@LDFLAGS@'
+ RPATH_FLAG='@RPATH_FLAG@'
+ PTHREAD_CFLAGS='@PTHREAD_CFLAGS@'
+ DL_LIB='@DL_LIB@'
++SELINUX_LIBS='@SELINUX_LIBS@'
+ 
+ LIBS='@LIBS@'
+ GEN_LIB=@GEN_LIB@
+@@ -217,7 +218,7 @@ if test -n "$do_libs"; then
+     fi
+ 
+     if test $library = 'krb5'; then
+-	lib_flags="$lib_flags -lkrb5 -lk5crypto -lcom_err $GEN_LIB $LIBS $DL_LIB"
++	lib_flags="$lib_flags -lkrb5 -lk5crypto -lcom_err $GEN_LIB $LIBS $SELINUX_LIBS $DL_LIB"
+     fi
+ 
+     echo $lib_flags
+--- krb5-1.6.1/src/lib/krb4/Makefile.in	2006-10-06 17:17:56.000000000 -0400
++++ krb5-1.6.1/src/lib/krb4/Makefile.in	2007-06-22 17:06:27.000000000 -0400
+@@ -25,7 +25,7 @@ SHLIB_EXPDEPS = \
+ 	$(TOPLIBD)/libdes425$(SHLIBEXT) \
+ 	$(TOPLIBD)/libk5crypto$(SHLIBEXT) \
+ 	$(TOPLIBD)/libkrb5$(SHLIBEXT)
+-SHLIB_EXPLIBS=-lkrb5 -lcom_err -ldes425 -lk5crypto
++SHLIB_EXPLIBS=-lkrb5 -lcom_err -ldes425 -lk5crypto -l$(SUPPORT_LIBNAME) $(SELINUX_LIBS)
+ SHLIB_DIRS=-L$(TOPLIBD)
+ SHLIB_RDIRS=$(KRB5_LIBDIR)
+ 
+--- krb5-1.6.1/src/include/k5-label.h	2007-06-24 17:25:59.000000000 -0400
++++ krb5-1.6.1/src/include/k5-label.h	2007-06-24 17:25:59.000000000 -0400
+@@ -0,0 +1,21 @@
++#ifndef _KRB5_LABEL_H
++#define _KRB5_LABEL_H
++/* Wrapper functions which help us create files and directories with the right
++ * context labels. */
++#ifdef USE_SELINUX
++#include <sys/types.h>
++#include <stdio.h>
++FILE *krb5int_labeled_fopen(const char *path, const char *mode);
++int krb5int_labeled_creat(const char *path, mode_t mode);
++int krb5int_labeled_open(const char *path, int flags, ...);
++int krb5int_labeled_mkdir(const char *path, mode_t mode);
++int krb5int_labeled_mknod(const char *path, mode_t mode, dev_t device);
++#ifndef USE_SELINUX_UNWRAPPED
++#define fopen krb5int_labeled_fopen
++#define open krb5int_labeled_open
++#define creat krb5int_labeled_creat
++#define mkdir krb5int_labeled_mkdir
++#define mknod krb5int_labeled_mknod
++#endif
++#endif
++#endif
+--- krb5-1.6.1/src/include/k5-int.h	2007-02-05 18:44:34.000000000 -0500
++++ krb5-1.6.1/src/include/k5-int.h	2007-06-24 17:25:40.000000000 -0400
+@@ -172,6 +172,9 @@
+ /* Get error info support.  */
+ #include "k5-err.h"
+ 
++/* Get file labeling support.  */
++#include "k5-label.h"
++
+ /* krb5/krb5.h includes many other .h files in the krb5 subdirectory.
+    The ones that it doesn't include, we include below.  */
+ 
+--- krb5-1.6.1/src/config/pre.in	2007-06-22 17:03:21.000000000 -0400
++++ krb5-1.6.1/src/config/pre.in	2007-06-22 17:06:27.000000000 -0400
+@@ -181,6 +181,7 @@ SRVDEPLIBS = @SRVDEPLIBS@
+ CLNTLIBS = @CLNTLIBS@
+ CLNTDEPLIBS = @CLNTDEPLIBS@
+ PAM_LIBS = @PAM_LIBS@
++SELINUX_LIBS = @SELINUX_LIBS@
+ 
+ INSTALL=@INSTALL@
+ INSTALL_STRIP=
+@@ -391,7 +392,7 @@ DES425_LIB	= @DES425_LIB@
+ # HESIOD_LIBS is -lhesiod...
+ HESIOD_LIBS	= @HESIOD_LIBS@
+ 
+-KRB5_BASE_LIBS	= $(KRB5_LIB) $(K5CRYPTO_LIB) $(COM_ERR_LIB) $(SUPPORT_LIB) $(GEN_LIB) $(LIBS) $(DL_LIB)
++KRB5_BASE_LIBS	= $(KRB5_LIB) $(K5CRYPTO_LIB) $(COM_ERR_LIB) $(SUPPORT_LIB) $(GEN_LIB) $(LIBS) $(SELINUX_LIBS) $(DL_LIB)
+ KRB4COMPAT_LIBS	= $(KRB4_LIB) $(DES425_LIB) $(KRB5_BASE_LIBS)
+ KDB5_LIBS	= $(KDB5_LIB)
+ GSS_LIBS	= $(GSS_KRB5_LIB)
+--- krb5-1.6.1/src/util/support/selinux.c	2007-06-22 17:06:42.000000000 -0400
++++ krb5-1.6.1/src/util/support/selinux.c	2007-06-22 17:31:53.000000000 -0400
+@@ -0,0 +1,258 @@
++/*
++ * Copyright 2007 Red Hat, Inc.  All Rights Reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *  Redistributions of source code must retain the above copyright notice, this
++ *  list of conditions and the following disclaimer.
++ *
++ *  Redistributions in binary form must reproduce the above copyright notice,
++ *  this list of conditions and the following disclaimer in the documentation
++ *  and/or other materials provided with the distribution.
++ *
++ *  Neither the name of Red Hat, Inc. nor the names of its contributors may be
++ *  used to endorse or promote products derived from this software without
++ *  specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
++ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ * 
++ * File-opening wrappers for creating correctly-labeled files.  So far, we can
++ * assume that this is Linux-specific, so we make many simplifying assumptions.
++ */
++
++#include "../../include/autoconf.h"
++
++#ifdef USE_SELINUX
++#define USE_SELINUX_UNWRAPPED
++
++#include <k5-label.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <limits.h>
++#include <pthread.h>
++#include <stdarg.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unistd.h>
++#include <selinux/selinux.h>
++
++/* #define DEBUG 1 */
++
++static pthread_mutex_t labeled_lock = PTHREAD_MUTEX_INITIALIZER;
++
++static security_context_t
++push_fscreatecon(const char *pathname, mode_t mode)
++{
++	security_context_t previous, next;
++	const char *fullpath;
++
++	previous = NULL;
++	if (is_selinux_enabled()) {
++		if (getfscreatecon(&previous) == 0) {
++			char *genpath;
++			genpath = NULL;
++			if (pathname[0] != '/') {
++				char *wd;
++				size_t len;
++				len = 0;
++				wd = getcwd(NULL, len);
++				if (wd == NULL) {
++					if (previous == NULL) {
++						freecon(previous);
++					}
++					return NULL;
++				}
++				len = strlen(wd) + strlen(pathname) + 1;
++				genpath = malloc(len);
++				if (genpath == NULL) {
++					free(wd);
++					if (previous == NULL) {
++						freecon(previous);
++					}
++					return NULL;
++				}
++				sprintf(genpath, "%s/%s", wd, pathname);
++				free(wd);
++				fullpath = genpath;
++			} else {
++				fullpath = pathname;
++			}
++			next = NULL;
++#ifdef DEBUG
++			if (isatty(fileno(stderr))) {
++				fprintf(stderr, "Looking up context for "
++					"\"%s\"(%05o).\n", fullpath, mode);
++			}
++#endif
++			if (matchpathcon(fullpath, mode, &next) != 0) {
++				free(genpath);
++				if (previous) {
++					freecon(previous);
++				}
++				return NULL;
++			}
++			free(genpath);
++#ifdef DEBUG
++			if (isatty(fileno(stderr))) {
++				fprintf(stderr, "Setting file creation context "
++					"to \"%s\".\n", next);
++			}
++#endif
++			if (setfscreatecon(next) != 0) {
++				freecon(next);
++				if (previous) {
++					freecon(previous);
++				}
++				return NULL;
++			}
++#ifdef DEBUG
++		} else {
++			if (isatty(fileno(stderr))) {
++				fprintf(stderr, "Unable to determine "
++					"current context.\n");
++			}
++#endif
++		}
++	}
++	return previous;
++}
++
++static void
++pop_fscreatecon(security_context_t previous)
++{
++	if (is_selinux_enabled()) {
++#ifdef DEBUG
++		if (isatty(fileno(stderr))) {
++			if (previous != NULL) {
++				fprintf(stderr, "Resetting file creation "
++					"context to \"%s\".\n", previous);
++			} else {
++				fprintf(stderr, "Resetting file creation "
++					"context to default.\n");
++			}
++		}
++#endif
++		setfscreatecon(previous);
++		if (previous != NULL) {
++			freecon(previous);
++		}
++	}
++}
++
++FILE *
++krb5int_labeled_fopen(const char *path, const char *mode)
++{
++	FILE *fp;
++	int errno_save;
++	security_context_t ctx;
++
++	pthread_mutex_lock(&labeled_lock);
++	ctx = push_fscreatecon(path, 0);
++	fp = fopen(path, mode);
++	errno_save = errno;
++	pop_fscreatecon(ctx);
++	pthread_mutex_unlock(&labeled_lock);
++
++	errno = errno_save;
++	return fp;
++}
++
++int
++krb5int_labeled_creat(const char *path, mode_t mode)
++{
++	int fd;
++	int errno_save;
++	security_context_t ctx;
++
++	pthread_mutex_lock(&labeled_lock);
++	ctx = push_fscreatecon(path, 0);
++	fd = creat(path, mode);
++	errno_save = errno;
++	pop_fscreatecon(ctx);
++	pthread_mutex_unlock(&labeled_lock);
++
++	errno = errno_save;
++	return fd;
++}
++
++int
++krb5int_labeled_mknod(const char *path, mode_t mode, dev_t dev)
++{
++	int ret;
++	int errno_save;
++	security_context_t ctx;
++
++	pthread_mutex_lock(&labeled_lock);
++	ctx = push_fscreatecon(path, mode);
++	ret = mknod(path, mode, dev);
++	errno_save = errno;
++	pop_fscreatecon(ctx);
++	pthread_mutex_unlock(&labeled_lock);
++
++	errno = errno_save;
++	return ret;
++}
++
++int
++krb5int_labeled_mkdir(const char *path, mode_t mode)
++{
++	int ret;
++	int errno_save;
++	security_context_t ctx;
++
++	pthread_mutex_lock(&labeled_lock);
++	ctx = push_fscreatecon(path, S_IFDIR);
++	ret = mkdir(path, mode);
++	errno_save = errno;
++	pop_fscreatecon(ctx);
++	pthread_mutex_unlock(&labeled_lock);
++
++	errno = errno_save;
++	return ret;
++}
++
++int
++krb5int_labeled_open(const char *path, int flags, ...)
++{
++	int fd;
++	int errno_save;
++	security_context_t ctx;
++	mode_t mode;
++	va_list ap;
++
++	if (flags & O_CREAT) {
++		pthread_mutex_unlock(&labeled_lock);
++	} else {
++		return open(path, flags);
++	}
++
++	pthread_mutex_lock(&labeled_lock);
++	ctx = push_fscreatecon(path, 0);
++
++	va_start(ap, flags);
++	mode = va_arg(ap, mode_t);
++	fd = open(path, flags, mode);
++	va_end(ap);
++
++	errno_save = errno;
++
++	pop_fscreatecon(ctx);
++	pthread_mutex_unlock(&labeled_lock);
++	return fd;
++}
++
++#endif
+--- krb5-1.6.1/src/util/support/libkrb5support.exports	2006-05-04 14:35:01.000000000 -0400
++++ krb5-1.6.1/src/util/support/libkrb5support.exports	2007-06-22 17:32:40.000000000 -0400
+@@ -32,3 +32,6 @@ krb5int_free_error
+ krb5int_clear_error
+ krb5int_set_error_info_callout_fn
+ krb5int_gmt_mktime
++krb5int_labeled_open
++krb5int_labeled_fopen
++krb5int_labeled_creat
+--- krb5-1.6.1/src/util/support/Makefile.in	2006-10-17 23:15:24.000000000 -0400
++++ krb5-1.6.1/src/util/support/Makefile.in	2007-06-22 17:06:27.000000000 -0400
+@@ -27,6 +27,7 @@ LIBFINIFUNC=krb5int_thread_support_fini
+ 
+ STLIBOBJS= \
+ 	threads.o \
++	selinux.o \
+ 	init-addrinfo.o \
+ 	plugins.o \
+ 	errors.o \
+@@ -55,7 +56,7 @@ SRCS=\
+ 	$(srcdir)/fake-addrinfo.c
+ SHLIB_EXPDEPS =
+ # Add -lm if dumping thread stats, for sqrt.
+-SHLIB_EXPLIBS= $(LIBS) $(DL_LIB)
++SHLIB_EXPLIBS= $(LIBS) $(SELINUX_LIBS) $(DL_LIB)
+ SHLIB_DIRS=
+ SHLIB_RDIRS=$(KRB5_LIBDIR)
+ 
+--- krb5-1.6.1/src/plugins/kdb/db2/libdb2/configure.in	2006-04-24 20:29:56.000000000 -0400
++++ krb5-1.6.1/src/plugins/kdb/db2/libdb2/configure.in	2007-06-22 17:06:27.000000000 -0400
+@@ -87,6 +87,8 @@ AC_CHECK_FUNC(strerror, ,
+ AC_DEFINE(strerror, kdb2__strerror,[Define to \`kdb2__strerror' to provide private strerror function])])
+ AC_SUBST(STRERROR_OBJ)
+ 
++LDFLAGS="$LDFLAGS $SELINUX_LIBS"
++
+ KRB5_BUILD_LIBRARY
+ KRB5_BUILD_LIBOBJS
+ KRB5_BUILD_PROGRAM
+--- krb5-1.6.1/src/configure.in	2007-06-22 17:03:21.000000000 -0400
++++ krb5-1.6.1/src/configure.in	2007-06-22 17:06:27.000000000 -0400
+@@ -425,6 +425,8 @@ AC_CACHE_CHECK([for in6addr_any definiti
+   fi
+ fi
+ 
++KRB5_WITH_SELINUX
++
+ dnl
+ dnl
+ dnl check for ANSI stdio, esp "b" option to fopen().  This (unfortunately)
+--- krb5-1.6.1/src/aclocal.m4	2007-06-22 17:06:27.000000000 -0400
++++ krb5-1.6.1/src/aclocal.m4	2007-06-22 17:08:51.000000000 -0400
+@@ -102,6 +102,7 @@ AC_SUBST_FILE(libnover_frag)
+ dnl
+ KRB5_AC_PRAGMA_WEAK_REF
+ WITH_LDAP
++KRB5_WITH_SELINUX
+ KRB5_LIB_PARAMS
+ KRB5_AC_INITFINI
+ KRB5_AC_ENABLE_THREADS
+@@ -1902,3 +1902,50 @@ fi
+ AC_SUBST(PAM_MAN)
+ AC_SUBST(NON_PAM_MAN)
+ ])dnl
++
++dnl Use libselinux to set file contexts on newly-created files.
++dnl 
++AC_DEFUN(KRB5_WITH_SELINUX,[
++AC_ARG_WITH(selinux,[AC_HELP_STRING(--with-selinux,[compile with SELinux labeling support])],
++	    withselinux="$withval",withselinux=auto)
++old_LIBS="$LIBS"
++if test "$withselinux" != no ; then
++	AC_MSG_RESULT([checking for libselinux...])
++	SELINUX_LIBS=
++	AC_CHECK_HEADERS(selinux/selinux.h)
++	if test "x$ac_cv_header_selinux_selinux_h" != xyes ; then
++		if test "$withselinux" = auto ; then
++			AC_MSG_RESULT([Unable to locate selinux/selinux.h.])
++			withselinux=no
++		else
++			AC_MSG_ERROR([Unable to locate selinux/selinux.h.])
++		fi
++	fi
++
++	LIBS=
++	unset ac_cv_func_setfscreatecon
++	AC_CHECK_FUNCS(setfscreatecon)
++	if test "x$ac_cv_func_setfscreatecon" = xno ; then
++		AC_CHECK_LIB(selinux,setfscreatecon)
++		unset ac_cv_func_setfscreatecon
++		AC_CHECK_FUNCS(setfscreatecon)
++		if test "x$ac_cv_func_setfscreatecon" = xyes ; then
++			SELINUX_LIBS="$LIBS"
++		else
++			if test "$withselinux" = auto ; then
++				AC_MSG_RESULT([Unable to locate libselinux.])
++				withselinux=no
++			else
++				AC_MSG_ERROR([Unable to locate libselinux.])
++			fi
++		fi
++	fi
++	if test "$withselinux" != no ; then
++		AC_MSG_RESULT([Using SELinux.])
++		AC_DEFINE(USE_SELINUX,1,[Define if Kerberos-aware tools should set SELinux file contexts when creating files.])
++		SELINUX_LIBS="$LIBS"
++	fi
++fi
++LIBS="$old_LIBS"
++AC_SUBST(SELINUX_LIBS)
++])dnl
+--- krb5-1.6.1/src/lib/kadm5/srv/server_dict.c	2007-06-22 18:36:07.000000000 -0400
++++ krb5-1.6.1/src/lib/kadm5/srv/server_dict.c	2007-06-22 18:36:52.000000000 -0400
+@@ -14,6 +14,7 @@ static char *rcsid = "$Header: /home/fedora/jkeating/pkgs/rpms/krb5/F-10/Attic/krb5-1.6.1-selinux-label.patch,v 1.1 2007/06/25 00:54:13 nalin Exp $";
+ #include    <sys/stat.h>
+ #include    <unistd.h>
+ #include <errno.h>
++#include    "k5-label.h"
+ #include    <kadm5/admin.h>
+ #include    <stdlib.h>
+ #include    <stdio.h>
+--- krb5-1.6.1/src/lib/krb4/put_svc_key.c	2007-06-22 18:38:19.000000000 -0400
++++ krb5-1.6.1/src/lib/krb4/put_svc_key.c	2007-06-22 18:38:27.000000000 -0400
+@@ -22,6 +22,7 @@
+  *    by ksrvutil.) This version supports just enough to be useful.
+  */
+ 
++#include "k5-label.h"
+ #include "krb.h"
+ #include "krb4int.h"
+ 
+--- krb5-1.6.1/src/lib/krb4/in_tkt.c	2007-06-22 18:38:47.000000000 -0400
++++ krb5-1.6.1/src/lib/krb4/in_tkt.c	2007-06-22 18:38:59.000000000 -0400
+@@ -27,6 +27,7 @@
+ #include <stdio.h>
+ #include <string.h>
+ #include <errno.h>
++#include "k5-label.h"
+ #include "krb.h"
+ #include <fcntl.h>
+ #include <sys/stat.h>
+--- krb5-1.6.1/src/lib/krb4/dest_tkt.c	2007-06-22 18:39:39.000000000 -0400
++++ krb5-1.6.1/src/lib/krb4/dest_tkt.c	2007-06-22 18:39:49.000000000 -0400
+@@ -24,6 +24,7 @@
+  * or implied warranty.
+  */
+ 
++#include "k5-label.h"
+ #include "krb.h"
+ #include <stdio.h>
+ #include <string.h>
+--- krb5-1.6.1/src/appl/libpty/void_assoc.c	2007-06-22 18:51:34.000000000 -0400
++++ krb5-1.6.1/src/appl/libpty/void_assoc.c	2007-06-22 18:52:21.000000000 -0400
+@@ -22,6 +22,7 @@
+ 
+ #include "com_err.h"
+ #include "libpty.h"
++#include "k5-label.h"
+ #include "pty-int.h"
+ 
+ /*
+--- krb5-1.6.1/src/appl/libpty/open_ctty.c	2007-06-22 18:51:55.000000000 -0400
++++ krb5-1.6.1/src/appl/libpty/open_ctty.c	2007-06-22 18:52:15.000000000 -0400
+@@ -21,6 +21,7 @@
+ 
+ #include "com_err.h"
+ #include "libpty.h"
++#include "k5-label.h"
+ #include "pty-int.h"
+ 
+ /* 
+--- krb5-1.6.1/src/appl/libpty/open_slave.c	2007-06-22 18:51:44.000000000 -0400
++++ krb5-1.6.1/src/appl/libpty/open_slave.c	2007-06-22 18:52:18.000000000 -0400
+@@ -23,6 +23,7 @@
+ 
+ #include "com_err.h"
+ #include "libpty.h"
++#include "k5-label.h"
+ #include "pty-int.h"
+ 
+ long
+--- krb5-1.6.1/src/appl/bsd/krcp.c	2007-06-22 18:53:09.000000000 -0400
++++ krb5-1.6.1/src/appl/bsd/krcp.c	2007-06-22 18:53:32.000000000 -0400
+@@ -68,6 +68,7 @@ char copyright[] =
+ #include <sys/wait.h>
+ 
+ #ifdef KERBEROS
++#include <k5-label.h>
+ #include <krb5.h>
+ #include <k5-util.h>
+ #include <com_err.h>
+--- krb5-1.6.1/src/appl/bsd/v4rcp.c	2007-06-22 18:54:02.000000000 -0400
++++ krb5-1.6.1/src/appl/bsd/v4rcp.c	2007-06-22 18:54:14.000000000 -0400
+@@ -36,6 +36,7 @@ static char sccsid[] = "@(#)rcp.c	5.10 (
+  * rcp
+  */
+ #ifdef KERBEROS
++#include <k5-label.h>
+ #include <krb5.h>
+ #include <com_err.h>
+ #include <k5-util.h>
+--- krb5-1.6.1/src/appl/telnet/telnetd/telnetd.c	2007-06-22 18:54:42.000000000 -0400
++++ krb5-1.6.1/src/appl/telnet/telnetd/telnetd.c	2007-06-22 18:54:52.000000000 -0400
+@@ -80,6 +80,7 @@ struct	socket_security ss;
+ #include "fake-addrinfo.h"
+ 
+ #ifdef KRB5
++#include "k5-label.h"
+ #include "krb5.h"
+ #endif
+ 
+--- krb5-1.6.1/src/plugins/kdb/db2/libdb2/btree/bt_open.c	2007-06-22 18:40:19.000000000 -0400
++++ krb5-1.6.1/src/plugins/kdb/db2/libdb2/btree/bt_open.c	2007-06-22 18:40:35.000000000 -0400
+@@ -58,6 +58,7 @@ static char sccsid[] = "@(#)bt_open.c	8.
+ #include <string.h>
+ #include <unistd.h>
+ 
++#include "k5-label.h"
+ #include "db-int.h"
+ #include "btree.h"
+ 
+--- krb5-1.6.1/src/plugins/kdb/db2/libdb2/hash/hash.c	2007-06-22 18:41:03.000000000 -0400
++++ krb5-1.6.1/src/plugins/kdb/db2/libdb2/hash/hash.c	2007-06-22 18:41:11.000000000 -0400
+@@ -51,6 +51,7 @@ static char sccsid[] = "@(#)hash.c	8.12 
+ #include <assert.h>
+ #endif
+ 
++#include "k5-label.h"
+ #include "db-int.h"
+ #include "hash.h"
+ #include "page.h"
+--- krb5-1.6.1/src/plugins/kdb/db2/libdb2/recno/rec_open.c	2007-06-22 18:41:25.000000000 -0400
++++ krb5-1.6.1/src/plugins/kdb/db2/libdb2/recno/rec_open.c	2007-06-22 18:41:35.000000000 -0400
+@@ -51,6 +51,7 @@ static char sccsid[] = "@(#)rec_open.c	8
+ #include <stdio.h>
+ #include <unistd.h>
+ 
++#include "k5-label.h"
+ #include "db-int.h"
+ #include "recno.h"
+ 
+--- krb5-1.6.1/src/lib/krb4/log.c	2007-06-22 19:10:22.000000000 -0400
++++ krb5-1.6.1/src/lib/krb4/log.c	2007-06-22 19:10:30.000000000 -0400
+@@ -30,6 +30,7 @@
+    krb_set_logfile, or change all the invokers. */
+ #endif
+ 
++#include "k5-label.h"
+ #include "krb.h"
+ #include "autoconf.h"
+ #ifdef HAVE_TIME_H
+--- krb5-1.6.1/src/lib/krb4/kuserok.c	2007-06-22 19:10:45.000000000 -0400
++++ krb5-1.6.1/src/lib/krb4/kuserok.c	2007-06-22 19:10:58.000000000 -0400
+@@ -27,6 +27,7 @@
+  * access to a local account
+  */
+ 
++#include "k5-label.h"
+ #include "krb.h"
+ 
+ #if !defined(_WIN32)
+--- krb5-1.6.1/src/lib/krb4/klog.c	2007-06-22 19:10:10.000000000 -0400
++++ krb5-1.6.1/src/lib/krb4/klog.c	2007-06-22 19:10:18.000000000 -0400
+@@ -24,6 +24,7 @@
+  * or implied warranty.
+  */
+ 
++#include "k5-label.h"
+ #include "krb.h"
+ #include "autoconf.h"
+ #ifdef HAVE_TIME_H
+--- krb5-1.6.1/src/util/profile/prof_file.c	2007-06-22 19:15:23.000000000 -0400
++++ krb5-1.6.1/src/util/profile/prof_file.c	2007-06-22 19:15:25.000000000 -0400
+@@ -2,6 +2,7 @@
+  * prof_file.c ---- routines that manipulate an individual profile file.
+  */
+ 
++#include "k5-label.h"
+ #include "prof_int.h"
+ 
+ #include <stdio.h>
+--- krb5-1.6.1/src/appl/gssftp/ftpd/ftpd.c	2007-06-22 19:28:07.000000000 -0400
++++ krb5-1.6.1/src/appl/gssftp/ftpd/ftpd.c	2007-06-22 19:28:56.000000000 -0400
+@@ -70,6 +70,7 @@ static char sccsid[] = "@(#)ftpd.c	5.40 
+ #ifdef HAVE_SHADOW
+ #include <shadow.h>
+ #endif
++#include <k5-label.h>
+ #ifdef USE_PAM
+ #include "../../bsd/pam.h"
+ #endif
+--- krb5-1.6.1/src/appl/gssftp/ftpd/ftpcmd.y	2007-06-24 17:29:48.000000000 -0400
++++ krb5-1.6.1/src/appl/gssftp/ftpd/ftpcmd.y	2007-06-24 17:29:56.000000000 -0400
+@@ -75,6 +75,7 @@
+ unsigned char *ucbuf;
+ 
+ static int kerror;	/* XXX needed for all auth types */
++#include <k5-label.h>
+ #ifdef KRB5_KRB4_COMPAT
+ extern	struct sockaddr_in his_addr, ctrl_addr;
+ #include <krb.h>
+--- krb5-1.6.1/src/appl/gssftp/ftp/cmds.c	2007-06-24 17:33:05.000000000 -0400
++++ krb5-1.6.1/src/appl/gssftp/ftp/cmds.c	2007-06-24 17:33:26.000000000 -0400
+@@ -70,6 +70,7 @@ static char sccsid[] = "@(#)cmds.c	5.26 
+ #define getwd(x) getcwd(x,MAXPATHLEN)
+ #endif
+ 
++#include <k5-label.h>
+ #include "ftp_var.h"
+ #include "pathnames.h"
+ 
+--- krb5-1.6.1/src/appl/gssftp/ftp/ruserpass.c	2007-06-24 17:32:03.000000000 -0400
++++ krb5-1.6.1/src/appl/gssftp/ftp/ruserpass.c	2007-06-24 17:32:27.000000000 -0400
+@@ -47,6 +47,7 @@ static char sccsid[] = "@(#)ruserpass.c	
+ #include <ctype.h>
+ #include <sys/stat.h>
+ #include <errno.h>
++#include <k5-label.h>
+ #include "ftp_var.h"
+ 
+ #ifdef _WIN32
+--- krb5-1.6.1/src/appl/gssftp/ftp/ftp.c	2007-06-24 17:33:32.000000000 -0400
++++ krb5-1.6.1/src/appl/gssftp/ftp/ftp.c	2007-06-24 17:33:46.000000000 -0400
+@@ -124,6 +124,7 @@ int gettimeofday(struct timeval *tv, voi
+ #define L_INCR 1
+ #endif
+ 
++#include <k5-label.h>
+ #ifdef KRB5_KRB4_COMPAT
+ #include <krb.h>
+ 
+--- krb5-1.6.1/src/appl/gssftp/ftp/getpass.c	2007-06-24 17:32:38.000000000 -0400
++++ krb5-1.6.1/src/appl/gssftp/ftp/getpass.c	2007-06-24 17:32:58.000000000 -0400
+@@ -102,6 +102,7 @@ static	struct termios ttyo, ttyb;
+ static	struct sgttyb ttyo, ttyb;
+ #endif
+ 
++#include "k5-label.h"
+ #include "ftp_var.h"
+ 
+ static	FILE *fi;
+--- krb5-1.6.1/src/appl/telnet/telnet/utilities.c	2007-06-24 17:37:10.000000000 -0400
++++ krb5-1.6.1/src/appl/telnet/telnet/utilities.c	2007-06-24 17:38:08.000000000 -0400
+@@ -61,6 +61,8 @@
+ #include <libtelnet/encrypt.h>
+ #endif
+ 
++#include <k5-label.h>
++
+ FILE	*NetTrace = 0;		/* Not in bss, since needs to stay */
+ int	prettydump;
+ 
+--- krb5-1.6.1/src/appl/telnet/telnet/commands.c	2007-06-24 17:37:16.000000000 -0400
++++ krb5-1.6.1/src/appl/telnet/telnet/commands.c	2007-06-24 17:37:55.000000000 -0400
+@@ -70,6 +70,7 @@
+ #ifdef HAVE_VFORK_H
+ #include <vfork.h>
+ #endif
++#include <k5-label.h>
+ 
+ #include <arpa/telnet.h>
+ 
+--- krb5-1.6.1/src/appl/telnet/libtelnet/kerberos.c	2007-06-24 17:40:03.000000000 -0400
++++ krb5-1.6.1/src/appl/telnet/libtelnet/kerberos.c	2007-06-24 17:41:03.000000000 -0400
+@@ -102,6 +102,7 @@
+ #else
+ #include <strings.h>
+ #endif
++#include <k5-label.h>
+ 
+ #include "encrypt.h"
+ #include "auth.h"
