@@ -79,3 +79,14 @@ upgraded to 1.6, and I expect to stop bothering for future releases.
  if test "$enable_static" = no && test "$krb5_force_static" != yes; then
  	AC_MSG_NOTICE([disabling static libraries])
  	LIBLINKS=
+@@ -1254,10 +1250,6 @@
+ , ,
+ [enable_shared=$default_shared])
+ 
+-if test "$enable_shared" != yes; then
+-  AC_MSG_ERROR([Sorry, this release builds only shared libraries, cannot disable them.])
+-fi
+-
+ if test "$enable_shared" = yes; then
+ 	case "$SHLIBEXT" in
+ 	.so-nobuild)
