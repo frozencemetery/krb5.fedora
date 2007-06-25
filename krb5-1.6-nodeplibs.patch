@@ -8,7 +8,7 @@ way or another by the --deps flag in future upstream releases.
      fi
  
      if test $library = 'krb5'; then
--	lib_flags="$lib_flags -lkrb5 -lk5crypto -lcom_err $GEN_LIB $LIBS $DL_LIB"
+-	lib_flags="$lib_flags -lkrb5 -lk5crypto -lcom_err $GEN_LIB $LIBS $SELINUX_LIBS $DL_LIB"
 +	lib_flags="$lib_flags -lkrb5 -lk5crypto -lcom_err"
      fi
  
