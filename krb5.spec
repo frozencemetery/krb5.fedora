@@ -14,7 +14,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.1
-Release: 4
+Release: 5
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -98,6 +98,7 @@ BuildPrereq: gzip, ncurses-devel, rsh, texinfo, tar
 BuildRequires: tetex-latex
 BuildRequires: keyutils-libs-devel
 BuildRequires: libselinux-devel
+BuildRequires: pam-devel
 
 %if %{WITH_LDAP}
 BuildRequires: openldap-devel
@@ -202,6 +203,9 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Sun Jun 24 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-5
+- add missing pam-devel build requirement, force selinux-or-fail build
+
 * Sun Jun 24 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-4
 - rebuild
 
@@ -1246,7 +1250,8 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--without-tcl \
 	--enable-dns \
 	--with-pam \
-	--with-pam-login-service=%{login_pam_service}
+	--with-pam-login-service=%{login_pam_service} \
+	--with-selinux
 # Now build it.
 make
 
