@@ -207,7 +207,8 @@ installed on systems which are meant provide these services.
 
 %changelog
 * Wed Jun 27 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-8
-- incorporate fixes for MITKRB5-SA-2007-004 and MITKRB5-SA-2007-005
+- incorporate fixes for MITKRB5-SA-2007-004 (CVE-2007-2442,CVE-2007-2443)
+  and MITKRB5-SA-2007-005 (CVE-2007-2798)
 
 * Mon Jun 25 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-7
 - reintroduce missing %%postun for the non-split_workstation case
