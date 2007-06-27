@@ -1,7 +1,3 @@
-%if %{?WITH_SELINUX:0}%{!?WITH_SELINUX:1}
-%define WITH_SELINUX 0
-%endif
-
 %define WITH_LDAP 1
 
 %define krb5prefix %{_prefix}/kerberos
@@ -81,6 +77,8 @@ Patch53: krb5-1.6-nodeplibs.patch
 Patch55: krb5-1.6.1-empty.patch
 Patch56: krb5-1.6.1-get_opt_fixup.patch
 Patch57: krb5-1.6.1-ftp-nospew.patch
+
+Patch62: krb5-any-fixup-patch.txt
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -195,6 +193,13 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Wed Jun 27 2007 Nalin Dahyabhai <nalin@redhat.com>
+- preprocess kerberos.ldif into a format FDS will like better, and include
+  that as a doc file as well (from 1.6.1-4)
+- drop old, incomplete SELinux patch (from 1.6.1-4)
+- add patch from Greg Hudson to make srvtab routines report missing-file errors
+  at same point that "file" keytab routines do (from 1.6.1-4, #241805)
+
 * Wed Jun 27 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-2.0
 - pull up from devel HEAD's 1.6.1-2
 
@@ -1091,6 +1096,9 @@ installed on systems which are meant provide these services.
 %prep
 %setup -q -a 23
 %patch2  -p1 -b .manpage-paths
+pushd src/lib/krb5/keytab
+%patch62 -p0 -b .any-fixup
+popd
 %patch3  -p1 -b .netkit-rsh
 %patch4  -p1 -b .rlogind-environ
 %patch5  -p1 -b .ksu-access
@@ -1102,9 +1110,6 @@ installed on systems which are meant provide these services.
 %patch14 -p1 -b .ftp-glob
 %patch16 -p1 -b .buildconf
 %patch18 -p1 -b .reject-bad-transited
-%if %{WITH_SELINUX}
-%patch21 -p1 -b .selinux
-%endif
 %patch23 -p1 -b .dns
 %patch25 -p1 -b .null
 # Removes a malloc(0) case, nothing more.
@@ -1151,6 +1156,15 @@ doc/kadm5     api-unit-test
 doc/kadm5     api-funcspec
 doc/kadm5     api-server-design
 EOF
+
+# Generate an FDS-compatible LDIF file.
+inldif=src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
+cat > 60kerberos.ldif << EOF
+# This is a variation on kerberos.ldif which Fedora Directory Server will like.
+dn: cn=schema
+EOF
+egrep -iv '(^$|^dn:|^changetype:|^add:)' $inldif >> 60kerberos.ldif
+touch -r $inldif 60kerberos.ldif
 
 # Rebuild the configure scripts.
 cd src
@@ -1555,6 +1569,7 @@ exit 0
 %docdir %{krb5prefix}/man
 %doc src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
 %doc src/plugins/kdb/ldap/libkdb_ldap/kerberos.schema
+%doc 60kerberos.ldif
 %dir %{_libdir}/krb5
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/kdb
