@@ -14,8 +14,8 @@
 
 Summary: The Kerberos network authentication system.
 Name: krb5
-Version: 1.6
-Release: 6
+Version: 1.6.1
+Release: 2
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -46,7 +46,7 @@ Source22: ekrb5-telnet.xinetd
 Source23: krb5-%{version}-pdf.tar.gz
 Source24: krb5-tex-pdf.sh
 
-Patch2: krb5-1.3-manpage-paths.patch
+Patch2: krb5-1.6-manpage-paths.patch
 Patch3: krb5-1.3-netkit-rsh.patch
 Patch4: krb5-1.3-rlogind-environ.patch
 Patch5: krb5-1.3-ksu-access.patch
@@ -74,14 +74,13 @@ Patch40: krb5-1.4.1-telnet-environ.patch
 Patch41: krb5-1.2.7-login-lpass.patch
 Patch44: krb5-1.4.3-enospc.patch
 Patch45: krb5-1.5-gssinit.patch
-Patch46: krb5-1.6-fix-sendto_kdc-memset.dif
 Patch47: krb5-1.6-sort-of-static.patch
-Patch48: krb5-1.6-CVE-2007-0956-prelim.patch
-Patch49: krb5-1.6-CVE-2007-0957-prelim.patch
-Patch50: krb5-1.6-CVE-2007-1216-prelim.patch
 Patch51: krb5-1.6-ldap-init.patch
 Patch52: krb5-1.6-ldap-man.patch
 Patch53: krb5-1.6-nodeplibs.patch
+Patch55: krb5-1.6.1-empty.patch
+Patch56: krb5-1.6.1-get_opt_fixup.patch
+Patch57: krb5-1.6.1-ftp-nospew.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -196,6 +195,25 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Wed Jun 27 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-2
+- pull up from devel HEAD's 1.6.1-2
+
+* Thu May 24 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-2
+- pull patch from svn to undo unintentional chattiness in ftp
+- pull patch from svn to handle NULL krb5_get_init_creds_opt structures
+  better in a couple of places where they're expected
+
+* Wed May 23 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-1
+- update to 1.6.1
+  - drop no-longer-needed patches for CVE-2007-0956,CVE-2007-0957,CVE-2007-1216
+  - drop patch for sendto bug in 1.6, fixed in 1.6.1
+
+* Fri May 18 2007 Nalin Dahyabhai <nalin@redhat.com>
+- kadmind.init: don't fail outright if the default principal database
+  isn't there if it looks like we might be using the kldap plugin
+- kadmind.init: attempt to extract the key for the host-specific kadmin
+  service when we try to create the keytab
+
 * Wed May 16 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6-6
 - omit dependent libraries from the krb5-config --libs output, as using
   shared libraries (no more static libraries) makes them unnecessary and
@@ -1103,16 +1121,15 @@ installed on systems which are meant provide these services.
 %patch41 -p1 -b .login-lpass
 %patch44 -p1 -b .enospc
 %patch45 -p1 -b .gssinit
-%patch46 -p0 -b .kpasswd
 %if %{build_static}
 %patch47 -p1 -b .sort-of-static
 %endif
-%patch48 -p0 -b .CVE-2007-0956
-%patch49 -p0 -b .CVE-2007-0957
-%patch50 -p0 -b .CVE-2007-1216
 %patch51 -p0 -b .ldap_init
 %patch52 -p0 -b .ldap_man
 %patch53 -p1 -b .nodeplibs
+#%patch55 -p1 -b .empty
+%patch56 -p0 -b .get_opt_fixup
+%patch57 -p1 -b .ftp-nospew
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
