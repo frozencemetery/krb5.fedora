@@ -14,7 +14,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.1
-Release: 5
+Release: 8%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -87,6 +87,9 @@ Patch60: krb5-1.6.1-pam.patch
 Patch61: krb5-trunk-manpaths.patch
 Patch62: krb5-any-fixup-patch.txt
 Patch63: krb5-1.6.1-selinux-label.patch
+
+Patch70: http://web.mit.edu/kerberos/advisories/2007-004-patch.txt
+Patch71: http://web.mit.edu/kerberos/advisories/2007-005-patch.txt
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -203,6 +206,18 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Wed Jun 27 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-8
+- incorporate fixes for MITKRB5-SA-2007-004 and MITKRB5-SA-2007-005
+
+* Mon Jun 25 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-7
+- reintroduce missing %%postun for the non-split_workstation case
+
+* Mon Jun 25 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-6
+- rebuild
+
+* Mon Jun 25 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-5.1
+- rebuild
+
 * Sun Jun 24 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-5
 - add missing pam-devel build requirement, force selinux-or-fail build
 
@@ -264,6 +279,9 @@ installed on systems which are meant provide these services.
   the part of the default/example kdc.conf where they'll actually have
   an effect (#236417)
 
+* Thu Apr  5 2007 Nalin Dahyabhai <nalin@redhat.com> 1.5-24
+- merge security fixes from RHSA-2007:0095
+
 * Tue Apr  3 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6-3
 - add patch to correct unauthorized access via krb5-aware telnet
   daemon (#229782, CVE-2007-0956)
@@ -278,9 +296,23 @@ installed on systems which are meant provide these services.
 - add buildrequires: on keyutils-libs-devel to enable use of keyring ccaches,
   dragging keyutils-libs in as a dependency
 
+* Mon Mar 19 2007 Nalin Dahyabhai <nalin@redhat.com> 1.5-23
+- fix bug ID in changelog
+
+* Thu Mar 15 2007 Nalin Dahyabhai <nalin@redhat.com> 1.5-22
+
+* Thu Mar 15 2007 Nalin Dahyabhai <nalin@redhat.com> 1.5-21
+- add preliminary patch to fix buffer overflow in krb5kdc and kadmind
+  (#231528, CVE-2007-0957)
+- add preliminary patch to fix double-free in kadmind (#231537, CVE-2007-1216)
+
 * Wed Feb 28 2007 Nalin Dahyabhai <nalin@redhat.com>
 - add patch to build semi-useful static libraries, but don't apply it unless
   we need them
+
+* Tue Feb 27 2007 Nalin Dahyabhai <nalin@redhat.com> - 1.5-20
+- temporarily back out %%post changes, fix for #143289 for security update
+- add preliminary patch to correct unauthorized access via krb5-aware telnet
 
 * Mon Feb 19 2007 Nalin Dahyabhai <nalin@redhat.com>
 - make profile.d scriptlets mode 644 instead of 755 (part of #225974)
@@ -1164,6 +1196,8 @@ popd
 #%patch55 -p1 -b .empty
 %patch56 -p0 -b .get_opt_fixup
 %patch57 -p1 -b .ftp-nospew
+%patch70 -p0 -b .2007-004
+%patch71 -p0 -b .2007-005
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
@@ -1375,13 +1409,20 @@ if [ "$1" -ge 1 ] ; then
 	/sbin/service krb524 condrestart > /dev/null 2>&1 || :
 	/sbin/service kprop condrestart > /dev/null 2>&1 || :
 fi
+exit 0
 
 %if %{split_workstation}
 %post workstation-servers
 /sbin/service xinetd reload > /dev/null 2>&1 || :
+exit 0
 
 %postun workstation-servers
 /sbin/service xinetd reload > /dev/null 2>&1 || :
+exit 0
+%else
+%postun workstation
+/sbin/service xinetd reload > /dev/null 2>&1 || :
+exit 0
 %endif
 
 %post workstation
