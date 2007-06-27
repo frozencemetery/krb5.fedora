@@ -11,7 +11,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.1
-Release: 2.0
+Release: 2.1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -79,6 +79,9 @@ Patch56: krb5-1.6.1-get_opt_fixup.patch
 Patch57: krb5-1.6.1-ftp-nospew.patch
 
 Patch62: krb5-any-fixup-patch.txt
+
+Patch70: http://web.mit.edu/kerberos/advisories/2007-004-patch.txt
+Patch71: http://web.mit.edu/kerberos/advisories/2007-005-patch.txt
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -193,6 +196,10 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Wed Jun 27 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-2.1
+- incorporate fixes for MITKRB5-SA-2007-004 (CVE-2007-2442,CVE-2007-2443)
+  and MITKRB5-SA-2007-005 (CVE-2007-2798)
+
 * Wed Jun 27 2007 Nalin Dahyabhai <nalin@redhat.com>
 - preprocess kerberos.ldif into a format FDS will like better, and include
   that as a doc file as well (from 1.6.1-4)
@@ -1135,6 +1142,8 @@ popd
 #%patch55 -p1 -b .empty
 %patch56 -p0 -b .get_opt_fixup
 %patch57 -p1 -b .ftp-nospew
+%patch70 -p0 -b .2007-004
+%patch71 -p0 -b .2007-005
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
