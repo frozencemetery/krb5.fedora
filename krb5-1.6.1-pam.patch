@@ -441,7 +441,7 @@ When enabled, ftpd, krshd, and login.krb5 gain dependence on libpam.
 +			if (message->msg_style == PAM_PROMPT_ECHO_ON) {
 +				if (fgets(pwbuf, sizeof(pwbuf),
 +					  stdin) != NULL) {
-+					pwbuf[strspn(pwbuf, "\r\n")] = '\0';
++					pwbuf[strcspn(pwbuf, "\r\n")] = '\0';
 +					pwstring = pwbuf;
 +				}
 +			} else {
