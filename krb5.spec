@@ -13,10 +13,10 @@
 
 Summary: The Kerberos network authentication system.
 Name: krb5
-Version: 1.6.1
-Release: 8%{?dist}
+Version: 1.6.2
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -80,16 +80,11 @@ Patch51: krb5-1.6-ldap-init.patch
 Patch52: krb5-1.6-ldap-man.patch
 Patch53: krb5-1.6-nodeplibs.patch
 Patch55: krb5-1.6.1-empty.patch
-Patch56: krb5-1.6.1-get_opt_fixup.patch
-Patch57: krb5-1.6.1-ftp-nospew.patch
 
 Patch60: krb5-1.6.1-pam.patch
 Patch61: krb5-trunk-manpaths.patch
 Patch62: krb5-any-fixup-patch.txt
 Patch63: krb5-1.6.1-selinux-label.patch
-
-Patch70: http://web.mit.edu/kerberos/advisories/2007-004-patch.txt
-Patch71: http://web.mit.edu/kerberos/advisories/2007-005-patch.txt
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -97,7 +92,7 @@ Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Prereq: grep, info, sh-utils, /sbin/install-info
 BuildPrereq: autoconf, bison, e2fsprogs-devel >= 1.35, flex
-BuildPrereq: gzip, ncurses-devel, rsh, texinfo, tar
+BuildPrereq: gzip, ncurses-devel, rsh, texinfo, texinfo-tex, tar
 BuildRequires: tetex-latex
 BuildRequires: keyutils-libs-devel
 BuildRequires: libselinux-devel
@@ -206,6 +201,10 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Thu Jul 17 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-1
+- update to 1.6.2
+- add "buildrequires: texinfo-tex" to get texi2pdf
+
 * Wed Jun 27 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-8
 - incorporate fixes for MITKRB5-SA-2007-004 (CVE-2007-2442,CVE-2007-2443)
   and MITKRB5-SA-2007-005 (CVE-2007-2798)
@@ -1195,10 +1194,6 @@ popd
 %patch52 -p0 -b .ldap_man
 %patch53 -p1 -b .nodeplibs
 #%patch55 -p1 -b .empty
-%patch56 -p0 -b .get_opt_fixup
-%patch57 -p1 -b .ftp-nospew
-%patch70 -p0 -b .2007-004
-%patch71 -p0 -b .2007-005
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
