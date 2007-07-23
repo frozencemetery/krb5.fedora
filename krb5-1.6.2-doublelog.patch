@@ -1,0 +1,28 @@
+Skip over duplicate entries in a profile's file list (closes #231147).  Files
+are parsed in the order specified, so skipping a duplicate the second (or
+subsequent) time it's seen shouldn't break any applications.
+
+diff -up krb5-1.6.2/src/util/profile/prof_init.c krb5-1.6.2/src/util/profile/prof_init.c
+--- krb5-1.6.2/src/util/profile/prof_init.c	2007-07-23 15:55:00.000000000 -0400
++++ krb5-1.6.2/src/util/profile/prof_init.c	2007-07-23 15:54:53.000000000 -0400
+@@ -23,7 +23,7 @@ typedef int32_t prof_int32;
+ errcode_t KRB5_CALLCONV
+ profile_init(const_profile_filespec_t *files, profile_t *ret_profile)
+ {
+-	const_profile_filespec_t *fs;
++	const_profile_filespec_t *fs, *fs2;
+ 	profile_t profile;
+ 	prf_file_t  new_file, last = 0;
+ 	errcode_t retval = 0;
+@@ -37,6 +37,11 @@ profile_init(const_profile_filespec_t *f
+         /* if the filenames list is not specified return an empty profile */
+         if ( files ) {
+ 	    for (fs = files; !PROFILE_LAST_FILESPEC(*fs); fs++) {
++	        for (fs2 = files; fs2 != fs; fs2++)
++		    if (strcmp(*fs2, *fs) == 0)
++			break;
++		if (fs2 != fs)
++		    continue;
+ 		retval = profile_open_file(*fs, &new_file);
+ 		/* if this file is missing, skip to the next */
+ 		if (retval == ENOENT || retval == EACCES) {
