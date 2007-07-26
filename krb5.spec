@@ -81,6 +81,8 @@ Patch52: krb5-1.6-ldap-man.patch
 Patch53: krb5-1.6-nodeplibs.patch
 Patch55: krb5-1.6.1-empty.patch
 Patch56: krb5-1.6.2-doublelog.patch
+Patch57: krb5-1.6.2-login_chdir.patch
+Patch58: krb5-1.6.2-key_exp.patch
 
 Patch60: krb5-1.6.1-pam.patch
 Patch61: krb5-trunk-manpaths.patch
@@ -1199,6 +1201,8 @@ popd
 %patch53 -p1 -b .nodeplibs
 #%patch55 -p1 -b .empty
 #%patch56 -p1 -b .doublelog
+#%patch57 -p1 -b .login_chdir
+#%patch58 -p1 -b .key_exp
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
