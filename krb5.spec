@@ -14,7 +14,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -202,7 +202,10 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
-* Thu Jul 17 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-1
+* Thu Jul 26 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-2
+- kdc.conf: default to listening for TCP clients, too (#248415)
+
+* Thu Jul 19 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-1
 - update to 1.6.2
 - add "buildrequires: texinfo-tex" to get texi2pdf
 
