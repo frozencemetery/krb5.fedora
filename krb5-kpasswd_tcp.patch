@@ -1,0 +1,165 @@
+diff -up src/lib/krb5/os/sendto_kdc.c src/lib/krb5/os/sendto_kdc.c
+--- src/lib/krb5/os/sendto_kdc.c	2007-08-09 16:41:58.000000000 -0400
++++ src/lib/krb5/os/sendto_kdc.c	2007-08-09 16:43:38.000000000 -0400
+@@ -54,8 +54,6 @@
+ #endif
+ 
+ #define MAX_PASS		    3
+-#define DEFAULT_UDP_PREF_LIMIT	 1465
+-#define HARD_UDP_LIMIT		32700 /* could probably do 64K-epsilon ? */
+ 
+ #undef DEBUG
+ 
+diff -up src/lib/krb5/os/os-proto.h src/lib/krb5/os/os-proto.h
+--- src/lib/krb5/os/os-proto.h	2007-08-09 16:42:05.000000000 -0400
++++ src/lib/krb5/os/os-proto.h	2007-08-09 16:42:26.000000000 -0400
+@@ -70,5 +70,7 @@ extern unsigned int krb5_skdc_timeout_sh
+ extern unsigned int krb5_skdc_timeout_1;
+ extern unsigned int krb5_max_dgram_size;
+ 
++#define DEFAULT_UDP_PREF_LIMIT   1465
++#define HARD_UDP_LIMIT          32700 /* could probably do 64K-epsilon ? */
+ 
+ #endif /* KRB5_LIBOS_INT_PROTO__ */
+diff -up src/lib/krb5/os/changepw.c src/lib/krb5/os/changepw.c
+--- src/lib/krb5/os/changepw.c	2007-01-26 17:01:06.000000000 -0500
++++ src/lib/krb5/os/changepw.c	2007-08-09 16:42:15.000000000 -0400
+@@ -197,7 +197,8 @@ krb5_change_set_password(krb5_context co
+ {
+     krb5_data 			chpw_rep;
+     krb5_address 		remote_kaddr;
+-    krb5_boolean		useTcp = 0;
++    int				sockType;
++    krb5_boolean		useTcp[2];
+     GETSOCKNAME_ARG3_TYPE 	addrlen;
+     krb5_error_code 		code = 0;
+     char 			*code_string;
+@@ -206,7 +207,7 @@ krb5_change_set_password(krb5_context co
+     struct sendto_callback_context  callback_ctx;
+     struct sendto_callback_info	callback_info;
+     struct sockaddr_storage	remote_addr;
+-    struct addrlist 		al = ADDRLIST_INIT;
++    struct addrlist		al = ADDRLIST_INIT, tmp_al = ADDRLIST_INIT;
+ 
+     memset( &callback_ctx, 0, sizeof(struct sendto_callback_context));
+     callback_ctx.context = context;
+@@ -225,13 +226,52 @@ krb5_change_set_password(krb5_context co
+ 				     &callback_ctx.ap_req)))
+ 	goto cleanup;
+ 
+-    do {
+-	if ((code = krb5_locate_kpasswd(callback_ctx.context,
+-					krb5_princ_realm(callback_ctx.context,
+-							 creds->server),
+-					&al, useTcp)))
+-	    break;
++    if (!useTcp && context->udp_pref_limit < 0) {
++	int tmp;
++	krb5_error_code retval;
++	retval = profile_get_integer(context->profile,
++				     "libdefaults", "udp_preference_limit", 0,
++				     DEFAULT_UDP_PREF_LIMIT, &tmp);
++	if (retval)
++	    return retval;
++	if (tmp < 0)
++	    tmp = DEFAULT_UDP_PREF_LIMIT;
++	else if (tmp > HARD_UDP_LIMIT)
++	    /* In the unlikely case that a *really* big value is
++	       given, let 'em use as big as we think we can
++	       support.  */
++	    tmp = HARD_UDP_LIMIT;
++	context->udp_pref_limit = tmp;
++    }
++
++    if (callback_ctx.ap_req.length > context->udp_pref_limit) {
++	useTcp[0] = 1;
++	useTcp[1] = 0;
++    } else {
++	useTcp[0] = 0;
++	useTcp[1] = 1;
++    }
+ 
++    for (sockType = 0;
++	 sockType < sizeof(useTcp) / sizeof(useTcp[0]);
++	 sockType++) {
++	krb5_locate_kpasswd(callback_ctx.context,
++			    krb5_princ_realm(callback_ctx.context,
++					     creds->server),
++			    &tmp_al, useTcp[sockType]);
++	if (tmp_al.naddrs > 0) {
++	    krb5int_grow_addrlist(&al, tmp_al.naddrs);
++	    memcpy(al.addrs + al.naddrs, tmp_al.addrs,
++		   sizeof(tmp_al.addrs[0]) * tmp_al.naddrs);
++	    al.naddrs += tmp_al.naddrs;
++	    tmp_al.naddrs = 0;
++	    krb5int_free_addrlist (&tmp_al);
++	}
++    }
++
++    if (al.naddrs == 0) {
++	code = KRB5_REALM_CANT_RESOLVE;
++    } else {
+ 	addrlen = sizeof(remote_addr);
+ 
+ 	callback_info.context = (void*) &callback_ctx;
+@@ -247,15 +287,8 @@ krb5_change_set_password(krb5_context co
+ 				   NULL,
+ 				   ss2sa(&remote_addr),
+                                    &addrlen,
+-				   NULL
+-		 ))) {
+-
+-	    /*
+-	     * Here we may want to switch to TCP on some errors.
+-	     * right?
+-	     */
+-	    break;
+-	}
++				   NULL)))
++	    goto cleanup;
+ 
+ 	remote_kaddr.addrtype = ADDRTYPE_INET;
+ 	remote_kaddr.length = sizeof(ss2sin(&remote_addr)->sin_addr);
+@@ -265,7 +298,7 @@ krb5_change_set_password(krb5_context co
+ 					   callback_ctx.auth_context,  
+ 					   NULL, 
+ 					   &remote_kaddr)))
+-	    break;
++	    goto cleanup;
+ 
+ 	if (set_password_for)
+ 	    code = krb5int_rd_setpw_rep(callback_ctx.context, 
+@@ -280,15 +313,8 @@ krb5_change_set_password(krb5_context co
+ 				       &local_result_code, 
+ 				       result_string);
+ 
+-	if (code) {
+-	    if (code == KRB5KRB_ERR_RESPONSE_TOO_BIG && !useTcp ) {
+-		krb5int_free_addrlist (&al);
+-		useTcp = 1;
+-		continue;
+-	    }
+-
+-	    break;
+-	}
++	if (code)
++	    goto cleanup;
+ 
+ 	if (result_code)
+ 	    *result_code = local_result_code;
+@@ -313,14 +339,7 @@ krb5_change_set_password(krb5_context co
+ 	    }
+ 	    strncpy(result_code_string->data, code_string, result_code_string->length);
+ 	}
+-
+-	if (code == KRB5KRB_ERR_RESPONSE_TOO_BIG && !useTcp ) {
+-	    krb5int_free_addrlist (&al);
+-	    useTcp = 1;
+-        } else {
+-	    break;
+-	} 
+-    } while (TRUE);
++    }
+ 
+ cleanup:
+     if (callback_ctx.auth_context != NULL)
