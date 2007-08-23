@@ -14,7 +14,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.2
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -83,6 +83,7 @@ Patch55: krb5-1.6.1-empty.patch
 Patch56: krb5-1.6.2-doublelog.patch
 Patch57: krb5-1.6.2-login_chdir.patch
 Patch58: krb5-1.6.2-key_exp.patch
+Patch59: krb5-kpasswd_tcp.patch
 
 Patch60: krb5-1.6.1-pam.patch
 Patch61: krb5-trunk-manpaths.patch
@@ -204,6 +205,9 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Thu Aug 23 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-3
+- rebuild
+
 * Thu Jul 26 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-2
 - kdc.conf: default to listening for TCP clients, too (#248415)
 
@@ -1203,6 +1207,7 @@ popd
 #%patch56 -p1 -b .doublelog
 #%patch57 -p1 -b .login_chdir
 #%patch58 -p1 -b .key_exp
+#%patch59 -p0 -b .kpasswd_tcp
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
