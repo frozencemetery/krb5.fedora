@@ -89,6 +89,7 @@ Patch60: krb5-1.6.1-pam.patch
 Patch61: krb5-trunk-manpaths.patch
 Patch62: krb5-any-fixup-patch.txt
 Patch63: krb5-1.6.1-selinux-label.patch
+Patch64: krb5-ok-as-delegate.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -1208,6 +1209,7 @@ popd
 #%patch57 -p1 -b .login_chdir
 #%patch58 -p1 -b .key_exp
 #%patch59 -p0 -b .kpasswd_tcp
+#%patch64 -p0 -b .ok-as-delegate
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
