@@ -206,6 +206,9 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Sat Aug 25 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-4
+- cover more cases in labeling files on creation
+
 * Thu Aug 23 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-3
 - rebuild
 
