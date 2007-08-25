@@ -96,7 +96,7 @@ URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Prereq: grep, info, sh-utils, /sbin/install-info
-BuildPrereq: autoconf, bison, e2fsprogs-devel >= 1.35, flex
+BuildPrereq: autoconf, bison, e2fsprogs-devel >= 1.35, flex, gawk
 BuildPrereq: gzip, ncurses-devel, rsh, texinfo, texinfo-tex, tar
 BuildRequires: tetex-latex
 BuildRequires: keyutils-libs-devel
@@ -208,6 +208,7 @@ installed on systems which are meant provide these services.
 %changelog
 * Sat Aug 25 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-4
 - cover more cases in labeling files on creation
+- add missing gawk build dependency
 
 * Thu Aug 23 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-3
 - rebuild
