@@ -14,7 +14,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.2
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -84,6 +84,8 @@ Patch56: krb5-1.6.2-doublelog.patch
 Patch57: krb5-1.6.2-login_chdir.patch
 Patch58: krb5-1.6.2-key_exp.patch
 Patch59: krb5-kpasswd_tcp.patch
+Patch65: CVE-2007-3999.patch
+Patch66: CVE-2007-4000.patch
 
 Patch60: krb5-1.6.1-pam.patch
 Patch61: krb5-trunk-manpaths.patch
@@ -206,6 +208,9 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Tue Sep  4 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-5
+- incorporate fixes for MITKRB5-SA-2007-006 (CVE-2007-3999, CVE-2007-4000)
+
 * Sat Aug 25 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-4
 - cover more cases in labeling files on creation
 - add missing gawk build dependency
@@ -1208,6 +1213,8 @@ popd
 %patch51 -p0 -b .ldap_init
 %patch52 -p0 -b .ldap_man
 %patch53 -p1 -b .nodeplibs
+%patch64 -p0 -b .2007-3999
+%patch65 -p0 -b .2007-4000
 #%patch55 -p1 -b .empty
 #%patch56 -p1 -b .doublelog
 #%patch57 -p1 -b .login_chdir
