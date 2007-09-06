@@ -32,7 +32,7 @@ start() {
   	if [ ! -f /var/kerberos/krb5kdc/principal ] ; then
 	    # Make an educated guess -- if they're using kldap somewhere,
 	    # then we don't know for sure that this is an error.
-  	    if [ ! grep -q 'db_library.*=.*kldap' /etc/krb5.conf ] ; then
+  	    if ! grep -q 'db_library.*=.*kldap' /etc/krb5.conf ; then
 	        echo $"Error. Default principal database does not exist."
 	    fi
 	    exit 0
