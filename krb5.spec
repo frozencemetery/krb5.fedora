@@ -11,7 +11,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.1
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -77,7 +77,7 @@ Patch53: krb5-1.6-nodeplibs.patch
 Patch55: krb5-1.6.1-empty.patch
 Patch56: krb5-1.6.1-get_opt_fixup.patch
 Patch57: krb5-1.6.1-ftp-nospew.patch
-Patch58: CVE-2007-3999.patch
+Patch58: CVE-2007-3999-2.patch
 Patch59: CVE-2007-4000.patch
 
 Patch62: krb5-any-fixup-patch.txt
@@ -198,6 +198,10 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Thu Sep  6 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-4
+- incorporate updated fix for CVE-2007-3999
+- fix incorrect call to "test" in the kadmin init script
+
 * Tue Sep  4 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-3
 - incorporate fixes for MITKRB5-SA-2007-006 (CVE-2007-3999, CVE-2007-4000)
 
@@ -1147,7 +1151,7 @@ popd
 #%patch55 -p1 -b .empty
 %patch56 -p0 -b .get_opt_fixup
 %patch57 -p1 -b .ftp-nospew
-%patch58 -p0 -b .2007-3999
+%patch58 -p0 -b .2007-3999-2
 %patch59 -p0 -b .2007-4000
 %patch70 -p0 -b .2007-004
 %patch71 -p0 -b .2007-005
