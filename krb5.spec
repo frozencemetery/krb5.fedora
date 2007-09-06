@@ -84,7 +84,7 @@ Patch56: krb5-1.6.2-doublelog.patch
 Patch57: krb5-1.6.2-login_chdir.patch
 Patch58: krb5-1.6.2-key_exp.patch
 Patch59: krb5-kpasswd_tcp.patch
-Patch65: CVE-2007-3999.patch
+Patch65: CVE-2007-3999-2.patch
 Patch66: CVE-2007-4000.patch
 
 Patch60: krb5-1.6.1-pam.patch
@@ -208,6 +208,10 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Thu Sep  6 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-6
+- incorporate updated fix for CVE-2007-3999
+- fix incorrect call to "test" in the kadmin init script
+
 * Tue Sep  4 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-5
 - incorporate fixes for MITKRB5-SA-2007-006 (CVE-2007-3999, CVE-2007-4000)
 
@@ -1213,7 +1217,7 @@ popd
 %patch51 -p0 -b .ldap_init
 %patch52 -p0 -b .ldap_man
 %patch53 -p1 -b .nodeplibs
-%patch64 -p0 -b .2007-3999
+%patch64 -p0 -b .2007-3999-2
 %patch65 -p0 -b .2007-4000
 #%patch55 -p1 -b .empty
 #%patch56 -p1 -b .doublelog
