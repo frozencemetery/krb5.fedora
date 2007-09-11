@@ -417,16 +417,16 @@ the libkrb5support library depends on libselinux.
  #include "krb.h"
  #include "krb4int.h"
  #include <stdio.h>
---- krb5-1.6.1/src/plugins/kdb/db2/libdb2/btree/bt_open.c	2007-08-25 03:19:01.000000000 -0400
-+++ krb5-1.6.1/src/plugins/kdb/db2/libdb2/btree/bt_open.c	2007-08-24 23:38:39.000000000 -0400
-@@ -58,6 +58,7 @@
- #include <string.h>
- #include <unistd.h>
+--- krb5-1.6.1/src/plugins/kdb/db2/libdb2/btree/bt_open.c	2000-07-02 23:43:42.000000000 -0400
++++ krb5-1.6.1/src/plugins/kdb/db2/libdb2/btree/bt_open.c	2007-09-06 12:36:18.000000000 -0400
+@@ -60,6 +60,7 @@
  
-+#include "k5-label.h"
  #include "db-int.h"
  #include "btree.h"
++#include "k5-label.h"
  
+ #ifdef DEBUG
+ #undef	MINPSIZE
 --- krb5-1.6.1/src/plugins/kdb/db2/libdb2/configure.in	2007-08-25 03:19:00.000000000 -0400
 +++ krb5-1.6.1/src/plugins/kdb/db2/libdb2/configure.in	2007-08-24 23:38:41.000000000 -0400
 @@ -89,6 +89,8 @@
@@ -438,16 +438,16 @@ the libkrb5support library depends on libselinux.
  KRB5_BUILD_LIBRARY
  KRB5_BUILD_LIBOBJS
  KRB5_BUILD_PROGRAM
---- krb5-1.6.1/src/plugins/kdb/db2/libdb2/hash/hash.c	2007-08-25 03:19:01.000000000 -0400
-+++ krb5-1.6.1/src/plugins/kdb/db2/libdb2/hash/hash.c	2007-08-24 23:38:39.000000000 -0400
-@@ -51,6 +51,7 @@
- #include <assert.h>
- #endif
- 
-+#include "k5-label.h"
- #include "db-int.h"
+--- krb5-1.6.1/src/plugins/kdb/db2/libdb2/hash/hash.c	2006-06-14 22:35:44.000000000 -0400
++++ krb5-1.6.1/src/plugins/kdb/db2/libdb2/hash/hash.c	2007-09-06 12:37:15.000000000 -0400
+@@ -55,6 +55,7 @@
  #include "hash.h"
  #include "page.h"
+ #include "extern.h"
++#include "k5-label.h"
+ 
+ static int32_t flush_meta __P((HTAB *));
+ static int32_t hash_access __P((HTAB *, ACTION, const DBT *, DBT *));
 --- krb5-1.6.1/src/plugins/kdb/db2/libdb2/include/config.h.in	2007-04-20 19:39:29.000000000 -0400
 +++ krb5-1.6.1/src/plugins/kdb/db2/libdb2/include/config.h.in	2007-08-24 23:44:21.000000000 -0400
 @@ -39,6 +39,9 @@
@@ -484,16 +484,16 @@ the libkrb5support library depends on libselinux.
  /* Define to empty if `const' does not conform to ANSI C. */
  #undef const
  
---- krb5-1.6.1/src/plugins/kdb/db2/libdb2/recno/rec_open.c	2007-08-25 03:19:01.000000000 -0400
-+++ krb5-1.6.1/src/plugins/kdb/db2/libdb2/recno/rec_open.c	2007-08-24 23:38:39.000000000 -0400
-@@ -51,6 +51,7 @@
- #include <stdio.h>
- #include <unistd.h>
+--- krb5-1.6.1/src/plugins/kdb/db2/libdb2/recno/rec_open.c	1998-01-21 11:33:31.000000000 -0500
++++ krb5-1.6.1/src/plugins/kdb/db2/libdb2/recno/rec_open.c	2007-09-06 12:36:52.000000000 -0400
+@@ -53,6 +53,7 @@
  
-+#include "k5-label.h"
  #include "db-int.h"
  #include "recno.h"
++#include "k5-label.h"
  
+ DB *
+ __rec_open(fname, flags, mode, openinfo, dflags)
 --- krb5-1.6.1/src/plugins/preauth/cksum_body/config.h.in	2007-04-20 19:39:45.000000000 -0400
 +++ krb5-1.6.1/src/plugins/preauth/cksum_body/config.h.in	2007-08-24 23:46:17.000000000 -0400
 @@ -39,6 +39,9 @@
