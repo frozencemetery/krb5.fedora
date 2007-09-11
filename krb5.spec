@@ -14,7 +14,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.2
-Release: 6%{?dist}
+Release: 7%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -208,6 +208,11 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Tue Sep 11 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-7
+- also perform PAM session and credential management when ftpd accepts a
+  client using strong authentication, missed earlier
+- also label kadmind log files and files created by the db2 plugin
+
 * Thu Sep  6 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-6
 - incorporate updated fix for CVE-2007-3999
 - fix incorrect call to "test" in the kadmin init script
