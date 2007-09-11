@@ -825,7 +825,24 @@ When enabled, ftpd, krshd, and login.krb5 gain dependence on libpam.
  #include <grp.h> 
  #include <setjmp.h>
  #ifndef POSIX_SETJMP
-@@ -903,6 +906,10 @@ end_login()
+@@ -803,6 +807,16 @@
+ 		}
+ #endif /* KRB5_KRB4_COMPAT */
+ 
++#ifdef USE_PAM
++		if (appl_pam_enabled(kcontext, "ftpd")) {
++			if (appl_pam_acct_mgmt(FTP_PAM_SERVICE, 0,
++					       pw->pw_name, "",
++					       FTP_PAM_SERVICE) != 0) {
++				reply(530, "Login incorrect.");
++				return;
++			}
++		}
++#endif
+ 		if (!authorized && authlevel == AUTHLEVEL_AUTHORIZE) {
+ 			strncat(buf, "; Access denied.",
+ 				sizeof(buf) - strlen(buf) - 1);
+@@ -903,6 +916,10 @@ end_login()
  	(void) krb5_seteuid((uid_t)0);
  	if (logged_in)
  		pty_logwtmp(ttyline, "", "");
@@ -836,7 +853,7 @@ When enabled, ftpd, krshd, and login.krb5 gain dependence on libpam.
  	if (have_creds) {
  #ifdef GSSAPI
  		krb5_cc_destroy(kcontext, ccache);
-@@ -1073,9 +1080,17 @@ pass(passwd)
+@@ -1073,9 +1090,17 @@ pass(passwd)
  		 *   kpass fails and the user has no local password
  		 *   kpass fails and the provided password doesn't match pw
  		 */
@@ -857,7 +874,7 @@ When enabled, ftpd, krshd, and login.krb5 gain dependence on libpam.
  			pw = NULL;
  			sleep(5);
  			if (++login_attempts >= 3) {
-@@ -1092,6 +1107,17 @@ pass(passwd)
+@@ -1092,6 +1117,17 @@ pass(passwd)
  	}
  	login_attempts = 0;		/* this time successful */
  
@@ -875,7 +892,7 @@ When enabled, ftpd, krshd, and login.krb5 gain dependence on libpam.
  	login(passwd, 0);
  	return;
  }
-@@ -1110,6 +1136,18 @@ login(passwd, logincode)
+@@ -1110,6 +1146,18 @@ login(passwd, logincode)
  		chown(tkt_string(), pw->pw_uid, pw->pw_gid);
  #endif
  	}
@@ -894,7 +911,7 @@ When enabled, ftpd, krshd, and login.krb5 gain dependence on libpam.
  
  	(void) krb5_setegid((gid_t)pw->pw_gid);
  	(void) initgroups(pw->pw_name, pw->pw_gid);
-@@ -2125,6 +2163,10 @@ dologout(status)
+@@ -2125,6 +2173,10 @@ dologout(status)
  		dest_tkt();
  #endif
  	}
