@@ -14,7 +14,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.2
-Release: 7%{?dist}
+Release: 8%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -208,6 +208,10 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Tue Sep 11 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-8
+- move the db2 kdb plugin from -server to -libs, because a multilib libkdb
+  might need it
+
 * Tue Sep 11 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-7
 - also perform PAM session and credential management when ftpd accepts a
   client using strong authentication, missed earlier
@@ -1653,8 +1657,6 @@ exit 0
 %dir %{krb5prefix}/man/man8
 %dir %{krb5prefix}/sbin
 
-%{_libdir}/krb5/plugins/kdb/db2.so
-
 # Problem-reporting tool.
 %{krb5prefix}/sbin/krb5-send-pr
 %{krb5prefix}/man/man1/krb5-send-pr.1*
@@ -1729,6 +1731,8 @@ exit 0
 %dir %{_libdir}/krb5
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/*
+%dir %{_libdir}/krb5/plugins/*
+%{_libdir}/krb5/plugins/kdb/db2.so
 %{krb5prefix}/share
 
 %files devel
