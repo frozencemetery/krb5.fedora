@@ -291,7 +291,7 @@ the libkrb5support library depends on libselinux.
  
 --- krb5-1.6.1/src/include/k5-label.h	2007-08-25 03:19:00.000000000 -0400
 +++ krb5-1.6.1/src/include/k5-label.h	2007-08-25 03:00:02.000000000 -0400
-@@ -0,0 +1,24 @@
+@@ -0,0 +1,39 @@
 +#ifndef _KRB5_LABEL_H
 +#define _KRB5_LABEL_H
 +/* Wrapper functions which help us create files and directories with the right
@@ -308,10 +308,25 @@ the libkrb5support library depends on libselinux.
 +int krb5int_labeled_mkdir(const char *path, mode_t mode);
 +int krb5int_labeled_mknod(const char *path, mode_t mode, dev_t device);
 +#ifndef USE_SELINUX_UNWRAPPED
++#ifdef fopen
++#undef fopen
++#endif
 +#define fopen krb5int_labeled_fopen
++#ifdef open
++#undef open
++#endif
 +#define open krb5int_labeled_open
++#ifdef creat
++#undef creat
++#endif
 +#define creat krb5int_labeled_creat
++#ifdef mkdir
++#undef mkdir
++#endif
 +#define mkdir krb5int_labeled_mkdir
++#ifdef mknod
++#undef mknod
++#endif
 +#define mknod krb5int_labeled_mknod
 +#endif
 +#endif
