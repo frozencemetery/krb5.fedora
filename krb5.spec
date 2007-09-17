@@ -199,7 +199,7 @@ installed on systems which are meant provide these services.
 
 %changelog
 * Mon Sep 17 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-5
-- fix incorrect call to "test" in the kadmin init script (#287291)
+- fix incorrect call to "test" in the kadmin init script (Fran Taylor, #287291)
 
 * Thu Sep  6 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-4
 - incorporate updated fix for CVE-2007-3999
