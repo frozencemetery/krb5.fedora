@@ -11,7 +11,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.1
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -198,9 +198,11 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Mon Sep 17 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-5
+- fix incorrect call to "test" in the kadmin init script (#287291)
+
 * Thu Sep  6 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-4
 - incorporate updated fix for CVE-2007-3999
-- fix incorrect call to "test" in the kadmin init script
 
 * Tue Sep  4 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-3
 - incorporate fixes for MITKRB5-SA-2007-006 (CVE-2007-3999, CVE-2007-4000)

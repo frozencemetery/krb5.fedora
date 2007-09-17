@@ -34,8 +34,8 @@ start() {
 	    # then we don't know for sure that this is an error.
   	    if ! grep -q 'db_library.*=.*kldap' /etc/krb5.conf ; then
 	        echo $"Error. Default principal database does not exist."
+	        exit 0
 	    fi
-	    exit 0
 	fi
   	if [ -f /var/kerberos/krb5kdc/kpropd.acl ] ; then
 	    echo $"Error. This appears to be a slave server, found kpropd.acl"
