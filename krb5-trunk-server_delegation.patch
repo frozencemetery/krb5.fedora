@@ -21,7 +21,7 @@ Index: src/lib/gssapi/mechglue/g_accept_sec_context.c
  						  mech_type,
  						  output_token,
 -						  ret_flags,
-+						  &temp_ret_flags,
++						  ret_flags ? &temp_ret_flags : NULL,
  						  time_rec,
  					d_cred ? &tmp_d_cred : NULL);
  
