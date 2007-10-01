@@ -14,7 +14,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.2
-Release: 8%{?dist}
+Release: 9%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -92,6 +92,7 @@ Patch61: krb5-trunk-manpaths.patch
 Patch62: krb5-any-fixup-patch.txt
 Patch63: krb5-1.6.1-selinux-label.patch
 Patch64: krb5-ok-as-delegate.patch
+Patch67: krb5-trunk-server_delegation.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -208,6 +209,10 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Mon Oct  1 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-9
+- apply the fix for CVE-2007-4000 instead of the experimental patch for
+  setting ok-as-delegate flags
+
 * Tue Sep 11 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-8
 - move the db2 kdb plugin from -server to -libs, because a multilib libkdb
   might need it
@@ -1226,14 +1231,15 @@ popd
 %patch51 -p0 -b .ldap_init
 %patch52 -p0 -b .ldap_man
 %patch53 -p1 -b .nodeplibs
-%patch64 -p0 -b .2007-3999-2
-%patch65 -p0 -b .2007-4000
+%patch65 -p0 -b .2007-3999-2
+%patch66 -p0 -b .2007-4000
 #%patch55 -p1 -b .empty
 #%patch56 -p1 -b .doublelog
 #%patch57 -p1 -b .login_chdir
 #%patch58 -p1 -b .key_exp
 #%patch59 -p0 -b .kpasswd_tcp
 #%patch64 -p0 -b .ok-as-delegate
+#%patch67 -p0 -b .server-delegation
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
