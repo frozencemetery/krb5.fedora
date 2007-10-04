@@ -93,6 +93,7 @@ Patch62: krb5-any-fixup-patch.txt
 Patch63: krb5-1.6.1-selinux-label.patch
 Patch64: krb5-ok-as-delegate.patch
 Patch67: krb5-trunk-server_delegation.patch
+Patch68: krb5-trunk-spnego_delegation.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -1240,6 +1241,7 @@ popd
 #%patch59 -p0 -b .kpasswd_tcp
 #%patch64 -p0 -b .ok-as-delegate
 #%patch67 -p0 -b .server-delegation
+#%patch68 -p0 -b .spnego_delegation
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
