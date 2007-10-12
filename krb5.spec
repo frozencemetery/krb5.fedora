@@ -210,6 +210,10 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Fri Oct 12 2007 Nalin Dahyabhai <nalin@redhat.com>
+- make krb5.conf %%verify(not md5 size mtime) in addition to
+  %%config(noreplace), like /etc/nsswitch.conf (#329811)
+
 * Mon Oct  1 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-9
 - apply the fix for CVE-2007-4000 instead of the experimental patch for
   setting ok-as-delegate flags
@@ -1717,7 +1721,7 @@ exit 0
 %files libs
 %defattr(-,root,root)
 %docdir %{krb5prefix}/man
-%config(noreplace) /etc/krb5.conf
+%verify(not md5 size mtime) %config(noreplace) /etc/krb5.conf
 %dir %{krb5prefix}
 %dir %{krb5prefix}/man
 %dir %{krb5prefix}/man/man1
