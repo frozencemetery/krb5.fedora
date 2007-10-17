@@ -14,7 +14,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.2
-Release: 9%{?dist}
+Release: 10%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -210,6 +210,9 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Wed Oct 17 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-10
+- make proper use of pam_loginuid and pam_selinux in rshd and ftpd
+
 * Fri Oct 12 2007 Nalin Dahyabhai <nalin@redhat.com>
 - make krb5.conf %%verify(not md5 size mtime) in addition to
   %%config(noreplace), like /etc/nsswitch.conf (#329811)
