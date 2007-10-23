@@ -1,4 +1,5 @@
 %define WITH_LDAP 1
+%define WITH_OPENSSL 1
 
 %define krb5prefix %{_prefix}/kerberos
 
@@ -13,8 +14,8 @@
 
 Summary: The Kerberos network authentication system.
 Name: krb5
-Version: 1.6.2
-Release: 10%{?dist}
+Version: 1.6.3
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -84,15 +85,12 @@ Patch56: krb5-1.6.2-doublelog.patch
 Patch57: krb5-1.6.2-login_chdir.patch
 Patch58: krb5-1.6.2-key_exp.patch
 Patch59: krb5-kpasswd_tcp.patch
-Patch65: CVE-2007-3999-2.patch
-Patch66: CVE-2007-4000.patch
 
 Patch60: krb5-1.6.1-pam.patch
 Patch61: krb5-trunk-manpaths.patch
 Patch62: krb5-any-fixup-patch.txt
 Patch63: krb5-1.6.1-selinux-label.patch
 Patch64: krb5-ok-as-delegate.patch
-Patch67: krb5-trunk-server_delegation.patch
 Patch68: krb5-trunk-spnego_delegation.patch
 
 License: MIT, freely distributable.
@@ -109,6 +107,9 @@ BuildRequires: pam-devel
 
 %if %{WITH_LDAP}
 BuildRequires: openldap-devel
+%endif
+%if %{WITH_OPENSSL}
+BuildRequires: openssl-devel >= 0.9.8
 %endif
 
 %description
@@ -209,7 +210,24 @@ servers. If your network uses Kerberos, this package should be
 installed on systems which are meant provide these services.
 %endif
 
+%package pkinit-openssl
+Summary: The PKINIT module for Kerberos 5.
+Group: System Environment/Libraries
+Requires: %{name}-libs = %{version}-%{release}
+
+%description pkinit-openssl
+Kerberos is a network authentication system. The krb5-pkinit-openssl
+package contains the PKINIT plugin, which uses OpenSSL to allow clients
+to obtain initial credentials from a KDC using a private key and a
+certificate.
+
 %changelog
+* Tue Oct 23 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-1
+- update to 1.6.3, dropping now-integrated patches for CVE-2007-3999
+  and CVE-2007-4000 (the new pkinit module is built conditionally and goes
+  into the -pkinit-openssl package, at least for now, to make a buildreq
+  loop with openssl avoidable)
+
 * Wed Oct 17 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-10
 - make proper use of pam_loginuid and pam_selinux in rshd and ftpd
 
@@ -1239,15 +1257,12 @@ popd
 %patch51 -p0 -b .ldap_init
 %patch52 -p0 -b .ldap_man
 %patch53 -p1 -b .nodeplibs
-%patch65 -p0 -b .2007-3999-2
-%patch66 -p0 -b .2007-4000
 #%patch55 -p1 -b .empty
 #%patch56 -p1 -b .doublelog
 #%patch57 -p1 -b .login_chdir
 #%patch58 -p1 -b .key_exp
 #%patch59 -p0 -b .kpasswd_tcp
 #%patch64 -p0 -b .ok-as-delegate
-#%patch67 -p0 -b .server-delegation
 #%patch68 -p0 -b .spnego_delegation
 cp src/krb524/README README.krb524
 gzip doc/*.ps
@@ -1309,6 +1324,14 @@ DEFINES="-D_FILE_OFFSET_BITS=64" ; export DEFINES
 OPENLDAP_PLUGIN=yes
 %else
 OPENLDAP_PLUGIN=""
+%endif
+# Enable or disable the PKINIT plugin.  The configure script only checks for
+# the version of OpenSSL being okay, so for now we have to use that to control
+# whether or not it tries to build the module.
+%if %{WITH_OPENSSL}
+k5_cv_openssl_version_okay=
+%else
+k5_cv_openssl_version_okay=no ; export k5_cv_openssl_version_okay
 %endif
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
 CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC`"
@@ -1749,6 +1772,15 @@ exit 0
 %dir %{_libdir}/krb5/plugins/*
 %{_libdir}/krb5/plugins/kdb/db2.so
 %{krb5prefix}/share
+
+%if %{WITH_OPENSSL}
+%files pkinit-openssl
+%defattr(-,root,root)
+%dir %{_libdir}/krb5
+%dir %{_libdir}/krb5/plugins
+%dir %{_libdir}/krb5/plugins/preauth
+%{_libdir}/krb5/plugins/preauth/pkinit.so
+%endif
 
 %files devel
 %defattr(-,root,root)

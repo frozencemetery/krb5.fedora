@@ -102,10 +102,12 @@ diff -up src/lib/krb5/os/changepw.c src/lib/krb5/os/changepw.c
  	addrlen = sizeof(remote_addr);
  
  	callback_info.context = (void*) &callback_ctx;
-@@ -247,15 +287,8 @@ krb5_change_set_password(krb5_context co
+@@ -247,17 +287,10 @@ krb5_change_set_password(krb5_context co
  				   NULL,
  				   ss2sa(&remote_addr),
                                     &addrlen,
+ 				   NULL,
+ 				   NULL,
 -				   NULL
 -		 ))) {
 -
