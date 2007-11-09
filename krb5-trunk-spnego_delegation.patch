@@ -1,6 +1,6 @@
 An spnego credential is itself a union credential, so search through it
 when we're looking for credentials of a mechanism which may already have
-been wrapped by spnego.
+been wrapped by spnego.  RT #5807.
 
 Index: src/lib/gssapi/mechglue/g_glue.c
 ===================================================================
