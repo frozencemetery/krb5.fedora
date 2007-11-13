@@ -231,7 +231,7 @@ installed on systems which are meant provide these services.
 - also label kadmind log files and files created by the db2 plugin
 
 * Thu Sep  6 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-6
-- incorporate updated fix for CVE-2007-3999
+- incorporate updated fix for CVE-2007-3999 (CVE-2007-4743)
 - fix incorrect call to "test" in the kadmin init script (#287291)
 
 * Tue Sep  4 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-5
