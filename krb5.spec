@@ -14,7 +14,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.2
-Release: 10%{?dist}
+Release: 11%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -210,6 +210,13 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Fri Nov 16 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-11
+- backport a fix to make handling of returned flags during spnego credential
+  delegation more forgiving of apps which don't care about flags but still
+  want a delegated credential handle (#314651, RT#5802)
+- fix retrieval of krb5 credentials from an spnego delegated handle (#319351,
+  RT#5807)
+
 * Wed Oct 17 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-10
 - make proper use of pam_loginuid and pam_selinux in rshd and ftpd
 
@@ -1247,8 +1254,8 @@ popd
 #%patch58 -p1 -b .key_exp
 #%patch59 -p0 -b .kpasswd_tcp
 #%patch64 -p0 -b .ok-as-delegate
-#%patch67 -p0 -b .server-delegation
-#%patch68 -p0 -b .spnego_delegation
+%patch67 -p0 -b .server-delegation
+%patch68 -p0 -b .spnego_delegation
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
