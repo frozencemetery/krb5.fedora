@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -222,6 +222,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Wed Dec  5 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-2
+- rebuild
+
 * Tue Oct 23 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-1
 - update to 1.6.3, dropping now-integrated patches for CVE-2007-3999
   and CVE-2007-4000 (the new pkinit module is built conditionally and goes
