@@ -693,16 +693,16 @@ the libkrb5support library depends on libselinux.
 +				len = 0;
 +				wd = getcwd(NULL, len);
 +				if (wd == NULL) {
-+					if (previous == NULL) {
++					if (previous != NULL) {
 +						freecon(previous);
 +					}
 +					return NULL;
 +				}
-+				len = strlen(wd) + strlen(pathname) + 1;
++				len = strlen(wd) + 1 + strlen(pathname) + 1;
 +				genpath = malloc(len);
 +				if (genpath == NULL) {
 +					free(wd);
-+					if (previous == NULL) {
++					if (previous != NULL) {
 +						freecon(previous);
 +					}
 +					return NULL;
@@ -722,7 +722,7 @@ the libkrb5support library depends on libselinux.
 +#endif
 +			if (matchpathcon(fullpath, mode, &next) != 0) {
 +				free(genpath);
-+				if (previous) {
++				if (previous != NULL) {
 +					freecon(previous);
 +				}
 +				return NULL;
@@ -736,7 +736,7 @@ the libkrb5support library depends on libselinux.
 +#endif
 +			if (setfscreatecon(next) != 0) {
 +				freecon(next);
-+				if (previous) {
++				if (previous != NULL) {
 +					freecon(previous);
 +				}
 +				return NULL;
