@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -222,6 +222,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Dec 18 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-3
+- allocate space for the nul-terminator in the local pathname when looking up
+  a file context, and properly free a previous context (Jose Plans, #426085)
+
 * Wed Dec  5 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-2
 - rebuild
 
