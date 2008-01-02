@@ -13,9 +13,6 @@
 # Get config.
 . /etc/sysconfig/network
 
-# Check that networking is up.
-[ ${NETWORKING} = "no" ] && exit 0
-
 # Get config.
 [ -r /etc/sysconfig/krb5kdc ] && . /etc/sysconfig/krb5kdc
 
@@ -26,8 +23,9 @@ RETVAL=0
 prog="Kerberos 5 KDC"
 krb5kdc=/usr/kerberos/sbin/krb5kdc
 
-# Sheel functions to cut down on useless shell instances.
+# Shell functions to cut down on useless shell instances.
 start() {
+	[ -x $krb5kdc ] || exit 5
 	echo -n $"Starting $prog: "
 	daemon ${krb5kdc} ${KRB5REALM:+-r ${KRB5REALM}} $KRB5KDC_ARGS
 	RETVAL=$?
@@ -75,7 +73,7 @@ case "$1" in
 	;;
   *)
 	echo $"Usage: $0 {start|stop|status|reload|restart|condrestart}"
-	RETVAL=1
+	RETVAL=2
 	;;
 esac
 
