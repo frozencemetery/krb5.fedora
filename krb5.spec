@@ -222,7 +222,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
-* Wed Jan  2 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-4
+* Wed Jan  2 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-4
 - some init script cleanups
   - drop unquoted check and silent exit for "$NETWORKING" (#426852, #242500)
   - krb524: don't barf on missing database if it looks like we're using kldap,
