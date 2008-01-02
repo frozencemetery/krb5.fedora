@@ -12,9 +12,6 @@
 # Get config.
 . /etc/sysconfig/network
 
-# Check that networking is up.
-[ ${NETWORKING} = "no" ] && exit 0
-
 # Source function library.
 . /etc/init.d/functions
 
@@ -22,11 +19,10 @@ RETVAL=0
 prog="Kerberos 5 Propagation Server"
 kpropd=/usr/kerberos/sbin/kpropd
 
-# Sheel functions to cut down on useless shell instances.
+# Shell functions to cut down on useless shell instances.
 start() {
-  	if [ ! -f /var/kerberos/krb5kdc/kpropd.acl ] ; then
-	    exit 0
-	fi
+  	[ -f /var/kerberos/krb5kdc/kpropd.acl ] || exit 6
+	[ -x $kpropd ] || exit 5
 	echo -n $"Starting $prog: "
 	daemon ${kpropd} -S
 	RETVAL=$?
@@ -65,7 +61,7 @@ case "$1" in
 	;;
   *)
 	echo $"Usage: $0 {start|stop|status|restart|condrestart}"
-	RETVAL=1
+	RETVAL=2
 	;;
 esac
 
