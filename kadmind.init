@@ -14,9 +14,6 @@
 # Get config.
 . /etc/sysconfig/network
 
-# Check that networking is up.
-[ ${NETWORKING} = "no" ] && exit 0
-
 # Get config.
 [ -r /etc/sysconfig/kadmin ] && . /etc/sysconfig/kadmin
 
@@ -34,13 +31,14 @@ start() {
 	    # then we don't know for sure that this is an error.
   	    if ! grep -q 'db_library.*=.*kldap' /etc/krb5.conf ; then
 	        echo $"Error. Default principal database does not exist."
-	        exit 0
+	        exit 1
 	    fi
 	fi
   	if [ -f /var/kerberos/krb5kdc/kpropd.acl ] ; then
 	    echo $"Error. This appears to be a slave server, found kpropd.acl"
-	    exit 0
+	    exit 6
 	else
+	[ -x $kadmind ] || exit 5
   	    if [ ! -f /var/kerberos/krb5kdc/kadm5.keytab ] ; then
 		echo -n $"Extracting kadm5 Service Keys: "
 		# This should always work.
@@ -97,7 +95,7 @@ case "$1" in
 	;;
   *)
 	echo $"Usage: $0 {start|stop|status|condrestart|reload|restart}"
-	RETVAL=1
+	RETVAL=2
 	;;
 esac
 
