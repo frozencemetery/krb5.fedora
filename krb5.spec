@@ -222,6 +222,13 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Wed Jan  2 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-4
+- some init script cleanups
+  - drop unquoted check and silent exit for "$NETWORKING" (#426852, #242500)
+  - krb524: don't barf on missing database if it looks like we're using kldap,
+    same as for kadmin
+  - return non-zero status for missing files which cause startup to fail
+
 * Tue Dec 18 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-3
 - allocate space for the nul-terminator in the local pathname when looking up
   a file context, and properly free a previous context (Jose Plans, #426085)

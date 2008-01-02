@@ -13,9 +13,6 @@
 # Get config.
 . /etc/sysconfig/network
 
-# Check that networking is up.
-[ ${NETWORKING} = "no" ] && exit 0
-
 # Get config.
 [ -r /etc/sysconfig/krb524 ] && . /etc/sysconfig/krb524
 
@@ -29,8 +26,14 @@ krb524d=/usr/kerberos/sbin/krb524d
 # Shell functions to cut down on unnecessary shell invocations.
 start() {
   	if [ ! -f /var/kerberos/krb5kdc/principal ] ; then
-	    exit 0
+	    # Make an educated guess -- if they're using kldap somewhere,
+	    # then we don't know for sure that this is an error.
+  	    if ! grep -q 'db_library.*=.*kldap' /etc/krb5.conf ; then
+	        echo $"Error. Default principal database does not exist."
+	        exit 6
+	    fi
 	fi
+	[ -x $krb524d ] || exit 5
 	echo -n $"Starting $prog: "
 	daemon ${krb524d} ${KRB524D_ARGS:--m}
 	RETVAL=$?
@@ -68,7 +71,7 @@ case "$1" in
 	;;
   *)
 	echo $"Usage: $0 {start|stop|status|restart|condrestart}"
-	RETVAL=1
+	RETVAL=2
 	;;
 esac
 
