@@ -84,7 +84,7 @@ Patch55: krb5-1.6.1-empty.patch
 Patch56: krb5-1.6.2-doublelog.patch
 Patch57: krb5-1.6.2-login_chdir.patch
 Patch58: krb5-1.6.2-key_exp.patch
-Patch59: krb5-kpasswd_tcp.patch
+Patch59: krb5-trunk-kpasswd_tcp.patch
 
 Patch60: krb5-1.6.1-pam.patch
 Patch61: krb5-trunk-manpaths.patch
