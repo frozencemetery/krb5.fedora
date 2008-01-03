@@ -92,6 +92,7 @@ Patch62: krb5-any-fixup-patch.txt
 Patch63: krb5-1.6.1-selinux-label.patch
 Patch64: krb5-ok-as-delegate.patch
 Patch68: krb5-trunk-spnego_delegation.patch
+Patch69: krb5-trunk-seqnum.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -224,10 +225,11 @@ certificate.
 %changelog
 * Wed Jan  2 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-4
 - some init script cleanups
-  - drop unquoted check and silent exit for "$NETWORKING" (#426852, #242500)
+  - drop unquoted check and silent exit for "$NETWORKING" (#426852, #242502)
   - krb524: don't barf on missing database if it looks like we're using kldap,
     same as for kadmin
-  - return non-zero status for missing files which cause startup to fail
+  - return non-zero status for missing files which cause startup to
+    fail (#242502)
 
 * Tue Dec 18 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-3
 - allocate space for the nul-terminator in the local pathname when looking up
@@ -1278,6 +1280,7 @@ popd
 #%patch59 -p0 -b .kpasswd_tcp
 #%patch64 -p0 -b .ok-as-delegate
 #%patch68 -p0 -b .spnego_delegation
+#%patch69 -p0 -b .seqnum
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
