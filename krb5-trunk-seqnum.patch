@@ -5,6 +5,7 @@ messages will mess with the counters in the auth_context.  Because the
 current code attempts to reuse auth_context structures (and changing that
 would be more invasive), we'll just save the sequence number values as they
 are after we build the AP-REQ, and restore them before generating requests.
+RT#5867.
 
 Index: src/lib/krb5/os/changepw.c
 ===================================================================
