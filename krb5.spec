@@ -11,7 +11,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.1
-Release: 6%{?dist}
+Release: 7%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -84,6 +84,7 @@ Patch62: krb5-any-fixup-patch.txt
 
 Patch67: krb5-trunk-server_delegation.patch
 Patch68: krb5-trunk-spnego_delegation.patch
+Patch69: krb5-1.6.1-gic_opt_chg_pwd_prmpt.patch
 
 Patch70: http://web.mit.edu/kerberos/advisories/2007-004-patch.txt
 Patch71: http://web.mit.edu/kerberos/advisories/2007-005-patch.txt
@@ -201,6 +202,11 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Wed Jan 23 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-7
+- backport fix from 1.6.3 to get back traditional prompt-for-password-change-
+  on-expired-password behavior back in kinit (and other users of
+  krb5_get_init_creds_opt_alloc()) (#429918)
+
 * Fri Nov 16 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-6
 - backport a fix to make handling of returned flags during spnego credential
   delegation more forgiving of apps which don't care about flags but still
@@ -1169,6 +1175,7 @@ popd
 %patch71 -p0 -b .2007-005
 %patch67 -p0 -b .server-delegation
 %patch68 -p0 -b .spnego_delegation
+%patch69 -p1 -b .gic_opt_chg_pwd_prmpt
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
