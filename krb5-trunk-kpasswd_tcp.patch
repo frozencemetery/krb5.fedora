@@ -1,4 +1,5 @@
-Fall back to TCP on kdc-unresolvable/unreachable errors.
+Fall back to TCP on kdc-unresolvable/unreachable errors.  We still have
+to wait for UDP to fail, so this might not be ideal.  RT #5868.
 
 Index: src/lib/krb5/os/changepw.c
 ===================================================================
