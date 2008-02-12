@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -224,6 +224,13 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Feb 12 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-5
+- enable patch for key-expiration reporting
+- enable patch to make kpasswd fall back to TCP if UDP fails
+- enable patch to make kpasswd use the right sequence number on retransmit
+- enable patch to allow mech-specific creds delegated under spnego to be found
+  when searching for creds
+
 * Wed Jan  2 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-4
 - some init script cleanups
   - drop unquoted check and silent exit for "$NETWORKING" (#426852, #242502)
@@ -1277,11 +1284,11 @@ popd
 #%patch55 -p1 -b .empty
 #%patch56 -p1 -b .doublelog
 #%patch57 -p1 -b .login_chdir
-#%patch58 -p1 -b .key_exp
-#%patch59 -p0 -b .kpasswd_tcp
+%patch58 -p1 -b .key_exp
+%patch59 -p0 -b .kpasswd_tcp
 #%patch64 -p0 -b .ok-as-delegate
-#%patch68 -p0 -b .spnego_delegation
-#%patch69 -p0 -b .seqnum
+%patch68 -p0 -b .spnego_delegation
+%patch69 -p0 -b .seqnum
 #%patch70 -p0 -b .kpasswd_tcp2
 cp src/krb524/README README.krb524
 gzip doc/*.ps
