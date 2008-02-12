@@ -12,7 +12,7 @@ to the wrong attribute on the KDC.  Do what RFC4120 says we should do.  RT#5755.
 +    } else if (client.pw_expiration == 0) {
 +       reply_encpart.key_exp = client.expiration;
 +    } else {
-+       reply_encpart.key_exp = client.pw_expiration < client.expiration ?;
++       reply_encpart.key_exp = client.pw_expiration < client.expiration ?
 +                               client.pw_expiration : client.expiration;
 +    }
      reply_encpart.flags = enc_tkt_reply.flags;
