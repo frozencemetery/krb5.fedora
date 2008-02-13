@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 5%{?dist}
+Release: 6%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -94,6 +94,7 @@ Patch64: krb5-ok-as-delegate.patch
 Patch68: krb5-trunk-spnego_delegation.patch
 Patch69: krb5-trunk-seqnum.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
+Patch71: krb5-1.6.3-netdb.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -224,6 +225,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Wed Feb 13 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-6
+- patch to avoid depending on <netdb.h> to define NI_MAXHOST and NI_MAXSERV
+
 * Tue Feb 12 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-5
 - enable patch for key-expiration reporting
 - enable patch to make kpasswd fall back to TCP if UDP fails
@@ -1290,6 +1294,7 @@ popd
 %patch68 -p0 -b .spnego_delegation
 %patch69 -p0 -b .seqnum
 #%patch70 -p0 -b .kpasswd_tcp2
+%patch71 -p1 -b .netdb
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
