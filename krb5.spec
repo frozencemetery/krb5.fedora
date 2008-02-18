@@ -1,5 +1,6 @@
 %define WITH_LDAP 1
 %define WITH_OPENSSL 1
+%define WITH_DIRSRV 1
 
 %define krb5prefix %{_prefix}/kerberos
 
@@ -15,7 +16,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 6%{?dist}
+Release: 7%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -94,7 +95,7 @@ Patch64: krb5-ok-as-delegate.patch
 Patch68: krb5-trunk-spnego_delegation.patch
 Patch69: krb5-trunk-seqnum.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
-Patch71: krb5-1.6.3-netdb.patch
+Patch71: krb5-1.6.2-dirsrv-accountlock.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -225,6 +226,12 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Feb 18 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-7
+- drop netdb patch
+- kdb_ldap: add patch to treat 'nsAccountLock: true' as an indication that
+  the DISALLOW_ALL_TIX flag is set on an entry, for better interop with Fedora,
+  Netscape, Red Hat Directory Server (Simo Sorce)
+
 * Wed Feb 13 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-6
 - patch to avoid depending on <netdb.h> to define NI_MAXHOST and NI_MAXSERV
 
@@ -1294,7 +1301,7 @@ popd
 %patch68 -p0 -b .spnego_delegation
 %patch69 -p0 -b .seqnum
 #%patch70 -p0 -b .kpasswd_tcp2
-%patch71 -p1 -b .netdb
+%patch71 -p1 -b .dirsrv-accountlock
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
@@ -1350,12 +1357,6 @@ INCLUDES=-I%{_includedir}/et
 %ifarch %{ix86} s390 ppc sparc
 DEFINES="-D_FILE_OFFSET_BITS=64" ; export DEFINES
 %endif
-# Enable or disable the LDAP plugin.
-%if %{WITH_LDAP}
-OPENLDAP_PLUGIN=yes
-%else
-OPENLDAP_PLUGIN=""
-%endif
 # Enable or disable the PKINIT plugin.  The configure script only checks for
 # the version of OpenSSL being okay, so for now we have to use that to control
 # whether or not it tries to build the module.
@@ -1371,7 +1372,6 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	CC=%{__cc} \
 	CFLAGS="$CFLAGS" \
 	CPPFLAGS="$CPPFLAGS" \
-	OPENLDAP_PLUGIN="$OPENLDAP_PLUGIN" \
 	SS_LIB="-lss -lcurses" \
 	--enable-shared \
 %if %{build_static}
@@ -1388,6 +1388,13 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--with-netlib=-lresolv \
 	--without-tcl \
 	--enable-dns \
+%if %{WITH_LDAP}
+%if %{WITH_DIRSRV}
+	--with-dirsrv \
+%else
+	--with-ldap \
+%endif
+%endif
 	--with-pam \
 	--with-pam-login-service=%{login_pam_service} \
 	--with-selinux
