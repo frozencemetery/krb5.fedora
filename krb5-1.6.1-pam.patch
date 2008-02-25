@@ -240,7 +240,7 @@ When enabled, ftpd, krshd, and login.krb5 gain dependence on libpam.
  
 +#ifdef USE_PAM
 +    if (login_use_pam) {
-+	if (appl_pam_acct_mgmt(LOGIN_PAM_SERVICE, 0, username, "",
++	if (appl_pam_acct_mgmt(LOGIN_PAM_SERVICE, 1, username, "",
 +			       ttyname(STDIN_FILENO)) != 0) {
 +	    printf("Login incorrect\n");
 +	    sleepexit(1);
@@ -652,9 +652,9 @@ When enabled, ftpd, krshd, and login.krb5 gain dependence on libpam.
 +	int ret = 0;
 +	if (appl_pam_started) {
 +#ifdef DEBUG
-+		printf("Changing PAM authentication token.\n");
++		printf("Changing PAM expired authentication token.\n");
 +#endif
-+		ret = pam_chauthtok(appl_pamh, 0);
++		ret = pam_chauthtok(appl_pamh, PAM_CHANGE_EXPIRED_AUTHTOK);
 +	}
 +	return ret;
 +}
