@@ -214,7 +214,7 @@ installed on systems which are meant provide these services.
 * Wed Jan 23 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-12
 - backport fix from 1.6.3 to get back traditional prompt-for-password-change-
   on-expired-password behavior back in kinit (and other users of
-  krb5_get_init_creds_opt_alloc()) (#429918)
+  krb5_get_init_creds_opt_alloc()) (#433818)
 
 * Fri Nov 16 2007 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-11
 - backport a fix to make handling of returned flags during spnego credential
