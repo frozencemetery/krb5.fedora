@@ -81,7 +81,7 @@ Patch51: krb5-1.6-ldap-init.patch
 Patch52: krb5-1.6-ldap-man.patch
 Patch53: krb5-1.6-nodeplibs.patch
 Patch55: krb5-1.6.1-empty.patch
-Patch56: krb5-1.6.2-doublelog.patch
+Patch56: krb5-trunk-doublelog.patch
 Patch57: krb5-1.6.2-login_chdir.patch
 Patch58: krb5-1.6.2-key_exp.patch
 Patch59: krb5-trunk-kpasswd_tcp.patch
@@ -226,6 +226,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Feb 25 2008 Nalin Dahyabhai <nalin@redhat.com>
+- add patch to suppress double-processing of /etc/krb5.conf when we build
+  with --sysconfdir=/etc, thereby suppressing double-logging (#231147)
+
 * Mon Feb 25 2008 Nalin Dahyabhai <nalin@redhat.com>
 - remove a patch, to fix problems with interfaces which are "up" but which
   have no address assigned, which conflicted with a different fix for the same
@@ -1308,7 +1312,7 @@ popd
 %patch52 -p0 -b .ldap_man
 %patch53 -p1 -b .nodeplibs
 #%patch55 -p1 -b .empty
-#%patch56 -p1 -b .doublelog
+%patch56 -p0 -b .doublelog
 #%patch57 -p1 -b .login_chdir
 %patch58 -p1 -b .key_exp
 %patch59 -p0 -b .kpasswd_tcp
