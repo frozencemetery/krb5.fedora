@@ -226,6 +226,13 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Feb 25 2008 Nalin Dahyabhai <nalin@redhat.com>
+- in login, allow PAM to interact with the user when they've been strongly
+  authenticated
+- in login, signal PAM when we're changing an expired password that it's an
+  expired password, so that when cracklib flags a password as being weak it's
+  treated as an error even if we're running as root
+
 * Mon Feb 18 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-7
 - drop netdb patch
 - kdb_ldap: add patch to treat 'nsAccountLock: true' as an indication that
