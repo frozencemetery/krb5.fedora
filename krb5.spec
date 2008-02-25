@@ -61,7 +61,6 @@ Patch14: krb5-1.3-ftp-glob.patch
 Patch16: krb5-1.6-buildconf.patch
 Patch18: krb5-1.2.7-reject-bad-transited.patch
 Patch23: krb5-1.3.1-dns.patch
-Patch25: krb5-1.4-null.patch
 Patch26: krb5-1.3.2-efence.patch
 Patch27: krb5-1.3.3-rcp-sendlarge.patch
 Patch29: krb5-1.3.5-kprop-mktemp.patch
@@ -211,6 +210,11 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Mon Feb 25 2008 Nalin Dahyabhai <nalin@redhat.com>
+- remove a patch, to fix problems with interfaces which are "up" but which
+  have no address assigned, which conflicted with a different fix for the same
+  problem in 1.5 (#200979)
+
 * Wed Jan 23 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-12
 - backport fix from 1.6.3 to get back traditional prompt-for-password-change-
   on-expired-password behavior back in kinit (and other users of
@@ -1231,7 +1235,6 @@ popd
 %patch16 -p1 -b .buildconf
 %patch18 -p1 -b .reject-bad-transited
 %patch23 -p1 -b .dns
-%patch25 -p1 -b .null
 # Removes a malloc(0) case, nothing more.
 # %patch26 -p1 -b .efence
 %patch27 -p1 -b .rcp-sendlarge
