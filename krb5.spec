@@ -96,6 +96,7 @@ Patch68: krb5-trunk-spnego_delegation.patch
 Patch69: krb5-trunk-seqnum.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.6.2-dirsrv-accountlock.patch
+Patch72: krb5-1.6.3-ftp_fdleak.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -226,6 +227,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Feb 25 2008 Nalin Dahyabhai <nalin@redhat.com>
+- ftp: don't lose track of a descriptor on passive get when the server fails to
+  open a file
+
 * Mon Feb 25 2008 Nalin Dahyabhai <nalin@redhat.com>
 - in login, allow PAM to interact with the user when they've been strongly
   authenticated
@@ -1309,6 +1314,7 @@ popd
 %patch69 -p0 -b .seqnum
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
+%patch72 -p1 -b .ftp_fdleak
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
