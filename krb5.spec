@@ -257,7 +257,7 @@ certificate.
 
 * Tue Feb 12 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-5
 - enable patch for key-expiration reporting
-- enable patch to make kpasswd fall back to TCP if UDP fails
+- enable patch to make kpasswd fall back to TCP if UDP fails (#251206)
 - enable patch to make kpasswd use the right sequence number on retransmit
 - enable patch to allow mech-specific creds delegated under spnego to be found
   when searching for creds
