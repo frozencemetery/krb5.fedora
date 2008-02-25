@@ -211,6 +211,13 @@ installed on systems which are meant provide these services.
 
 %changelog
 * Mon Feb 25 2008 Nalin Dahyabhai <nalin@redhat.com>
+- in login, allow PAM to interact with the user when they've been strongly
+  authenticated
+- in login, signal PAM when we're changing an expired password that it's an
+  expired password, so that when cracklib flags a password as being weak it's
+  treated as an error even if we're running as root
+
+* Mon Feb 25 2008 Nalin Dahyabhai <nalin@redhat.com>
 - remove a patch, to fix problems with interfaces which are "up" but which
   have no address assigned, which conflicted with a different fix for the same
   problem in 1.5 (#200979)
