@@ -75,7 +75,6 @@ Patch39: krb5-1.4.1-api.patch
 Patch40: krb5-1.4.1-telnet-environ.patch
 Patch41: krb5-1.2.7-login-lpass.patch
 Patch44: krb5-1.4.3-enospc.patch
-Patch45: krb5-1.5-gssinit.patch
 Patch47: krb5-1.6-sort-of-static.patch
 Patch51: krb5-1.6-ldap-init.patch
 Patch52: krb5-1.6-ldap-man.patch
@@ -96,6 +95,7 @@ Patch69: krb5-trunk-seqnum.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.6.2-dirsrv-accountlock.patch
 Patch72: krb5-1.6.3-ftp_fdleak.patch
+Patch73: krb5-1.6.3-ftp_glob_runique.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -226,6 +226,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Feb 26 2008 Nalin Dahyabhai <nalin@redhat.com>
+- ftp: add patch to fix "runique on" case when globbing fixes applied
+- stop adding a redundant but harmless call to initialize the gssapi internals
+
 * Mon Feb 25 2008 Nalin Dahyabhai <nalin@redhat.com>
 - add patch to suppress double-processing of /etc/krb5.conf when we build
   with --sysconfdir=/etc, thereby suppressing double-logging (#231147)
@@ -1304,7 +1308,6 @@ popd
 %patch40 -p1 -b .telnet-environ
 %patch41 -p1 -b .login-lpass
 %patch44 -p1 -b .enospc
-%patch45 -p1 -b .gssinit
 %if %{build_static}
 %patch47 -p1 -b .sort-of-static
 %endif
@@ -1322,6 +1325,7 @@ popd
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
 %patch72 -p1 -b .ftp_fdleak
+%patch73 -p1 -b .ftp_glob_runique
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
