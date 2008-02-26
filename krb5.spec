@@ -11,7 +11,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.1
-Release: 7%{?dist}
+Release: 8%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.5/krb5-1.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -200,7 +200,7 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
-* Tue Feb 26 2008 Nalin Dahyabhai <nalin@redhat.com>
+* Tue Feb 26 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-8
 - stop adding a redundant but harmless call to initialize the gssapi internals
 
 * Mon Feb 25 2008 Nalin Dahyabhai <nalin@redhat.com>
