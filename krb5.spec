@@ -68,7 +68,6 @@ Patch39: krb5-1.4.1-api.patch
 Patch40: krb5-1.4.1-telnet-environ.patch
 Patch41: krb5-1.2.7-login-lpass.patch
 Patch44: krb5-1.4.3-enospc.patch
-Patch45: krb5-1.5-gssinit.patch
 Patch47: krb5-1.6-sort-of-static.patch
 Patch51: krb5-1.6-ldap-init.patch
 Patch52: krb5-1.6-ldap-man.patch
@@ -201,6 +200,9 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Tue Feb 26 2008 Nalin Dahyabhai <nalin@redhat.com>
+- stop adding a redundant but harmless call to initialize the gssapi internals
+
 * Mon Feb 25 2008 Nalin Dahyabhai <nalin@redhat.com>
 - remove a patch, to fix problems with interfaces which are "up" but which
   have no address assigned, which conflicted with a different fix for the same
@@ -1162,7 +1164,6 @@ popd
 %patch40 -p1 -b .telnet-environ
 %patch41 -p1 -b .login-lpass
 %patch44 -p1 -b .enospc
-%patch45 -p1 -b .gssinit
 %if %{build_static}
 %patch47 -p1 -b .sort-of-static
 %endif
