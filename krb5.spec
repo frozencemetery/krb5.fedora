@@ -1,4 +1,5 @@
 %define WITH_LDAP 1
+%define WITH_DIRSRV 1
 
 %define krb5prefix %{_prefix}/kerberos
 
