@@ -86,6 +86,7 @@ Patch69: krb5-1.6.1-gic_opt_chg_pwd_prmpt.patch
 
 Patch70: http://web.mit.edu/kerberos/advisories/2007-004-patch.txt
 Patch71: http://web.mit.edu/kerberos/advisories/2007-005-patch.txt
+Patch72: krb5-1.6.2-dirsrv-accountlock.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -202,6 +203,9 @@ installed on systems which are meant provide these services.
 %changelog
 * Tue Feb 26 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.1-8
 - stop adding a redundant but harmless call to initialize the gssapi internals
+- kdb_ldap: add patch to treat 'nsAccountLock: true' as an indication that
+  the DISALLOW_ALL_TIX flag is set on an entry, for better interop with Fedora,
+  Netscape, Red Hat Directory Server (Simo Sorce)
 
 * Mon Feb 25 2008 Nalin Dahyabhai <nalin@redhat.com>
 - remove a patch, to fix problems with interfaces which are "up" but which
@@ -1180,6 +1184,7 @@ popd
 %patch67 -p0 -b .server-delegation
 %patch68 -p0 -b .spnego_delegation
 %patch69 -p1 -b .gic_opt_chg_pwd_prmpt
+%patch72 -p1 -b .dirsrv_accountlock
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
@@ -1228,12 +1233,6 @@ INCLUDES=-I%{_includedir}/et
 %ifarch %{ix86} s390 ppc sparc
 DEFINES="-D_FILE_OFFSET_BITS=64" ; export DEFINES
 %endif
-# Enable or disable the LDAP plugin.
-%if %{WITH_LDAP}
-OPENLDAP_PLUGIN=yes
-%else
-OPENLDAP_PLUGIN=""
-%endif
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
 CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC`"
 CPPFLAGS="`echo $DEFINES $INCLUDES`"
@@ -1241,8 +1240,14 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	CC=%{__cc} \
 	CFLAGS="$CFLAGS" \
 	CPPFLAGS="$CPPFLAGS" \
-	OPENLDAP_PLUGIN="$OPENLDAP_PLUGIN" \
 	SS_LIB="-lss -lcurses" \
+%if %{WITH_LDAP}
+%if %{WITH_DIRSRV}
+	--with-dirsrv \
+%else
+	--with-ldap \
+%endif
+%endif
 	--enable-shared \
 %if %{build_static}
 	--enable-static \
