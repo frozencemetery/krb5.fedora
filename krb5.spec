@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.2
-Release: 13%{?dist}
+Release: 14%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -211,6 +211,10 @@ installed on systems which are meant provide these services.
 %endif
 
 %changelog
+* Tue Mar 18 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-14
+- fix calculation of the length of relative filenames when looking up the
+  SELinux labels they should be given (Pawel Salek, #436345)
+
 * Tue Feb 26 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-13
 - stop adding a redundant but harmless call to initialize the gssapi internals
 - kdb_ldap: add patch to treat 'nsAccountLock: true' as an indication that
