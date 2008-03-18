@@ -698,7 +698,7 @@ the libkrb5support library depends on libselinux.
 +					}
 +					return NULL;
 +				}
-+				len = strlen(wd) + strlen(pathname) + 1;
++				len = strlen(wd) + 1 + strlen(pathname) + 1;
 +				genpath = malloc(len);
 +				if (genpath == NULL) {
 +					free(wd);
