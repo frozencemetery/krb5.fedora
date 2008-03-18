@@ -16,7 +16,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 8%{?dist}
+Release: 9%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -88,7 +88,7 @@ Patch59: krb5-trunk-kpasswd_tcp.patch
 Patch60: krb5-1.6.1-pam.patch
 Patch61: krb5-trunk-manpaths.patch
 Patch62: krb5-any-fixup-patch.txt
-Patch63: krb5-1.6.1-selinux-label.patch
+Patch63: krb5-1.6.3-selinux-label.patch
 Patch64: krb5-ok-as-delegate.patch
 Patch68: krb5-trunk-spnego_delegation.patch
 Patch69: krb5-trunk-seqnum.patch
@@ -226,6 +226,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Mar 18 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-9
+- rework file labeling patch to not depend on fragile preprocessor trickery,
+  in another attempt at fixing #428355 and friends
+
 * Tue Feb 26 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-8
 - ftp: add patch to fix "runique on" case when globbing fixes applied
 - stop adding a redundant but harmless call to initialize the gssapi internals
