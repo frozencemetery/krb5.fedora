@@ -96,6 +96,11 @@ Patch68: krb5-trunk-spnego_delegation.patch
 Patch69: krb5-1.6.1-gic_opt_chg_pwd_prmpt.patch
 Patch70: krb5-1.6.2-dirsrv-accountlock.patch
 
+Patch73: krb5-CVE-2008-0062,0063.patch
+Patch74: krb5-CVE-2008-0947.patch
+Patch75: krb5-CVE-2007-5901.patch
+Patch76: krb5-CVE-2007-5971.patch
+
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -212,6 +217,15 @@ installed on systems which are meant provide these services.
 
 %changelog
 * Tue Mar 18 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.2-14
+- add fixes from MITKRB5-SA-2008-001 for use of null or dangling pointer
+  when v4 compatibility is enabled on the KDC (CVE-2008-0062, CVE-2008-0063,
+  #432620, #432621)
+- add fixes from MITKRB5-SA-2008-002 for array out-of-bounds accesses when
+  high-numbered descriptors are used (CVE-2008-0947, #433596)
+- add backport bug fix for an attempt to free non-heap memory in
+  libgssapi_krb5 (CVE-2007-5901, #415321)
+- add backport bug fix for a double-free in out-of-memory situations in
+  libgssapi_krb5 (CVE-2007-5971, #415351)
 - fix calculation of the length of relative filenames when looking up the
   SELinux labels they should be given (Pawel Salek, #436345)
 
@@ -1284,6 +1298,10 @@ popd
 %patch68 -p0 -b .spnego_delegation
 %patch69 -p1 -b .gic_opt_chg_pwd_prmpt
 %patch70 -p1 -b .dirsrv_accountlock
+%patch73 -p0 -b .2008-0062,0063
+%patch74 -p0 -b .2008-0947
+%patch75 -p0 -b .2007-5901
+%patch76 -p0 -b .2007-5971
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
