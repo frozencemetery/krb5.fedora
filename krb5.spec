@@ -100,6 +100,7 @@ Patch74: krb5-CVE-2008-0062,0063.patch
 Patch75: krb5-CVE-2008-0947.patch
 Patch76: krb5-CVE-2007-5901.patch
 Patch77: krb5-CVE-2007-5971.patch
+Patch78: krb5-1.6.3-lucid-acceptor.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -230,6 +231,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Apr  1 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-11
+- libgssapi_krb5: properly export the acceptor subkey when creating a lucid
+  context (Kevin Coffman, via the nfs4 mailing list)
+
 * Tue Mar 18 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-10
 - add fixes from MITKRB5-SA-2008-001 for use of null or dangling pointer
   when v4 compatibility is enabled on the KDC (CVE-2008-0062, CVE-2008-0063,
@@ -1349,6 +1354,7 @@ popd
 %patch75 -p0 -b .2008-0947
 %patch76 -p0 -b .2007-5901
 %patch77 -p0 -b .2007-5971
+%patch78 -p0 -b .lucid_acceptor
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
