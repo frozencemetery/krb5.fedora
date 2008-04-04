@@ -16,7 +16,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 11%{?dist}
+Release: 12%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -231,6 +231,11 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Fri Apr  4 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-12
+- stop exporting kadmin keys to a keytab file when kadmind starts -- the
+  daemon's been able to use the database directly for a long long time now
+- belatedly add aes128,aes256 to the default set of supported key types
+
 * Tue Apr  1 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-11
 - libgssapi_krb5: properly export the acceptor subkey when creating a lucid
   context (Kevin Coffman, via the nfs4 mailing list)
