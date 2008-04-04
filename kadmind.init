@@ -38,15 +38,7 @@ start() {
 	    echo $"Error. This appears to be a slave server, found kpropd.acl"
 	    exit 6
 	else
-	[ -x $kadmind ] || exit 5
-  	    if [ ! -f /var/kerberos/krb5kdc/kadm5.keytab ] ; then
-		echo -n $"Extracting kadm5 Service Keys: "
-		# This should always work.
-		/usr/kerberos/sbin/kadmin.local ${KRB5REALM:+-r $KRB5REALM} -q "ktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/admin${KRB5REALM:+@$KRB5REALM} kadmin/changepw${KRB5REALM:+@$KRB5REALM}" && success || failure
-		# It's probably okay if this fails.
-		/usr/kerberos/sbin/kadmin.local ${KRB5REALM:+-r $KRB5REALM} -q "ktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/`hostname`${KRB5REALM:+@$KRB5REALM}" 2> /dev/null && success
-		echo
-	    fi
+	    [ -x $kadmind ] || exit 5
 	fi
 	echo -n $"Starting $prog: "
 	daemon ${kadmind} ${KRB5REALM:+-r ${KRB5REALM}} $KADMIND_ARGS
