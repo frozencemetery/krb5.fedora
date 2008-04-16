@@ -16,7 +16,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 12%{?dist}
+Release: 13%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -101,6 +101,7 @@ Patch75: krb5-CVE-2008-0947.patch
 Patch76: krb5-CVE-2007-5901.patch
 Patch77: krb5-CVE-2007-5971.patch
 Patch78: krb5-1.6.3-lucid-acceptor.patch
+Patch79: krb5-trunk-ftp_mget_case.patch
 
 License: MIT, freely distributable.
 URL: http://web.mit.edu/kerberos/www/
@@ -231,6 +232,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Wed Apr 16 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-13
+- ftp: use the correct local filename during mget when the 'case' option is
+  enabled (#442713)
+
 * Fri Apr  4 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-12
 - stop exporting kadmin keys to a keytab file when kadmind starts -- the
   daemon's been able to use the database directly for a long long time now
@@ -1360,6 +1365,7 @@ popd
 %patch76 -p0 -b .2007-5901
 %patch77 -p0 -b .2007-5971
 %patch78 -p0 -b .lucid_acceptor
+%patch79 -p0 -b .ftp_mget_case
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
