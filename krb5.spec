@@ -16,7 +16,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 14%{?dist}
+Release: 15%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -232,6 +232,12 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Fri Jul 11 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-15
+- build with -fno-strict-aliasing, which is needed because the library
+  triggers these warnings
+- don't forget to label principal database lock files
+- fix the labeling patch so that it doesn't break bootstrapping
+
 * Sat Jun 14 2008 Tom "spot" Callaway <tcallawa@redhat.com> 1.6.3-14
 - generate src/include/krb5/krb5.h before building
 - fix conditional for sparcv9
@@ -1434,7 +1440,7 @@ k5_cv_openssl_version_okay=
 k5_cv_openssl_version_okay=no ; export k5_cv_openssl_version_okay
 %endif
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
-CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC`"
+CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC -fno-strict-aliasing`"
 CPPFLAGS="`echo $DEFINES $INCLUDES`"
 %configure \
 	CC=%{__cc} \
