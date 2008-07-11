@@ -1466,10 +1466,6 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--with-pam \
 	--with-pam-login-service=%{login_pam_service} \
 	--with-selinux
-# Generate krb5/krb5.h
-pushd include
-make krb5/krb5.h
-popd
 # Now build it.
 make
 
