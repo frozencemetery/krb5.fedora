@@ -52,7 +52,7 @@ Index: configure.in
 --- configure.in	(revision 19589)
 +++ configure.in	(working copy)
 @@ -986,6 +986,73 @@
- AC_CONFIG_SUBDIRS(appl/libpty appl/bsd appl/gssftp appl/telnet)
+ KRB5_WITH_PAM
  
  AC_CONFIG_FILES(krb5-config, [chmod +x krb5-config])
 +
