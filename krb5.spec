@@ -235,6 +235,7 @@ certificate.
 - clear fuzz out of patches, dropping a man page patch which is no longer
   necessary
 - quote %%{__cc} where needed because it includes whitespace now
+- define ASN1BUF_OMIT_INLINE_FUNCS at compile-time (for now) to keep building
 
 * Fri Jul 11 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-15
 - build with -fno-strict-aliasing, which is needed because the library
@@ -1434,6 +1435,10 @@ INCLUDES=-I%{_includedir}/et
 %ifarch %{ix86} s390 ppc sparcv9
 DEFINES="-D_FILE_OFFSET_BITS=64" ; export DEFINES
 %endif
+
+# FIXME!
+DEFINES="$DEFINES -DASN1BUF_OMIT_INLINE_FUNCS=1"; export DEFINES
+
 # Enable or disable the PKINIT plugin.  The configure script only checks for
 # the version of OpenSSL being okay, so for now we have to use that to control
 # whether or not it tries to build the module.
