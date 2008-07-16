@@ -234,6 +234,7 @@ certificate.
 * Wed Jul 16 2008 Nalin Dahyabhai <nalin@redhat.com>
 - clear fuzz out of patches, dropping a man page patch which is no longer
   necessary
+- quote %%{__cc} where needed because it includes whitespace now
 
 * Fri Jul 11 2008 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-15
 - build with -fno-strict-aliasing, which is needed because the library
@@ -1445,7 +1446,7 @@ k5_cv_openssl_version_okay=no ; export k5_cv_openssl_version_okay
 CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC -fno-strict-aliasing`"
 CPPFLAGS="`echo $DEFINES $INCLUDES`"
 %configure \
-	CC=%{__cc} \
+	CC="%{__cc}" \
 	CFLAGS="$CFLAGS" \
 	CPPFLAGS="$CPPFLAGS" \
 	SS_LIB="-lss -lcurses" \
