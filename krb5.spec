@@ -16,7 +16,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 15%{?dist}
+Release: 16%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -102,7 +102,7 @@ Patch77: krb5-CVE-2007-5971.patch
 Patch78: krb5-1.6.3-lucid-acceptor.patch
 Patch79: krb5-trunk-ftp_mget_case.patch
 
-License: MIT, freely distributable.
+License: MIT
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
@@ -231,6 +231,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Aug  5 2008 Tom "spot" Callaway <tcallawa@redhat.com> 1.6.3-16
+- fix license tag
+
 * Wed Jul 16 2008 Nalin Dahyabhai <nalin@redhat.com>
 - clear fuzz out of patches, dropping a man page patch which is no longer
   necessary
