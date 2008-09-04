@@ -101,6 +101,7 @@ Patch76: krb5-CVE-2007-5901.patch
 Patch77: krb5-CVE-2007-5971.patch
 Patch78: krb5-1.6.3-lucid-acceptor.patch
 Patch79: krb5-trunk-ftp_mget_case.patch
+Patch80: krb5-trunk-preauth-master.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -231,6 +232,11 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Thu Sep  4 2008 Nalin Dahyabhai <nalin@redhat.com>
+- if we successfully change the user's password during an attempt to get
+  initial credentials, but then fail to get initial creds from a non-master
+  using the new password, retry against the master (#432334)
+
 * Tue Aug  5 2008 Tom "spot" Callaway <tcallawa@redhat.com> 1.6.3-16
 - fix license tag
 
@@ -1383,6 +1389,7 @@ popd
 %patch77 -p0 -b .2007-5971
 %patch78 -p0 -b .lucid_acceptor
 %patch79 -p0 -b .ftp_mget_case
+%patch80 -p0 -b .preauth_master
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
