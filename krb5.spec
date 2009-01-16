@@ -232,7 +232,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
-* Fri Jan 16 2008  Nalin Dahyabhai <nalin@redhat.com> 1.6.3-17
+* Fri Jan 16 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-17
 - rebuild
 
 * Thu Sep  4 2008 Nalin Dahyabhai <nalin@redhat.com>
