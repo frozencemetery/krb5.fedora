@@ -16,7 +16,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 16%{?dist}
+Release: 17%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -232,6 +232,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Fri Jan 16 2008  Nalin Dahyabhai <nalin@redhat.com> 1.6.3-17
+- rebuild
+
 * Thu Sep  4 2008 Nalin Dahyabhai <nalin@redhat.com>
 - if we successfully change the user's password during an attempt to get
   initial credentials, but then fail to get initial creds from a non-master
