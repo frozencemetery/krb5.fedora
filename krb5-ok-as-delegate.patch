@@ -1,7 +1,7 @@
 This appears to be the minimum needed to be able to set the OK-AS-DELEGATE
 flag on an entry using kadmin, and to have the flag propagate back to clients
 from the KDC.  Note: this affects the KDB storage format, so this MUST NOT be
-used until it's in upstream's tree.
+used until it's in upstream's tree.  RT#5596.
 
 Index: doc/admin.texinfo
 ===================================================================
