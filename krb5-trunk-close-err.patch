@@ -1,0 +1,19 @@
+Check for errors returned by close(), which is when we notice out-of-space
+errors on NFS.  Patch by Tomas Smetana.  RT#6399
+
+Index: src/appl/bsd/krcp.c
+===================================================================
+--- src/appl/bsd/krcp.c	(revision 22038)
++++ src/appl/bsd/krcp.c	(working copy)
+@@ -1115,7 +1115,10 @@
+ 	  wrerr++;
+ 	if (ftruncate(of, size))
+ 	  error("rcp: can't truncate %s: %s\n", nambuf, error_message(errno));
+-	(void) close(of);
++	if (close(of) != 0)
++	{
++		error("rcp: error closing %s: %s\n", nambuf, error_message(errno));
++	}
+ 	(void) response();
+ 	if (setimes) {
+ 	    setimes = 0;
