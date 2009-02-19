@@ -1,5 +1,6 @@
 Treat empty values of KRB5CCNAME (and other variables which can't usefully
-be set to empty values) as if they were not set.
+be set to empty values) as if they were not set.  Incomplete and needs more
+thought about whether or not it's even correct.
 
 diff -ur krb5-1.6.1/src/appl/bsd/krshd.c krb5-1.6.1/src/appl/bsd/krshd.c
 --- krb5-1.6.1/src/appl/bsd/krshd.c	2006-10-15 03:50:16.000000000 -0400
