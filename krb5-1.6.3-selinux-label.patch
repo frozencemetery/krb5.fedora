@@ -846,3 +846,15 @@ diff -ur krb5-1.6.3/src/util/support/Makefile.in krb5-1.6.3/src/util/support/Mak
 +#define THREEPARAMOPEN(x,y,z) open(x,y,z)
 +#endif
 +#endif
+--- krb5-1.6.3/src/plugins/kdb/db2/libdb2/test/Makefile.in	2009-02-19 16:10:41.000000000 -0500
++++ krb5-1.6.3/src/plugins/kdb/db2/libdb2/test/Makefile.in	2009-02-19 16:10:44.000000000 -0500
+@@ -14,7 +14,8 @@ PROG_RPATH=$(KRB5_LIBDIR)
+ 
+ KRB5_RUN_ENV= @KRB5_RUN_ENV@
+ 
+-DB_LIB		= -ldb
++DB_LIB		= -ldb $(SUPPORT_DEPLIB)
++
+ DB_DEPLIB	= ../libdb$(DEPLIBEXT)
+ 
+ all::
