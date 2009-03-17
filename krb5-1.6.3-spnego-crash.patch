@@ -1,0 +1,16 @@
+Upstream change #22099, triggered by report from Marcus Granado, fix by Tom Yu.
+In a nutshell, when return_token is neither NO_TOKEN_SEND nor CHECK_MIC, we
+might still not want a reply token, for example if it's ERROR_TOKEN_SEND.
+diff -up src/lib/gssapi/spnego/spnego_mech.c src/lib/gssapi/spnego/spnego_mech.c
+--- src/lib/gssapi/spnego/spnego_mech.c	2009-03-17 16:47:10.000000000 -0400
++++ src/lib/gssapi/spnego/spnego_mech.c	2009-03-17 16:47:14.000000000 -0400
+@@ -1248,7 +1248,8 @@ spnego_gss_accept_sec_context(void *ct,
+ 				 &negState, &return_token);
+ 	}
+ cleanup:
+-	if (return_token != NO_TOKEN_SEND && return_token != CHECK_MIC) {
++	if (return_token == INIT_TOKEN_SEND ||
++	    return_token == CONT_TOKEN_SEND) {
+ 		tmpret = make_spnego_tokenTarg_msg(negState, sc->internal_mech,
+ 						   &mechtok_out, mic_out,
+ 						   return_token,
