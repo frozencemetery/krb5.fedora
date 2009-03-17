@@ -16,7 +16,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 16%{?dist}
+Release: 17%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -102,6 +102,7 @@ Patch77: krb5-CVE-2007-5971.patch
 Patch78: krb5-1.6.3-lucid-acceptor.patch
 Patch79: krb5-trunk-ftp_mget_case.patch
 Patch80: krb5-trunk-preauth-master.patch
+Patch81: krb5-1.6.3-spnego-crash.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -232,6 +233,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Mar 17 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-17
+- libgssapi_krb5: backport fix for some errors which can occur when
+  we fail to set up the server half of a context (CVE-2009-0845)
+
 * Thu Sep  4 2008 Nalin Dahyabhai <nalin@redhat.com>
 - if we successfully change the user's password during an attempt to get
   initial credentials, but then fail to get initial creds from a non-master
@@ -1390,6 +1395,7 @@ popd
 %patch78 -p0 -b .lucid_acceptor
 %patch79 -p0 -b .ftp_mget_case
 %patch80 -p0 -b .preauth_master
+%patch81 -p0 -b .spnego-crash
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
