@@ -10,7 +10,7 @@
 # For consistency with regular login.
 %define login_pam_service remote
 
-Summary: The Kerberos network authentication system.
+Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.6.3
 Release: 100%{?dist}
@@ -123,7 +123,7 @@ which can improve your network's security by eliminating the insecure
 practice of cleartext passwords.
 
 %package devel
-Summary: Development files needed to compile Kerberos 5 programs.
+Summary: Development files needed to compile Kerberos 5 programs
 Group: Development/Libraries
 Requires: %{name}-libs = %{version}-%{release}, e2fsprogs-devel
 Requires: keyutils-libs-devel, libselinux-devel
@@ -135,7 +135,7 @@ contains the header files and libraries needed for compiling Kerberos
 to install this package.
 
 %package libs
-Summary: The shared libraries used by Kerberos 5.
+Summary: The shared libraries used by Kerberos 5
 Group: System Environment/Libraries
 
 %description libs
@@ -145,7 +145,7 @@ Kerberos, you need to install this package.
 
 %package server
 Group: System Environment/Daemons
-Summary: The KDC and related programs for Kerberos 5.
+Summary: The KDC and related programs for Kerberos 5
 Requires: %{name}-libs = %{version}-%{release}
 Requires(post): /sbin/install-info, chkconfig
 Requires(preun): /sbin/install-info, chkconfig, initscripts
@@ -162,7 +162,7 @@ NOT install this package).
 
 %package server-ldap
 Group: System Environment/Daemons
-Summary: The LDAP storage plugin for the Kerberos 5 KDC.
+Summary: The LDAP storage plugin for the Kerberos 5 KDC
 Requires: %{name}-server = %{version}-%{release}
 
 %description server-ldap
@@ -173,7 +173,7 @@ and you wish to use a directory server to store the data for your
 realm, you need to install this package.
 
 %package workstation
-Summary: Kerberos 5 programs for use on workstations.
+Summary: Kerberos 5 programs for use on workstations
 Group: System Environment/Base
 Requires: %{name}-libs = %{version}-%{release}
 Requires(post): /sbin/install-info
@@ -188,7 +188,7 @@ kpasswd). If your network uses Kerberos, this package should be
 installed on every workstation.
 
 %package workstation-clients
-Summary: Kerberos 5 clients for use on workstations.
+Summary: Kerberos 5 clients for use on workstations
 Group: System Environment/Base
 Requires: %{name}-workstation = %{version}-%{release}
 
@@ -200,7 +200,7 @@ installed on systems which expect to connect to servers which provide
 these services.
 
 %package workstation-servers
-Summary: Kerberos 5 servers for use on workstations.
+Summary: Kerberos 5 servers for use on workstations
 Group: System Environment/Base
 Requires: %{name}-workstation = %{version}-%{release}
 Requires(post): initscripts
@@ -215,7 +215,7 @@ servers. If your network uses Kerberos, this package should be
 installed on systems which are meant provide these services.
 
 %package pkinit-openssl
-Summary: The PKINIT module for Kerberos 5.
+Summary: The PKINIT module for Kerberos 5
 Group: System Environment/Libraries
 Requires: %{name}-libs = %{version}-%{release}
 
@@ -235,6 +235,7 @@ certificate.
 - clean up buildprereq/prereqs, explicit mktemp requires, and add the
   ldconfig for the -server-ldap subpackage (part of #225974)
 - escape possible macros in the changelog (part of #225974)
+- fixup summary texts (part of #225974)
 
 * Tue Mar 17 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-19
 - libgssapi_krb5: backport fix for some errors which can occur when
