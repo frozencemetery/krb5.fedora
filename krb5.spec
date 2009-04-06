@@ -4,9 +4,6 @@
 
 %define krb5prefix %{_prefix}/kerberos
 
-# This'll be made unconditional at some point.
-%define split_workstation 1
-
 # This'll be pulled out at some point.
 %define build_static 0
 
@@ -188,7 +185,6 @@ package contains the basic Kerberos programs (kinit, klist, kdestroy,
 kpasswd). If your network uses Kerberos, this package should be
 installed on every workstation.
 
-%if %{split_workstation}
 %package workstation-clients
 Summary: Kerberos 5 clients for use on workstations.
 Group: System Environment/Base
@@ -217,7 +213,6 @@ Kerberos is a network authentication system. The krb5-workstation-servers
 package contains kerberized versions of Telnet, FTP, and rsh/rlogin
 servers. If your network uses Kerberos, this package should be
 installed on systems which are meant provide these services.
-%endif
 
 %package pkinit-openssl
 Summary: The PKINIT module for Kerberos 5.
@@ -1653,18 +1648,13 @@ if [ "$2" -eq "0" ] ; then
 fi
 exit 0
 
-%if %{split_workstation}
 %post workstation-servers
 /sbin/service xinetd reload > /dev/null 2>&1 || :
 exit 0
+
 %postun workstation-servers
 /sbin/service xinetd reload > /dev/null 2>&1 || :
 exit 0
-%else
-%postun workstation
-/sbin/service xinetd reload > /dev/null 2>&1 || :
-exit 0
-%endif
 
 %post workstation
 /sbin/install-info %{_infodir}/krb5-user.info %{_infodir}/dir
@@ -1721,7 +1711,6 @@ exit 0
 %{krb5prefix}/sbin/krb5-send-pr
 %{krb5prefix}/man/man1/krb5-send-pr.1*
 
-%if %{split_workstation}
 %files workstation-clients
 %defattr(-,root,root)
 %docdir %{krb5prefix}/man
@@ -1734,7 +1723,6 @@ exit 0
 %dir %{krb5prefix}/man
 %dir %{krb5prefix}/man/man1
 %dir %{krb5prefix}/sbin
-%endif
 
 # Used by both clients and servers.
 %{krb5prefix}/bin/rcp
@@ -1757,7 +1745,6 @@ exit 0
 %{krb5prefix}/bin/gss-client
 %{krb5prefix}/bin/uuclient
 
-%if %{split_workstation}
 %files workstation-servers
 %defattr(-,root,root)
 %docdir %{krb5prefix}/man
@@ -1776,7 +1763,6 @@ exit 0
 # Used by both clients and servers.
 %{krb5prefix}/bin/rcp
 %{krb5prefix}/man/man1/rcp.1*
-%endif
 
 %config(noreplace) /etc/xinetd.d/*
 %config(noreplace) /etc/pam.d/*
@@ -1785,7 +1771,6 @@ exit 0
 %{krb5prefix}/sbin/login.krb5
 %{krb5prefix}/man/man8/login.krb5.8*
 
-%if %{split_workstation}
 # Tools you're likely to need if you're running these app servers.
 %{krb5prefix}/bin/kvno
 %{krb5prefix}/man/man1/kvno.1*
@@ -1795,7 +1780,6 @@ exit 0
 %{krb5prefix}/man/man8/k5srvutil.8*
 %{krb5prefix}/sbin/ktutil
 %{krb5prefix}/man/man8/ktutil.8*
-%endif
 
 # Application servers.
 %{krb5prefix}/sbin/ftpd
