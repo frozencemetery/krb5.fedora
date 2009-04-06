@@ -103,9 +103,8 @@ License: MIT
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Prereq: grep, info, sh-utils, /sbin/install-info
-BuildPrereq: autoconf, bison, e2fsprogs-devel >= 1.35, flex, gawk
-BuildPrereq: gzip, ncurses-devel, rsh, texinfo, texinfo-tex, tar
+BuildRequires: autoconf, bison, e2fsprogs-devel >= 1.35, flex, gawk
+BuildRequires: gzip, ncurses-devel, rsh, texinfo, texinfo-tex, tar
 BuildRequires: tetex-latex
 BuildRequires: keyutils-libs-devel
 BuildRequires: libselinux-devel
@@ -138,8 +137,6 @@ to install this package.
 %package libs
 Summary: The shared libraries used by Kerberos 5.
 Group: System Environment/Libraries
-Prereq: grep, /sbin/ldconfig, sh-utils
-Obsoletes: krb5-configs
 
 %description libs
 Kerberos is a network authentication system. The krb5-libs package
@@ -150,7 +147,11 @@ Kerberos, you need to install this package.
 Group: System Environment/Daemons
 Summary: The KDC and related programs for Kerberos 5.
 Requires: %{name}-libs = %{version}-%{release}
-Prereq: grep, /sbin/install-info, /bin/sh, sh-utils, /sbin/chkconfig
+Requires(post): /sbin/install-info, chkconfig
+Requires(preun): /sbin/install-info, chkconfig, initscripts
+Requires(postun): initscripts
+# mktemp is used by krb5-send-pr
+Requires: mktemp
 
 %description server
 Kerberos is a network authentication system. The krb5-server package
@@ -175,7 +176,8 @@ realm, you need to install this package.
 Summary: Kerberos 5 programs for use on workstations.
 Group: System Environment/Base
 Requires: %{name}-libs = %{version}-%{release}
-Prereq: grep, /sbin/install-info, /bin/sh, sh-utils
+Requires(post): /sbin/install-info
+Requires(preun): /sbin/install-info
 # mktemp is used by krb5-send-pr
 Requires: mktemp
 
@@ -189,9 +191,6 @@ installed on every workstation.
 Summary: Kerberos 5 clients for use on workstations.
 Group: System Environment/Base
 Requires: %{name}-workstation = %{version}-%{release}
-Prereq: grep, /sbin/install-info, /bin/sh, sh-utils
-# mktemp is used by krb5-send-pr
-Requires: mktemp
 
 %description workstation-clients
 Kerberos is a network authentication system. The krb5-workstation-clients
@@ -204,7 +203,8 @@ these services.
 Summary: Kerberos 5 servers for use on workstations.
 Group: System Environment/Base
 Requires: %{name}-workstation = %{version}-%{release}
-Prereq: grep, /sbin/install-info, /bin/sh, sh-utils
+Requires(post): initscripts
+Requires(postun): initscripts
 # mktemp is used by krb5-send-pr
 Requires: mktemp, xinetd, /etc/pam.d/%{login_pam_service}
 
@@ -232,6 +232,8 @@ certificate.
   -workstation-servers gets upgraded, because it's gone now
 - move the libraries to /%{_lib}, but leave --libdir alone so that plugins
   get installed and are searched for in the same locations (#473333)
+- clean up buildprereq/prereqs, explicit mktemp requires, and add the
+  ldconfig for the -server-ldap subpackage (part of #225974)
 
 * Tue Mar 17 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-19
 - libgssapi_krb5: backport fix for some errors which can occur when
@@ -1598,6 +1600,10 @@ done
 %post libs -p /sbin/ldconfig
 
 %postun libs -p /sbin/ldconfig
+
+%post server-ldap -p /sbin/ldconfig
+
+%postun server-ldap -p /sbin/ldconfig
 
 %post server
 # Remove the init script for older servers.
