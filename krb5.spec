@@ -61,7 +61,6 @@ Patch12: krb5-1.4-ktany.patch
 Patch13: krb5-1.3-large-file.patch
 Patch14: krb5-1.3-ftp-glob.patch
 Patch16: krb5-1.6-buildconf.patch
-Patch18: krb5-1.2.7-reject-bad-transited.patch
 Patch23: krb5-1.3.1-dns.patch
 Patch26: krb5-1.3.2-efence.patch
 Patch27: krb5-1.3.3-rcp-sendlarge.patch
@@ -73,7 +72,7 @@ Patch35: krb5-1.5-fclose.patch
 Patch36: krb5-1.3.3-rcp-markus.patch
 Patch39: krb5-1.4.1-api.patch
 Patch40: krb5-1.4.1-telnet-environ.patch
-Patch41: krb5-1.2.7-login-lpass.patch
+Patch41: krb5-1.6.3-login-lpass.patch
 Patch44: krb5-1.4.3-enospc.patch
 Patch47: krb5-1.6-sort-of-static.patch
 Patch51: krb5-1.6-ldap-init.patch
@@ -233,6 +232,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Apr  6 2009 Nalin Dahyabhai <nalin@redhat.com>
+- pull in a couple of defuzzed patches from the F-10 version of this package,
+  dropping a redundant man page patch in the process
+
 * Tue Mar 17 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-15
 - libgssapi_krb5: backport fix for some errors which can occur when
   we fail to set up the server half of a context (CVE-2009-0845)
@@ -1336,7 +1339,6 @@ popd
 %patch13 -p1 -b .large-file
 %patch14 -p1 -b .ftp-glob
 %patch16 -p1 -b .buildconf
-%patch18 -p1 -b .reject-bad-transited
 %patch23 -p1 -b .dns
 # Removes a malloc(0) case, nothing more.
 # %patch26 -p1 -b .efence

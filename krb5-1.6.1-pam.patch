@@ -941,8 +941,8 @@ When enabled, ftpd, krshd, and login.krb5 gain dependence on libpam.
 +KRB5_WITH_PAM
 +
  AC_CONFIG_FILES(krb5-config, [chmod +x krb5-config])
+ V5_AC_OUTPUT_MAKEFILE(.
  
- mansysconfdir=$sysconfdir
 --- krb5-1.6.1/src/config/pre.in	2007-06-21 17:39:57.000000000 -0400
 +++ krb5-1.6.1/src/config/pre.in	2007-06-21 17:39:57.000000000 -0400
 @@ -180,6 +180,7 @@ SRVLIBS = @SRVLIBS@
