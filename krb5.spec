@@ -236,6 +236,8 @@ certificate.
   ldconfig for the -server-ldap subpackage (part of #225974)
 - escape possible macros in the changelog (part of #225974)
 - fixup summary texts (part of #225974)
+- take the execute bit off of the protocol docs (part of #225974)
+- unflag init scripts as configuration files (part of #225974)
 
 * Tue Mar 17 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-19
 - libgssapi_krb5: backport fix for some errors which can occur when
@@ -1416,6 +1418,9 @@ sed -i -e '1c\
 \\usepackage{fancyheadings}\
 \\usepackage{hyperref}' doc/implement/implement.tex
 
+# Take the execute bit off of documentation.
+chmod -x doc/krb5-protocol/*.txt
+
 # Rename the man pages so that they'll get generated correctly.
 pushd src
 cat $RPM_SOURCE_DIR/krb5-trunk-manpaths.txt | while read manpage ; do
@@ -1808,9 +1813,9 @@ exit 0
 %defattr(-,root,root)
 %docdir %{krb5prefix}/man
 
-%config /etc/rc.d/init.d/krb5kdc
-%config /etc/rc.d/init.d/kadmin
-%config /etc/rc.d/init.d/kprop
+/etc/rc.d/init.d/krb5kdc
+/etc/rc.d/init.d/kadmin
+/etc/rc.d/init.d/kprop
 %config(noreplace) /etc/sysconfig/krb5kdc
 %config(noreplace) /etc/sysconfig/kadmin
 
