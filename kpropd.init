@@ -45,7 +45,8 @@ case "$1" in
   stop)
 	stop
 	;;
-  restart)
+  # We don't really "do" reload, so treat it as a restart.
+  restart|reload)
 	stop
 	start
 	;;

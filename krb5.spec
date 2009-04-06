@@ -238,6 +238,7 @@ certificate.
 - fixup summary texts (part of #225974)
 - take the execute bit off of the protocol docs (part of #225974)
 - unflag init scripts as configuration files (part of #225974)
+- make the kpropd init script treat 'reload' as 'restart' (part of #225974)
 
 * Tue Mar 17 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-19
 - libgssapi_krb5: backport fix for some errors which can occur when
