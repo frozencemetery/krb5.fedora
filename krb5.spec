@@ -235,6 +235,8 @@ certificate.
 - turn off krb4 support (it won't be part of the 1.7 release, but do it now)
 - use triggeruns to properly shut down and disable krb524d when -server and
   -workstation-servers gets upgraded, because it's gone now
+- move the libraries to /%{_lib}, but leave --libdir alone so that plugins
+  get installed and are searched for in the same locations (#473333)
 
 * Tue Mar 17 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-19
 - libgssapi_krb5: backport fix for some errors which can occur when
@@ -1580,6 +1582,21 @@ sed -r -i -e 's|^libdir=/usr/lib(64)?$|libdir=/usr/lib|g' $RPM_BUILD_ROOT%{krb5p
 # Remove the randomly-generated compile-et filename comment from header files.
 sed -i -e 's|^ \* ettmp[^ \t]*\.h:$| * ettmpXXXXXX.h:|g' $RPM_BUILD_ROOT%{_includedir}/*{,/*}.h
 
+# Move specific libraries from %{_libdir} to /%{_lib}, and fixup the symlinks.
+touch $RPM_BUILD_ROOT/rootfile
+rellibdir=..
+while ! test -r $RPM_BUILD_ROOT/%{_libdir}/${rellibdir}/rootfile ; do
+	rellibdir=../${rellibdir}
+done
+rm -f $RPM_BUILD_ROOT/rootfile
+mkdir -p $RPM_BUILD_ROOT/%{_lib}
+for library in libdes425 libgssapi_krb5 libgssrpc libk5crypto libkrb5 libkrb5support ; do
+	mv $RPM_BUILD_ROOT/%{_libdir}/${library}.so.* $RPM_BUILD_ROOT/%{_lib}/
+	pushd $RPM_BUILD_ROOT/%{_libdir}
+	ln -fs ${rellibdir}/%{_lib}/${library}.so.*.* ${library}.so
+	popd
+done
+
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 
@@ -1889,15 +1906,15 @@ exit 0
 %{krb5prefix}/man/man1/kerberos.1*
 %{krb5prefix}/man/man5/.k5login.5*
 %{krb5prefix}/man/man5/krb5.conf.5*
-%{_libdir}/libdes425.so.*
-%{_libdir}/libgssapi_krb5.so.*
-%{_libdir}/libgssrpc.so.*
-%{_libdir}/libk5crypto.so.*
+/%{_lib}/libdes425.so.*
+/%{_lib}/libgssapi_krb5.so.*
+/%{_lib}/libgssrpc.so.*
+/%{_lib}/libk5crypto.so.*
 %{_libdir}/libkadm5clnt.so.*
 %{_libdir}/libkadm5srv.so.*
 %{_libdir}/libkdb5.so.*
-%{_libdir}/libkrb5.so.*
-%{_libdir}/libkrb5support.so.*
+/%{_lib}/libkrb5.so.*
+/%{_lib}/libkrb5support.so.*
 %dir %{_libdir}/krb5
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/*
