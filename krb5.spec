@@ -230,10 +230,11 @@ certificate.
 - turn off krb4 support (it won't be part of the 1.7 release, but do it now)
 - use triggeruns to properly shut down and disable krb524d when -server and
   -workstation-servers gets upgraded, because it's gone now
-- move the libraries to /%{_lib}, but leave --libdir alone so that plugins
+- move the libraries to /%%{_lib}, but leave --libdir alone so that plugins
   get installed and are searched for in the same locations (#473333)
 - clean up buildprereq/prereqs, explicit mktemp requires, and add the
   ldconfig for the -server-ldap subpackage (part of #225974)
+- escape possible macros in the changelog (part of #225974)
 
 * Tue Mar 17 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-19
 - libgssapi_krb5: backport fix for some errors which can occur when
@@ -1092,7 +1093,7 @@ certificate.
 
 * Thu Feb  8 2001 Nalin Dahyabhai <nalin@redhat.com>
 - build alpha with -O0 for now
-- own %{_var}/kerberos
+- own %%{_var}/kerberos
 
 * Tue Feb  6 2001 Nalin Dahyabhai <nalin@redhat.com>
 - own the directories which are created for each package (#26342)
@@ -1129,7 +1130,7 @@ certificate.
 - make krb5-libs obsolete the old krb5-configs package (#18351)
 - don't quit from the kpropd init script if there's no principal database so
   that you can propagate the first time without running kpropd manually
-- don't complain if /etc/ld.so.conf doesn't exist in the -libs %post
+- don't complain if /etc/ld.so.conf doesn't exist in the -libs %%post
 
 * Tue Sep 12 2000 Nalin Dahyabhai <nalin@redhat.com>
 - fix credential forwarding problem in klogind (goof in KRB5CCNAME handling)
@@ -1253,7 +1254,7 @@ certificate.
 
 * Mon Apr 10 2000 Nalin Dahyabhai <nalin@redhat.com>
 - add LDCOMBINE=-lc to configure invocation to use libc versioning (bug #10653)
-- change Requires: for/in subpackages to include %{version}
+- change Requires: for/in subpackages to include %%{version}
 
 * Wed Apr 05 2000 Nalin Dahyabhai <nalin@redhat.com>
 - add man pages for kerberos(1), kvno(1), .k5login(5)
