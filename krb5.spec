@@ -16,13 +16,12 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 19%{?dist}
+Release: 100%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
-Source3: krb524d.init
 Source4: kadmind.init
 Source5: krb5kdc.init
 Source6: krb5.conf
@@ -40,7 +39,6 @@ Source17: krb5-telnet.xinetd
 Source18: gssftp.xinetd
 Source19: krb5kdc.sysconfig
 Source20: kadmin.sysconfig
-Source21: krb524.sysconfig
 Source22: ekrb5-telnet.xinetd
 # The same source files we "check", generated with "krb5-tex-pdf.sh create"
 # and tarred up.
@@ -233,6 +231,11 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Apr  6 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-100
+- turn off krb4 support (it won't be part of the 1.7 release, but do it now)
+- use triggeruns to properly shut down and disable krb524d when -server and
+  -workstation-servers gets upgraded, because it's gone now
+
 * Tue Mar 17 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-19
 - libgssapi_krb5: backport fix for some errors which can occur when
   we fail to set up the server half of a context (CVE-2009-0845)
@@ -1402,7 +1405,6 @@ popd
 %patch79 -p0 -b .ftp_mget_case
 %patch80 -p0 -b .preauth_master
 %patch81 -p0 -b .spnego-crash
-cp src/krb524/README README.krb524
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -1423,7 +1425,6 @@ popd
 # Check that the PDFs we built earlier match this source tree.
 $RPM_SOURCE_DIR/krb5-tex-pdf.sh check << EOF
 doc/api       library krb5
-doc/api       libdes
 doc/implement implement
 doc/kadm5     adb-unit-test
 doc/kadm5     api-unit-test
@@ -1486,7 +1487,7 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--sbindir=%{krb5prefix}/sbin \
 	--datadir=%{krb5prefix}/share \
 	--localstatedir=%{_var}/kerberos \
-	--with-krb4 \
+	--without-krb4 \
 	--with-system-et \
 	--with-system-ss \
 	--with-netlib=-lresolv \
@@ -1543,11 +1544,9 @@ mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
 install -pm 755 $RPM_SOURCE_DIR/krb5kdc.init $RPM_BUILD_ROOT/etc/rc.d/init.d/krb5kdc
 install -pm 755 $RPM_SOURCE_DIR/kadmind.init $RPM_BUILD_ROOT/etc/rc.d/init.d/kadmin
 install -pm 755 $RPM_SOURCE_DIR/kpropd.init $RPM_BUILD_ROOT/etc/rc.d/init.d/kprop
-install -pm 755 $RPM_SOURCE_DIR/krb524d.init $RPM_BUILD_ROOT/etc/rc.d/init.d/krb524
 mkdir -p $RPM_BUILD_ROOT/etc/sysconfig
 install -pm 644 $RPM_SOURCE_DIR/krb5kdc.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/krb5kdc
 install -pm 644 $RPM_SOURCE_DIR/kadmin.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/kadmin
-install -pm 644 $RPM_SOURCE_DIR/krb524.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/krb524
 
 # Xinetd configuration files.
 mkdir -p $RPM_BUILD_ROOT/etc/xinetd.d/
@@ -1594,7 +1593,6 @@ sed -i -e 's|^ \* ettmp[^ \t]*\.h:$| * ettmpXXXXXX.h:|g' $RPM_BUILD_ROOT%{_inclu
 # Install the new ones.
 /sbin/chkconfig --add krb5kdc
 /sbin/chkconfig --add kadmin
-/sbin/chkconfig --add krb524
 /sbin/chkconfig --add kprop
 # Install info pages.
 /sbin/install-info %{_infodir}/krb425.info.gz %{_infodir}/dir
@@ -1603,14 +1601,12 @@ sed -i -e 's|^ \* ettmp[^ \t]*\.h:$| * ettmpXXXXXX.h:|g' $RPM_BUILD_ROOT%{_inclu
 exit 0
 
 %preun server
-if [ "$1" = "0" ] ; then
+if [ "$1" -eq "0" ] ; then
 	/sbin/chkconfig --del krb5kdc
 	/sbin/chkconfig --del kadmin
-	/sbin/chkconfig --del krb524
 	/sbin/chkconfig --del kprop
 	/sbin/service krb5kdc stop > /dev/null 2>&1 || :
 	/sbin/service kadmin stop > /dev/null 2>&1 || :
-	/sbin/service krb524 stop > /dev/null 2>&1 || :
 	/sbin/service kprop stop > /dev/null 2>&1 || :
 	/sbin/install-info --delete %{_infodir}/krb425.info.gz %{_infodir}/dir
 	/sbin/install-info --delete %{_infodir}/krb5-admin.info.gz %{_infodir}/dir
@@ -1622,8 +1618,21 @@ exit 0
 if [ "$1" -ge 1 ] ; then
 	/sbin/service krb5kdc condrestart > /dev/null 2>&1 || :
 	/sbin/service kadmin condrestart > /dev/null 2>&1 || :
-	/sbin/service krb524 condrestart > /dev/null 2>&1 || :
 	/sbin/service kprop condrestart > /dev/null 2>&1 || :
+fi
+exit 0
+
+%triggerun server -- krb5-server < 1.6.3-100
+if [ "$2" -eq "0" ] ; then
+	/sbin/service krb524 stop > /dev/null 2>&1 || :
+	/sbin/chkconfig --del krb524 > /dev/null 2>&1 || :
+fi
+exit 0
+
+%triggerun workstation-servers -- krb5-workstation-servers < 1.6.3-100
+if [ "$2" -eq "0" ] ; then
+	/sbin/service krb524 stop > /dev/null 2>&1 || :
+	/sbin/chkconfig --del krb524 > /dev/null 2>&1 || :
 fi
 exit 0
 
@@ -1631,7 +1640,6 @@ exit 0
 %post workstation-servers
 /sbin/service xinetd reload > /dev/null 2>&1 || :
 exit 0
-
 %postun workstation-servers
 /sbin/service xinetd reload > /dev/null 2>&1 || :
 exit 0
@@ -1646,7 +1654,7 @@ exit 0
 exit 0
 
 %preun workstation
-if [ "$1" = "0" ] ; then
+if [ "$1" -eq "0" ] ; then
 	/sbin/install-info --delete %{_infodir}/krb5-user.info %{_infodir}/dir
 fi
 exit 0
@@ -1678,8 +1686,6 @@ exit 0
 %{krb5prefix}/man/man1/klist.1*
 %{krb5prefix}/bin/kpasswd
 %{krb5prefix}/man/man1/kpasswd.1*
-%{krb5prefix}/bin/krb524init
-%{krb5prefix}/man/man1/krb524init.1*
 
 %{krb5prefix}/bin/kvno
 %{krb5prefix}/man/man1/kvno.1*
@@ -1716,8 +1722,6 @@ exit 0
 # Used by both clients and servers.
 %{krb5prefix}/bin/rcp
 %{krb5prefix}/man/man1/rcp.1*
-%attr(0755,root,root) %{krb5prefix}/bin/v4rcp
-%{krb5prefix}/man/man1/v4rcp.1*
 
 # Client network bits.
 %{krb5prefix}/bin/ftp
@@ -1755,8 +1759,6 @@ exit 0
 # Used by both clients and servers.
 %{krb5prefix}/bin/rcp
 %{krb5prefix}/man/man1/rcp.1*
-%attr(0755,root,root) %{krb5prefix}/bin/v4rcp
-%{krb5prefix}/man/man1/v4rcp.1*
 %endif
 
 %config(noreplace) /etc/xinetd.d/*
@@ -1788,12 +1790,6 @@ exit 0
 %{krb5prefix}/sbin/telnetd
 %{krb5prefix}/man/man8/telnetd.8*
 
-# Here, so that it can be run in keytab mode.
-%config /etc/rc.d/init.d/krb524
-%config(noreplace) /etc/sysconfig/krb524
-%{krb5prefix}/sbin/krb524d
-%{krb5prefix}/man/man8/krb524d.8*
-
 # Protocol test servers.
 %{krb5prefix}/sbin/sim_server
 %{krb5prefix}/sbin/gss-server
@@ -1805,16 +1801,13 @@ exit 0
 
 %config /etc/rc.d/init.d/krb5kdc
 %config /etc/rc.d/init.d/kadmin
-%config /etc/rc.d/init.d/krb524
 %config /etc/rc.d/init.d/kprop
 %config(noreplace) /etc/sysconfig/krb5kdc
 %config(noreplace) /etc/sysconfig/kadmin
-%config(noreplace) /etc/sysconfig/krb524
 
 %doc doc/admin*.ps.gz
 %doc doc/krb425*.ps.gz
 %doc doc/install*.ps.gz
-%doc README.krb524
 
 %{_infodir}/krb5-admin.info*
 %{_infodir}/krb5-install.info*
@@ -1853,8 +1846,6 @@ exit 0
 %{krb5prefix}/man/man8/kprop.8*
 %{krb5prefix}/sbin/kpropd
 %{krb5prefix}/man/man8/kpropd.8*
-%{krb5prefix}/sbin/krb524d
-%{krb5prefix}/man/man8/krb524d.8*
 %{krb5prefix}/sbin/krb5kdc
 %{krb5prefix}/man/man8/krb5kdc.8*
 
@@ -1905,12 +1896,10 @@ exit 0
 %{_libdir}/libkadm5clnt.so.*
 %{_libdir}/libkadm5srv.so.*
 %{_libdir}/libkdb5.so.*
-%{_libdir}/libkrb4.so.*
 %{_libdir}/libkrb5.so.*
 %{_libdir}/libkrb5support.so.*
 %dir %{_libdir}/krb5
 %dir %{_libdir}/krb5/plugins
-%dir %{_libdir}/krb5/plugins/*
 %dir %{_libdir}/krb5/plugins/*
 %{_libdir}/krb5/plugins/kdb/db2.so
 %{krb5prefix}/share
@@ -1954,7 +1943,6 @@ exit 0
 %{_libdir}/libkadm5clnt.so
 %{_libdir}/libkadm5srv.so
 %{_libdir}/libkdb5.so
-%{_libdir}/libkrb4.so
 %{_libdir}/libkrb5.so
 %{_libdir}/libkrb5support.so
 
