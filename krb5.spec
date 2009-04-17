@@ -228,6 +228,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Fri Apr 17 2009 Nalin Dahyabhai <nalin@redhat.com>
+- explicitly run the pdf generation script using sh (part of #225974)
+
 * Tue Apr  7 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-101
 - add patches for read overflow and null pointer dereference in the
   implementation of the SPNEGO mechanism (CVE-2009-0844, CVE-2009-0845)
@@ -1443,7 +1446,7 @@ done
 popd
 
 # Check that the PDFs we built earlier match this source tree.
-$RPM_SOURCE_DIR/krb5-tex-pdf.sh check << EOF
+sh $RPM_SOURCE_DIR/krb5-tex-pdf.sh check << EOF
 doc/api       library krb5
 doc/implement implement
 doc/kadm5     adb-unit-test
