@@ -4,11 +4,21 @@
 #
 # chkconfig:   - 35 65
 # description: Kerberos 5 is a trusted third-party authentication system.  \
-#	       This script starts and stops the server that Kerberos IV and 5 \
+#	       This script starts and stops the server that Kerberos 5 \
 #	       clients need to connect to in order to obtain credentials.
 # processname: krb5kdc
 # config: /etc/sysconfig/krb5kdc
 #
+
+### BEGIN INIT INFO
+# Provides: krb5kdc
+# Required-Start: $local_fs $network
+# Required-Stop: $local_fs $network
+# Default-Stop: 0 1 2 3 4 5 6
+# Short-Description: start and stop the Kerberos 5 KDC
+# Description: The krb5kdc is the Kerberos 5 key distribution center, which \
+#              issues credentials to Kerberos 5 clients.
+### END INIT INFO
 
 # Get config.
 . /etc/sysconfig/network
