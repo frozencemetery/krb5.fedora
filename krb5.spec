@@ -1532,7 +1532,7 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 # Now build it.
 make
 
-# Run the test suite.
+# Run the test suite.  We can't actually do this in the build system.
 : make check TMPDIR=%{_tmppath}
 
 %install
