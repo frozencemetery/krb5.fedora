@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.6.3
-Release: 102%{?dist}
+Release: 103%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -24,7 +24,6 @@ Source5: krb5kdc.init
 Source6: krb5.conf
 Source7: krb5.sh
 Source8: krb5.csh
-Source9: kdcrotate
 Source10: kdc.conf
 Source11: kadm5.acl
 Source12: krsh
@@ -50,7 +49,6 @@ Patch3: krb5-1.3-netkit-rsh.patch
 Patch4: krb5-1.3-rlogind-environ.patch
 Patch5: krb5-1.3-ksu-access.patch
 Patch6: krb5-1.5-ksu-path.patch
-Patch9: krb5-1.5-brokenrev.patch
 Patch11: krb5-1.2.1-passive.patch
 Patch12: krb5-1.4-ktany.patch
 Patch13: krb5-1.3-large-file.patch
@@ -100,6 +98,7 @@ Patch80: krb5-trunk-preauth-master.patch
 Patch82: krb5-CVE-2009-0844-0845-2.patch
 Patch83: krb5-CVE-2009-0846.patch
 Patch84: krb5-CVE-2009-0847.patch
+Patch85: krb5-trunk-ksu-typo.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -228,6 +227,11 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Apr 21 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-103
+- fix a typo in a ksu error message (Marek Mahut)
+- "rev" works the way the test suite expects now, so don't disable tests
+  that use it
+
 * Mon Apr 20 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-102
 - add LSB-style init script info
 
@@ -1380,7 +1384,6 @@ popd
 %patch4  -p1 -b .rlogind-environ
 %patch5  -p1 -b .ksu-access
 %patch6  -p1 -b .ksu-path
-%patch9  -p1 -b .brokenrev
 %patch11 -p1 -b .passive
 %patch12 -p1 -b .ktany
 %patch13 -p1 -b .large-file
@@ -1428,6 +1431,7 @@ popd
 %patch82 -p1 -b .CVE-2009-0844-0845-2
 %patch83 -p1 -b .CVE-2009-0846
 %patch84 -p1 -b .CVE-2009-0847
+%patch85 -p1 -b .ksu-typo
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
