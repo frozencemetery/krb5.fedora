@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.6.3
-Release: 103%{?dist}
+Release: 104%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
