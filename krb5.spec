@@ -44,6 +44,7 @@ Source25: krb5-trunk-manpaths.txt
 Source26: gssftp.pamd
 Source27: kshell.pamd
 Source28: ekshell.pamd
+Source29: ksu.pamd
 
 Patch3: krb5-1.3-netkit-rsh.patch
 Patch4: krb5-1.3-rlogind-environ.patch
@@ -227,6 +228,12 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Thu Apr 23 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-104
+- extend PAM support to ksu: perform account and session management for the
+  target user
+- pull up and merge James Leddy's changes to also set PAM_RHOST in PAM-aware
+  network-facing services
+
 * Tue Apr 21 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-103
 - fix a typo in a ksu error message (Marek Mahut)
 - "rev" works the way the test suite expects now, so don't disable tests
@@ -1587,7 +1594,7 @@ done
 
 # PAM configuration files.
 mkdir -p $RPM_BUILD_ROOT/etc/pam.d/
-for pam in kshell ekshell gssftp ; do
+for pam in kshell ekshell gssftp ksu ; do
 	install -pm 644 $RPM_SOURCE_DIR/$pam.pamd \
 	$RPM_BUILD_ROOT/etc/pam.d/$pam
 done
