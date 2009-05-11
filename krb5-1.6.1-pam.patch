@@ -84,7 +84,7 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
  #ifdef KERBEROS
  
  #if defined(KRB5_KRB4_COMPAT) && !defined(ALWAYS_V5_KUSEROK)
-@@ -1151,11 +1148,50 @@ void doit(f, fromp)
+@@ -1151,11 +1148,51 @@ void doit(f, fromp)
  	goto signout_please;
      }
      
@@ -97,6 +97,7 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
 +			       locuser,
 +			       "",
 +			       hostname,
++			       NULL,
 +			       do_encrypt ?
 +			       EKSHELL_PAM_SERVICE :
 +			       KSHELL_PAM_SERVICE) != 0) {
@@ -224,7 +225,7 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
  #ifdef KRB5_GET_TICKETS
      {"krb5_get_tickets", &login_krb5_get_tickets},
  #endif
-@@ -1292,6 +1300,19 @@ int main(argc, argv)
+@@ -1292,6 +1300,20 @@ int main(argc, argv)
  	if (!unix_needs_passwd())
  	    break;
  
@@ -232,6 +233,7 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
 +	if (login_use_pam) {
 +	    if (appl_pam_authenticate(LOGIN_PAM_SERVICE, 1, username, "",
 +	                              hostname,
++	                              NULL,
 +				      ttyname(STDIN_FILENO)) == PAM_SUCCESS) {
 +	        break;
 +	    } else {
@@ -251,7 +253,7 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
 +#ifdef USE_PAM
 +    if (login_use_pam) {
 +	if (appl_pam_acct_mgmt(LOGIN_PAM_SERVICE, 1, username, "",
-+			       hostname, ttyname(STDIN_FILENO)) != 0) {
++			       hostname, NULL, ttyname(STDIN_FILENO)) != 0) {
 +	    printf("Login incorrect\n");
 +	    sleepexit(1);
 +	}
@@ -305,7 +307,7 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
      if (pwd->pw_uid == 0)
 --- /dev/null	2007-06-22 10:29:46.741860805 -0400
 +++ krb5-1.6.1/src/appl/bsd/pam.c	2007-06-22 14:22:10.000000000 -0400
-@@ -0,0 +1,424 @@
+@@ -0,0 +1,433 @@
 +/*
 + * src/appl/bsd/pam.c
 + *
@@ -561,6 +563,7 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
 +	       const char *login_username,
 +	       const char *non_interactive_password,
 +	       const char *hostname,
++	       const char *ruser,
 +	       const char *tty)
 +{
 +	static int exit_handler_registered;
@@ -595,6 +598,12 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
 +#endif
 +				pam_set_item(appl_pamh, PAM_RHOST, hostname);
 +			}
++			if (ruser != NULL) {
++#ifdef DEBUG
++				printf("Setting PAM_RUSER to \"%s\".\n", ruser);
++#endif
++				pam_set_item(appl_pamh, PAM_RUSER, ruser);
++			}
 +			if (tty != NULL) {
 +#ifdef DEBUG
 +				printf("Setting PAM_TTY to \"%s\".\n", tty);
@@ -621,11 +630,12 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
 +		      const char *login_username,
 +		      const char *non_interactive_password,
 +		      const char *hostname,
++		      const char *ruser,
 +		      const char *tty)
 +{
 +	int ret;
 +	ret = appl_pam_start(service, interactive, login_username,
-+			     non_interactive_password, hostname, tty);
++			     non_interactive_password, hostname, ruser, tty);
 +	if (ret == 0) {
 +		ret = pam_authenticate(appl_pamh, 0);
 +	}
@@ -636,12 +646,13 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
 +		   const char *login_username,
 +		   const char *non_interactive_password,
 +		   const char *hostname,
++		   const char *ruser,
 +		   const char *tty)
 +{
 +	int ret;
 +	appl_pam_pwchange_required = 0;
 +	ret = appl_pam_start(service, interactive, login_username,
-+			     non_interactive_password, hostname, tty);
++			     non_interactive_password, hostname, ruser, tty);
 +	if (ret == 0) {
 +#ifdef DEBUG
 +		printf("Calling pam_acct_mgmt().\n");
@@ -732,7 +743,7 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
 +#endif
 --- /dev/null	2007-06-22 10:29:46.741860805 -0400
 +++ krb5-1.6.1/src/appl/bsd/pam.h	2007-06-22 14:27:05.000000000 -0400
-@@ -0,0 +1,63 @@
+@@ -0,0 +1,65 @@
 +/*
 + * src/appl/bsd/pam.h
 + *
@@ -782,11 +793,13 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
 +			  const char *local_username,
 +			  const char *non_interactive_password,
 +			  const char *hostname,
++			  const char *ruser,
 +			  const char *tty);
 +int appl_pam_acct_mgmt(const char *service, int interactive,
 +		       const char *local_username,
 +		       const char *non_interactive_password,
 +		       const char *hostname,
++		       const char *ruser,
 +		       const char *tty);
 +int appl_pam_requires_chauthtok(void);
 +int appl_pam_chauthtok(void);
@@ -847,7 +860,7 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
  #include <grp.h> 
  #include <setjmp.h>
  #ifndef POSIX_SETJMP
-@@ -803,6 +806,21 @@
+@@ -803,6 +806,22 @@
  		}
  #endif /* KRB5_KRB4_COMPAT */
  
@@ -856,6 +869,7 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
 +			if (appl_pam_acct_mgmt(FTP_PAM_SERVICE, 0,
 +					       pw->pw_name, "",
 +					       hostname,
++					       NULL,
 +					       FTP_PAM_SERVICE) != 0) {
 +				reply(530, "Login incorrect.");
 +				return;
@@ -880,7 +894,7 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
  	if (have_creds) {
  #ifdef GSSAPI
  		krb5_cc_destroy(kcontext, ccache);
-@@ -1073,9 +1095,18 @@ pass(passwd)
+@@ -1073,9 +1095,19 @@ pass(passwd)
  		 *   kpass fails and the user has no local password
  		 *   kpass fails and the provided password doesn't match pw
  		 */
@@ -893,6 +907,7 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
 +		    (appl_pam_authenticate(FTP_PAM_SERVICE, 0,
 +					   pw->pw_name, passwd,
 +					   hostname,
++					   NULL,
 +					   FTP_PAM_SERVICE) != 0) :
 +#endif
 +		    (!kpass(pw->pw_name, passwd) &&
@@ -902,7 +917,7 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
  			pw = NULL;
  			sleep(5);
  			if (++login_attempts >= 3) {
-@@ -1092,6 +1123,22 @@ pass(passwd)
+@@ -1092,6 +1123,23 @@ pass(passwd)
  	}
  	login_attempts = 0;		/* this time successful */
  
@@ -911,6 +926,7 @@ When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
 +		if (appl_pam_acct_mgmt(FTP_PAM_SERVICE, 0,
 +				       pw->pw_name, passwd,
 +				       hostname,
++				       NULL,
 +				       FTP_PAM_SERVICE) != 0) {
 +			reply(530, "Login incorrect.");
 +			return;
@@ -1135,7 +1151,7 @@ diff -up krb5-1.6.1/src/clients/ksu/Makefile.in krb5-1.6.1/src/clients/ksu/Makef
 +#ifdef USE_PAM
 +    if (appl_pam_enabled(ksu_context, "ksu")) {
 +	if (appl_pam_acct_mgmt(KSU_PAM_SERVICE, 1, target_user, NULL,
-+			       NULL, ttyname(STDERR_FILENO)) != 0) {
++			       NULL, source_user, ttyname(STDERR_FILENO)) != 0) {
 +	    fprintf(stderr, "Access denied for %s.\n", target_user);
 +	    sweep_up(ksu_context, cc_target);
 +	    exit(1);
