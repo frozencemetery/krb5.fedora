@@ -8,7 +8,6 @@ configure script should be rebuilt.
     appl/bsd/rcp.M
     appl/bsd/rlogin.M
     appl/bsd/rsh.M
-    appl/bsd/v4rcp.M
     appl/gssftp/ftpd/ftpd.M
     appl/gssftp/ftp/ftp.M
     appl/sample/sclient/sclient.M
@@ -34,10 +33,7 @@ configure script should be rebuilt.
     kadmin/ktutil/ktutil.M
     kadmin/passwd/kpasswd.M
     kadmin/server/kadmind.M
-    kdc/fakeka.M
     kdc/krb5kdc.M
-    krb524/k524init.M
-    krb524/krb524d.M
     krb5-config.M
     plugins/kdb/ldap/ldap_util/kdb5_ldap_util.M
     slave/kpropd.M
@@ -51,7 +47,7 @@ Index: configure.in
 ===================================================================
 --- configure.in	(revision 19589)
 +++ configure.in	(working copy)
-@@ -986,6 +986,73 @@
+@@ -986,6 +986,69 @@
  KRB5_WITH_PAM
  
  AC_CONFIG_FILES(krb5-config, [chmod +x krb5-config])
@@ -81,7 +77,6 @@ Index: configure.in
 +	appl/bsd/rcp.M
 +	appl/bsd/rlogin.M
 +	appl/bsd/rsh.M
-+	appl/bsd/v4rcp.M
 +	appl/gssftp/ftpd/ftpd.M
 +	appl/gssftp/ftp/ftp.M
 +	appl/sample/sclient/sclient.M
@@ -107,10 +102,7 @@ Index: configure.in
 +	kadmin/ktutil/ktutil.M
 +	kadmin/passwd/kpasswd.M
 +	kadmin/server/kadmind.M
-+	kdc/fakeka.M
 +	kdc/krb5kdc.M
-+	krb524/k524init.M
-+	krb524/krb524d.M
 +	krb5-config.M
 +	plugins/kdb/ldap/ldap_util/kdb5_ldap_util.M
 +	slave/kpropd.M
@@ -182,7 +174,7 @@ Index: appl/telnet/telnetd/telnetd.8
  protocol server
  .SH SYNOPSIS
 -.B /usr/libexec/telnetd
-+.B @manlibexecdir@/telnetd
++.B @mansbindir@/telnetd
  [\fB\-a\fP \fIauthmode\fP] [\fB\-B\fP] [\fB\-D\fP] [\fIdebugmode\fP]
  [\fB\-e\fP] [\fB\-h\fP] [\fB\-I\fP\fIinitid\fP] [\fB\-l\fP]
  [\fB\-k\fP] [\fB\-n\fP] [\fB\-r\fP\fIlowpty-highpty\fP] [\fB\-s\fP]
@@ -294,7 +286,7 @@ Index: slave/kpropd.M
  turn on standalone mode.  Normally, kpropd is invoked out of
 @@ -124,14 +124,14 @@
  allows the user to specify the path to the
- .KR kpropd.acl
+ kpropd.acl
  file; by default the path used is KPROPD_ACL_FILE
 -(normally /usr/local/var/krb5kdc/kpropd.acl).
 +(normally @manlocalstatedir@/krb5kdc/kpropd.acl).

@@ -4,7 +4,6 @@ appl/bsd/login.M
 appl/bsd/rcp.M
 appl/bsd/rlogin.M
 appl/bsd/rsh.M
-appl/bsd/v4rcp.M
 appl/gssftp/ftpd/ftpd.M
 appl/gssftp/ftp/ftp.M
 appl/sample/sclient/sclient.M
@@ -30,10 +29,7 @@ kadmin/dbutil/kdb5_util.M
 kadmin/ktutil/ktutil.M
 kadmin/passwd/kpasswd.M
 kadmin/server/kadmind.M
-kdc/fakeka.M
 kdc/krb5kdc.M
-krb524/k524init.M
-krb524/krb524d.M
 krb5-config.M
 plugins/kdb/ldap/ldap_util/kdb5_ldap_util.M
 slave/kpropd.M
