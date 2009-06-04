@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 0%{?dist}
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -57,17 +57,11 @@ Patch26: krb5-1.3.2-efence.patch
 Patch27: krb5-1.7-rcp-sendlarge.patch
 Patch29: krb5-1.7-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
-Patch32: krb5-1.4-ncurses.patch
 Patch33: krb5-1.7-io.patch
-Patch35: krb5-1.5-fclose.patch
 Patch36: krb5-1.7-rcp-markus.patch
 Patch39: krb5-1.7-api.patch
 Patch40: krb5-1.4.1-telnet-environ.patch
 Patch41: krb5-1.6.3-login-lpass.patch
-Patch44: krb5-1.4.3-enospc.patch
-Patch47: krb5-1.6-sort-of-static.patch
-Patch51: krb5-1.6-ldap-init.patch
-Patch52: krb5-1.6-ldap-man.patch
 Patch53: krb5-1.7-nodeplibs.patch
 Patch55: krb5-1.6.1-empty.patch
 Patch56: krb5-1.7-doublelog.patch
@@ -77,24 +71,11 @@ Patch59: krb5-trunk-kpasswd_tcp.patch
 Patch60: krb5-1.7-pam.patch
 Patch61: krb5-trunk-manpaths.patch
 Patch63: krb5-1.7-selinux-label.patch
-Patch64: krb5-ok-as-delegate.patch
-Patch68: krb5-trunk-spnego_delegation.patch
-Patch69: krb5-trunk-seqnum.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.7-dirsrv-accountlock.patch
 Patch72: krb5-1.6.3-ftp_fdleak.patch
 Patch73: krb5-1.6.3-ftp_glob_runique.patch
-Patch74: krb5-CVE-2008-0062,0063.patch
-Patch75: krb5-CVE-2008-0947.patch
-Patch76: krb5-CVE-2007-5901.patch
-Patch77: krb5-CVE-2007-5971.patch
-Patch78: krb5-1.6.3-lucid-acceptor.patch
 Patch79: krb5-trunk-ftp_mget_case.patch
-Patch80: krb5-trunk-preauth-master.patch
-Patch82: krb5-CVE-2009-0844-0845-2.patch
-Patch83: krb5-CVE-2009-0846.patch
-Patch84: krb5-CVE-2009-0847.patch
-Patch85: krb5-trunk-ksu-typo.patch
 Patch86: krb5-1.7-time_t_size.patch
 
 License: MIT
@@ -224,7 +205,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
-* Tue Jun  2 2009 Nalin Dahyabhai <nalin@redhat.com> 1.7-1
+* Thu Jun  4 2009 Nalin Dahyabhai <nalin@redhat.com> 1.7-1
 - update to 1.7
   - no need to work around build issues with ASN1BUF_OMIT_INLINE_FUNCS
   - configure recognizes --enable/--disable-pkinit now
@@ -1416,58 +1397,22 @@ popd
 %patch27 -p1 -b .rcp-sendlarge
 %patch29 -p1 -b .kprop-mktemp
 %patch30 -p1 -b .send-pr-tempfile
-# Unneeded
-# %patch32 -p1 -b .ncurses
 %patch33 -p1 -b .io
-# Upstream
-# %patch35 -p1 -b .fclose
 %patch36 -p1 -b .rcp-markus
 %patch39 -p1 -b .api
 %patch40 -p1 -b .telnet-environ
 %patch41 -p1 -b .login-lpass
-# No longer needed -- improved error-reporting should take care of this.
-# %patch44 -p1 -b .enospc
-# Upstream
-# %patch51 -p0 -b .ldap_init
-# Upstream
-# %patch52 -p0 -b .ldap_man
 %patch53 -p1 -b .nodeplibs
 #%patch55 -p1 -b .empty
 %patch56 -p1 -b .doublelog
 #%patch57 -p1 -b .login_chdir
 %patch58 -p1 -b .key_exp
 %patch59 -p0 -b .kpasswd_tcp
-# Upstream, more or less.
-# %patch64 -p0 -b .ok-as-delegate
-# Upstream, different patch.
-# %patch68 -p0 -b .spnego_delegation
-# Upstream
-# %patch69 -p0 -b .seqnum
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
 %patch72 -p1 -b .ftp_fdleak
 %patch73 -p1 -b .ftp_glob_runique
-# Upstream
-# %patch74 -p0 -b .2008-0062,0063
-# Upstream
-# %patch75 -p0 -b .2008-0947
-# Upstream
-# %patch76 -p0 -b .2007-5901
-# Upstream
-# %patch77 -p0 -b .2007-5971
-# Was a backport.
-# %patch78 -p0 -b .lucid_acceptor
 %patch79 -p0 -b .ftp_mget_case
-# Upstream
-# %patch80 -p0 -b .preauth_master
-# Upstream
-# %patch82 -p1 -b .CVE-2009-0844-0845-2
-# Upstream
-# %patch83 -p1 -b .CVE-2009-0846
-# Upstream
-# %patch84 -p1 -b .CVE-2009-0847
-# Upstream
-# %patch85 -p1 -b .ksu-typo
 %patch86 -p1 -b .time_t_size
 gzip doc/*.ps
 
