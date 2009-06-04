@@ -8,6 +8,6 @@ service eklogin
 	wait		= no
 	user		= root
 	server		= /usr/kerberos/sbin/klogind
-	server_args	= -e -5
+	server_args	= -e
 	disable		= yes
 }
