@@ -8,6 +8,5 @@ service klogin
 	wait		= no
 	user		= root
 	server		= /usr/kerberos/sbin/klogind
-	server_args	= -5
 	disable		= yes
 }

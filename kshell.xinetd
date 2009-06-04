@@ -8,6 +8,6 @@ service kshell
 	wait		= no
 	user		= root
 	server		= /usr/kerberos/sbin/kshd
-	server_args	= -e -5
+	server_args	= -e
 	disable		= yes
 }
