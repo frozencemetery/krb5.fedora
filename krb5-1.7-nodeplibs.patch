@@ -10,7 +10,7 @@ diff -up krb5-1.7/src/krb5-config.in krb5-1.7/src/krb5-config.in
  
      if test $library = 'krb5'; then
 -	lib_flags="$lib_flags -lkrb5 -lk5crypto -lcom_err $GEN_LIB $LIBS $SELINUX_LIBS $DL_LIB"
-+	if test "$do_deps" -eq  1 ; then
++	if test 0$do_deps -eq 1 ; then
 +	    lib_flags="$lib_flags -lkrb5 -lk5crypto -lcom_err $GEN_LIB $LIBS $SELINUX_LIBS $DL_LIB"
 +	else
 +	    lib_flags="$lib_flags -lkrb5 -lk5crypto -lcom_err"
