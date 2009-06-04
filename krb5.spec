@@ -4,18 +4,15 @@
 
 %define krb5prefix %{_prefix}/kerberos
 
-# This'll be pulled out at some point.
-%define build_static 0
-
 # For consistency with regular login.
 %define login_pam_service remote
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.6.3
-Release: 106%{?dist}
+Version: 1.7
+Release: 0%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -51,42 +48,40 @@ Patch4: krb5-1.3-rlogind-environ.patch
 Patch5: krb5-1.3-ksu-access.patch
 Patch6: krb5-1.5-ksu-path.patch
 Patch11: krb5-1.2.1-passive.patch
-Patch12: krb5-1.4-ktany.patch
+Patch12: krb5-1.7-ktany.patch
 Patch13: krb5-1.3-large-file.patch
 Patch14: krb5-1.3-ftp-glob.patch
-Patch16: krb5-1.6-buildconf.patch
+Patch16: krb5-1.7-buildconf.patch
 Patch23: krb5-1.3.1-dns.patch
 Patch26: krb5-1.3.2-efence.patch
-Patch27: krb5-1.3.3-rcp-sendlarge.patch
-Patch29: krb5-1.3.5-kprop-mktemp.patch
+Patch27: krb5-1.7-rcp-sendlarge.patch
+Patch29: krb5-1.7-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch32: krb5-1.4-ncurses.patch
-Patch33: krb5-1.5-io.patch
+Patch33: krb5-1.7-io.patch
 Patch35: krb5-1.5-fclose.patch
-Patch36: krb5-1.3.3-rcp-markus.patch
-Patch39: krb5-1.4.1-api.patch
+Patch36: krb5-1.7-rcp-markus.patch
+Patch39: krb5-1.7-api.patch
 Patch40: krb5-1.4.1-telnet-environ.patch
 Patch41: krb5-1.6.3-login-lpass.patch
 Patch44: krb5-1.4.3-enospc.patch
 Patch47: krb5-1.6-sort-of-static.patch
 Patch51: krb5-1.6-ldap-init.patch
 Patch52: krb5-1.6-ldap-man.patch
-Patch53: krb5-1.6-nodeplibs.patch
+Patch53: krb5-1.7-nodeplibs.patch
 Patch55: krb5-1.6.1-empty.patch
-Patch56: krb5-trunk-doublelog.patch
+Patch56: krb5-1.7-doublelog.patch
 Patch57: krb5-1.6.2-login_chdir.patch
 Patch58: krb5-1.6.2-key_exp.patch
 Patch59: krb5-trunk-kpasswd_tcp.patch
-
-Patch60: krb5-1.6.1-pam.patch
+Patch60: krb5-1.7-pam.patch
 Patch61: krb5-trunk-manpaths.patch
-Patch62: krb5-any-fixup-patch.txt
-Patch63: krb5-1.6.3-selinux-label.patch
+Patch63: krb5-1.7-selinux-label.patch
 Patch64: krb5-ok-as-delegate.patch
 Patch68: krb5-trunk-spnego_delegation.patch
 Patch69: krb5-trunk-seqnum.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
-Patch71: krb5-1.6.2-dirsrv-accountlock.patch
+Patch71: krb5-1.7-dirsrv-accountlock.patch
 Patch72: krb5-1.6.3-ftp_fdleak.patch
 Patch73: krb5-1.6.3-ftp_glob_runique.patch
 Patch74: krb5-CVE-2008-0062,0063.patch
@@ -100,6 +95,7 @@ Patch82: krb5-CVE-2009-0844-0845-2.patch
 Patch83: krb5-CVE-2009-0846.patch
 Patch84: krb5-CVE-2009-0847.patch
 Patch85: krb5-trunk-ksu-typo.patch
+Patch86: krb5-1.7-time_t_size.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -228,6 +224,20 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Jun  2 2009 Nalin Dahyabhai <nalin@redhat.com> 1.7-1
+- update to 1.7
+  - no need to work around build issues with ASN1BUF_OMIT_INLINE_FUNCS
+  - configure recognizes --enable/--disable-pkinit now
+  - configure can take --disable-rpath now
+  - no more libdes425, krb524d, krb425.info
+  - kadmin/k5srvutil/ktutil are user commands now
+  - new kproplog
+  - FAST encrypted-challenge plugin is new
+- drop static build logic
+- drop pam_krb5-specific configuration from the default krb5.conf
+- drop only-use-v5 flags being passed to various things started by xinetd
+- put %%{krb5prefix}/sbin in everyone's path, too
+
 * Tue May 19 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-106
 - add an auth stack to ksu's PAM configuration so that pam_setcred() calls
   won't just fail
@@ -1390,9 +1400,6 @@ pushd src
 %patch60 -p2 -b .pam
 %patch61 -p0 -b .manpaths
 popd
-pushd src/lib/krb5/keytab
-%patch62 -p0 -b .any-fixup
-popd
 %patch63 -p1 -b .selinux-label
 %patch3  -p1 -b .netkit-rsh
 %patch4  -p1 -b .rlogind-environ
@@ -1409,43 +1416,59 @@ popd
 %patch27 -p1 -b .rcp-sendlarge
 %patch29 -p1 -b .kprop-mktemp
 %patch30 -p1 -b .send-pr-tempfile
-%patch32 -p1 -b .ncurses
+# Unneeded
+# %patch32 -p1 -b .ncurses
 %patch33 -p1 -b .io
-%patch35 -p1 -b .fclose
+# Upstream
+# %patch35 -p1 -b .fclose
 %patch36 -p1 -b .rcp-markus
 %patch39 -p1 -b .api
 %patch40 -p1 -b .telnet-environ
 %patch41 -p1 -b .login-lpass
-%patch44 -p1 -b .enospc
-%if %{build_static}
-%patch47 -p1 -b .sort-of-static
-%endif
-%patch51 -p0 -b .ldap_init
-%patch52 -p0 -b .ldap_man
+# No longer needed -- improved error-reporting should take care of this.
+# %patch44 -p1 -b .enospc
+# Upstream
+# %patch51 -p0 -b .ldap_init
+# Upstream
+# %patch52 -p0 -b .ldap_man
 %patch53 -p1 -b .nodeplibs
 #%patch55 -p1 -b .empty
-%patch56 -p0 -b .doublelog
+%patch56 -p1 -b .doublelog
 #%patch57 -p1 -b .login_chdir
 %patch58 -p1 -b .key_exp
 %patch59 -p0 -b .kpasswd_tcp
-#%patch64 -p0 -b .ok-as-delegate
-%patch68 -p0 -b .spnego_delegation
-%patch69 -p0 -b .seqnum
+# Upstream, more or less.
+# %patch64 -p0 -b .ok-as-delegate
+# Upstream, different patch.
+# %patch68 -p0 -b .spnego_delegation
+# Upstream
+# %patch69 -p0 -b .seqnum
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
 %patch72 -p1 -b .ftp_fdleak
 %patch73 -p1 -b .ftp_glob_runique
-%patch74 -p0 -b .2008-0062,0063
-%patch75 -p0 -b .2008-0947
-%patch76 -p0 -b .2007-5901
-%patch77 -p0 -b .2007-5971
-%patch78 -p0 -b .lucid_acceptor
+# Upstream
+# %patch74 -p0 -b .2008-0062,0063
+# Upstream
+# %patch75 -p0 -b .2008-0947
+# Upstream
+# %patch76 -p0 -b .2007-5901
+# Upstream
+# %patch77 -p0 -b .2007-5971
+# Was a backport.
+# %patch78 -p0 -b .lucid_acceptor
 %patch79 -p0 -b .ftp_mget_case
-%patch80 -p0 -b .preauth_master
-%patch82 -p1 -b .CVE-2009-0844-0845-2
-%patch83 -p1 -b .CVE-2009-0846
-%patch84 -p1 -b .CVE-2009-0847
-%patch85 -p1 -b .ksu-typo
+# Upstream
+# %patch80 -p0 -b .preauth_master
+# Upstream
+# %patch82 -p1 -b .CVE-2009-0844-0845-2
+# Upstream
+# %patch83 -p1 -b .CVE-2009-0846
+# Upstream
+# %patch84 -p1 -b .CVE-2009-0847
+# Upstream
+# %patch85 -p1 -b .ksu-typo
+%patch86 -p1 -b .time_t_size
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -1457,7 +1480,7 @@ sed -i -e '1c\
 \\usepackage{hyperref}' doc/implement/implement.tex
 
 # Take the execute bit off of documentation.
-chmod -x doc/krb5-protocol/*.txt
+chmod -x doc/krb5-protocol/*.txt doc/*.html
 
 # Rename the man pages so that they'll get generated correctly.
 pushd src
@@ -1503,17 +1526,6 @@ INCLUDES=-I%{_includedir}/et
 DEFINES="-D_FILE_OFFSET_BITS=64" ; export DEFINES
 %endif
 
-# FIXME!
-DEFINES="$DEFINES -DASN1BUF_OMIT_INLINE_FUNCS=1"; export DEFINES
-
-# Enable or disable the PKINIT plugin.  The configure script only checks for
-# the version of OpenSSL being okay, so for now we have to use that to control
-# whether or not it tries to build the module.
-%if %{WITH_OPENSSL}
-k5_cv_openssl_version_okay=
-%else
-k5_cv_openssl_version_okay=no ; export k5_cv_openssl_version_okay
-%endif
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
 CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC -fno-strict-aliasing`"
 CPPFLAGS="`echo $DEFINES $INCLUDES`"
@@ -1521,17 +1533,14 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	CC="%{__cc}" \
 	CFLAGS="$CFLAGS" \
 	CPPFLAGS="$CPPFLAGS" \
-	SS_LIB="-lss -lcurses" \
+	SS_LIB="-lss -ltinfo" \
 	--enable-shared \
-%if %{build_static}
-	--enable-static \
-%endif
 	--bindir=%{krb5prefix}/bin \
 	--mandir=%{krb5prefix}/man \
 	--sbindir=%{krb5prefix}/sbin \
 	--datadir=%{krb5prefix}/share \
 	--localstatedir=%{_var}/kerberos \
-	--without-krb4 \
+	--disable-rpath \
 	--with-system-et \
 	--with-system-ss \
 	--with-netlib=-lresolv \
@@ -1543,6 +1552,11 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 %else
 	--with-ldap \
 %endif
+%endif
+%if %{WITH_OPENSSL}
+	--enable-pkinit \
+%else
+	--disable-pkinit \
 %endif
 	--with-pam \
 	--with-pam-login-service=%{login_pam_service} \
@@ -1613,12 +1627,9 @@ install -pdm 755 $RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/kdb
 # The rest of the binaries, headers, libraries, and docs.
 make -C src DESTDIR=$RPM_BUILD_ROOT install
 
-# Munge the krb5-config script to remove rpaths.
-sed "s|^CC_LINK=.*|CC_LINK='\$(CC) \$(PROG_LIBPATH)'|g" src/krb5-config > $RPM_BUILD_ROOT%{krb5prefix}/bin/krb5-config
-
 # Munge krb5-config yet again.  This is totally wrong for 64-bit, but chunks
 # of the buildconf patch already conspire to strip out /usr/<anything> from the
-# list of link flags.
+# list of link flags, and it helps prevent file conflicts on multilib systems.
 sed -r -i -e 's|^libdir=/usr/lib(64)?$|libdir=/usr/lib|g' $RPM_BUILD_ROOT%{krb5prefix}/bin/krb5-config
 
 # Remove the randomly-generated compile-et filename comment from header files.
@@ -1632,7 +1643,7 @@ while ! test -r $RPM_BUILD_ROOT/%{_libdir}/${rellibdir}/rootfile ; do
 done
 rm -f $RPM_BUILD_ROOT/rootfile
 mkdir -p $RPM_BUILD_ROOT/%{_lib}
-for library in libdes425 libgssapi_krb5 libgssrpc libk5crypto libkrb5 libkrb5support ; do
+for library in libgssapi_krb5 libgssrpc libk5crypto libkrb5 libkrb5support ; do
 	mv $RPM_BUILD_ROOT/%{_libdir}/${library}.so.* $RPM_BUILD_ROOT/%{_lib}/
 	pushd $RPM_BUILD_ROOT/%{_libdir}
 	ln -fs ${rellibdir}/%{_lib}/${library}.so.*.* ${library}.so
@@ -1658,7 +1669,6 @@ done
 /sbin/chkconfig --add kadmin
 /sbin/chkconfig --add kprop
 # Install info pages.
-/sbin/install-info %{_infodir}/krb425.info.gz %{_infodir}/dir
 /sbin/install-info %{_infodir}/krb5-admin.info.gz %{_infodir}/dir
 /sbin/install-info %{_infodir}/krb5-install.info.gz %{_infodir}/dir
 exit 0
@@ -1671,7 +1681,6 @@ if [ "$1" -eq "0" ] ; then
 	/sbin/service krb5kdc stop > /dev/null 2>&1 || :
 	/sbin/service kadmin stop > /dev/null 2>&1 || :
 	/sbin/service kprop stop > /dev/null 2>&1 || :
-	/sbin/install-info --delete %{_infodir}/krb425.info.gz %{_infodir}/dir
 	/sbin/install-info --delete %{_infodir}/krb5-admin.info.gz %{_infodir}/dir
 	/sbin/install-info --delete %{_infodir}/krb5-install.info.gz %{_infodir}/dir
 fi
@@ -1687,6 +1696,7 @@ exit 0
 
 %triggerun server -- krb5-server < 1.6.3-100
 if [ "$2" -eq "0" ] ; then
+	/sbin/install-info --delete %{_infodir}/krb425.info.gz %{_infodir}/dir
 	/sbin/service krb524 stop > /dev/null 2>&1 || :
 	/sbin/chkconfig --del krb524 > /dev/null 2>&1 || :
 fi
@@ -1747,12 +1757,12 @@ exit 0
 
 %{krb5prefix}/bin/kvno
 %{krb5prefix}/man/man1/kvno.1*
-%{krb5prefix}/sbin/kadmin
-%{krb5prefix}/man/man8/kadmin.8*
-%{krb5prefix}/sbin/k5srvutil
-%{krb5prefix}/man/man8/k5srvutil.8*
-%{krb5prefix}/sbin/ktutil
-%{krb5prefix}/man/man8/ktutil.8*
+%{krb5prefix}/bin/kadmin
+%{krb5prefix}/man/man1/kadmin.1*
+%{krb5prefix}/bin/k5srvutil
+%{krb5prefix}/man/man1/k5srvutil.1*
+%{krb5prefix}/bin/ktutil
+%{krb5prefix}/man/man1/ktutil.1*
 
 # Doesn't really fit anywhere else.
 %attr(4755,root,root) %{krb5prefix}/bin/ksu
@@ -1824,12 +1834,12 @@ exit 0
 # Tools you're likely to need if you're running these app servers.
 %{krb5prefix}/bin/kvno
 %{krb5prefix}/man/man1/kvno.1*
-%{krb5prefix}/sbin/kadmin
-%{krb5prefix}/man/man8/kadmin.8*
-%{krb5prefix}/sbin/k5srvutil
-%{krb5prefix}/man/man8/k5srvutil.8*
-%{krb5prefix}/sbin/ktutil
-%{krb5prefix}/man/man8/ktutil.8*
+%{krb5prefix}/bin/kadmin
+%{krb5prefix}/man/man1/kadmin.1*
+%{krb5prefix}/bin/k5srvutil
+%{krb5prefix}/man/man1/k5srvutil.1*
+%{krb5prefix}/bin/ktutil
+%{krb5prefix}/man/man1/ktutil.1*
 
 # Application servers.
 %{krb5prefix}/sbin/ftpd
@@ -1857,12 +1867,10 @@ exit 0
 %config(noreplace) /etc/sysconfig/kadmin
 
 %doc doc/admin*.ps.gz
-%doc doc/krb425*.ps.gz
 %doc doc/install*.ps.gz
 
 %{_infodir}/krb5-admin.info*
 %{_infodir}/krb5-install.info*
-%{_infodir}/krb425.info*
 
 %dir %{_var}/kerberos
 %dir %{_var}/kerberos/krb5kdc
@@ -1897,6 +1905,8 @@ exit 0
 %{krb5prefix}/man/man8/kprop.8*
 %{krb5prefix}/sbin/kpropd
 %{krb5prefix}/man/man8/kpropd.8*
+%{krb5prefix}/sbin/kproplog
+%{krb5prefix}/man/man8/kproplog.8*
 %{krb5prefix}/sbin/krb5kdc
 %{krb5prefix}/man/man8/krb5kdc.8*
 
@@ -1940,7 +1950,6 @@ exit 0
 %{krb5prefix}/man/man1/kerberos.1*
 %{krb5prefix}/man/man5/.k5login.5*
 %{krb5prefix}/man/man5/krb5.conf.5*
-/%{_lib}/libdes425.so.*
 /%{_lib}/libgssapi_krb5.so.*
 /%{_lib}/libgssrpc.so.*
 /%{_lib}/libk5crypto.so.*
@@ -1952,6 +1961,7 @@ exit 0
 %dir %{_libdir}/krb5
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/*
+%{_libdir}/krb5/plugins/preauth/encrypted_challenge.so
 %{_libdir}/krb5/plugins/kdb/db2.so
 %{krb5prefix}/share
 
@@ -1987,7 +1997,6 @@ exit 0
 %dir %{krb5prefix}/sbin
 
 %{_includedir}/*
-%{_libdir}/libdes425.so
 %{_libdir}/libgssapi_krb5.so
 %{_libdir}/libgssrpc.so
 %{_libdir}/libk5crypto.so
@@ -1996,10 +2005,6 @@ exit 0
 %{_libdir}/libkdb5.so
 %{_libdir}/libkrb5.so
 %{_libdir}/libkrb5support.so
-
-%if %{build_static}
-%{_libdir}/*.a
-%endif
 
 %{krb5prefix}/bin/krb5-config
 %{krb5prefix}/bin/sclient
