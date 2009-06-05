@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -205,6 +205,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Fri Jun  5 2009 Nalin Dahyabhai <nalin@redhat.com> 1.7-2
+- add and own %%{_libdir}/krb5/plugins/authdata
+
 * Thu Jun  4 2009 Nalin Dahyabhai <nalin@redhat.com> 1.7-1
 - update to 1.7
   - no need to work around build issues with ASN1BUF_OMIT_INLINE_FUNCS
@@ -1568,6 +1571,7 @@ done
 # Plug-in directories.
 install -pdm 755 $RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/preauth
 install -pdm 755 $RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/kdb
+install -pdm 755 $RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/authdata
 
 # The rest of the binaries, headers, libraries, and docs.
 make -C src DESTDIR=$RPM_BUILD_ROOT install
@@ -1828,6 +1832,7 @@ exit 0
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/kdb
 %dir %{_libdir}/krb5/plugins/preauth
+%dir %{_libdir}/krb5/plugins/authdata
 %dir %{krb5prefix}/man
 %dir %{krb5prefix}/man/man1
 %dir %{krb5prefix}/man/man5
