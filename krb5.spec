@@ -16,7 +16,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 21%{?dist}
+Release: 22%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -235,6 +235,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Jun  8 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-22
+- put %%{krb5prefix}/sbin in everyone's path, too (#504525)
+
 * Tue May 26 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-21
 - don't depend on the execute bit being set on scripts that are sources
 
