@@ -16,7 +16,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 18%{?dist}
+Release: 19%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -235,6 +235,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Jun  8 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-19
+- put %%{krb5prefix}/sbin in everyone's path, too (#504525)
+
 * Tue Apr  7 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-18
 - add patches for read overflow and null pointer dereference in the
   implementation of the SPNEGO mechanism (CVE-2009-0844, CVE-2009-0845)
