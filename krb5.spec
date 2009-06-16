@@ -205,6 +205,11 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Jun 16 2009 Nalin Dahyabhai <nalin@redhat.com>
+- compile with %%{?_smp_mflags} (Steve Grubb)
+- drop the bit where we munge part of the error table header, as it's not
+  needed any more
+
 * Fri Jun  5 2009 Nalin Dahyabhai <nalin@redhat.com> 1.7-2
 - add and own %%{_libdir}/krb5/plugins/authdata
 
@@ -220,7 +225,7 @@ certificate.
 - drop static build logic
 - drop pam_krb5-specific configuration from the default krb5.conf
 - drop only-use-v5 flags being passed to various things started by xinetd
-- put %%{krb5prefix}/sbin in everyone's path, too
+- put %%{krb5prefix}/sbin in everyone's path, too (#504525)
 
 * Tue May 19 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-106
 - add an auth stack to ksu's PAM configuration so that pam_setcred() calls
@@ -1510,7 +1515,7 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--with-pam-login-service=%{login_pam_service} \
 	--with-selinux
 # Now build it.
-make
+make %{?_smp_mflags}
 
 # Run the test suite.  We can't actually do this in the build system.
 : make check TMPDIR=%{_tmppath}
@@ -1580,9 +1585,6 @@ make -C src DESTDIR=$RPM_BUILD_ROOT install
 # of the buildconf patch already conspire to strip out /usr/<anything> from the
 # list of link flags, and it helps prevent file conflicts on multilib systems.
 sed -r -i -e 's|^libdir=/usr/lib(64)?$|libdir=/usr/lib|g' $RPM_BUILD_ROOT%{krb5prefix}/bin/krb5-config
-
-# Remove the randomly-generated compile-et filename comment from header files.
-sed -i -e 's|^ \* ettmp[^ \t]*\.h:$| * ettmpXXXXXX.h:|g' $RPM_BUILD_ROOT%{_includedir}/*{,/*}.h
 
 # Move specific libraries from %{_libdir} to /%{_lib}, and fixup the symlinks.
 touch $RPM_BUILD_ROOT/rootfile
