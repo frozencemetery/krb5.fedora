@@ -37,6 +37,7 @@ the earlier, non-PAM behavior by setting "use_pam" to false in the [ksu]
 section of /etc/krb5.conf.
 
 When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
+Updated version of patch filed as RT#5939.
 
 diff -up krb5-1.7/src/aclocal.m4 krb5-1.7/src/aclocal.m4
 --- krb5-1.7/src/aclocal.m4	2009-02-18 19:38:17.000000000 -0500
@@ -103,7 +104,7 @@ diff -up krb5-1.7/src/aclocal.m4 krb5-1.7/src/aclocal.m4
 +		fi
 +	fi
 +	if test "$withpam" != no ; then
-+		AC_MSG_RESULT([Using PAM.])
++		AC_MSG_NOTICE([building with PAM support])
 +		AC_DEFINE(USE_PAM,1,[Define if Kerberos-aware tools should support PAM])
 +		AC_DEFINE_UNQUOTED(LOGIN_PAM_SERVICE,"$withloginpamservice",
 +				   [Define to the name of the PAM service name to be used by login.])
