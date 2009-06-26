@@ -77,6 +77,8 @@ Patch72: krb5-1.6.3-ftp_fdleak.patch
 Patch73: krb5-1.6.3-ftp_glob_runique.patch
 Patch79: krb5-trunk-ftp_mget_case.patch
 Patch86: krb5-1.7-time_t_size.patch
+Patch87: krb5-1.7-errs.patch
+Patch88: krb5-1.7-sizeof.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -205,6 +207,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Fri Jun 26 2009 Nalin Dahyabhai <nalin@redhat.com>
+- fix a type mismatch in krb5_copy_error_message()
+- ftp: fix some odd use of strlen()
+
 * Tue Jun 16 2009 Nalin Dahyabhai <nalin@redhat.com>
 - compile with %%{?_smp_mflags} (Steve Grubb)
 - drop the bit where we munge part of the error table header, as it's not
@@ -1422,6 +1428,8 @@ popd
 %patch73 -p1 -b .ftp_glob_runique
 %patch79 -p0 -b .ftp_mget_case
 %patch86 -p1 -b .time_t_size
+%patch87 -p1 -b .errs
+%patch88 -p1 -b .sizeof
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -1455,7 +1463,7 @@ EOF
 # Generate an FDS-compatible LDIF file.
 inldif=src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
 cat > 60kerberos.ldif << EOF
-# This is a variation on kerberos.ldif which Fedora Directory Server will like.
+# This is a variation on kerberos.ldif which 389 Directory Server will like.
 dn: cn=schema
 EOF
 egrep -iv '(^$|^dn:|^changetype:|^add:)' $inldif >> 60kerberos.ldif
