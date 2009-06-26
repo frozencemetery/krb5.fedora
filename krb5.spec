@@ -210,6 +210,8 @@ certificate.
 * Fri Jun 26 2009 Nalin Dahyabhai <nalin@redhat.com>
 - fix a type mismatch in krb5_copy_error_message()
 - ftp: fix some odd use of strlen()
+- selinux labeling: use selabel_open() family of functions rather than
+  matchpathcon(), bail on it if attempting to get the mutex lock fails
 
 * Tue Jun 16 2009 Nalin Dahyabhai <nalin@redhat.com>
 - compile with %%{?_smp_mflags} (Steve Grubb)
