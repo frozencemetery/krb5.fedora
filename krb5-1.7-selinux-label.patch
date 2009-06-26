@@ -6,8 +6,11 @@ because SELinux can apply a default label to a file based on the label
 of the directory in which it's created.
 
 In the case of files such as /etc/krb5.keytab, however, this isn't
-sufficient, as /etc/krb5.keytab will almost always need given a label
-which differs from that of /etc/issue or /etc/resolv.conf.
+sufficient, as /etc/krb5.keytab will almost always need to be given a
+label which differs from that of /etc/issue or /etc/resolv.conf.  The
+the kdb stash file needs a different label than the database for which
+it's holding a master key, even though both typically live in the same
+directory.
 
 To give the file the correct label, we can either force a "restorecon"
 call to fix a file's label after it's created, or create the file with
@@ -520,9 +523,9 @@ diff -up krb5-1.7/src/util/support/Makefile.in krb5-1.7/src/util/support/Makefil
 diff -up /dev/null krb5-1.7/src/util/support/selinux.c
 --- /dev/null	2009-06-04 10:34:55.169007373 -0400
 +++ krb5-1.7/src/util/support/selinux.c	2009-06-04 13:47:20.000000000 -0400
-@@ -0,0 +1,275 @@
+@@ -0,0 +1,300 @@
 +/*
-+ * Copyright 2007,2008 Red Hat, Inc.  All Rights Reserved.
++ * Copyright 2007,2008,2009 Red Hat, Inc.  All Rights Reserved.
 + *
 + * Redistribution and use in source and binary forms, with or without
 + * modification, are permitted provided that the following conditions are met:
@@ -572,6 +575,7 @@ diff -up /dev/null krb5-1.7/src/util/support/selinux.c
 +#include <string.h>
 +#include <unistd.h>
 +#include <selinux/selinux.h>
++#include <selinux/label.h>
 +
 +/* #define DEBUG 1 */
 +
@@ -590,6 +594,7 @@ diff -up /dev/null krb5-1.7/src/util/support/selinux.c
 +push_fscreatecon(const char *pathname, mode_t mode)
 +{
 +	security_context_t previous, next;
++	struct selabel_handle *ctx;
 +	const char *fullpath;
 +
 +	previous = NULL;
@@ -630,12 +635,18 @@ diff -up /dev/null krb5-1.7/src/util/support/selinux.c
 +					"\"%s\"(%05o).\n", fullpath, mode);
 +			}
 +#endif
-+			if (matchpathcon(fullpath, mode, &next) != 0) {
-+				free(genpath);
-+				if (previous != NULL) {
-+					freecon(previous);
++			ctx = selabel_open(SELABEL_CTX_FILE, NULL, 0);
++			if (ctx != NULL) {
++				if (selabel_lookup(ctx, &next,
++						   fullpath, mode) != 0) {
++					selabel_close(ctx);
++					free(genpath);
++					if (previous != NULL) {
++						freecon(previous);
++					}
++					return NULL;
 +				}
-+				return NULL;
++				selabel_close(ctx);
 +			}
 +			free(genpath);
 +#ifdef DEBUG
@@ -698,14 +709,17 @@ diff -up /dev/null krb5-1.7/src/util/support/selinux.c
 +	}
 +
 +	k5_once(&labeled_once, label_mutex_init);
-+	k5_mutex_lock(&labeled_mutex);
-+	ctx = push_fscreatecon(path, 0);
-+	fp = fopen(path, mode);
-+	errno_save = errno;
-+	pop_fscreatecon(ctx);
-+	k5_mutex_unlock(&labeled_mutex);
++	if (k5_mutex_lock(&labeled_mutex) == 0) {
++		ctx = push_fscreatecon(path, 0);
++		fp = fopen(path, mode);
++		errno_save = errno;
++		pop_fscreatecon(ctx);
++		k5_mutex_unlock(&labeled_mutex);
++		errno = errno_save;
++	} else {
++		fp = fopen(path, mode);
++	}
 +
-+	errno = errno_save;
 +	return fp;
 +}
 +
@@ -717,14 +731,16 @@ diff -up /dev/null krb5-1.7/src/util/support/selinux.c
 +	security_context_t ctx;
 +
 +	k5_once(&labeled_once, label_mutex_init);
-+	k5_mutex_lock(&labeled_mutex);
-+	ctx = push_fscreatecon(path, 0);
-+	fd = creat(path, mode);
-+	errno_save = errno;
-+	pop_fscreatecon(ctx);
-+	k5_mutex_unlock(&labeled_mutex);
-+
-+	errno = errno_save;
++	if (k5_mutex_lock(&labeled_mutex) == 0) {
++		ctx = push_fscreatecon(path, 0);
++		fd = creat(path, mode);
++		errno_save = errno;
++		pop_fscreatecon(ctx);
++		k5_mutex_unlock(&labeled_mutex);
++		errno = errno_save;
++	} else {
++		fd = creat(path, mode);
++	}
 +	return fd;
 +}
 +
@@ -736,14 +752,16 @@ diff -up /dev/null krb5-1.7/src/util/support/selinux.c
 +	security_context_t ctx;
 +
 +	k5_once(&labeled_once, label_mutex_init);
-+	k5_mutex_lock(&labeled_mutex);
-+	ctx = push_fscreatecon(path, mode);
-+	ret = mknod(path, mode, dev);
-+	errno_save = errno;
-+	pop_fscreatecon(ctx);
-+	k5_mutex_unlock(&labeled_mutex);
-+
-+	errno = errno_save;
++	if (k5_mutex_lock(&labeled_mutex) == 0) {
++		ctx = push_fscreatecon(path, mode);
++		ret = mknod(path, mode, dev);
++		errno_save = errno;
++		pop_fscreatecon(ctx);
++		k5_mutex_unlock(&labeled_mutex);
++		errno = errno_save;
++	} else {
++		ret = mknod(path, mode, dev);
++	}
 +	return ret;
 +}
 +
@@ -755,14 +773,16 @@ diff -up /dev/null krb5-1.7/src/util/support/selinux.c
 +	security_context_t ctx;
 +
 +	k5_once(&labeled_once, label_mutex_init);
-+	k5_mutex_lock(&labeled_mutex);
-+	ctx = push_fscreatecon(path, S_IFDIR);
-+	ret = mkdir(path, mode);
-+	errno_save = errno;
-+	pop_fscreatecon(ctx);
-+	k5_mutex_unlock(&labeled_mutex);
-+
-+	errno = errno_save;
++	if (k5_mutex_lock(&labeled_mutex) == 0) {
++		ctx = push_fscreatecon(path, S_IFDIR);
++		ret = mkdir(path, mode);
++		errno_save = errno;
++		pop_fscreatecon(ctx);
++		k5_mutex_unlock(&labeled_mutex);
++		errno = errno_save;
++	} else {
++		ret = mkdir(path, mode);
++	}
 +	return ret;
 +}
 +
@@ -780,18 +800,26 @@ diff -up /dev/null krb5-1.7/src/util/support/selinux.c
 +	}
 +
 +	k5_once(&labeled_once, label_mutex_init);
-+	k5_mutex_lock(&labeled_mutex);
-+	ctx = push_fscreatecon(path, 0);
++	if (k5_mutex_lock(&labeled_mutex) == 0) {
++		ctx = push_fscreatecon(path, 0);
 +
-+	va_start(ap, flags);
-+	mode = va_arg(ap, mode_t);
-+	fd = open(path, flags, mode);
-+	va_end(ap);
++		va_start(ap, flags);
++		mode = va_arg(ap, mode_t);
++		fd = open(path, flags, mode);
++		va_end(ap);
 +
-+	errno_save = errno;
-+
-+	pop_fscreatecon(ctx);
-+	k5_mutex_unlock(&labeled_mutex);
++		errno_save = errno;
++		pop_fscreatecon(ctx);
++		k5_mutex_unlock(&labeled_mutex);
++		errno = errno_save;
++	} else {
++		va_start(ap, flags);
++		mode = va_arg(ap, mode_t);
++		fd = open(path, flags, mode);
++		errno_save = errno;
++		va_end(ap);
++		errno = errno_save;
++	}
 +	return fd;
 +}
 +
