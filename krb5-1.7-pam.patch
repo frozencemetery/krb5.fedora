@@ -37,7 +37,7 @@ the earlier, non-PAM behavior by setting "use_pam" to false in the [ksu]
 section of /etc/krb5.conf.
 
 When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
-Updated version of patch filed as RT#5939.
+RT#5939.
 
 diff -up krb5-1.7/src/aclocal.m4 krb5-1.7/src/aclocal.m4
 --- krb5-1.7/src/aclocal.m4	2009-02-18 19:38:17.000000000 -0500

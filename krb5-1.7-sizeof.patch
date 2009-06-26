@@ -1,4 +1,4 @@
-Surely "buf[strlen(buf)] = '\0'" doesn't do what we intend.  RT#TBD
+Surely "buf[strlen(buf)] = '\0'" doesn't do what we intend.  RT#6521
 
 diff -up krb5-1.7/src/appl/gssftp/ftp/ftp.c krb5-1.7/src/appl/gssftp/ftp/ftp.c
 --- krb5-1.7/src/appl/gssftp/ftp/ftp.c	2009-06-22 16:03:48.000000000 -0400

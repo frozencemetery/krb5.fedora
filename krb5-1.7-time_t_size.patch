@@ -1,4 +1,4 @@
-Handle ut_tv not always being a struct timeval.  RT#TBD
+Handle ut_tv not always being a struct timeval.  RT#6520
 
 Index: krb5/src/appl/libpty/update_utmp.c
 ===================================================================
