@@ -1,7 +1,7 @@
 Change the absolute paths included in the man pages so that the correct
 values can be dropped in by config.status.  After applying this patch,
 these files should be renamed to their ".in" counterparts, and then the
-configure script should be rebuilt.
+configure scripts should be rebuilt.
     appl/bsd/klogind.M
     appl/bsd/kshd.M
     appl/bsd/login.M
@@ -45,10 +45,10 @@ configure script should be rebuilt.
     util/send-pr/send-pr.1
 Index: configure.in
 ===================================================================
---- configure.in	(revision 19589)
+--- configure.in	(revision 22424)
 +++ configure.in	(working copy)
-@@ -986,6 +986,69 @@
- KRB5_WITH_PAM
+@@ -1043,6 +1043,59 @@
+ AC_CONFIG_SUBDIRS(appl/libpty appl/bsd appl/gssftp appl/telnet)
  
  AC_CONFIG_FILES(krb5-config, [chmod +x krb5-config])
 +
@@ -71,18 +71,8 @@ Index: configure.in
 +AC_SUBST(manlocalstatedir)
 +AC_SUBST(manlibexecdir)
 +AC_OUTPUT([
-+	appl/bsd/klogind.M
-+	appl/bsd/kshd.M
-+	appl/bsd/login.M
-+	appl/bsd/rcp.M
-+	appl/bsd/rlogin.M
-+	appl/bsd/rsh.M
-+	appl/gssftp/ftpd/ftpd.M
-+	appl/gssftp/ftp/ftp.M
 +	appl/sample/sclient/sclient.M
 +	appl/sample/sserver/sserver.M
-+	appl/telnet/telnetd/telnetd.8
-+	appl/telnet/telnet/telnet.1
 +	clients/kcpytkt/kcpytkt.M
 +	clients/kdeltkt/kdeltkt.M
 +	clients/kdestroy/kdestroy.M
@@ -119,7 +109,7 @@ Index: configure.in
  	util util/support util/profile util/send-pr
 Index: appl/sample/sserver/sserver.M
 ===================================================================
---- appl/sample/sserver/sserver.M	(revision 19589)
+--- appl/sample/sserver/sserver.M	(revision 22424)
 +++ appl/sample/sserver/sserver.M	(working copy)
 @@ -59,7 +59,7 @@
  using a line in
@@ -130,9 +120,42 @@ Index: appl/sample/sserver/sserver.M
  .PP
  Since \fBsample\fP is normally not a port defined in /etc/services, you will
  usually have to add a line to /etc/services which looks like this:
+Index: appl/gssftp/configure.in
+===================================================================
+--- appl/gssftp/configure.in	(revision 22424)
++++ appl/gssftp/configure.in	(working copy)
+@@ -65,4 +65,28 @@
+ dnl
+ dnl
+ KRB5_BUILD_PROGRAM
++
++mansysconfdir=$sysconfdir
++mansysconfdir=`eval echo $mansysconfdir | sed -e "s,NONE,$prefix,g"`
++mansysconfdir=`eval echo $mansysconfdir | sed -e "s,NONE,$ac_default_prefix,g"`
++mansbindir=$sbindir
++mansbindir=`eval echo $mansbindir | sed -e "s,NONE,$exec_prefix,g"`
++mansbindir=`eval echo $mansbindir | sed -e "s,NONE,$prefix,g"`
++mansbindir=`eval echo $mansbindir | sed -e "s,NONE,$ac_default_prefix,g"`
++manlocalstatedir=$localstatedir
++manlocalstatedir=`eval echo $manlocalstatedir | sed -e "s,NONE,$prefix,g"`
++manlocalstatedir=`eval echo $manlocalstatedir | sed -e "s,NONE,$ac_default_prefix,g"`
++manlibexecdir=$libexecdir
++manlibexecdir=`eval echo $manlibexecdir | sed -e "s,NONE,$exec_prefix,g"`
++manlibexecdir=`eval echo $manlibexecdir | sed -e "s,NONE,$prefix,g"`
++manlibexecdir=`eval echo $manlibexecdir | sed -e "s,NONE,$ac_default_prefix,g"`
++AC_SUBST(mansysconfdir)
++AC_SUBST(mansbindir)
++AC_SUBST(manlocalstatedir)
++AC_SUBST(manlibexecdir)
++AC_OUTPUT([
++	ftpd/ftpd.M
++	ftp/ftp.M
++])
++
+ V5_AC_OUTPUT_MAKEFILE(. ftp ftpd)
 Index: appl/bsd/klogind.M
 ===================================================================
---- appl/bsd/klogind.M	(revision 19589)
+--- appl/bsd/klogind.M	(revision 22424)
 +++ appl/bsd/klogind.M	(working copy)
 @@ -27,7 +27,7 @@
  the port indicated in /etc/inetd.conf.  A typical /etc/inetd.conf
@@ -145,7 +168,7 @@ Index: appl/bsd/klogind.M
  
 Index: appl/bsd/kshd.M
 ===================================================================
---- appl/bsd/kshd.M	(revision 19589)
+--- appl/bsd/kshd.M	(revision 22424)
 +++ appl/bsd/kshd.M	(working copy)
 @@ -8,7 +8,7 @@
  .SH NAME
@@ -165,9 +188,46 @@ Index: appl/bsd/kshd.M
  
  When a service request is received, the following protocol is initiated:
  
+Index: appl/bsd/configure.in
+===================================================================
+--- appl/bsd/configure.in	(revision 22424)
++++ appl/bsd/configure.in	(working copy)
+@@ -156,4 +156,32 @@
+ 
+ KRB5_AC_LIBUTIL
+ KRB5_BUILD_PROGRAM
++
++mansysconfdir=$sysconfdir
++mansysconfdir=`eval echo $mansysconfdir | sed -e "s,NONE,$prefix,g"`
++mansysconfdir=`eval echo $mansysconfdir | sed -e "s,NONE,$ac_default_prefix,g"`
++mansbindir=$sbindir
++mansbindir=`eval echo $mansbindir | sed -e "s,NONE,$exec_prefix,g"`
++mansbindir=`eval echo $mansbindir | sed -e "s,NONE,$prefix,g"`
++mansbindir=`eval echo $mansbindir | sed -e "s,NONE,$ac_default_prefix,g"`
++manlocalstatedir=$localstatedir
++manlocalstatedir=`eval echo $manlocalstatedir | sed -e "s,NONE,$prefix,g"`
++manlocalstatedir=`eval echo $manlocalstatedir | sed -e "s,NONE,$ac_default_prefix,g"`
++manlibexecdir=$libexecdir
++manlibexecdir=`eval echo $manlibexecdir | sed -e "s,NONE,$exec_prefix,g"`
++manlibexecdir=`eval echo $manlibexecdir | sed -e "s,NONE,$prefix,g"`
++manlibexecdir=`eval echo $manlibexecdir | sed -e "s,NONE,$ac_default_prefix,g"`
++AC_SUBST(mansysconfdir)
++AC_SUBST(mansbindir)
++AC_SUBST(manlocalstatedir)
++AC_SUBST(manlibexecdir)
++AC_OUTPUT([
++	klogind.M
++	kshd.M
++	login.M
++	rcp.M
++	rlogin.M
++	rsh.M
++])
++
+ V5_AC_OUTPUT_MAKEFILE
 Index: appl/telnet/telnetd/telnetd.8
 ===================================================================
---- appl/telnet/telnetd/telnetd.8	(revision 19589)
+--- appl/telnet/telnetd/telnetd.8	(revision 22424)
 +++ appl/telnet/telnetd/telnetd.8	(working copy)
 @@ -37,7 +37,7 @@
  .SM DARPA TELNET
@@ -178,11 +238,44 @@ Index: appl/telnet/telnetd/telnetd.8
  [\fB\-a\fP \fIauthmode\fP] [\fB\-B\fP] [\fB\-D\fP] [\fIdebugmode\fP]
  [\fB\-e\fP] [\fB\-h\fP] [\fB\-I\fP\fIinitid\fP] [\fB\-l\fP]
  [\fB\-k\fP] [\fB\-n\fP] [\fB\-r\fP\fIlowpty-highpty\fP] [\fB\-s\fP]
+Index: appl/telnet/configure.in
+===================================================================
+--- appl/telnet/configure.in	(revision 22424)
++++ appl/telnet/configure.in	(working copy)
+@@ -161,4 +161,28 @@
+ LIBS="$old_LIBS"
+ dnl
+ KRB5_AC_LIBUTIL
++
++mansysconfdir=$sysconfdir
++mansysconfdir=`eval echo $mansysconfdir | sed -e "s,NONE,$prefix,g"`
++mansysconfdir=`eval echo $mansysconfdir | sed -e "s,NONE,$ac_default_prefix,g"`
++mansbindir=$sbindir
++mansbindir=`eval echo $mansbindir | sed -e "s,NONE,$exec_prefix,g"`
++mansbindir=`eval echo $mansbindir | sed -e "s,NONE,$prefix,g"`
++mansbindir=`eval echo $mansbindir | sed -e "s,NONE,$ac_default_prefix,g"`
++manlocalstatedir=$localstatedir
++manlocalstatedir=`eval echo $manlocalstatedir | sed -e "s,NONE,$prefix,g"`
++manlocalstatedir=`eval echo $manlocalstatedir | sed -e "s,NONE,$ac_default_prefix,g"`
++manlibexecdir=$libexecdir
++manlibexecdir=`eval echo $manlibexecdir | sed -e "s,NONE,$exec_prefix,g"`
++manlibexecdir=`eval echo $manlibexecdir | sed -e "s,NONE,$prefix,g"`
++manlibexecdir=`eval echo $manlibexecdir | sed -e "s,NONE,$ac_default_prefix,g"`
++AC_SUBST(mansysconfdir)
++AC_SUBST(mansbindir)
++AC_SUBST(manlocalstatedir)
++AC_SUBST(manlibexecdir)
++AC_OUTPUT([
++	telnetd/telnetd.8
++	telnet/telnet.1
++])
++
+ V5_AC_OUTPUT_MAKEFILE(. libtelnet telnet telnetd)
 Index: kadmin/cli/kadmin.M
 ===================================================================
---- kadmin/cli/kadmin.M	(revision 19589)
+--- kadmin/cli/kadmin.M	(revision 22424)
 +++ kadmin/cli/kadmin.M	(working copy)
-@@ -826,9 +826,9 @@
+@@ -850,9 +850,9 @@
  .RS
  .TP
  EXAMPLE:
@@ -194,7 +287,7 @@ Index: kadmin/cli/kadmin.M
  kadmin:
  .RE
  .fi
-@@ -870,7 +870,7 @@
+@@ -894,7 +894,7 @@
  .SH HISTORY
  The
  .B kadmin
@@ -205,7 +298,7 @@ Index: kadmin/cli/kadmin.M
  .IR kerberos (1),
 Index: config-files/kdc.conf.M
 ===================================================================
---- config-files/kdc.conf.M	(revision 19589)
+--- config-files/kdc.conf.M	(revision 22424)
 +++ config-files/kdc.conf.M	(working copy)
 @@ -82,14 +82,14 @@
  .B string
@@ -224,7 +317,7 @@ Index: config-files/kdc.conf.M
  
  .IP database_name
  This
-@@ -239,7 +239,7 @@
+@@ -257,7 +257,7 @@
  realm names and the [capaths] section of its krb5.conf file
  
  .SH FILES 
@@ -235,7 +328,7 @@ Index: config-files/kdc.conf.M
  krb5.conf(5), krb5kdc(8)
 Index: slave/kprop.M
 ===================================================================
---- slave/kprop.M	(revision 19589)
+--- slave/kprop.M	(revision 22424)
 +++ slave/kprop.M	(working copy)
 @@ -39,7 +39,7 @@
  This is done by transmitting the dumped database file to the slave
@@ -257,9 +350,9 @@ Index: slave/kprop.M
  specifies the port to use to contact the
 Index: slave/kpropd.M
 ===================================================================
---- slave/kpropd.M	(revision 19589)
+--- slave/kpropd.M	(revision 22424)
 +++ slave/kpropd.M	(working copy)
-@@ -69,7 +69,7 @@
+@@ -74,7 +74,7 @@
  This is done by adding a line to the inetd.conf file which looks like
  this:
  
@@ -268,7 +361,7 @@ Index: slave/kpropd.M
  
  However, kpropd can also run as a standalone deamon, if the
  .B \-S
-@@ -87,13 +87,13 @@
+@@ -111,13 +111,13 @@
  \fB\-f\fP \fIfile\fP
  specifies the filename where the dumped principal database file is to be
  stored; by default the dumped database file is KPROPD_DEFAULT_FILE
@@ -284,7 +377,7 @@ Index: slave/kpropd.M
  .TP
  .B \-S
  turn on standalone mode.  Normally, kpropd is invoked out of
-@@ -124,14 +124,14 @@
+@@ -148,14 +148,14 @@
  allows the user to specify the path to the
  kpropd.acl
  file; by default the path used is KPROPD_ACL_FILE
