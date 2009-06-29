@@ -72,7 +72,7 @@ diff -up krb5-1.7/src/aclocal.m4 krb5-1.7/src/aclocal.m4
 +               fi
 +       fi
 +       if test "$withselinux" != no ; then
-+               AC_MSG_RESULT([Using SELinux.])
++               AC_MSG_NOTICE([building with SELinux labeling support])
 +               AC_DEFINE(USE_SELINUX,1,[Define if Kerberos-aware tools should set SELinux file contexts when creating files.])
 +               SELINUX_LIBS="$LIBS"
 +		EXTRA_SUPPORT_SYMS="$EXTRA_SUPPORT_SYMS krb5int_labeled_open krb5int_labeled_fopen"
@@ -110,7 +110,7 @@ diff -up krb5-1.7/src/appl/telnet/configure.in krb5-1.7/src/appl/telnet/configur
  if test $krb5_cv_sys_setpgrp_two = yes; then
    AC_DEFINE(SETPGRP_TWOARG,1,[Define if setpgrp takes two arguments])
  fi
-+KRB5_USE_SELINUX
++KRB5_WITH_SELINUX
  dnl
  KRB5_NEED_PROTO([#include <stdlib.h>],unsetenv,1)
  dnl KRB5_NEED_PROTO([#include <stdlib.h>],setenv,1)
