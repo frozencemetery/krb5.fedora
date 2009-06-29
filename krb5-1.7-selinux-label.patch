@@ -1,5 +1,5 @@
-SELinux bases access to files mainly on the domain of the requesting
-process and the context applied to the file.
+SELinux bases access to files on the domain of the requesting process,
+the operation being performed, and the context applied to the file.
 
 In many cases, applications needn't be SELinux aware to work properly,
 because SELinux can apply a default label to a file based on the label
@@ -14,9 +14,22 @@ directory.
 
 To give the file the correct label, we can either force a "restorecon"
 call to fix a file's label after it's created, or create the file with
-the right label, as we do here.  We lean on THREEPARAMOPEN and define a
-similar macro named WRITABLEFOPEN with which we replace several uses of
-fopen().
+the right label, as we attempt to do here.  We lean on THREEPARAMOPEN
+and define a similar macro named WRITABLEFOPEN with which we replace
+several uses of fopen().
+
+The file creation context that we're manipulating here is a process-wide
+attribute.  While for the most part, applications which need to label
+files when they're created have tended to be single-threaded, there's
+not much we can do to avoid interfering with an application that
+manipulates the creation context directly.  Right now we're mediating
+access using a library-local mutex, but that can only work for consumers
+that are part of this package -- an unsuspecting application will still
+stomp all over us.
+
+The selabel APIs for looking up the context should be thread-safe (per
+Red Hat #273081), so switching to using them instead of matchpathcon(),
+which we used earlier, is some improvement.
 
 diff -up krb5-1.7/src/aclocal.m4 krb5-1.7/src/aclocal.m4
 --- krb5-1.7/src/aclocal.m4	2009-06-04 13:47:20.000000000 -0400
