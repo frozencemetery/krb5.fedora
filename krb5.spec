@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -84,7 +84,8 @@ License: MIT
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: autoconf, bison, e2fsprogs-devel >= 1.35, flex, gawk
+BuildRequires: autoconf, bison, flex, gawk
+BuildRequires: libcom_err-devel, libss-devel
 BuildRequires: gzip, ncurses-devel, rsh, texinfo, texinfo-tex, tar
 BuildRequires: tetex-latex
 BuildRequires: keyutils-libs-devel
@@ -106,7 +107,7 @@ practice of cleartext passwords.
 %package devel
 Summary: Development files needed to compile Kerberos 5 programs
 Group: Development/Libraries
-Requires: %{name}-libs = %{version}-%{release}, e2fsprogs-devel
+Requires: %{name}-libs = %{version}-%{release}, libcom_err-devel
 Requires: keyutils-libs-devel, libselinux-devel
 
 %description devel
@@ -207,6 +208,11 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Jun 29 2009 Nalin Dahyabhai <nalin@redhat.com> 1.7-3
+- switch buildrequires: and requires: on e2fsprogs-devel into
+  buildrequires: and requires: on libss-devel, libcom_err-devel, per
+  sandeen on fedora-devel-list
+
 * Fri Jun 26 2009 Nalin Dahyabhai <nalin@redhat.com>
 - fix a type mismatch in krb5_copy_error_message()
 - ftp: fix some odd use of strlen()
@@ -1534,7 +1540,7 @@ make %{?_smp_mflags}
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 
 # Shell scripts wrappers for Kerberized rsh and rlogin.
-mkdir -p $RPM_BUILD_ROOT%{krb5prefix}/bin
+mkdir -p $RPM_BUILD_ROOT%{krb5prefix}/{bin,man/man{1,5,8},sbin,share}
 install -m 755 $RPM_SOURCE_DIR/{krsh,krlogin} $RPM_BUILD_ROOT/%{krb5prefix}/bin/
 
 # Info docs.
