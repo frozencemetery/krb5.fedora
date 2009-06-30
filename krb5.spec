@@ -235,6 +235,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Jun 30 2009 Nalin Dahyabhai <nalin@redhat.com>
+- pam_rhosts_auth.so's been gone, use pam_rhosts.so instead
+
 * Mon Jun  8 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-22
 - put %%{krb5prefix}/sbin in everyone's path, too (#504525)
 
