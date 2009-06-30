@@ -234,6 +234,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Jun 30 2009 Nalin Dahyabhai <nalin@redhat.com>
+- pam_rhosts_auth.so's been gone, use pam_rhosts.so instead
+
 * Tue Apr  7 2009 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-16
 - add patches for read overflow and null pointer dereference in the
   implementation of the SPNEGO mechanism (CVE-2009-0844, CVE-2009-0845)
