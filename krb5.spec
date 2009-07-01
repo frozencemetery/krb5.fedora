@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -49,12 +49,10 @@ Patch5: krb5-1.3-ksu-access.patch
 Patch6: krb5-1.5-ksu-path.patch
 Patch11: krb5-1.2.1-passive.patch
 Patch12: krb5-1.7-ktany.patch
-Patch13: krb5-1.3-large-file.patch
 Patch14: krb5-1.3-ftp-glob.patch
 Patch16: krb5-1.7-buildconf.patch
 Patch23: krb5-1.3.1-dns.patch
 Patch26: krb5-1.3.2-efence.patch
-Patch27: krb5-1.7-rcp-sendlarge.patch
 Patch29: krb5-1.7-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch33: krb5-1.7-io.patch
@@ -79,6 +77,7 @@ Patch79: krb5-trunk-ftp_mget_case.patch
 Patch86: krb5-1.7-time_t_size.patch
 Patch87: krb5-1.7-errs.patch
 Patch88: krb5-1.7-sizeof.patch
+Patch89: krb5-1.7-largefile.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -208,6 +207,14 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Jun 30 2009 Nalin Dahyabhai <nalin@redhat.com> 1.7-4
+- try to merge and clean up all the large file support for ftp and rcp
+  - ftpd no longer prints a negative length when sending a large file
+    from a 32-bit host
+
+* Tue Jun 30 2009 Nalin Dahyabhai <nalin@redhat.com>
+- pam_rhosts_auth.so's been gone, use pam_rhosts.so instead
+
 * Mon Jun 29 2009 Nalin Dahyabhai <nalin@redhat.com> 1.7-3
 - switch buildrequires: and requires: on e2fsprogs-devel into
   buildrequires: and requires: on libss-devel, libcom_err-devel, per
@@ -1410,13 +1417,11 @@ popd
 %patch6  -p1 -b .ksu-path
 %patch11 -p1 -b .passive
 %patch12 -p1 -b .ktany
-%patch13 -p1 -b .large-file
 %patch14 -p1 -b .ftp-glob
 %patch16 -p1 -b .buildconf
 %patch23 -p1 -b .dns
 # Removes a malloc(0) case, nothing more.
 # %patch26 -p1 -b .efence
-%patch27 -p1 -b .rcp-sendlarge
 %patch29 -p1 -b .kprop-mktemp
 %patch30 -p1 -b .send-pr-tempfile
 %patch33 -p1 -b .io
@@ -1438,6 +1443,7 @@ popd
 %patch86 -p1 -b .time_t_size
 %patch87 -p1 -b .errs
 %patch88 -p1 -b .sizeof
+%patch89 -p1 -b .largefile
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -1490,11 +1496,6 @@ done
 %build
 cd src
 INCLUDES=-I%{_includedir}/et
-# Get LFS support on systems that need it which aren't already 64-bit.
-%ifarch %{ix86} s390 ppc sparcv9
-DEFINES="-D_FILE_OFFSET_BITS=64" ; export DEFINES
-%endif
-
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
 CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC -fno-strict-aliasing`"
 CPPFLAGS="`echo $DEFINES $INCLUDES`"
