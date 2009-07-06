@@ -208,6 +208,8 @@ certificate.
 
 %changelog
 * Mon Jul  6 2009 Nalin Dahyabhai <nalin@redhat.com>
+- simplify the man pages patch by only preprocessing the files we care about
+  and moving shared configure.in logic into a shared function
 - catch the case of ftpd printing file sizes using %i, when they might be
   bigger than an int now
 
