@@ -207,6 +207,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Jul  6 2009 Nalin Dahyabhai <nalin@redhat.com>
+- catch the case of ftpd printing file sizes using %i, when they might be
+  bigger than an int now
+
 * Tue Jun 30 2009 Nalin Dahyabhai <nalin@redhat.com> 1.7-4
 - try to merge and clean up all the large file support for ftp and rcp
   - ftpd no longer prints a negative length when sending a large file
