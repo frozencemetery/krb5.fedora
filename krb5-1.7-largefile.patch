@@ -7,7 +7,7 @@
 * Check for fseeko(), which takes an off_t, and if we find it, use it
   instead of fseek(), which takes a long and might not handle the full
   range of values.
-RT#TBD
+RT#6524
 Index: krb5/src/appl/gssftp/configure.in
 ===================================================================
 --- krb5/src/appl/gssftp/configure.in	(revision 22425)
