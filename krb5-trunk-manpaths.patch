@@ -1,7 +1,7 @@
 Change the absolute paths included in the man pages so that the correct
 values can be dropped in by config.status.  After applying this patch,
 these files should be renamed to their ".in" counterparts, and then the
-configure scripts should be rebuilt.  RT#TBD
+configure scripts should be rebuilt.  RT#6525
 
 Index: configure.in
 ===================================================================
