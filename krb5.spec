@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 6%{?dist}
+Release: 7%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -78,6 +78,7 @@ Patch86: krb5-1.7-time_t_size.patch
 Patch87: krb5-1.7-errs.patch
 Patch88: krb5-1.7-sizeof.patch
 Patch89: krb5-1.7-largefile.patch
+Patch90: krb5-1.7-openssl-1.0.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -207,11 +208,17 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Aug 24 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-7
+- work around a compile problem with new openssl
+
 * Fri Aug 21 2009 Tomas Mraz <tmraz@redhat.com> - 1.7-6
 - rebuilt with new openssl
 
 * Fri Jul 24 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.7-5
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_12_Mass_Rebuild
+
+* Tue Jul  7 2009 Nalin Dahyabhai <nalin@redhat.com> 1.7-5
+- rebuild to pick up the current forms of various patches
 
 * Mon Jul  6 2009 Nalin Dahyabhai <nalin@redhat.com>
 - simplify the man pages patch by only preprocessing the files we care about
@@ -1456,6 +1463,7 @@ popd
 %patch87 -p1 -b .errs
 %patch88 -p1 -b .sizeof
 %patch89 -p1 -b .largefile
+%patch90 -p0 -b .openssl-1.0
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
