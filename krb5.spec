@@ -208,6 +208,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Sep  8 2009 Nalin Dahyabhai <nalin@redhat.com>
+- if the init script fails to start krb5kdc/kadmind/kpropd because it's already
+  running (according to status()), return 0 (part of #521772)
+
 * Mon Aug 24 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-7
 - work around a compile problem with new openssl
 

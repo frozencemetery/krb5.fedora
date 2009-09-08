@@ -41,6 +41,11 @@ start() {
 	daemon ${krb5kdc} ${KRB5REALM:+-r ${KRB5REALM}} $KRB5KDC_ARGS
 	RETVAL=$?
 	echo
+	if test $RETVAL -ne 0 ; then
+	    if status ${krb5kdc} > /dev/null ; then
+		RETVAL=0
+	    fi
+	fi
 	[ $RETVAL = 0 ] && touch /var/lock/subsys/krb5kdc
 }
 stop() {
