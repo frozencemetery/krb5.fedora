@@ -38,6 +38,11 @@ start() {
 	daemon ${kpropd} -S
 	RETVAL=$?
 	echo
+	if test $RETVAL -ne 0 ; then
+	    if status ${kpropd} > /dev/null ; then
+		RETVAL=0
+	    fi
+	fi
 	[ $RETVAL = 0 ] && touch /var/lock/subsys/kprop
 }
 stop() {
