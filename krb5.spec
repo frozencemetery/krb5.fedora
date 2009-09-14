@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 7%{?dist}
+Release: 8%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -130,6 +130,8 @@ Group: System Environment/Daemons
 Summary: The KDC and related programs for Kerberos 5
 Requires: %{name}-libs = %{version}-%{release}
 Requires(post): /sbin/install-info, chkconfig
+# we need 'status -l' to work, and that option was added in 8.99
+Requires: initscripts >= 8.99-1
 Requires(preun): /sbin/install-info, chkconfig, initscripts
 Requires(postun): initscripts
 # mktemp is used by krb5-send-pr
@@ -208,6 +210,11 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Sep 14 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-8
+- specify the location of the subsystem lock when using the status() function
+  in the kadmind and kpropd init scripts, so that we get the right error when
+  we're dead but have a lock file - requires initscripts 8.99 (#521772)
+
 * Tue Sep  8 2009 Nalin Dahyabhai <nalin@redhat.com>
 - if the init script fails to start krb5kdc/kadmind/kpropd because it's already
   running (according to status()), return 0 (part of #521772)
