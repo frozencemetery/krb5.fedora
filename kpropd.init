@@ -39,7 +39,7 @@ start() {
 	RETVAL=$?
 	echo
 	if test $RETVAL -ne 0 ; then
-	    if status ${kpropd} > /dev/null ; then
+	    if status -l kprop ${kpropd} > /dev/null ; then
 		RETVAL=0
 	    fi
 	fi
@@ -67,7 +67,7 @@ case "$1" in
 	start
 	;;
   status)
-	status ${kpropd}
+	status -l kprop ${kpropd}
 	retval=$?
 	;;
   condrestart)
