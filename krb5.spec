@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 8%{?dist}
+Release: 9%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -210,6 +210,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Oct 13 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-9
+- don't forget the README
+
 * Mon Sep 14 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-8
 - specify the location of the subsystem lock when using the status() function
   in the kadmind and kpropd init scripts, so that we get the right error when
@@ -1940,6 +1943,7 @@ exit 0
 
 %files libs
 %defattr(-,root,root)
+%doc README
 %docdir %{krb5prefix}/man
 %verify(not md5 size mtime) %config(noreplace) /etc/krb5.conf
 %dir %{krb5prefix}
