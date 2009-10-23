@@ -85,7 +85,9 @@ URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, bison, flex, gawk
+%if 0%{?fedora} >= 12
 BuildRequires: libcom_err-devel, libss-devel
+%endif
 BuildRequires: gzip, ncurses-devel, rsh, texinfo, texinfo-tex, tar
 BuildRequires: tetex-latex
 BuildRequires: keyutils-libs-devel
@@ -107,7 +109,10 @@ practice of cleartext passwords.
 %package devel
 Summary: Development files needed to compile Kerberos 5 programs
 Group: Development/Libraries
-Requires: %{name}-libs = %{version}-%{release}, libcom_err-devel
+Requires: %{name}-libs = %{version}-%{release}
+%if 0%{?fedora} >= 12
+Requires: libcom_err-devel
+%endif
 Requires: keyutils-libs-devel, libselinux-devel
 
 %description devel
@@ -210,7 +215,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
-* Tue Oct 13 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-9
+* Fri Oct 23 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-9
+- add some conditional logic to simplify building on older Fedora releases
+
+* Tue Oct 13 2009 Nalin Dahyabhai <nalin@redhat.com>
 - don't forget the README
 
 * Mon Sep 14 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-8
@@ -1537,7 +1545,11 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	CC="%{__cc}" \
 	CFLAGS="$CFLAGS" \
 	CPPFLAGS="$CPPFLAGS" \
+%if 0%{?fedora} >= 7
 	SS_LIB="-lss -ltinfo" \
+%else
+	SS_LIB="-lss -lncurses" \
+%endif
 	--enable-shared \
 	--bindir=%{krb5prefix}/bin \
 	--mandir=%{krb5prefix}/man \
