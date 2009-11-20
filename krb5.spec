@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 9%{?dist}
+Release: 10%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -210,6 +210,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Fri Nov 20 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-10
+- move /etc/pam.d/ksu from krb5-workstation-servers to krb5-workstation,
+  where it's actually needed (#538703)
+
 * Tue Oct 13 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-9
 - don't forget the README
 
@@ -1769,6 +1773,7 @@ exit 0
 # Doesn't really fit anywhere else.
 %attr(4755,root,root) %{krb5prefix}/bin/ksu
 %{krb5prefix}/man/man1/ksu.1*
+%config(noreplace) /etc/pam.d/ksu
 
 # Problem-reporting tool.
 %{krb5prefix}/sbin/krb5-send-pr
@@ -1827,7 +1832,9 @@ exit 0
 %{krb5prefix}/man/man1/rcp.1*
 
 %config(noreplace) /etc/xinetd.d/*
-%config(noreplace) /etc/pam.d/*
+%config(noreplace) /etc/pam.d/kshell
+%config(noreplace) /etc/pam.d/ekshell
+%config(noreplace) /etc/pam.d/gssftp
 
 # Login is used by telnetd and klogind.
 %{krb5prefix}/sbin/login.krb5
