@@ -1092,45 +1092,61 @@ diff -up krb5-1.7/src/clients/ksu/main.c krb5-1.7/src/clients/ksu/main.c
  #include "ksu.h"
  #include "adm_proto.h"
  #include <sys/types.h>
-@@ -32,6 +33,11 @@
+@@ -32,6 +33,10 @@
  #include <signal.h>
  #include <grp.h>
  
 +#ifdef USE_PAM
 +#include "../../appl/bsd/pam.h"
-+int force_fork = 0;
 +#endif
 +
  /* globals */
  char * prog_name;
  int auth_debug =0;     
-@@ -791,7 +797,24 @@ main (argc, argv)
+@@ -39,6 +44,7 @@
+ char k5users_path[MAXPATHLEN];
+ char * gb_err = NULL;
+ int quiet = 0;
++int force_fork = 0;
+ /***********/
+ 
+ #define _DEF_CSH "/bin/csh" 
+@@ -585,6 +591,25 @@
+ 	       prog_name,target_user,client_name,
+ 	       source_user,ontty());
+ 	
++#ifdef USE_PAM
++	if (appl_pam_enabled(ksu_context, "ksu")) {
++	    if (appl_pam_acct_mgmt(KSU_PAM_SERVICE, 1, target_user, NULL,
++				   NULL, source_user,
++				   ttyname(STDERR_FILENO)) != 0) {
++		fprintf(stderr, "Access denied for %s.\n", target_user);
++		sweep_up(ksu_context, cc_target);
++		exit(1);
++	    }
++	    if (appl_pam_requires_chauthtok()) {
++		fprintf(stderr, "Password change required for %s.\n",
++			target_user);
++		sweep_up(ksu_context, cc_target);
++		exit(1);
++	    }
++	    force_fork++;
++	}
++#endif
++
+ 	/* Run authorization as target.*/
+ 	if (krb5_seteuid(target_uid)) {
+ 	    com_err(prog_name, errno, "while switching to target for authorization check");
+@@ -791,7 +816,7 @@
  	fprintf(stderr, "program to be execed %s\n",params[0]);
      }
      
 -    if( keep_target_cache ) {
-+#ifdef USE_PAM
-+    if (appl_pam_enabled(ksu_context, "ksu")) {
-+	if (appl_pam_acct_mgmt(KSU_PAM_SERVICE, 1, target_user, NULL,
-+			       NULL, source_user, ttyname(STDERR_FILENO)) != 0) {
-+	    fprintf(stderr, "Access denied for %s.\n", target_user);
-+	    sweep_up(ksu_context, cc_target);
-+	    exit(1);
-+	}
-+	if (appl_pam_requires_chauthtok()) {
-+	    fprintf(stderr, "Password change required for %s.\n", target_user);
-+	    sweep_up(ksu_context, cc_target);
-+	    exit(1);
-+	}
-+	force_fork++;
-+    }
-+#endif
-+
 +    if( keep_target_cache && !force_fork ) {
  	execv(params[0], params);
  	com_err(prog_name, errno, "while trying to execv %s",
  		params[0]);
-@@ -799,6 +822,33 @@ main (argc, argv)
+@@ -799,6 +824,33 @@
  	exit(1);
      }else{
  	statusp = 1;
@@ -1164,7 +1180,7 @@ diff -up krb5-1.7/src/clients/ksu/main.c krb5-1.7/src/clients/ksu/main.c
  	switch ((child_pid = fork())) {
  	default:
  	    if (auth_debug){
-@@ -822,15 +872,34 @@ main (argc, argv)
+@@ -822,15 +874,34 @@
  	    if (ret_pid == -1) {
  	    	com_err(prog_name, errno, "while calling waitpid");
  	    }
