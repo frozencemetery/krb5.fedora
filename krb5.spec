@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 10%{?dist}
+Release: 11%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -215,6 +215,14 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Thu Dec  3 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-11
+- ksu: move account management checks to before we drop privileges, like
+  su does (#540769)
+- selinux: set the user part of file creation contexts to match the current
+  context instead of what we looked up
+- configure with --enable-dns-for-realm instead of --enable-dns, which isn't
+  recognized any more
+
 * Fri Nov 20 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-10
 - move /etc/pam.d/ksu from krb5-workstation-servers to krb5-workstation,
   where it's actually needed (#538703)
@@ -1565,7 +1573,7 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--with-system-ss \
 	--with-netlib=-lresolv \
 	--without-tcl \
-	--enable-dns \
+	--enable-dns-for-realm \
 %if %{WITH_LDAP}
 %if %{WITH_DIRSRV}
 	--with-dirsrv \
