@@ -215,6 +215,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Fri Dec  4 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-12
+- make krb5-config suppress CFLAGS output when called with --libs (#544391)
+
 * Thu Dec  3 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-11
 - ksu: move account management checks to before we drop privileges, like
   su does (#540769)
