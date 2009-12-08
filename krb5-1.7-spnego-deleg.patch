@@ -1,0 +1,61 @@
+Punt a set_cred_option() call down to the mechanism for the first
+credential that we have whose mechanism implements a set_cred_option()
+method.  Not completely sure this is the correct fix, as we may need to
+change gssspi_set_cred_option() to keep going if it gets GSS_S_UNAVAILABLE
+back from the mechanism-specific function (which is what the Kerberos
+mechanism, previously the only provider of a set_cred_option(), returns
+if it doesn't understand the request).
+
+diff -up krb5/src/lib/gssapi/spnego/gssapiP_spnego.h krb5/src/lib/gssapi/spnego/gssapiP_spnego.h
+--- krb5/src/lib/gssapi/spnego/gssapiP_spnego.h	2009-12-08 14:46:57.000000000 -0500
++++ krb5/src/lib/gssapi/spnego/gssapiP_spnego.h	2009-12-08 14:46:20.000000000 -0500
+@@ -333,6 +333,15 @@ spnego_gss_inquire_sec_context_by_oid
+ );
+ 
+ OM_uint32
++spnego_gss_set_cred_option
++(
++	OM_uint32 *minor_status,
++	gss_cred_id_t cred_handle,
++	const gss_OID desired_object,
++	const gss_buffer_t value
++);
++
++OM_uint32
+ spnego_gss_set_sec_context_option
+ (
+ 	OM_uint32 *minor_status,
+diff -up krb5/src/lib/gssapi/spnego/spnego_mech.c krb5/src/lib/gssapi/spnego/spnego_mech.c
+--- krb5/src/lib/gssapi/spnego/spnego_mech.c	2009-12-08 14:47:01.000000000 -0500
++++ krb5/src/lib/gssapi/spnego/spnego_mech.c	2009-12-08 14:46:20.000000000 -0500
+@@ -250,7 +250,7 @@ static struct gss_config spnego_mechanis
+  	spnego_gss_inquire_sec_context_by_oid, /* gss_inquire_sec_context_by_oid */
+  	NULL,				/* gss_inquire_cred_by_oid */
+  	spnego_gss_set_sec_context_option, /* gss_set_sec_context_option */
+- 	NULL,				/* gssspi_set_cred_option */
++ 	spnego_gss_set_cred_option,	/* gssspi_set_cred_option */
+  	NULL,				/* gssspi_mech_invoke */
+ 	spnego_gss_wrap_aead,
+ 	spnego_gss_unwrap_aead,
+@@ -2081,6 +2081,21 @@ spnego_gss_inquire_sec_context_by_oid(
+ }
+ 
+ OM_uint32
++spnego_gss_set_cred_option(
++		OM_uint32 *minor_status,
++		gss_cred_id_t cred_handle,
++		const gss_OID desired_object,
++		const gss_buffer_t value)
++{
++	OM_uint32 ret;
++	ret = gssspi_set_cred_option(minor_status,
++				     cred_handle,
++				     desired_object,
++				     value);
++	return (ret);
++}
++
++OM_uint32
+ spnego_gss_set_sec_context_option(
+ 		OM_uint32 *minor_status,
+ 		gss_ctx_id_t *context_handle,
