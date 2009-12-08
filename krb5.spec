@@ -216,6 +216,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Dec  8 2009 Nalin Dahyabhai <nalin@redhat.com>
+- back that last change out
+
 * Tue Dec  8 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-13
 - try to make gss_krb5_copy_ccache() work correctly for spnego (#542868)
 
@@ -1505,7 +1508,7 @@ popd
 %patch88 -p1 -b .sizeof
 %patch89 -p1 -b .largefile
 %patch90 -p0 -b .openssl-1.0
-%patch91 -p1 -b .spnego-deleg
+#%patch91 -p1 -b .spnego-deleg
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
