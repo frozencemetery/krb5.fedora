@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 11%{?dist}
+Release: 12%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -79,6 +79,7 @@ Patch87: krb5-1.7-errs.patch
 Patch88: krb5-1.7-sizeof.patch
 Patch89: krb5-1.7-largefile.patch
 Patch90: krb5-1.7-openssl-1.0.patch
+Patch91: krb5-1.7-spnego-deleg.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -215,7 +216,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
-* Fri Dec  4 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-12
+* Tue Dec  8 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-13
+- try to make gss_krb5_copy_ccache() work correctly for spnego (#542868)
+
+* Fri Dec  4 2009 Nalin Dahyabhai <nalin@redhat.com>
 - make krb5-config suppress CFLAGS output when called with --libs (#544391)
 
 * Thu Dec  3 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-11
@@ -1501,6 +1505,7 @@ popd
 %patch88 -p1 -b .sizeof
 %patch89 -p1 -b .largefile
 %patch90 -p0 -b .openssl-1.0
+%patch91 -p1 -b .spnego-deleg
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
