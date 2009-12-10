@@ -216,6 +216,11 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Thu Dec 10 2009 Nalin Dahyabhai <nalin@redhat.com>
+- move man pages that live in the -libs subpackage into the regular
+  %%{_mandir} tree where they'll still be found if that package is the
+  only one %installed (#529319)
+
 * Wed Dec  9 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-13
 - and put it back in
 
@@ -1690,6 +1695,13 @@ for library in libgssapi_krb5 libgssrpc libk5crypto libkrb5 libkrb5support ; do
 	popd
 done
 
+# Move man pages which will be in the -libs subpackage into %%{_mandir}'s tree.
+for man in man1/tmac.doc man1/kerberos.1 man5/.k5login.5 man5/krb5.conf.5 ; do
+	mkdir -p $RPM_BUILD_ROOT/%{_mandir}/${man%%/*}
+	mv $RPM_BUILD_ROOT/%{krb5prefix}/man/${man} \
+	   $RPM_BUILD_ROOT/%{_mandir}/${man%%/*}/
+done
+
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 
@@ -1987,14 +1999,10 @@ exit 0
 %doc README
 %docdir %{krb5prefix}/man
 %verify(not md5 size mtime) %config(noreplace) /etc/krb5.conf
-%dir %{krb5prefix}
-%dir %{krb5prefix}/man
-%dir %{krb5prefix}/man/man1
-%dir %{krb5prefix}/man/man5
-%{krb5prefix}/man/man1/tmac.doc*
-%{krb5prefix}/man/man1/kerberos.1*
-%{krb5prefix}/man/man5/.k5login.5*
-%{krb5prefix}/man/man5/krb5.conf.5*
+/%{_mandir}/man1/tmac.doc*
+/%{_mandir}/man1/kerberos.1*
+/%{_mandir}/man5/.k5login.5*
+/%{_mandir}/man5/krb5.conf.5*
 /%{_lib}/libgssapi_krb5.so.*
 /%{_lib}/libgssrpc.so.*
 /%{_lib}/libk5crypto.so.*
