@@ -4,7 +4,7 @@ method.  Not completely sure this is the correct fix, as we may need to
 change gssspi_set_cred_option() to keep going if it gets GSS_S_UNAVAILABLE
 back from the mechanism-specific function (which is what the Kerberos
 mechanism, previously the only provider of a set_cred_option(), returns
-if it doesn't understand the request).
+if it doesn't understand the request). RT#6594
 
 diff -up krb5/src/lib/gssapi/spnego/gssapiP_spnego.h krb5/src/lib/gssapi/spnego/gssapiP_spnego.h
 --- krb5/src/lib/gssapi/spnego/gssapiP_spnego.h	2009-12-08 14:46:57.000000000 -0500
