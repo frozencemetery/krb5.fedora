@@ -222,7 +222,7 @@ certificate.
 * Thu Dec 10 2009 Nalin Dahyabhai <nalin@redhat.com>
 - move man pages that live in the -libs subpackage into the regular
   %%{_mandir} tree where they'll still be found if that package is the
-  only one %installed (#529319)
+  only one installed (#529319)
 
 * Wed Dec  9 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-13
 - and put it back in
