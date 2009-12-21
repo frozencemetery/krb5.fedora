@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 13%{?dist}
+Release: 14%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -216,6 +216,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Dec 21 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-14
+- refresh patch for #542868 from trunk
+
 * Thu Dec 10 2009 Nalin Dahyabhai <nalin@redhat.com>
 - move man pages that live in the -libs subpackage into the regular
   %%{_mandir} tree where they'll still be found if that package is the
@@ -1516,7 +1519,7 @@ popd
 %patch88 -p1 -b .sizeof
 %patch89 -p1 -b .largefile
 %patch90 -p0 -b .openssl-1.0
-%patch91 -p1 -b .spnego-deleg
+%patch91 -p0 -b .spnego-deleg
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
