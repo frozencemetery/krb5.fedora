@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 10%{?dist}
+Release: 14%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -79,13 +79,16 @@ Patch87: krb5-1.7-errs.patch
 Patch88: krb5-1.7-sizeof.patch
 Patch89: krb5-1.7-largefile.patch
 Patch90: krb5-1.7-openssl-1.0.patch
+Patch91: krb5-1.7-spnego-deleg.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, bison, flex, gawk
+%if 0%{?fedora} >= 12
 BuildRequires: libcom_err-devel, libss-devel
+%endif
 BuildRequires: gzip, ncurses-devel, rsh, texinfo, texinfo-tex, tar
 BuildRequires: tetex-latex
 BuildRequires: keyutils-libs-devel
@@ -107,7 +110,10 @@ practice of cleartext passwords.
 %package devel
 Summary: Development files needed to compile Kerberos 5 programs
 Group: Development/Libraries
-Requires: %{name}-libs = %{version}-%{release}, libcom_err-devel
+Requires: %{name}-libs = %{version}-%{release}
+%if 0%{?fedora} >= 12
+Requires: libcom_err-devel
+%endif
 Requires: keyutils-libs-devel, libselinux-devel
 
 %description devel
@@ -210,11 +216,42 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Dec 21 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-14
+- refresh patch for #542868 from trunk
+
+* Thu Dec 10 2009 Nalin Dahyabhai <nalin@redhat.com>
+- move man pages that live in the -libs subpackage into the regular
+  %%{_mandir} tree where they'll still be found if that package is the
+  only one installed (#529319)
+
+* Wed Dec  9 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-13
+- and put it back in
+
+* Tue Dec  8 2009 Nalin Dahyabhai <nalin@redhat.com>
+- back that last change out
+
+* Tue Dec  8 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-12
+- try to make gss_krb5_copy_ccache() work correctly for spnego (#542868)
+
+* Fri Dec  4 2009 Nalin Dahyabhai <nalin@redhat.com>
+- make krb5-config suppress CFLAGS output when called with --libs (#544391)
+
+* Thu Dec  3 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-11
+- ksu: move account management checks to before we drop privileges, like
+  su does (#540769)
+- selinux: set the user part of file creation contexts to match the current
+  context instead of what we looked up
+- configure with --enable-dns-for-realm instead of --enable-dns, which isn't
+  recognized any more
+
 * Fri Nov 20 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-10
 - move /etc/pam.d/ksu from krb5-workstation-servers to krb5-workstation,
   where it's actually needed (#538703)
 
-* Tue Oct 13 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-9
+* Fri Oct 23 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-9
+- add some conditional logic to simplify building on older Fedora releases
+
+* Tue Oct 13 2009 Nalin Dahyabhai <nalin@redhat.com>
 - don't forget the README
 
 * Mon Sep 14 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-8
@@ -1482,6 +1519,7 @@ popd
 %patch88 -p1 -b .sizeof
 %patch89 -p1 -b .largefile
 %patch90 -p0 -b .openssl-1.0
+%patch91 -p0 -b .spnego-deleg
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -1541,7 +1579,11 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	CC="%{__cc}" \
 	CFLAGS="$CFLAGS" \
 	CPPFLAGS="$CPPFLAGS" \
+%if 0%{?fedora} >= 7
 	SS_LIB="-lss -ltinfo" \
+%else
+	SS_LIB="-lss -lncurses" \
+%endif
 	--enable-shared \
 	--bindir=%{krb5prefix}/bin \
 	--mandir=%{krb5prefix}/man \
@@ -1553,7 +1595,7 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--with-system-ss \
 	--with-netlib=-lresolv \
 	--without-tcl \
-	--enable-dns \
+	--enable-dns-for-realm \
 %if %{WITH_LDAP}
 %if %{WITH_DIRSRV}
 	--with-dirsrv \
@@ -1654,6 +1696,13 @@ for library in libgssapi_krb5 libgssrpc libk5crypto libkrb5 libkrb5support ; do
 	pushd $RPM_BUILD_ROOT/%{_libdir}
 	ln -fs ${rellibdir}/%{_lib}/${library}.so.*.* ${library}.so
 	popd
+done
+
+# Move man pages which will be in the -libs subpackage into %%{_mandir}'s tree.
+for man in man1/tmac.doc man1/kerberos.1 man5/.k5login.5 man5/krb5.conf.5 ; do
+	mkdir -p $RPM_BUILD_ROOT/%{_mandir}/${man%%/*}
+	mv $RPM_BUILD_ROOT/%{krb5prefix}/man/${man} \
+	   $RPM_BUILD_ROOT/%{_mandir}/${man%%/*}/
 done
 
 %clean
@@ -1953,14 +2002,10 @@ exit 0
 %doc README
 %docdir %{krb5prefix}/man
 %verify(not md5 size mtime) %config(noreplace) /etc/krb5.conf
-%dir %{krb5prefix}
-%dir %{krb5prefix}/man
-%dir %{krb5prefix}/man/man1
-%dir %{krb5prefix}/man/man5
-%{krb5prefix}/man/man1/tmac.doc*
-%{krb5prefix}/man/man1/kerberos.1*
-%{krb5prefix}/man/man5/.k5login.5*
-%{krb5prefix}/man/man5/krb5.conf.5*
+/%{_mandir}/man1/tmac.doc*
+/%{_mandir}/man1/kerberos.1*
+/%{_mandir}/man5/.k5login.5*
+/%{_mandir}/man5/krb5.conf.5*
 /%{_lib}/libgssapi_krb5.so.*
 /%{_lib}/libgssrpc.so.*
 /%{_lib}/libk5crypto.so.*

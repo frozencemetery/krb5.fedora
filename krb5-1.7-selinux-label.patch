@@ -42,7 +42,7 @@ diff -up krb5-1.7/src/aclocal.m4 krb5-1.7/src/aclocal.m4
  KRB5_LIB_PARAMS
  KRB5_AC_INITFINI
  KRB5_AC_ENABLE_THREADS
-@@ -1876,3 +1877,51 @@ AC_SUBST(PAM_LIBS)
+@@ -1876,3 +1877,53 @@ AC_SUBST(PAM_LIBS)
  AC_SUBST(manlibexecdir)
  AC_CONFIG_FILES($1)
  ])
@@ -56,7 +56,7 @@ diff -up krb5-1.7/src/aclocal.m4 krb5-1.7/src/aclocal.m4
 +if test "$withselinux" != no ; then
 +       AC_MSG_RESULT([checking for libselinux...])
 +       SELINUX_LIBS=
-+       AC_CHECK_HEADERS(selinux/selinux.h)
++       AC_CHECK_HEADERS(selinux/selinux.h selinux/label.h)
 +       if test "x$ac_cv_header_selinux_selinux_h" != xyes ; then
 +               if test "$withselinux" = auto ; then
 +                       AC_MSG_RESULT([Unable to locate selinux/selinux.h.])
@@ -68,11 +68,13 @@ diff -up krb5-1.7/src/aclocal.m4 krb5-1.7/src/aclocal.m4
 +
 +       LIBS=
 +       unset ac_cv_func_setfscreatecon
-+       AC_CHECK_FUNCS(setfscreatecon)
++       AC_CHECK_FUNCS(setfscreatecon selabel_open)
 +       if test "x$ac_cv_func_setfscreatecon" = xno ; then
 +               AC_CHECK_LIB(selinux,setfscreatecon)
++               AC_CHECK_LIB(selinux,selabel_open)
 +               unset ac_cv_func_setfscreatecon
-+               AC_CHECK_FUNCS(setfscreatecon)
++               unset ac_cv_func_selabel_open
++               AC_CHECK_FUNCS(setfscreatecon selabel_open)
 +               if test "x$ac_cv_func_setfscreatecon" = xyes ; then
 +                       SELINUX_LIBS="$LIBS"
 +               else
@@ -162,17 +164,20 @@ diff -up krb5-1.7/src/configure.in krb5-1.7/src/configure.in
 diff -up krb5-1.7/src/include/autoconf.h.in krb5-1.7/src/include/autoconf.h.in
 --- krb5-1.7/src/include/autoconf.h.in	2009-06-01 20:58:35.000000000 -0400
 +++ krb5-1.7/src/include/autoconf.h.in	2009-06-04 13:47:20.000000000 -0400
-@@ -389,6 +389,9 @@
+@@ -389,6 +389,12 @@
  /* Define to 1 if you have the `sched_yield' function. */
  #undef HAVE_SCHED_YIELD
  
++/* Define to 1 if you have the <selinux/label.h> header file. */
++#undef HAVE_SELINUX_LABEL_H
++
 +/* Define to 1 if you have the <selinux/selinux.h> header file. */
 +#undef HAVE_SELINUX_SELINUX_H
 +
  /* Define to 1 if you have the <semaphore.h> header file. */
  #undef HAVE_SEMAPHORE_H
  
-@@ -401,6 +404,9 @@
+@@ -401,6 +407,9 @@
  /* Define to 1 if you have the `setegid' function. */
  #undef HAVE_SETEGID
  
@@ -182,7 +187,7 @@ diff -up krb5-1.7/src/include/autoconf.h.in krb5-1.7/src/include/autoconf.h.in
  /* Define to 1 if you have the `setenv' function. */
  #undef HAVE_SETENV
  
-@@ -768,6 +774,10 @@
+@@ -768,6 +777,10 @@
  /* Define if the KDC should use a replay cache */
  #undef USE_RCACHE
  
@@ -536,7 +541,7 @@ diff -up krb5-1.7/src/util/support/Makefile.in krb5-1.7/src/util/support/Makefil
 diff -up /dev/null krb5-1.7/src/util/support/selinux.c
 --- /dev/null	2009-06-04 10:34:55.169007373 -0400
 +++ krb5-1.7/src/util/support/selinux.c	2009-06-04 13:47:20.000000000 -0400
-@@ -0,0 +1,300 @@
+@@ -0,0 +1,346 @@
 +/*
 + * Copyright 2007,2008,2009 Red Hat, Inc.  All Rights Reserved.
 + *
@@ -588,7 +593,10 @@ diff -up /dev/null krb5-1.7/src/util/support/selinux.c
 +#include <string.h>
 +#include <unistd.h>
 +#include <selinux/selinux.h>
++#include <selinux/context.h>
++#ifdef HAVE_SELINUX_LABEL_H
 +#include <selinux/label.h>
++#endif
 +
 +/* #define DEBUG 1 */
 +
@@ -606,9 +614,12 @@ diff -up /dev/null krb5-1.7/src/util/support/selinux.c
 +static security_context_t
 +push_fscreatecon(const char *pathname, mode_t mode)
 +{
-+	security_context_t previous, next;
++	security_context_t previous, configuredsc, currentsc, derivedsc;
++	context_t current, derived;
++	const char *fullpath, *currentuser;
++#ifdef HAVE_SELINUX_LABEL_H
 +	struct selabel_handle *ctx;
-+	const char *fullpath;
++#endif
 +
 +	previous = NULL;
 +	if (is_selinux_enabled()) {
@@ -641,16 +652,17 @@ diff -up /dev/null krb5-1.7/src/util/support/selinux.c
 +			} else {
 +				fullpath = pathname;
 +			}
-+			next = NULL;
 +#ifdef DEBUG
 +			if (isatty(fileno(stderr))) {
 +				fprintf(stderr, "Looking up context for "
 +					"\"%s\"(%05o).\n", fullpath, mode);
 +			}
 +#endif
++			configuredsc = NULL;
++#ifdef HAVE_SELINUX_LABEL_H
 +			ctx = selabel_open(SELABEL_CTX_FILE, NULL, 0);
 +			if (ctx != NULL) {
-+				if (selabel_lookup(ctx, &next,
++				if (selabel_lookup(ctx, &configuredsc,
 +						   fullpath, mode) != 0) {
 +					selabel_close(ctx);
 +					free(genpath);
@@ -661,21 +673,60 @@ diff -up /dev/null krb5-1.7/src/util/support/selinux.c
 +				}
 +				selabel_close(ctx);
 +			}
-+			free(genpath);
-+#ifdef DEBUG
-+			if (isatty(fileno(stderr))) {
-+				fprintf(stderr, "Setting file creation context "
-+					"to \"%s\".\n", next);
-+			}
-+#endif
-+			if (setfscreatecon(next) != 0) {
-+				freecon(next);
++#else
++			if (matchpathcon(fullpath, mode, &configuredsc) != 0) {
++				free(genpath);
 +				if (previous != NULL) {
 +					freecon(previous);
 +				}
 +				return NULL;
 +			}
-+			freecon(next);
++#endif
++			free(genpath);
++			if (configuredsc == NULL) {
++				if (previous != NULL) {
++					freecon(previous);
++				}
++				return NULL;
++			}
++			currentsc = NULL;
++			getcon(&currentsc);
++			if (currentsc != NULL) {
++				derived = context_new(configuredsc);
++				if (derived != NULL) {
++					current = context_new(currentsc);
++					if (current != NULL) {
++						currentuser = context_user_get(current);
++						if (currentuser != NULL) {
++							if (context_user_set(derived,
++									     currentuser) == 0) {
++								derivedsc = context_str(derived);
++								if (derivedsc != NULL) {
++									freecon(configuredsc);
++									configuredsc = strdup(derivedsc);
++								}
++							}
++						}
++						context_free(current);
++					}
++					context_free(derived);
++				}
++				freecon(currentsc);
++			}
++#ifdef DEBUG
++			if (isatty(fileno(stderr))) {
++				fprintf(stderr, "Setting file creation context "
++					"to \"%s\".\n", configured);
++			}
++#endif
++			if (setfscreatecon(configuredsc) != 0) {
++				freecon(configuredsc);
++				if (previous != NULL) {
++					freecon(previous);
++				}
++				return NULL;
++			}
++			freecon(configuredsc);
 +#ifdef DEBUG
 +		} else {
 +			if (isatty(fileno(stderr))) {
