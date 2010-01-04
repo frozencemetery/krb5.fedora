@@ -219,7 +219,7 @@ certificate.
 %changelog
 * Mon Jan  4 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-15
 - add upstream patch for KDC crash during referral processing (CVE-2009-3295),
-  via Tom Yu
+  via Tom Yu (#545002)
 
 * Mon Dec 21 2009 Nalin Dahyabhai <nalin@redhat.com> - 1.7-14
 - refresh patch for #542868 from trunk
