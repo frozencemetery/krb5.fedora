@@ -81,6 +81,7 @@ Patch89: krb5-1.7-largefile.patch
 Patch90: krb5-1.7-openssl-1.0.patch
 Patch91: krb5-1.7-spnego-deleg.patch
 Patch92: http://web.mit.edu/kerberos/advisories/2009-003-patch.txt
+Patch93: krb5-1.7-create_on_load.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -219,6 +220,8 @@ certificate.
 %changelog
 * Tue Jan  5 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-16
 - use %%global instead of %%define
+- pull up proposed patch for creating previously-not-there lock files for
+  kdb databases when 'kdb5_util' is called to 'load' (#551764)
 
 * Mon Jan  4 2010 Dennis Gregorovic <dgregor@redhat.com>
 - fix conditional for future RHEL
@@ -1532,6 +1535,7 @@ popd
 %patch90 -p0 -b .openssl-1.0
 %patch91 -p0 -b .spnego-deleg
 %patch92 -p1 -b .2009-003
+%patch93 -p1 -b .create_on_load
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
