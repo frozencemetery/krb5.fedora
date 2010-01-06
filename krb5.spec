@@ -220,6 +220,8 @@ certificate.
 %changelog
 * Wed Jan  6 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-17
 - put the conditional back for the -devel subpackage
+- back down to the earlier version of the patch for #551764; the backported
+  alternate version was incomplete
 
 * Tue Jan  5 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-16
 - use %%global instead of %%define
