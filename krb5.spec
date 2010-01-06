@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 16%{?dist}
+Release: 17%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -113,7 +113,7 @@ practice of cleartext passwords.
 Summary: Development files needed to compile Kerberos 5 programs
 Group: Development/Libraries
 Requires: %{name}-libs = %{version}-%{release}
-%if 0%{?fedora} >= 12
+%if 0%{?fedora} >= 12 || 0%{?rhel} >= 6
 Requires: libcom_err-devel
 %endif
 Requires: keyutils-libs-devel, libselinux-devel
@@ -218,6 +218,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Wed Jan  6 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-17
+- put the conditional back for the -devel subpackage
+
 * Tue Jan  5 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-16
 - use %%global instead of %%define
 - pull up proposed patch for creating previously-not-there lock files for
