@@ -1,16 +1,16 @@
-%define WITH_LDAP 1
-%define WITH_OPENSSL 1
-%define WITH_DIRSRV 1
+%global WITH_LDAP 1
+%global WITH_OPENSSL 1
+%global WITH_DIRSRV 1
 
-%define krb5prefix %{_prefix}/kerberos
+%global krb5prefix %{_prefix}/kerberos
 
 # For consistency with regular login.
-%define login_pam_service remote
+%global login_pam_service remote
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 15%{?dist}
+Release: 17%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -81,13 +81,14 @@ Patch89: krb5-1.7-largefile.patch
 Patch90: krb5-1.7-openssl-1.0.patch
 Patch91: krb5-1.7-spnego-deleg.patch
 Patch92: http://web.mit.edu/kerberos/advisories/2009-003-patch.txt
+Patch93: krb5-1.7-create_on_load.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, bison, flex, gawk
-%if 0%{?fedora} >= 12
+%if 0%{?fedora} >= 12 || 0%{?rhel} >= 6
 BuildRequires: libcom_err-devel, libss-devel
 %endif
 BuildRequires: gzip, ncurses-devel, rsh, texinfo, texinfo-tex, tar
@@ -112,7 +113,7 @@ practice of cleartext passwords.
 Summary: Development files needed to compile Kerberos 5 programs
 Group: Development/Libraries
 Requires: %{name}-libs = %{version}-%{release}
-%if 0%{?fedora} >= 12
+%if 0%{?fedora} >= 12 || 0%{?rhel} >= 6
 Requires: libcom_err-devel
 %endif
 Requires: keyutils-libs-devel, libselinux-devel
@@ -217,6 +218,19 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Wed Jan  6 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-17
+- put the conditional back for the -devel subpackage
+- back down to the earlier version of the patch for #551764; the backported
+  alternate version was incomplete
+
+* Tue Jan  5 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-16
+- use %%global instead of %%define
+- pull up proposed patch for creating previously-not-there lock files for
+  kdb databases when 'kdb5_util' is called to 'load' (#551764)
+
+* Mon Jan  4 2010 Dennis Gregorovic <dgregor@redhat.com>
+- fix conditional for future RHEL
+
 * Mon Jan  4 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-15
 - add upstream patch for KDC crash during referral processing (CVE-2009-3295),
   via Tom Yu (#545002)
@@ -1526,6 +1540,7 @@ popd
 %patch90 -p0 -b .openssl-1.0
 %patch91 -p0 -b .spnego-deleg
 %patch92 -p1 -b .2009-003
+%patch93 -p1 -b .create_on_load
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex

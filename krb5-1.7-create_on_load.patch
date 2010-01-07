@@ -1,0 +1,50 @@
+When we are about to rename the database, try to create one first, just in
+case it's already there.  Ignore errors that crop up if there's actually one
+there.  Pulled down from trunk.
+diff -up krb5-1.7/src/plugins/kdb/db2/adb_openclose.c krb5-1.7/src/plugins/kdb/db2/adb_openclose.c
+diff -up krb5-1.7/src/plugins/kdb/db2/kdb_db2.c krb5-1.7/src/plugins/kdb/db2/kdb_db2.c
+--- krb5-1.7/src/plugins/kdb/db2/kdb_db2.c	2010-01-05 18:17:24.000000000 -0500
++++ krb5-1.7/src/plugins/kdb/db2/kdb_db2.c	2010-01-05 18:35:24.000000000 -0500
+@@ -1745,13 +1745,10 @@ krb5_db2_db_rename(context, from, to)
+      * files must exist because krb5_db2_db_lock, called below,
+      * will fail otherwise.
+      */
+-    db = k5db2_dbopen(db_ctx, to, O_RDWR|O_CREAT, 0600, 0);
+-    if (db == NULL) {
+-	retval = errno;
++    retval = krb5_db2_db_create(context, to, 0);
++    if (retval != 0 && retval != EEXIST)
+ 	goto errout;
+-    }
+-    else
+-	(*db->close)(db);
++
+     /*
+      * Set the database to the target, so that other processes sharing
+      * the target will stop their activity, and notice the new database.
+@@ -1764,25 +1761,6 @@ krb5_db2_db_rename(context, from, to)
+     if (retval)
+ 	goto errout;
+ 
+-    {
+-	/* Ugly brute force hack.
+-
+-	   Should be going through nice friendly helper routines for
+-	   this, but it's a mess of jumbled so-called interfaces right
+-	   now.  */
+-	char    policy[2048], new_policy[2048];
+-	assert (strlen(db_ctx->db_name) < 2000);
+-	snprintf(policy, sizeof(policy), "%s.kadm5", db_ctx->db_name);
+-	snprintf(new_policy, sizeof(new_policy),
+-		 "%s~.kadm5", db_ctx->db_name);
+-	if (0 != rename(new_policy, policy)) {
+-	    retval = errno;
+-	    goto errout;
+-	}
+-	strlcat(new_policy, ".lock",sizeof(new_policy));
+-	(void) unlink(new_policy);
+-    }
+-
+     db_ctx->db_lf_name = gen_dbsuffix(db_ctx->db_name, KDB2_LOCK_EXT);
+     if (db_ctx->db_lf_name == NULL) {
+ 	retval = ENOMEM;
