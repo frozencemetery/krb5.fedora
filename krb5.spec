@@ -237,7 +237,7 @@ certificate.
 
 %changelog
 * Tue Jan 12 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.6.3-23
-- add upstream patch for KDC crash during AES and RC4 decryption
+- add upstream patch for integer underflow during AES and RC4 decryption
   (CVE-2009-4212), via Tom Yu (#545015)
 
 * Tue Jun 30 2009 Nalin Dahyabhai <nalin@redhat.com>
