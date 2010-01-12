@@ -16,7 +16,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 22%{?dist}
+Release: 23%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -105,6 +105,7 @@ Patch80: krb5-trunk-preauth-master.patch
 Patch82: krb5-CVE-2009-0844-0845-2.patch
 Patch83: krb5-CVE-2009-0846.patch
 Patch84: krb5-CVE-2009-0847.patch
+Patch85: http://web.mit.edu/kerberos/advisories/2009-004-patch_1.6.3.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -235,6 +236,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Jan 12 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.6.3-23
+- add upstream patch for KDC crash during AES and RC4 decryption
+  (CVE-2009-4212), via Tom Yu (#545015)
+
 * Tue Jun 30 2009 Nalin Dahyabhai <nalin@redhat.com>
 - pam_rhosts_auth.so's been gone, use pam_rhosts.so instead
 
@@ -1422,6 +1427,7 @@ popd
 %patch82 -p1 -b .CVE-2009-0844-0845-2
 %patch83 -p1 -b .CVE-2009-0846
 %patch84 -p1 -b .CVE-2009-0847
+%patch85 -p0 -b .2009-004
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
