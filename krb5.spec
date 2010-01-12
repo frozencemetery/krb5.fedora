@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 17%{?dist}
+Release: 18%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -82,6 +82,7 @@ Patch90: krb5-1.7-openssl-1.0.patch
 Patch91: krb5-1.7-spnego-deleg.patch
 Patch92: http://web.mit.edu/kerberos/advisories/2009-003-patch.txt
 Patch93: krb5-1.7-create_on_load.patch
+Patch94: http://web.mit.edu/kerberos/advisories/2009-004-patch_1.7.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -218,6 +219,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Jan 12 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-18
+- add upstream patch for KDC crash during AES and RC4 decryption
+  (CVE-2009-4212), via Tom Yu (#545015)
+
 * Wed Jan  6 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-17
 - put the conditional back for the -devel subpackage
 - back down to the earlier version of the patch for #551764; the backported
@@ -1541,6 +1546,7 @@ popd
 %patch91 -p0 -b .spnego-deleg
 %patch92 -p1 -b .2009-003
 %patch93 -p1 -b .create_on_load
+%patch94 -p0 -b .2009-004
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
