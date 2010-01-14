@@ -9,6 +9,18 @@
 # processname: kpropd
 #
 
+### BEGIN INIT INFO
+# Provides: kprop
+# Required-Start: $local_fs $network
+# Required-Stop: $local_fs $network
+# Should-Start: portreserve
+# Default-Start:
+# Default-Stop: 0 1 2 3 4 5 6
+# Short-Description: start and stop the Kerberos 5 propagation client
+# Description: The kpropd service accepts database updates pushed to it from \
+#              the master KDC.  It will never be needed on a master KDC.
+### END INIT INFO
+
 # Get config.
 . /etc/sysconfig/network
 
@@ -24,6 +36,8 @@ start() {
   	[ -f /var/kerberos/krb5kdc/kpropd.acl ] || exit 6
 	[ -x $kpropd ] || exit 5
 	echo -n $"Starting $prog: "
+	# tell portreserve to release the krb5_prop port
+	[ -x /sbin/portrelease ] && /sbin/portrelease krb5_prop &>/dev/null || :
 	daemon ${kpropd} -S
 	RETVAL=$?
 	echo
@@ -45,7 +59,8 @@ case "$1" in
   stop)
 	stop
 	;;
-  restart)
+  # We don't really "do" reload, so treat it as a restart.
+  restart|reload)
 	stop
 	start
 	;;
