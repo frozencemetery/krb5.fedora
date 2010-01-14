@@ -14,6 +14,7 @@
 # Provides: krb5kdc
 # Required-Start: $local_fs $network
 # Required-Stop: $local_fs $network
+# Should-Start: portreserve
 # Default-Start:
 # Default-Stop: 0 1 2 3 4 5 6
 # Short-Description: start and stop the Kerberos 5 KDC
@@ -38,6 +39,8 @@ krb5kdc=/usr/kerberos/sbin/krb5kdc
 start() {
 	[ -x $krb5kdc ] || exit 5
 	echo -n $"Starting $prog: "
+	# tell portreserve to release the kerberos-iv port
+	[ -x /sbin/portrelease ] && /sbin/portrelease kerberos-iv &>/dev/null || :
 	daemon ${krb5kdc} ${KRB5REALM:+-r ${KRB5REALM}} $KRB5KDC_ARGS
 	RETVAL=$?
 	echo
