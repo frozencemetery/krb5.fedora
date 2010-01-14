@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 18%{?dist}
+Release: 19%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -42,6 +42,7 @@ Source26: gssftp.pamd
 Source27: kshell.pamd
 Source28: ekshell.pamd
 Source29: ksu.pamd
+Source30: krb5.portreserve
 
 Patch3: krb5-1.3-netkit-rsh.patch
 Patch4: krb5-1.3-rlogind-environ.patch
@@ -145,6 +146,8 @@ Requires(preun): /sbin/install-info, chkconfig, initscripts
 Requires(postun): initscripts
 # mktemp is used by krb5-send-pr
 Requires: mktemp
+# portreserve is used by init scripts for kadmind, kpropd, and krb5kdc
+Requires: portreserve
 
 %description server
 Kerberos is a network authentication system. The krb5-server package
@@ -219,6 +222,12 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Thu Jan 14 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-19
+- use portreserve to make sure the KDC can always bind to the kerberos-iv
+  port, kpropd can always bind to the krb5_prop port, and that kadmind can
+  always bind to the kerberos-adm port (#555279)
+- correct inadvertent use of macros in the changelog (rpmlint)
+
 * Tue Jan 12 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-18
 - add upstream patch for integer underflow during AES and RC4 decryption
   (CVE-2009-4212), via Tom Yu (#545015)
@@ -302,7 +311,7 @@ certificate.
 * Mon Jul  6 2009 Nalin Dahyabhai <nalin@redhat.com>
 - simplify the man pages patch by only preprocessing the files we care about
   and moving shared configure.in logic into a shared function
-- catch the case of ftpd printing file sizes using %i, when they might be
+- catch the case of ftpd printing file sizes using %%i, when they might be
   bigger than an int now
 
 * Tue Jun 30 2009 Nalin Dahyabhai <nalin@redhat.com> 1.7-4
@@ -1682,6 +1691,8 @@ install -pm 755 $RPM_SOURCE_DIR/kpropd.init $RPM_BUILD_ROOT/etc/rc.d/init.d/kpro
 mkdir -p $RPM_BUILD_ROOT/etc/sysconfig
 install -pm 644 $RPM_SOURCE_DIR/krb5kdc.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/krb5kdc
 install -pm 644 $RPM_SOURCE_DIR/kadmin.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/kadmin
+mkdir -p $RPM_BUILD_ROOT/etc/portreserve
+install -pm 644 $RPM_SOURCE_DIR/krb5.portreserve $RPM_BUILD_ROOT/etc/portreserve/krb5
 
 # Xinetd configuration files.
 mkdir -p $RPM_BUILD_ROOT/etc/xinetd.d/
@@ -1950,6 +1961,7 @@ exit 0
 /etc/rc.d/init.d/kprop
 %config(noreplace) /etc/sysconfig/krb5kdc
 %config(noreplace) /etc/sysconfig/kadmin
+%config(noreplace) /etc/portreserve/krb5
 
 %doc doc/admin*.ps.gz
 %doc doc/install*.ps.gz

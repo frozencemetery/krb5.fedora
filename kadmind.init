@@ -15,6 +15,7 @@
 # Provides: kadmin
 # Required-Start: $local_fs $network
 # Required-Stop: $local_fs $network
+# Should-Start: portreserve
 # Default-Start:
 # Default-Stop: 0 1 2 3 4 5 6
 # Short-Description: start and stop the Kerberos 5 admin server
@@ -53,6 +54,8 @@ start() {
 	    [ -x $kadmind ] || exit 5
 	fi
 	echo -n $"Starting $prog: "
+	# tell portreserve to release the kerberos-adm port
+	[ -x /sbin/portrelease ] && /sbin/portrelease kerberos-adm &>/dev/null || :
 	daemon ${kadmind} ${KRB5REALM:+-r ${KRB5REALM}} $KADMIND_ARGS
 	RETVAL=$?
 	echo
