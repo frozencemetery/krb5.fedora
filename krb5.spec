@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 19%{?dist}
+Release: 20%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -84,6 +84,7 @@ Patch91: krb5-1.7-spnego-deleg.patch
 Patch92: http://web.mit.edu/kerberos/advisories/2009-003-patch.txt
 Patch93: krb5-1.7-create_on_load.patch
 Patch94: http://web.mit.edu/kerberos/advisories/2009-004-patch_1.7.txt
+Patch95: krb5-1.7-opte.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -222,6 +223,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Fri Jan 15 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-20
+- krb5_get_init_creds_password: check opte->flags instead of options->flags
+  when checking whether or not we get to use the prompter callback (#555875)
+
 * Thu Jan 14 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-19
 - use portreserve to make sure the KDC can always bind to the kerberos-iv
   port, kpropd can always bind to the krb5_prop port, and that kadmind can
@@ -1556,6 +1561,7 @@ popd
 %patch92 -p1 -b .2009-003
 %patch93 -p1 -b .create_on_load
 %patch94 -p0 -b .2009-004
+%patch95 -p1 -b .opte
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
