@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 20%{?dist}
+Release: 21%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -85,6 +85,7 @@ Patch92: http://web.mit.edu/kerberos/advisories/2009-003-patch.txt
 Patch93: krb5-1.7-create_on_load.patch
 Patch94: http://web.mit.edu/kerberos/advisories/2009-004-patch_1.7.txt
 Patch95: krb5-1.7-opte.patch
+Patch96: krb5-1.7-exp_warn.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -223,6 +224,12 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Jan 18 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-21
+- suppress warnings of impending password expiration if expiration is more than
+  seven days away when the KDC reports it via the last-req field, just as we
+  already do when it reports expiration via the key-expiration field (#556495)
+- link with libtinfo rather than libncurses, when we can, in future RHEL
+
 * Fri Jan 15 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-20
 - krb5_get_init_creds_password: check opte->flags instead of options->flags
   when checking whether or not we get to use the prompter callback (#555875)
@@ -1562,6 +1569,7 @@ popd
 %patch93 -p1 -b .create_on_load
 %patch94 -p0 -b .2009-004
 %patch95 -p1 -b .opte
+%patch96 -p1 -b .exp_warn
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -1621,7 +1629,7 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	CC="%{__cc}" \
 	CFLAGS="$CFLAGS" \
 	CPPFLAGS="$CPPFLAGS" \
-%if 0%{?fedora} >= 7
+%if 0%{?fedora} >= 7 || 0%{?rhel} >= 6
 	SS_LIB="-lss -ltinfo" \
 %else
 	SS_LIB="-lss -lncurses" \
