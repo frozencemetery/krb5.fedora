@@ -16,7 +16,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 24%{?dist}
+Release: 25%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -50,7 +50,9 @@ Source25: krb5-trunk-manpaths.txt
 Source26: gssftp.pamd
 Source27: kshell.pamd
 Source28: ekshell.pamd
-Source29: krb5.portreserve
+Source29: kerberos-iv.portreserve
+Source30: kerberos-adm.portreserve
+Source31: krb5_prop.portreserve
 
 Patch3: krb5-1.3-netkit-rsh.patch
 Patch4: krb5-1.3-rlogind-environ.patch
@@ -239,6 +241,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Fri Jan 22 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.6.3-25
+- use portreserve correctly -- portrelease takes the basename of the file
+  whose entries should be released, so we need three files, not one
+
 * Thu Jan 14 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.6.3-24
 - use portreserve to make sure the KDC can always bind to the kerberos-iv
   port, kpropd can always bind to the krb5_prop port, and that kadmind can
@@ -1585,7 +1591,9 @@ install -pm 644 $RPM_SOURCE_DIR/krb5kdc.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/
 install -pm 644 $RPM_SOURCE_DIR/kadmin.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/kadmin
 install -pm 644 $RPM_SOURCE_DIR/krb524.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/krb524
 mkdir -p $RPM_BUILD_ROOT/etc/portreserve
-install -pm 644 $RPM_SOURCE_DIR/krb5.portreserve $RPM_BUILD_ROOT/etc/portreserve/krb5
+install -pm 644 $RPM_SOURCE_DIR/kerberos-iv.portreserve $RPM_BUILD_ROOT/etc/portreserve/kerberos-iv
+install -pm 644 $RPM_SOURCE_DIR/kerberos-adm.portreserve $RPM_BUILD_ROOT/etc/portreserve/kerberos-adm
+install -pm 644 $RPM_SOURCE_DIR/krb5_prop.portreserve $RPM_BUILD_ROOT/etc/portreserve/krb5_prop
 
 # Xinetd configuration files.
 mkdir -p $RPM_BUILD_ROOT/etc/xinetd.d/
@@ -1848,7 +1856,9 @@ exit 0
 %config(noreplace) /etc/sysconfig/krb5kdc
 %config(noreplace) /etc/sysconfig/kadmin
 %config(noreplace) /etc/sysconfig/krb524
-%config(noreplace) /etc/portreserve/krb5
+%config(noreplace) /etc/portreserve/kerberos-iv
+%config(noreplace) /etc/portreserve/kerberos-adm
+%config(noreplace) /etc/portreserve/krb5_prop
 
 %doc doc/admin*.ps.gz
 %doc doc/krb425*.ps.gz
