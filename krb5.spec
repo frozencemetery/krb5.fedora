@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7
-Release: 22%{?dist}
+Release: 23%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -226,6 +226,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Jan 25 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-23
+- tighten up default permissions on kdc.conf and kadm5.acl (#558343)
+
 * Fri Jan 22 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-22
 - use portreserve correctly -- portrelease takes the basename of the file
   whose entries should be released, so we need three files, not one
@@ -1690,8 +1693,8 @@ gzip $RPM_BUILD_ROOT%{_infodir}/*.info*
 
 # Sample KDC config files.
 mkdir -p $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc
-install -pm 644 $RPM_SOURCE_DIR/kdc.conf  $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc/
-install -pm 644 $RPM_SOURCE_DIR/kadm5.acl $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc/
+install -pm 600 $RPM_SOURCE_DIR/kdc.conf  $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc/
+install -pm 600 $RPM_SOURCE_DIR/kadm5.acl $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc/
 
 # Login-time scriptlets to fix the PATH variable.
 mkdir -p $RPM_BUILD_ROOT/etc/profile.d
