@@ -9,10 +9,10 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.7
-Release: 20%{?dist}
+Version: 1.7.1
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -78,14 +78,12 @@ Patch72: krb5-1.6.3-ftp_fdleak.patch
 Patch73: krb5-1.6.3-ftp_glob_runique.patch
 Patch79: krb5-trunk-ftp_mget_case.patch
 Patch86: krb5-1.7-time_t_size.patch
-Patch87: krb5-1.7-errs.patch
 Patch88: krb5-1.7-sizeof.patch
 Patch89: krb5-1.7-largefile.patch
 Patch90: krb5-1.7-openssl-1.0.patch
-Patch91: krb5-1.7-spnego-deleg.patch
-Patch92: http://web.mit.edu/kerberos/advisories/2009-003-patch.txt
 Patch93: krb5-1.7-create_on_load.patch
-Patch94: http://web.mit.edu/kerberos/advisories/2009-004-patch_1.7.txt
+Patch95: krb5-1.7-opte.patch
+Patch96: krb5-1.7-exp_warn.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -224,9 +222,33 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
-* Fri Jan 22 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-20
+* Wed Feb  3 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7.1-1
+- update to 1.7.1
+  - don't trip AD lockout on wrong password (#542687, #554351)
+  - incorporates fixes for CVE-2009-4212 and CVE-2009-3295
+  - fixes gss_krb5_copy_ccache() when SPNEGO is used
+- move sim_client/sim_server, gss-client/gss-server, uuclient/uuserver to
+  the devel subpackage, better lining up with the expected krb5/krb5-appl
+  split in 1.8
+- drop kvno,kadmin,k5srvutil,ktutil from -workstation-servers, as it already
+  depends on -workstation which also includes them
+
+* Mon Jan 25 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-23
+- tighten up default permissions on kdc.conf and kadm5.acl (#558343)
+
+* Fri Jan 22 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-22
 - use portreserve correctly -- portrelease takes the basename of the file
   whose entries should be released, so we need three files, not one
+
+* Mon Jan 18 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-21
+- suppress warnings of impending password expiration if expiration is more than
+  seven days away when the KDC reports it via the last-req field, just as we
+  already do when it reports expiration via the key-expiration field (#556495)
+- link with libtinfo rather than libncurses, when we can, in future RHEL
+
+* Fri Jan 15 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-20
+- krb5_get_init_creds_password: check opte->flags instead of options->flags
+  when checking whether or not we get to use the prompter callback (#555875)
 
 * Thu Jan 14 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7-19
 - use portreserve to make sure the KDC can always bind to the kerberos-iv
@@ -1554,14 +1576,12 @@ popd
 %patch73 -p1 -b .ftp_glob_runique
 %patch79 -p0 -b .ftp_mget_case
 %patch86 -p1 -b .time_t_size
-%patch87 -p1 -b .errs
 %patch88 -p1 -b .sizeof
 %patch89 -p1 -b .largefile
 %patch90 -p0 -b .openssl-1.0
-%patch91 -p0 -b .spnego-deleg
-%patch92 -p1 -b .2009-003
 %patch93 -p1 -b .create_on_load
-%patch94 -p0 -b .2009-004
+%patch95 -p1 -b .opte
+%patch96 -p1 -b .exp_warn
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -1621,7 +1641,7 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	CC="%{__cc}" \
 	CFLAGS="$CFLAGS" \
 	CPPFLAGS="$CPPFLAGS" \
-%if 0%{?fedora} >= 7
+%if 0%{?fedora} >= 7 || 0%{?rhel} >= 6
 	SS_LIB="-lss -ltinfo" \
 %else
 	SS_LIB="-lss -lncurses" \
@@ -1676,8 +1696,8 @@ gzip $RPM_BUILD_ROOT%{_infodir}/*.info*
 
 # Sample KDC config files.
 mkdir -p $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc
-install -pm 644 $RPM_SOURCE_DIR/kdc.conf  $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc/
-install -pm 644 $RPM_SOURCE_DIR/kadm5.acl $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc/
+install -pm 600 $RPM_SOURCE_DIR/kdc.conf  $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc/
+install -pm 600 $RPM_SOURCE_DIR/kadm5.acl $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc/
 
 # Login-time scriptlets to fix the PATH variable.
 mkdir -p $RPM_BUILD_ROOT/etc/profile.d
@@ -1902,11 +1922,6 @@ exit 0
 %{krb5prefix}/bin/telnet
 %{krb5prefix}/man/man1/telnet.1*
 
-# Protocol test clients.
-%{krb5prefix}/bin/sim_client
-%{krb5prefix}/bin/gss-client
-%{krb5prefix}/bin/uuclient
-
 %files workstation-servers
 %defattr(-,root,root)
 %docdir %{krb5prefix}/man
@@ -1935,16 +1950,6 @@ exit 0
 %{krb5prefix}/sbin/login.krb5
 %{krb5prefix}/man/man8/login.krb5.8*
 
-# Tools you're likely to need if you're running these app servers.
-%{krb5prefix}/bin/kvno
-%{krb5prefix}/man/man1/kvno.1*
-%{krb5prefix}/bin/kadmin
-%{krb5prefix}/man/man1/kadmin.1*
-%{krb5prefix}/bin/k5srvutil
-%{krb5prefix}/man/man1/k5srvutil.1*
-%{krb5prefix}/bin/ktutil
-%{krb5prefix}/man/man1/ktutil.1*
-
 # Application servers.
 %{krb5prefix}/sbin/ftpd
 %{krb5prefix}/man/man8/ftpd.8*
@@ -1954,11 +1959,6 @@ exit 0
 %{krb5prefix}/man/man8/kshd.8*
 %{krb5prefix}/sbin/telnetd
 %{krb5prefix}/man/man8/telnetd.8*
-
-# Protocol test servers.
-%{krb5prefix}/sbin/sim_server
-%{krb5prefix}/sbin/gss-server
-%{krb5prefix}/sbin/uuserver
 
 %files server
 %defattr(-,root,root)
@@ -2117,3 +2117,13 @@ exit 0
 %{krb5prefix}/man/man1/sclient.1*
 %{krb5prefix}/man/man8/sserver.8*
 %{krb5prefix}/sbin/sserver
+
+# Protocol test clients.
+%{krb5prefix}/bin/sim_client
+%{krb5prefix}/bin/gss-client
+%{krb5prefix}/bin/uuclient
+
+# Protocol test servers.
+%{krb5prefix}/sbin/sim_server
+%{krb5prefix}/sbin/gss-server
+%{krb5prefix}/sbin/uuserver
