@@ -84,7 +84,7 @@ Patch90: krb5-1.7-openssl-1.0.patch
 Patch93: krb5-1.7-create_on_load.patch
 Patch95: krb5-1.7-opte.patch
 Patch96: krb5-1.7-exp_warn.patch
-Patch97: http://web.mit.edu/kerberos/advisories/2010-001-patch.txt.asc
+Patch97: http://web.mit.edu/kerberos/advisories/2010-001-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
