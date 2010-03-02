@@ -16,7 +16,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 25%{?dist}
+Release: 26%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -241,6 +241,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Mar  2 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.6.3-26
+- fix a regression (not labeling a kdb database lock file correctly, #569902)
+
 * Fri Jan 22 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.6.3-25
 - use portreserve correctly -- portrelease takes the basename of the file
   whose entries should be released, so we need three files, not one
