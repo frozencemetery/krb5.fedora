@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7.1
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -224,6 +224,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Mar  2 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7.1-4
+- fix a regression (not labeling a kdb database lock file correctly, #569902)
+
 * Wed Feb 17 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7.1-3
 - pull up the change to make kpasswd's behavior better match the docs
   when there's no ccache (#563431)
