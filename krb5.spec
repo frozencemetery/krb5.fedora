@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7.1
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -850,6 +850,9 @@ exit 0
 %{krb5prefix}/sbin/uuserver
 
 %changelog
+* Tue Mar  2 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7.1-5
+- fix a regression (not labeling a kdb database lock file correctly, #569902)
+
 * Thu Feb 25 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7.1-4
 - move the package changelog to the end to match the usual style (jdennis)
 - scrub out references to $RPM_SOURCE_DIR (jdennis)
