@@ -109,6 +109,7 @@ Patch82: krb5-CVE-2009-0844-0845-2.patch
 Patch83: krb5-CVE-2009-0846.patch
 Patch84: krb5-CVE-2009-0847.patch
 Patch85: http://web.mit.edu/kerberos/advisories/2009-004-patch_1.6.3.txt
+Patch86: krb5-1.7-openssl-1.0.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -243,6 +244,8 @@ certificate.
 %changelog
 * Tue Mar  2 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.6.3-26
 - fix a regression (not labeling a kdb database lock file correctly, #569902)
+- add a workaround to build with OpenSSL 1.0, which changed the signature
+  of EVP_PKEY_decrypt()
 
 * Fri Jan 22 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.6.3-25
 - use portreserve correctly -- portrelease takes the basename of the file
@@ -1447,6 +1450,7 @@ popd
 %patch83 -p1 -b .CVE-2009-0846
 %patch84 -p1 -b .CVE-2009-0847
 %patch85 -p0 -b .2009-004
+%patch86 -p0 -b .openssl-1.0
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
