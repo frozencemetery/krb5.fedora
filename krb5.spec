@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7.1
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -224,6 +224,12 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Wed Mar  3 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7.1-5
+- fix a null pointer dereference and crash introduced in our PAM patch that
+  would happen if ftpd was given the name of a user who wasn't known to the
+  local system, limited to being triggerable by gssapi-authenticated clients by
+  the default xinetd config (Olivier Fourdan, #569472)
+
 * Tue Mar  2 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7.1-4
 - fix a regression (not labeling a kdb database lock file correctly, #569902)
 

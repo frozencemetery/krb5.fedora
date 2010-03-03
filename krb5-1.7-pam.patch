@@ -937,7 +937,7 @@ diff -up krb5-1.7/src/appl/gssftp/ftpd/ftpd.c krb5-1.7/src/appl/gssftp/ftpd/ftpd
 +#ifdef USE_PAM
 +		if (appl_pam_enabled(kcontext, "ftpd")) {
 +			if (appl_pam_acct_mgmt(FTP_PAM_SERVICE, 0,
-+					       pw->pw_name, "",
++					       name, "",
 +					       hostname,
 +					       NULL,
 +					       FTP_PAM_SERVICE) != 0) {
@@ -971,7 +971,7 @@ diff -up krb5-1.7/src/appl/gssftp/ftpd/ftpd.c krb5-1.7/src/appl/gssftp/ftpd/ftpd
 -		if (pw == NULL || (!kpass(pw->pw_name, passwd) &&
 -				   (want_creds || !*pw->pw_passwd ||
 -				    strcmp(xpasswd, pw->pw_passwd)))) {
-+		if ((pw == NULL) ||
++		if ((pw == NULL) || (
 +#ifdef USE_PAM
 +		    appl_pam_enabled(kcontext, "ftpd") ?
 +		    (appl_pam_authenticate(FTP_PAM_SERVICE, 0,
@@ -983,7 +983,7 @@ diff -up krb5-1.7/src/appl/gssftp/ftpd/ftpd.c krb5-1.7/src/appl/gssftp/ftpd/ftpd
 +		    (!kpass(pw->pw_name, passwd) &&
 +		     (want_creds ||
 +		      !*pw->pw_passwd ||
-+		      strcmp(xpasswd, pw->pw_passwd)))) {
++		      strcmp(xpasswd, pw->pw_passwd))))) {
  			pw = NULL;
  			sleep(5);
  			if (++login_attempts >= 3) {
