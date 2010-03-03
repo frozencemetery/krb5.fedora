@@ -7,15 +7,19 @@
 # For consistency with regular login.
 %global login_pam_service remote
 
+# Temporary.
+%global appl_version 1.0
+
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.7.1
-Release: 5%{?dist}
+Version: 1.8
+Release: 0%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
+Source3: krb5-appl-%{appl_version}.tar.gz
 Source4: kadmind.init
 Source5: krb5kdc.init
 Source6: krb5.conf
@@ -224,7 +228,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -a 23
+%setup -q -a 3 -a 23
 ln -s README LICENSE
 pushd src
 %patch60 -p2 -b .pam
@@ -850,6 +854,12 @@ exit 0
 %{krb5prefix}/sbin/uuserver
 
 %changelog
+* Wed Mar  3 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7.1-6
+- fix a null pointer dereference and crash introduced in our PAM patch that
+  would happen if ftpd was given the name of a user who wasn't known to the
+  local system, limited to being triggerable by gssapi-authenticated clients by
+  the default xinetd config (Olivier Fourdan, #569472)
+
 * Tue Mar  2 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7.1-5
 - fix a regression (not labeling a kdb database lock file correctly, #569902)
 
