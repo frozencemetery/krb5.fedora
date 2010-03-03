@@ -832,7 +832,7 @@ When enabled, ftpd, krshd, and login.krb5 gain dependence on libpam.
 +#ifdef USE_PAM
 +		if (appl_pam_enabled(kcontext, "ftpd")) {
 +			if (appl_pam_acct_mgmt(FTP_PAM_SERVICE, 0,
-+					       pw->pw_name, "",
++					       name, "",
 +					       FTP_PAM_SERVICE) != 0) {
 +				reply(530, "Login incorrect.");
 +				return;
@@ -860,7 +860,7 @@ When enabled, ftpd, krshd, and login.krb5 gain dependence on libpam.
 -		if (pw == NULL || (!kpass(pw->pw_name, passwd) &&
 -				   (want_creds || !*pw->pw_passwd ||
 -				    strcmp(xpasswd, pw->pw_passwd)))) {
-+		if ((pw == NULL) ||
++		if ((pw == NULL) || (
 +#ifdef USE_PAM
 +		    appl_pam_enabled(kcontext, "ftpd") ?
 +		    (appl_pam_authenticate(FTP_PAM_SERVICE, 0,
@@ -870,7 +870,7 @@ When enabled, ftpd, krshd, and login.krb5 gain dependence on libpam.
 +		    (!kpass(pw->pw_name, passwd) &&
 +		     (want_creds ||
 +		      !*pw->pw_passwd ||
-+		      strcmp(xpasswd, pw->pw_passwd)))) {
++		      strcmp(xpasswd, pw->pw_passwd))))) {
  			pw = NULL;
  			sleep(5);
  			if (++login_attempts >= 3) {
