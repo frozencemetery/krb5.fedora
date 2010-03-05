@@ -29,7 +29,7 @@
 
 RETVAL=0
 prog="Kerberos 5 Propagation Server"
-kpropd=/usr/kerberos/sbin/kpropd
+kpropd=/usr/sbin/kpropd
 
 # Shell functions to cut down on useless shell instances.
 start() {

@@ -2,10 +2,10 @@ Change to the user's directory after dropping privileges, in case it is only
 accessible to the user (for example, if it's in NFS with root squashing).
 Incomplete - we probably need to do the same for rshd and ftpd.
 
-diff -up krb5/src/appl/bsd/login.c krb5/src/appl/bsd/login.c
---- krb5/src/appl/bsd/login.c	2007-07-11 13:50:34.000000000 -0400
-+++ krb5/src/appl/bsd/login.c	2007-07-11 13:50:36.000000000 -0400
-@@ -1497,13 +1497,8 @@ int main(argc, argv)
+diff -up krb5-appl-1.0/bsd/login.c.login_chdir krb5-appl-1.0/bsd/login.c
+--- krb5-appl-1.0/bsd/login.c.login_chdir	2010-03-05 11:01:23.000000000 -0500
++++ krb5-appl-1.0/bsd/login.c	2010-03-05 11:01:23.000000000 -0500
+@@ -1115,13 +1115,8 @@ int main(argc, argv)
      }
  #endif /* USE_PAM */
  
@@ -20,8 +20,8 @@ diff -up krb5/src/appl/bsd/login.c krb5/src/appl/bsd/login.c
 +	exit(0);
  
      /* nothing else left to fail -- really log in */
-     {
-@@ -1710,6 +1705,14 @@ int main(argc, argv)
+     login_time = time(NULL);
+@@ -1293,6 +1288,14 @@ int main(argc, argv)
  	sleepexit(1);
      }
  

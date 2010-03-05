@@ -31,9 +31,9 @@ The selabel APIs for looking up the context should be thread-safe (per
 Red Hat #273081), so switching to using them instead of matchpathcon(),
 which we used earlier, is some improvement.
 
-diff -up krb5-1.7/src/aclocal.m4 krb5-1.7/src/aclocal.m4
---- krb5-1.7/src/aclocal.m4	2009-06-04 13:47:20.000000000 -0400
-+++ krb5-1.7/src/aclocal.m4	2009-06-04 13:47:20.000000000 -0400
+diff -up krb5-1.8/src/aclocal.m4.selinux-label krb5-1.8/src/aclocal.m4
+--- krb5-1.8/src/aclocal.m4.selinux-label	2010-03-05 10:57:23.000000000 -0500
++++ krb5-1.8/src/aclocal.m4	2010-03-05 10:57:23.000000000 -0500
 @@ -103,6 +103,7 @@ AC_SUBST_FILE(libnodeps_frag)
  dnl
  KRB5_AC_PRAGMA_WEAK_REF
@@ -42,7 +42,7 @@ diff -up krb5-1.7/src/aclocal.m4 krb5-1.7/src/aclocal.m4
  KRB5_LIB_PARAMS
  KRB5_AC_INITFINI
  KRB5_AC_ENABLE_THREADS
-@@ -1876,3 +1877,53 @@ AC_SUBST(PAM_LIBS)
+@@ -1791,3 +1792,53 @@ AC_SUBST(manlocalstatedir)
  AC_SUBST(manlibexecdir)
  AC_CONFIG_FILES($1)
  ])
@@ -96,51 +96,18 @@ diff -up krb5-1.7/src/aclocal.m4 krb5-1.7/src/aclocal.m4
 +LIBS="$old_LIBS"
 +AC_SUBST(SELINUX_LIBS)
 +])dnl
-diff -up krb5-1.7/src/appl/bsd/configure.in krb5-1.7/src/appl/bsd/configure.in
---- krb5-1.7/src/appl/bsd/configure.in	2009-06-04 13:47:20.000000000 -0400
-+++ krb5-1.7/src/appl/bsd/configure.in	2009-06-04 13:47:20.000000000 -0400
-@@ -25,6 +25,7 @@ AC_CHECK_LIB(odm,main,
-       LOGINLIBS="$LOGINLIBS -lodm -ls -lcfg" 
-       )))
- KRB5_WITH_PAM
-+KRB5_WITH_SELINUX
- dnl
- dnl Make our operating system-specific security checks and definitions for
- dnl login.
-diff -up krb5-1.7/src/appl/gssftp/configure.in krb5-1.7/src/appl/gssftp/configure.in
---- krb5-1.7/src/appl/gssftp/configure.in	2009-06-04 13:47:20.000000000 -0400
-+++ krb5-1.7/src/appl/gssftp/configure.in	2009-06-04 13:47:20.000000000 -0400
-@@ -18,6 +18,7 @@ AC_REPLACE_FUNCS(getdtablesize)
- AC_CHECK_FUNCS(getcwd getdtablesize getusershell seteuid setreuid setresuid strerror getenv)
- AC_CHECK_LIB(crypt,crypt) dnl 
- KRB5_WITH_PAM
-+KRB5_WITH_SELINUX
- KRB5_AC_LIBUTIL
- dnl 
- dnl copied from appl/bsd/configure.in
-diff -up krb5-1.7/src/appl/telnet/configure.in krb5-1.7/src/appl/telnet/configure.in
---- krb5-1.7/src/appl/telnet/configure.in	2008-12-15 15:31:53.000000000 -0500
-+++ krb5-1.7/src/appl/telnet/configure.in	2009-06-04 13:47:20.000000000 -0400
-@@ -151,6 +151,7 @@ AC_MSG_RESULT($krb5_cv_sys_setpgrp_two)
- if test $krb5_cv_sys_setpgrp_two = yes; then
-   AC_DEFINE(SETPGRP_TWOARG,1,[Define if setpgrp takes two arguments])
- fi
-+KRB5_WITH_SELINUX
- dnl
- KRB5_NEED_PROTO([#include <stdlib.h>],unsetenv,1)
- dnl KRB5_NEED_PROTO([#include <stdlib.h>],setenv,1)
-diff -up krb5-1.7/src/config/pre.in krb5-1.7/src/config/pre.in
---- krb5-1.7/src/config/pre.in	2009-06-04 13:47:20.000000000 -0400
-+++ krb5-1.7/src/config/pre.in	2009-06-04 13:47:20.000000000 -0400
-@@ -182,6 +182,7 @@ LD_SHLIBDIR_PREFIX = @LD_SHLIBDIR_PREFIX
+diff -up krb5-1.8/src/config/pre.in.selinux-label krb5-1.8/src/config/pre.in
+--- krb5-1.8/src/config/pre.in.selinux-label	2010-03-05 10:57:23.000000000 -0500
++++ krb5-1.8/src/config/pre.in	2010-03-05 10:57:23.000000000 -0500
+@@ -180,6 +180,7 @@ LD_UNRESOLVED_PREFIX = @LD_UNRESOLVED_PREFIX@
+ LD_SHLIBDIR_PREFIX = @LD_SHLIBDIR_PREFIX@
  LDARGS = @LDARGS@
  LIBS = @LIBS@
- PAM_LIBS = @PAM_LIBS@
 +SELINUX_LIBS=@SELINUX_LIBS@
  
  INSTALL=@INSTALL@
  INSTALL_STRIP=
-@@ -382,7 +383,7 @@ SUPPORT_LIB			= -l$(SUPPORT_LIBNAME)
+@@ -379,7 +380,7 @@ SUPPORT_LIB			= -l$(SUPPORT_LIBNAME)
  # HESIOD_LIBS is -lhesiod...
  HESIOD_LIBS	= @HESIOD_LIBS@
  
@@ -149,10 +116,10 @@ diff -up krb5-1.7/src/config/pre.in krb5-1.7/src/config/pre.in
  KDB5_LIBS	= $(KDB5_LIB) $(GSSRPC_LIBS)
  GSS_LIBS	= $(GSS_KRB5_LIB)
  # needs fixing if ever used on Mac OS X!
-diff -up krb5-1.7/src/configure.in krb5-1.7/src/configure.in
---- krb5-1.7/src/configure.in	2009-06-04 13:47:20.000000000 -0400
-+++ krb5-1.7/src/configure.in	2009-06-04 13:47:20.000000000 -0400
-@@ -1042,6 +1042,8 @@ AC_CONFIG_SUBDIRS(appl/libpty appl/bsd a
+diff -up krb5-1.8/src/configure.in.selinux-label krb5-1.8/src/configure.in
+--- krb5-1.8/src/configure.in.selinux-label	2010-03-05 10:57:23.000000000 -0500
++++ krb5-1.8/src/configure.in	2010-03-05 10:57:23.000000000 -0500
+@@ -1053,6 +1053,8 @@ fi
  
  KRB5_WITH_PAM
  
@@ -161,47 +128,10 @@ diff -up krb5-1.7/src/configure.in krb5-1.7/src/configure.in
  AC_CONFIG_FILES(krb5-config, [chmod +x krb5-config])
  
  V5_AC_OUTPUT_MANPAGE([
-diff -up krb5-1.7/src/include/autoconf.h.in krb5-1.7/src/include/autoconf.h.in
---- krb5-1.7/src/include/autoconf.h.in	2009-06-01 20:58:35.000000000 -0400
-+++ krb5-1.7/src/include/autoconf.h.in	2009-06-04 13:47:20.000000000 -0400
-@@ -389,6 +389,12 @@
- /* Define to 1 if you have the `sched_yield' function. */
- #undef HAVE_SCHED_YIELD
- 
-+/* Define to 1 if you have the <selinux/label.h> header file. */
-+#undef HAVE_SELINUX_LABEL_H
-+
-+/* Define to 1 if you have the <selinux/selinux.h> header file. */
-+#undef HAVE_SELINUX_SELINUX_H
-+
- /* Define to 1 if you have the <semaphore.h> header file. */
- #undef HAVE_SEMAPHORE_H
- 
-@@ -401,6 +407,9 @@
- /* Define to 1 if you have the `setegid' function. */
- #undef HAVE_SETEGID
- 
-+/* Define to 1 if you have the `setfscreatecon' function. */
-+#undef HAVE_SETFSCREATECON
-+
- /* Define to 1 if you have the `setenv' function. */
- #undef HAVE_SETENV
- 
-@@ -768,6 +777,10 @@
- /* Define if the KDC should use a replay cache */
- #undef USE_RCACHE
- 
-+/* Define if Kerberos-aware tools should set SELinux file contexts when
-+   creating files. */
-+#undef USE_SELINUX
-+
- /* Define if sigprocmask should be used */
- #undef USE_SIGPROCMASK
- 
-diff -up krb5-1.7/src/include/k5-int.h krb5-1.7/src/include/k5-int.h
---- krb5-1.7/src/include/k5-int.h	2009-05-11 16:56:53.000000000 -0400
-+++ krb5-1.7/src/include/k5-int.h	2009-06-04 13:47:20.000000000 -0400
-@@ -132,6 +132,7 @@ typedef unsigned char	u_char;
+diff -up krb5-1.8/src/include/k5-int.h.selinux-label krb5-1.8/src/include/k5-int.h
+--- krb5-1.8/src/include/k5-int.h.selinux-label	2010-01-04 14:59:16.000000000 -0500
++++ krb5-1.8/src/include/k5-int.h	2010-03-05 10:57:23.000000000 -0500
+@@ -133,6 +133,7 @@ typedef unsigned char   u_char;
  typedef UINT64_TYPE krb5_ui_8;
  typedef INT64_TYPE krb5_int64;
  
@@ -209,15 +139,18 @@ diff -up krb5-1.7/src/include/k5-int.h krb5-1.7/src/include/k5-int.h
  
  #define DEFAULT_PWD_STRING1 "Enter password"
  #define DEFAULT_PWD_STRING2 "Re-enter password for verification"
-diff -up /dev/null krb5-1.7/src/include/k5-label.h
---- /dev/null	2009-06-04 10:34:55.169007373 -0400
-+++ krb5-1.7/src/include/k5-label.h	2009-06-04 13:47:20.000000000 -0400
-@@ -0,0 +1,27 @@
+diff -up krb5-1.8/src/include/k5-label.h.selinux-label krb5-1.8/src/include/k5-label.h
+--- krb5-1.8/src/include/k5-label.h.selinux-label	2010-03-05 10:57:23.000000000 -0500
++++ krb5-1.8/src/include/k5-label.h	2010-03-05 10:57:23.000000000 -0500
+@@ -0,0 +1,30 @@
 +#ifndef _KRB5_LABEL_H
 +#define _KRB5_LABEL_H
 +
 +#ifdef THREEPARAMOPEN
 +#undef THREEPARAMOPEN
++#endif
++#ifdef WRITABLEFOPEN
++#undef WRITABLEFOPEN
 +#endif
 +
 +/* Wrapper functions which help us create files and directories with the right
@@ -240,9 +173,9 @@ diff -up /dev/null krb5-1.7/src/include/k5-label.h
 +#define THREEPARAMOPEN(x,y,z) open(x,y,z)
 +#endif
 +#endif
-diff -up krb5-1.7/src/include/krb5/krb5.hin krb5-1.7/src/include/krb5/krb5.hin
---- krb5-1.7/src/include/krb5/krb5.hin	2009-04-15 16:07:03.000000000 -0400
-+++ krb5-1.7/src/include/krb5/krb5.hin	2009-06-04 13:47:20.000000000 -0400
+diff -up krb5-1.8/src/include/krb5/krb5.hin.selinux-label krb5-1.8/src/include/krb5/krb5.hin
+--- krb5-1.8/src/include/krb5/krb5.hin.selinux-label	2010-01-21 17:49:07.000000000 -0500
++++ krb5-1.8/src/include/krb5/krb5.hin	2010-03-05 10:57:23.000000000 -0500
 @@ -87,6 +87,12 @@
  #define THREEPARAMOPEN(x,y,z) open(x,y,z)
  #endif
@@ -256,21 +189,21 @@ diff -up krb5-1.7/src/include/krb5/krb5.hin krb5-1.7/src/include/krb5/krb5.hin
  #define KRB5_OLD_CRYPTO
  
  #include <stdlib.h>
-diff -up krb5-1.7/src/kadmin/dbutil/dump.c krb5-1.7/src/kadmin/dbutil/dump.c
---- krb5-1.7/src/kadmin/dbutil/dump.c	2009-01-30 18:55:14.000000000 -0500
-+++ krb5-1.7/src/kadmin/dbutil/dump.c	2009-06-04 13:47:20.000000000 -0400
-@@ -1219,7 +1219,7 @@ dump_db(argc, argv)
- 	 * want to get into.
- 	 */
- 	unlink(ofile);
--	if (!(f = fopen(ofile, "w"))) {
-+	if (!(f = WRITABLEFOPEN(ofile, "w"))) {
- 	    fprintf(stderr, ofopen_error,
- 		    progname, ofile, error_message(errno));
- 	    exit_status++;
-diff -up krb5-1.7/src/krb5-config.in krb5-1.7/src/krb5-config.in
---- krb5-1.7/src/krb5-config.in	2008-12-18 13:31:16.000000000 -0500
-+++ krb5-1.7/src/krb5-config.in	2009-06-04 13:47:20.000000000 -0400
+diff -up krb5-1.8/src/kadmin/dbutil/dump.c.selinux-label krb5-1.8/src/kadmin/dbutil/dump.c
+--- krb5-1.8/src/kadmin/dbutil/dump.c.selinux-label	2009-10-30 20:48:38.000000000 -0400
++++ krb5-1.8/src/kadmin/dbutil/dump.c	2010-03-05 10:57:23.000000000 -0500
+@@ -1274,7 +1274,7 @@ dump_db(argc, argv)
+          * want to get into.
+          */
+         unlink(ofile);
+-        if (!(f = fopen(ofile, "w"))) {
++        if (!(f = WRITABLEFOPEN(ofile, "w"))) {
+             fprintf(stderr, ofopen_error,
+                     progname, ofile, error_message(errno));
+             exit_status++;
+diff -up krb5-1.8/src/krb5-config.in.selinux-label krb5-1.8/src/krb5-config.in
+--- krb5-1.8/src/krb5-config.in.selinux-label	2010-01-21 17:49:01.000000000 -0500
++++ krb5-1.8/src/krb5-config.in	2010-03-05 10:57:23.000000000 -0500
 @@ -38,6 +38,7 @@ RPATH_FLAG='@RPATH_FLAG@'
  PROG_RPATH_FLAGS='@PROG_RPATH_FLAGS@'
  PTHREAD_CFLAGS='@PTHREAD_CFLAGS@'
@@ -288,95 +221,95 @@ diff -up krb5-1.7/src/krb5-config.in krb5-1.7/src/krb5-config.in
      fi
  
      echo $lib_flags
-diff -up krb5-1.7/src/lib/kadm5/logger.c krb5-1.7/src/lib/kadm5/logger.c
---- krb5-1.7/src/lib/kadm5/logger.c	2008-12-29 18:01:15.000000000 -0500
-+++ krb5-1.7/src/lib/kadm5/logger.c	2009-06-04 13:47:20.000000000 -0400
-@@ -421,7 +421,7 @@ krb5_klog_init(krb5_context kcontext, ch
- 		     * Check for append/overwrite, then open the file.
- 		     */
- 		    if (cp[4] == ':' || cp[4] == '=') {
--			f = fopen(&cp[5], (cp[4] == ':') ? "a" : "w");
-+			f = WRITABLEFOPEN(&cp[5], (cp[4] == ':') ? "a" : "w");
- 			if (f) {
- 			    set_cloexec_file(f);
- 			    log_control.log_entries[i].lfu_filep = f;
-@@ -954,7 +954,7 @@ krb5_klog_reopen(krb5_context kcontext)
- 	     * In case the old logfile did not get moved out of the
- 	     * way, open for append to prevent squashing the old logs.
- 	     */
--	    f = fopen(log_control.log_entries[lindex].lfu_fname, "a+");
-+	    f = WRITABLEFOPEN(log_control.log_entries[lindex].lfu_fname, "a+");
- 	    if (f) {
- 		set_cloexec_file(f);
- 		log_control.log_entries[lindex].lfu_filep = f;
-diff -up krb5-1.7/src/lib/krb5/keytab/kt_file.c krb5-1.7/src/lib/krb5/keytab/kt_file.c
---- krb5-1.7/src/lib/krb5/keytab/kt_file.c	2009-05-11 16:55:22.000000000 -0400
-+++ krb5-1.7/src/lib/krb5/keytab/kt_file.c	2009-06-04 13:47:20.000000000 -0400
-@@ -1094,7 +1094,7 @@ krb5_ktfileint_open(krb5_context context
+diff -up krb5-1.8/src/lib/kadm5/logger.c.selinux-label krb5-1.8/src/lib/kadm5/logger.c
+--- krb5-1.8/src/lib/kadm5/logger.c.selinux-label	2009-12-28 21:42:51.000000000 -0500
++++ krb5-1.8/src/lib/kadm5/logger.c	2010-03-05 10:57:23.000000000 -0500
+@@ -425,7 +425,7 @@ krb5_klog_init(krb5_context kcontext, ch
+                      * Check for append/overwrite, then open the file.
+                      */
+                     if (cp[4] == ':' || cp[4] == '=') {
+-                        f = fopen(&cp[5], (cp[4] == ':') ? "a" : "w");
++                        f = WRITABLEFOPEN(&cp[5], (cp[4] == ':') ? "a" : "w");
+                         if (f) {
+                             set_cloexec_file(f);
+                             log_control.log_entries[i].lfu_filep = f;
+@@ -961,7 +961,7 @@ krb5_klog_reopen(krb5_context kcontext)
+              * In case the old logfile did not get moved out of the
+              * way, open for append to prevent squashing the old logs.
+              */
+-            f = fopen(log_control.log_entries[lindex].lfu_fname, "a+");
++            f = WRITABLEFOPEN(log_control.log_entries[lindex].lfu_fname, "a+");
+             if (f) {
+                 set_cloexec_file(f);
+                 log_control.log_entries[lindex].lfu_filep = f;
+diff -up krb5-1.8/src/lib/krb5/keytab/kt_file.c.selinux-label krb5-1.8/src/lib/krb5/keytab/kt_file.c
+--- krb5-1.8/src/lib/krb5/keytab/kt_file.c.selinux-label	2009-11-10 14:59:39.000000000 -0500
++++ krb5-1.8/src/lib/krb5/keytab/kt_file.c	2010-03-05 10:57:23.000000000 -0500
+@@ -1050,7 +1050,7 @@ krb5_ktfileint_open(krb5_context context
  
      KTCHECKLOCK(id);
      errno = 0;
 -    KTFILEP(id) = fopen(KTFILENAME(id),
 +    KTFILEP(id) = WRITABLEFOPEN(KTFILENAME(id),
- 			(mode == KRB5_LOCKMODE_EXCLUSIVE) ?
- 			  fopen_mode_rbplus : fopen_mode_rb);
+                         (mode == KRB5_LOCKMODE_EXCLUSIVE) ?
+                         fopen_mode_rbplus : fopen_mode_rb);
      if (!KTFILEP(id)) {
-@@ -1102,7 +1102,7 @@ krb5_ktfileint_open(krb5_context context
- 	    /* try making it first time around */
+@@ -1058,7 +1058,7 @@ krb5_ktfileint_open(krb5_context context
+             /* try making it first time around */
              krb5_create_secure_file(context, KTFILENAME(id));
- 	    errno = 0;
--	    KTFILEP(id) = fopen(KTFILENAME(id), fopen_mode_rbplus);
-+	    KTFILEP(id) = WRITABLEFOPEN(KTFILENAME(id), fopen_mode_rbplus);
- 	    if (!KTFILEP(id))
- 		goto report_errno;
- 	    writevno = 1;
-diff -up krb5-1.7/src/plugins/kdb/db2/adb_openclose.c krb5-1.7/src/plugins/kdb/db2/adb_openclose.c
---- krb5-1.7/src/plugins/kdb/db2/adb_openclose.c	2007-10-22 15:18:53.000000000 -0400
-+++ krb5-1.7/src/plugins/kdb/db2/adb_openclose.c	2009-06-04 13:47:20.000000000 -0400
-@@ -198,7 +198,7 @@ krb5_error_code osa_adb_init_db(osa_adb_
- 	   * POSIX systems
- 	   */
- 	  lockp->lockinfo.filename = strdup(lockfilename);
--	  if ((lockp->lockinfo.lockfile = fopen(lockfilename, "r+")) == NULL) {
-+	  if ((lockp->lockinfo.lockfile = WRITABLEFOPEN(lockfilename, "r+")) == NULL) {
- 	       /*
- 		* maybe someone took away write permission so we could only
- 		* get shared locks?
-diff -up krb5-1.7/src/plugins/kdb/db2/kdb_db2.c krb5-1.7/src/plugins/kdb/db2/kdb_db2.c
---- krb5-1.7/src/plugins/kdb/db2/kdb_db2.c	2009-01-30 20:07:04.000000000 -0500
-+++ krb5-1.7/src/plugins/kdb/db2/kdb_db2.c	2009-06-04 13:47:20.000000000 -0400
-@@ -327,8 +327,8 @@ krb5_db2_db_init(krb5_context context)
+             errno = 0;
+-            KTFILEP(id) = fopen(KTFILENAME(id), fopen_mode_rbplus);
++            KTFILEP(id) = WRITABLEFOPEN(KTFILENAME(id), fopen_mode_rbplus);
+             if (!KTFILEP(id))
+                 goto report_errno;
+             writevno = 1;
+diff -up krb5-1.8/src/plugins/kdb/db2/adb_openclose.c.selinux-label krb5-1.8/src/plugins/kdb/db2/adb_openclose.c
+--- krb5-1.8/src/plugins/kdb/db2/adb_openclose.c.selinux-label	2009-11-24 18:52:25.000000000 -0500
++++ krb5-1.8/src/plugins/kdb/db2/adb_openclose.c	2010-03-05 10:57:23.000000000 -0500
+@@ -201,7 +201,7 @@ osa_adb_init_db(osa_adb_db_t *dbp, char 
+          * POSIX systems
+          */
+         lockp->lockinfo.filename = strdup(lockfilename);
+-        if ((lockp->lockinfo.lockfile = fopen(lockfilename, "r+")) == NULL) {
++        if ((lockp->lockinfo.lockfile = WRITABLEFOPEN(lockfilename, "r+")) == NULL) {
+             /*
+              * maybe someone took away write permission so we could only
+              * get shared locks?
+diff -up krb5-1.8/src/plugins/kdb/db2/kdb_db2.c.selinux-label krb5-1.8/src/plugins/kdb/db2/kdb_db2.c
+--- krb5-1.8/src/plugins/kdb/db2/kdb_db2.c.selinux-label	2009-11-25 09:36:05.000000000 -0500
++++ krb5-1.8/src/plugins/kdb/db2/kdb_db2.c	2010-03-05 10:57:23.000000000 -0500
+@@ -326,8 +326,8 @@ krb5_db2_db_init(krb5_context context)
       * should be opened read/write so that write locking can work with
       * POSIX systems
       */
 -    if ((db_ctx->db_lf_file = open(filename, O_RDWR, 0666)) < 0) {
--	if ((db_ctx->db_lf_file = open(filename, O_RDONLY, 0666)) < 0) {
+-        if ((db_ctx->db_lf_file = open(filename, O_RDONLY, 0666)) < 0) {
 +    if ((db_ctx->db_lf_file = THREEPARAMOPEN(filename, O_RDWR, 0666)) < 0) {
-+	if ((db_ctx->db_lf_file = THREEPARAMOPEN(filename, O_RDONLY, 0666)) < 0) {
- 	    retval = errno;
- 	    goto err_out;
- 	}
-@@ -754,7 +754,7 @@ krb5_db2_db_create(krb5_context context,
++        if ((db_ctx->db_lf_file = THREEPARAMOPEN(filename, O_RDONLY, 0666)) < 0) {
+             retval = errno;
+             goto err_out;
+         }
+@@ -745,7 +745,7 @@ krb5_db2_db_create(krb5_context context,
      if (!okname)
- 	retval = ENOMEM;
+         retval = ENOMEM;
      else {
--	fd = open(okname, O_CREAT | O_RDWR | O_TRUNC, 0600);
-+	fd = THREEPARAMOPEN(okname, O_CREAT | O_RDWR | O_TRUNC, 0600);
- 	if (fd < 0)
- 	    retval = errno;
- 	else
-@@ -1795,7 +1795,7 @@ krb5_db2_db_rename(context, from, to)
- 	retval = ENOMEM;
- 	goto errout;
+-        fd = open(okname, O_CREAT | O_RDWR | O_TRUNC, 0600);
++        fd = THREEPARAMOPEN(okname, O_CREAT | O_RDWR | O_TRUNC, 0600);
+         if (fd < 0)
+             retval = errno;
+         else
+@@ -1925,7 +1925,7 @@ krb5_db2_db_rename(context, from, to, me
+         retval = ENOMEM;
+         goto errout;
      }
 -    db_ctx->db_lf_file = open(db_ctx->db_lf_name, O_RDWR|O_CREAT, 0600);
 +    db_ctx->db_lf_file = THREEPARAMOPEN(db_ctx->db_lf_name, O_RDWR|O_CREAT, 0600);
      if (db_ctx->db_lf_file < 0) {
- 	retval = errno;
- 	goto errout;
-diff -up krb5-1.7/src/plugins/kdb/db2/libdb2/btree/bt_open.c krb5-1.7/src/plugins/kdb/db2/libdb2/btree/bt_open.c
---- krb5-1.7/src/plugins/kdb/db2/libdb2/btree/bt_open.c	2007-10-22 15:18:53.000000000 -0400
-+++ krb5-1.7/src/plugins/kdb/db2/libdb2/btree/bt_open.c	2009-06-04 13:47:20.000000000 -0400
+         retval = errno;
+         goto errout;
+diff -up krb5-1.8/src/plugins/kdb/db2/libdb2/btree/bt_open.c.selinux-label krb5-1.8/src/plugins/kdb/db2/libdb2/btree/bt_open.c
+--- krb5-1.8/src/plugins/kdb/db2/libdb2/btree/bt_open.c.selinux-label	2009-10-30 20:48:38.000000000 -0400
++++ krb5-1.8/src/plugins/kdb/db2/libdb2/btree/bt_open.c	2010-03-05 10:57:23.000000000 -0500
 @@ -60,6 +60,7 @@ static char sccsid[] = "@(#)bt_open.c	8.
  
  #include "k5-platform.h"	/* mkstemp? */
@@ -388,15 +321,15 @@ diff -up krb5-1.7/src/plugins/kdb/db2/libdb2/btree/bt_open.c krb5-1.7/src/plugin
 @@ -203,7 +204,7 @@ __bt_open(fname, flags, mode, openinfo, 
  			goto einval;
  		}
- 		
+ 
 -		if ((t->bt_fd = open(fname, flags | O_BINARY, mode)) < 0)
 +		if ((t->bt_fd = THREEPARAMOPEN(fname, flags | O_BINARY, mode)) < 0)
  			goto err;
  
  	} else {
-diff -up krb5-1.7/src/plugins/kdb/db2/libdb2/hash/hash.c krb5-1.7/src/plugins/kdb/db2/libdb2/hash/hash.c
---- krb5-1.7/src/plugins/kdb/db2/libdb2/hash/hash.c	2009-01-23 13:04:08.000000000 -0500
-+++ krb5-1.7/src/plugins/kdb/db2/libdb2/hash/hash.c	2009-06-04 13:47:20.000000000 -0400
+diff -up krb5-1.8/src/plugins/kdb/db2/libdb2/hash/hash.c.selinux-label krb5-1.8/src/plugins/kdb/db2/libdb2/hash/hash.c
+--- krb5-1.8/src/plugins/kdb/db2/libdb2/hash/hash.c.selinux-label	2009-10-30 20:48:38.000000000 -0400
++++ krb5-1.8/src/plugins/kdb/db2/libdb2/hash/hash.c	2010-03-05 10:57:23.000000000 -0500
 @@ -51,6 +51,7 @@ static char sccsid[] = "@(#)hash.c	8.12 
  #include <assert.h>
  #endif
@@ -414,9 +347,9 @@ diff -up krb5-1.7/src/plugins/kdb/db2/libdb2/hash/hash.c krb5-1.7/src/plugins/kd
  			RETURN_ERROR(errno, error0);
  		(void)fcntl(hashp->fp, F_SETFD, 1);
  	}
-diff -up krb5-1.7/src/plugins/kdb/db2/libdb2/recno/rec_open.c krb5-1.7/src/plugins/kdb/db2/libdb2/recno/rec_open.c
---- krb5-1.7/src/plugins/kdb/db2/libdb2/recno/rec_open.c	2007-10-22 15:18:53.000000000 -0400
-+++ krb5-1.7/src/plugins/kdb/db2/libdb2/recno/rec_open.c	2009-06-04 13:47:20.000000000 -0400
+diff -up krb5-1.8/src/plugins/kdb/db2/libdb2/recno/rec_open.c.selinux-label krb5-1.8/src/plugins/kdb/db2/libdb2/recno/rec_open.c
+--- krb5-1.8/src/plugins/kdb/db2/libdb2/recno/rec_open.c.selinux-label	2007-10-22 15:18:53.000000000 -0400
++++ krb5-1.8/src/plugins/kdb/db2/libdb2/recno/rec_open.c	2010-03-05 10:57:23.000000000 -0500
 @@ -51,6 +51,7 @@ static char sccsid[] = "@(#)rec_open.c	8
  #include <stdio.h>
  #include <unistd.h>
@@ -434,10 +367,10 @@ diff -up krb5-1.7/src/plugins/kdb/db2/libdb2/recno/rec_open.c krb5-1.7/src/plugi
  		return (NULL);
  
  	if (fname != NULL && fcntl(rfd, F_SETFD, 1) == -1) {
-diff -up krb5-1.7/src/plugins/kdb/db2/libdb2/test/Makefile.in krb5-1.7/src/plugins/kdb/db2/libdb2/test/Makefile.in
---- krb5-1.7/src/plugins/kdb/db2/libdb2/test/Makefile.in	2008-08-25 19:08:16.000000000 -0400
-+++ krb5-1.7/src/plugins/kdb/db2/libdb2/test/Makefile.in	2009-06-04 13:47:20.000000000 -0400
-@@ -14,7 +14,8 @@ PROG_RPATH=$(KRB5_LIBDIR)
+diff -up krb5-1.8/src/plugins/kdb/db2/libdb2/test/Makefile.in.selinux-label krb5-1.8/src/plugins/kdb/db2/libdb2/test/Makefile.in
+--- krb5-1.8/src/plugins/kdb/db2/libdb2/test/Makefile.in.selinux-label	2009-11-22 13:13:29.000000000 -0500
++++ krb5-1.8/src/plugins/kdb/db2/libdb2/test/Makefile.in	2010-03-05 10:57:23.000000000 -0500
+@@ -12,7 +12,8 @@ PROG_RPATH=$(KRB5_LIBDIR)
  
  KRB5_RUN_ENV= @KRB5_RUN_ENV@
  
@@ -447,19 +380,19 @@ diff -up krb5-1.7/src/plugins/kdb/db2/libdb2/test/Makefile.in krb5-1.7/src/plugi
  DB_DEPLIB	= ../libdb$(DEPLIBEXT)
  
  all::
-diff -up krb5-1.7/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c krb5-1.7/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c
---- krb5-1.7/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c	2008-12-01 12:09:59.000000000 -0500
-+++ krb5-1.7/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c	2009-06-04 13:47:20.000000000 -0400
-@@ -1096,7 +1096,7 @@ rem_service_entry_from_file(argc, argv, 
+diff -up krb5-1.8/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c.selinux-label krb5-1.8/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c
+--- krb5-1.8/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c.selinux-label	2009-11-24 18:52:25.000000000 -0500
++++ krb5-1.8/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c	2010-03-05 10:57:23.000000000 -0500
+@@ -1091,7 +1091,7 @@
  
      /* Create a temporary file which contains all the entries except the
         entry for the given service dn */
 -    pfile = fopen(file_name, "r+");
 +    pfile = WRITABLEFOPEN(file_name, "r+");
      if (pfile == NULL) {
- 	com_err(me, errno, "while deleting entry from file %s", file_name);
- 	goto cleanup;
-@@ -1113,7 +1113,7 @@ rem_service_entry_from_file(argc, argv, 
+         com_err(me, errno, "while deleting entry from file %s", file_name);
+         goto cleanup;
+@@ -1108,7 +1108,7 @@
      snprintf (tmp_file, strlen(file_name) + 4 + 1, "%s%s", file_name, ".tmp");
  
  
@@ -467,79 +400,88 @@ diff -up krb5-1.7/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c krb5-1.7/s
 +    tmpfd = THREEPARAMOPEN(tmp_file, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR);
      umask(omask);
      if (tmpfd == -1) {
- 	com_err(me, errno, "while deleting entry from file\n");
-@@ -1767,7 +1767,7 @@ kdb5_ldap_set_service_password(argc, arg
+         com_err(me, errno, "while deleting entry from file\n");
+@@ -1728,7 +1728,7 @@
+ 
+             printf("File does not exist. Creating the file %s...\n", file_name);
+             omask = umask(077);
+-            fd = creat(file_name, S_IRUSR|S_IWUSR);
++            fd = THREEPARAMOPEN(file_name, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR);
+             umask(omask);
+             if (fd == -1) {
+                 com_err(me, errno, "Error creating file %s", file_name);
+@@ -1756,7 +1756,7 @@
  
      /* TODO: file lock for the service password file */
      /* set password in the file */
 -    pfile = fopen(file_name, "r+");
 +    pfile = WRITABLEFOPEN(file_name, "r+");
      if (pfile == NULL) {
- 	com_err(me, errno, "Failed to open file %s", file_name);
- 	goto cleanup;
-@@ -1808,7 +1808,7 @@ kdb5_ldap_set_service_password(argc, arg
- 	}
+         com_err(me, errno, "Failed to open file %s", file_name);
+         goto cleanup;
+@@ -1797,7 +1797,7 @@
+         }
  
- 	omask = umask(077);
--	newfile = fopen(tmp_file, "w+");
-+	newfile = WRITABLEFOPEN(tmp_file, "w+");
- 	umask(omask);
- 	if (newfile == NULL) {
- 	    com_err(me, errno, "Error creating file %s", tmp_file);
-@@ -2032,7 +2032,7 @@ done:
+         omask = umask(077);
+-        newfile = fopen(tmp_file, "w+");
++        newfile = WRITABLEFOPEN(tmp_file, "w+");
+         umask(omask);
+         if (newfile == NULL) {
+             com_err(me, errno, "Error creating file %s", tmp_file);
+@@ -2019,7 +2019,7 @@
  
      /* set password in the file */
      old_mode = umask(0177);
 -    pfile = fopen(file_name, "a+");
 +    pfile = WRITABLEFOPEN(file_name, "a+");
      if (pfile == NULL) {
- 	com_err(me, errno, "Failed to open file %s: %s", file_name,
- 		strerror (errno));
-@@ -2082,7 +2082,7 @@ done:
- 	}
+         com_err(me, errno, "Failed to open file %s: %s", file_name,
+                 strerror (errno));
+@@ -2069,7 +2069,7 @@
+         }
  
- 	omask = umask(077);
--	newfile = fopen(tmp_file, "w");
-+	newfile = WRITABLEFOPEN(tmp_file, "w");
- 	umask (omask);
- 	if (newfile == NULL) {
- 	    com_err(me, errno, "Error creating file %s", tmp_file);
-diff -up krb5-1.7/src/slave/kpropd.c krb5-1.7/src/slave/kpropd.c
---- krb5-1.7/src/slave/kpropd.c	2008-12-30 00:45:06.000000000 -0500
-+++ krb5-1.7/src/slave/kpropd.c	2009-06-04 13:47:20.000000000 -0400
-@@ -346,7 +346,7 @@ retry:
- 	if (!debug && iproprole != IPROP_SLAVE)
- 		daemon(1, 0);	    
+         omask = umask(077);
+-        newfile = fopen(tmp_file, "w");
++        newfile = WRITABLEFOPEN(tmp_file, "w");
+         umask (omask);
+         if (newfile == NULL) {
+             com_err(me, errno, "Error creating file %s", tmp_file);
+diff -up krb5-1.8/src/slave/kpropd.c.selinux-label krb5-1.8/src/slave/kpropd.c
+--- krb5-1.8/src/slave/kpropd.c.selinux-label	2009-12-31 17:25:11.000000000 -0500
++++ krb5-1.8/src/slave/kpropd.c	2010-03-05 10:57:23.000000000 -0500
+@@ -328,7 +328,7 @@ retry:
+     if (!debug && iproprole != IPROP_SLAVE)
+         daemon(1, 0);
  #ifdef PID_FILE
--	if ((pidfile = fopen(PID_FILE, "w")) != NULL) {
-+	if ((pidfile = WRITABLEFOPEN(PID_FILE, "w")) != NULL) {
- 		fprintf(pidfile, "%d\n", getpid());
- 		fclose(pidfile);
- 	} else
-diff -up krb5-1.7/src/util/profile/prof_file.c krb5-1.7/src/util/profile/prof_file.c
---- krb5-1.7/src/util/profile/prof_file.c	2008-11-05 11:19:01.000000000 -0500
-+++ krb5-1.7/src/util/profile/prof_file.c	2009-06-04 13:47:20.000000000 -0400
-@@ -29,6 +29,7 @@
+-    if ((pidfile = fopen(PID_FILE, "w")) != NULL) {
++    if ((pidfile = WRITABLEFOPEN(PID_FILE, "w")) != NULL) {
+         fprintf(pidfile, "%d\n", getpid());
+         fclose(pidfile);
+     } else
+diff -up krb5-1.8/src/util/profile/prof_file.c.selinux-label krb5-1.8/src/util/profile/prof_file.c
+--- krb5-1.8/src/util/profile/prof_file.c.selinux-label	2009-12-27 19:21:20.000000000 -0500
++++ krb5-1.8/src/util/profile/prof_file.c	2010-03-05 10:57:23.000000000 -0500
+@@ -30,6 +30,7 @@
  #endif
  
  #include "k5-platform.h"
 +#include "k5-label.h"
  
  struct global_shared_profile_data {
- 	/* This is the head of the global list of shared trees */
-@@ -422,7 +423,7 @@ static errcode_t write_data_to_file(prf_
+     /* This is the head of the global list of shared trees */
+@@ -418,7 +419,7 @@ static errcode_t write_data_to_file(prf_
  
- 	errno = 0;
+     errno = 0;
  
--	f = fopen(new_file, "w");
-+	f = WRITABLEFOPEN(new_file, "w");
- 	if (!f) {
- 		retval = errno;
- 		if (retval == 0)
-diff -up krb5-1.7/src/util/support/Makefile.in krb5-1.7/src/util/support/Makefile.in
---- krb5-1.7/src/util/support/Makefile.in	2009-01-05 15:27:53.000000000 -0500
-+++ krb5-1.7/src/util/support/Makefile.in	2009-06-04 13:47:20.000000000 -0400
-@@ -38,6 +38,7 @@ PRINTF_OBJ= @PRINTF_OBJ@
+-    f = fopen(new_file, "w");
++    f = WRITABLEFOPEN(new_file, "w");
+     if (!f) {
+         retval = errno;
+         if (retval == 0)
+diff -up krb5-1.8/src/util/support/Makefile.in.selinux-label krb5-1.8/src/util/support/Makefile.in
+--- krb5-1.8/src/util/support/Makefile.in.selinux-label	2009-11-23 20:25:10.000000000 -0500
++++ krb5-1.8/src/util/support/Makefile.in	2010-03-05 10:57:23.000000000 -0500
+@@ -54,6 +54,7 @@ IPC_SYMS= \
  
  STLIBOBJS= \
  	threads.o \
@@ -547,7 +489,7 @@ diff -up krb5-1.7/src/util/support/Makefile.in krb5-1.7/src/util/support/Makefil
  	init-addrinfo.o \
  	plugins.o \
  	errors.o \
-@@ -86,7 +87,7 @@ SRCS=\
+@@ -108,7 +109,7 @@ SRCS=\
  
  SHLIB_EXPDEPS =
  # Add -lm if dumping thread stats, for sqrt.
@@ -556,9 +498,9 @@ diff -up krb5-1.7/src/util/support/Makefile.in krb5-1.7/src/util/support/Makefil
  SHLIB_DIRS=
  SHLIB_RDIRS=$(KRB5_LIBDIR)
  
-diff -up /dev/null krb5-1.7/src/util/support/selinux.c
---- /dev/null	2009-06-04 10:34:55.169007373 -0400
-+++ krb5-1.7/src/util/support/selinux.c	2009-06-04 13:47:20.000000000 -0400
+diff -up krb5-1.8/src/util/support/selinux.c.selinux-label krb5-1.8/src/util/support/selinux.c
+--- krb5-1.8/src/util/support/selinux.c.selinux-label	2010-03-05 10:57:23.000000000 -0500
++++ krb5-1.8/src/util/support/selinux.c	2010-03-05 10:57:23.000000000 -0500
 @@ -0,0 +1,346 @@
 +/*
 + * Copyright 2007,2008,2009 Red Hat, Inc.  All Rights Reserved.

@@ -1,9 +1,11 @@
 Sadique Puthen notes that the warning on the client side seems to be correspond
 to the wrong attribute on the KDC.  Do what RFC4120 says we should do.  RT#5755.
---- krb5-1.6.2/src/kdc/do_as_req.c	2007-06-25 15:49:06.000000000 -0400
-+++ krb5-1.6.2/src/kdc/do_as_req.c	2007-06-25 15:49:08.000000000 -0400
-@@ -371,7 +371,14 @@ process_as_req(krb5_kdc_req *request, kr
- 	goto errout;
+
+diff -up krb5-1.8/src/kdc/do_as_req.c.key_exp krb5-1.8/src/kdc/do_as_req.c
+--- krb5-1.8/src/kdc/do_as_req.c.key_exp	2010-02-16 17:21:08.000000000 -0500
++++ krb5-1.8/src/kdc/do_as_req.c	2010-03-05 11:02:06.000000000 -0500
+@@ -555,7 +555,14 @@ process_as_req(krb5_kdc_req *request, kr
+         goto errout;
      }
      reply_encpart.nonce = request->nonce;
 -    reply_encpart.key_exp = client.expiration;

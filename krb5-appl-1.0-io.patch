@@ -3,10 +3,10 @@ neither end is reading.  This is a port of a patch which aims to solve that
 problem, but for now it's incomplete because we don't handle partial writes.  A
 proper non-blocking implementation would require a bit more work.
 
-diff -up krb5-1.7/src/appl/bsd/defines.h krb5-1.7/src/appl/bsd/defines.h
---- krb5-1.7/src/appl/bsd/defines.h	2008-12-15 15:29:01.000000000 -0500
-+++ krb5-1.7/src/appl/bsd/defines.h	2009-06-04 14:18:48.000000000 -0400
-@@ -34,6 +34,7 @@ extern int kcmd (int *sock, char **ahost
+diff -up krb5-appl-1.0/bsd/defines.h.io krb5-appl-1.0/bsd/defines.h
+--- krb5-appl-1.0/bsd/defines.h.io	2009-11-16 05:27:04.000000000 -0500
++++ krb5-appl-1.0/bsd/defines.h	2010-03-05 11:00:06.000000000 -0500
+@@ -36,6 +36,7 @@ extern int kcmd (int *sock, char **ahost
  		 enum kcmd_proto *protonum /* input and output */
  		 );
  
@@ -14,10 +14,10 @@ diff -up krb5-1.7/src/appl/bsd/defines.h krb5-1.7/src/appl/bsd/defines.h
  extern int rcmd_stream_read (int fd, char *buf, size_t len, int secondary);
  extern int rcmd_stream_write (int fd, char *buf, size_t len, int secondary);
  extern int getport (int * /* portnum */, int * /* addrfamily */);
-diff -up krb5-1.7/src/appl/bsd/kcmd.c krb5-1.7/src/appl/bsd/kcmd.c
---- krb5-1.7/src/appl/bsd/kcmd.c	2009-04-15 16:07:15.000000000 -0400
-+++ krb5-1.7/src/appl/bsd/kcmd.c	2009-06-04 14:18:48.000000000 -0400
-@@ -686,6 +686,11 @@ void rcmd_stream_init_normal()
+diff -up krb5-appl-1.0/bsd/kcmd.c.io krb5-appl-1.0/bsd/kcmd.c
+--- krb5-appl-1.0/bsd/kcmd.c.io	2009-11-16 05:27:04.000000000 -0500
++++ krb5-appl-1.0/bsd/kcmd.c	2010-03-05 11:00:06.000000000 -0500
+@@ -767,6 +767,11 @@ void rcmd_stream_init_normal()
      output = twrite;
  }
  
@@ -29,8 +29,8 @@ diff -up krb5-1.7/src/appl/bsd/kcmd.c krb5-1.7/src/appl/bsd/kcmd.c
  void rcmd_stream_init_krb5(in_keyblock, encrypt_flag, lencheck, am_client,
  			   protonum)
       krb5_keyblock *in_keyblock;
-@@ -846,7 +851,8 @@ static int v5_des_read(fd, buf, len, sec
- 	cc = krb5_net_read(bsd_context, fd, &c, 1);
+@@ -927,7 +932,8 @@ static int v5_des_read(fd, buf, len, sec
+ 	cc = full_read(fd, &c, 1);
  	/* we should check for non-blocking here, but we'd have
  	   to make it save partial reads as well. */
 -	if (cc <= 0) return cc; /* read error */
@@ -39,10 +39,10 @@ diff -up krb5-1.7/src/appl/bsd/kcmd.c krb5-1.7/src/appl/bsd/kcmd.c
  	if (cc == 1) {
  	    if (c == 0 || !do_lencheck) break;
  	}
-diff -up krb5-1.7/src/appl/bsd/krsh.c krb5-1.7/src/appl/bsd/krsh.c
---- krb5-1.7/src/appl/bsd/krsh.c	2009-06-04 14:18:47.000000000 -0400
-+++ krb5-1.7/src/appl/bsd/krsh.c	2009-06-04 14:18:48.000000000 -0400
-@@ -115,10 +115,11 @@ main(argc, argv0)
+diff -up krb5-appl-1.0/bsd/krsh.c.io krb5-appl-1.0/bsd/krsh.c
+--- krb5-appl-1.0/bsd/krsh.c.io	2010-03-05 11:00:05.000000000 -0500
++++ krb5-appl-1.0/bsd/krsh.c	2010-03-05 11:00:06.000000000 -0500
+@@ -117,10 +117,11 @@ main(argc, argv0)
       char **argv0;
  {
      int rem, pid = 0;
@@ -55,7 +55,7 @@ diff -up krb5-1.7/src/appl/bsd/krsh.c krb5-1.7/src/appl/bsd/krsh.c
      int one = 1;
      struct servent *sp;
      struct servent defaultservent;
-@@ -508,9 +509,14 @@ main(argc, argv0)
+@@ -510,9 +511,14 @@ main(argc, argv0)
      FD_ZERO(&readfrom);
      FD_SET(rfd2, &readfrom);
      FD_SET(rem, &readfrom);
@@ -71,7 +71,7 @@ diff -up krb5-1.7/src/appl/bsd/krsh.c krb5-1.7/src/appl/bsd/krsh.c
  	    if (errno != EINTR) {
  		perror("select");
  		exit(1);
-@@ -518,22 +524,38 @@ main(argc, argv0)
+@@ -520,22 +526,38 @@ main(argc, argv0)
  	    continue;
  	}
  	if (FD_ISSET(rfd2, &ready)) {
@@ -124,10 +124,10 @@ diff -up krb5-1.7/src/appl/bsd/krsh.c krb5-1.7/src/appl/bsd/krsh.c
  	}
      } while (FD_ISSET(rem, &readfrom) || FD_ISSET(rfd2, &readfrom));
      if (nflag == 0)
-diff -up krb5-1.7/src/appl/bsd/krshd.c krb5-1.7/src/appl/bsd/krshd.c
---- krb5-1.7/src/appl/bsd/krshd.c	2009-06-04 14:18:47.000000000 -0400
-+++ krb5-1.7/src/appl/bsd/krshd.c	2009-06-04 14:18:48.000000000 -0400
-@@ -583,7 +583,8 @@ void doit(f, fromp)
+diff -up krb5-appl-1.0/bsd/krshd.c.io krb5-appl-1.0/bsd/krshd.c
+--- krb5-appl-1.0/bsd/krshd.c.io	2010-03-05 11:00:05.000000000 -0500
++++ krb5-appl-1.0/bsd/krshd.c	2010-03-05 11:00:06.000000000 -0500
+@@ -585,7 +585,8 @@ void doit(f, fromp)
      short port;
      int pv[2], pw[2], px[2], cc;
      fd_set ready, readfrom;
@@ -137,7 +137,7 @@ diff -up krb5-1.7/src/appl/bsd/krshd.c krb5-1.7/src/appl/bsd/krshd.c
      struct sockaddr_storage localaddr;
  #ifdef POSIX_SIGNALS
      struct sigaction sa;
-@@ -1214,6 +1215,10 @@ void doit(f, fromp)
+@@ -1216,6 +1217,10 @@ void doit(f, fromp)
  	    if (pw[0] > maxfd)
  		maxfd = pw[0];
  	    
@@ -148,7 +148,7 @@ diff -up krb5-1.7/src/appl/bsd/krshd.c krb5-1.7/src/appl/bsd/krshd.c
  	    /* read from f, write to px[1] -- child stdin */
  	    /* read from s, signal child */
  	    /* read from pv[0], write to s -- child stderr */
-@@ -1221,36 +1226,47 @@ void doit(f, fromp)
+@@ -1223,36 +1228,47 @@ void doit(f, fromp)
  
  	    do {
  		ready = readfrom;
@@ -204,7 +204,7 @@ diff -up krb5-1.7/src/appl/bsd/krshd.c krb5-1.7/src/appl/bsd/krshd.c
  		}
  		if (port&&FD_ISSET(s, &ready)) {
  		    /* read from the alternate channel, signal the child */
-@@ -1268,12 +1284,15 @@ void doit(f, fromp)
+@@ -1270,12 +1286,15 @@ void doit(f, fromp)
  		    }
  		}
  		if (FD_ISSET(f, &ready)) {
@@ -221,7 +221,7 @@ diff -up krb5-1.7/src/appl/bsd/krshd.c krb5-1.7/src/appl/bsd/krshd.c
  		    } else {
  		        int wcc;
  		        wcc = write(px[1], buf, (unsigned) cc);
-@@ -1281,17 +1300,22 @@ void doit(f, fromp)
+@@ -1283,17 +1302,22 @@ void doit(f, fromp)
  			  /* pipe closed, don't read any more */
  			  /* might check for EPIPE */
  			  (void) close(px[1]);

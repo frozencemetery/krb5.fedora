@@ -33,7 +33,7 @@
 # Source function library.
 . /etc/init.d/functions
 prog="Kerberos 5 Admin Server"
-kadmind=/usr/kerberos/sbin/kadmind
+kadmind=/usr/sbin/kadmind
 
 RETVAL=0
 

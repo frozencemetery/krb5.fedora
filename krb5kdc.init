@@ -33,7 +33,7 @@
 
 RETVAL=0
 prog="Kerberos 5 KDC"
-krb5kdc=/usr/kerberos/sbin/krb5kdc
+krb5kdc=/usr/sbin/krb5kdc
 
 # Shell functions to cut down on useless shell instances.
 start() {

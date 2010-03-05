@@ -17,7 +17,7 @@ At run-time, krshd's behavior can be reset to the earlier, non-PAM
 behavior by setting "use_pam" to false in the [ftpd] section of
 /etc/krb5.conf.
 
-Modify login so that instead of directly obtaining v5 or v4 credentials
+Modify login so that instead of directly obtaining v5 credentials
 or running aklog, it calls PAM for authentication if strong
 authentication hasn't already been performed, so that it performs
 account management using PAM (prompting for a password change if need
@@ -28,24 +28,16 @@ is pretty much always going to be there.  At run-time, login's behavior
 can be reset to the earlier, non-PAM behavior by setting "use_pam" to
 false in the [login] section of /etc/krb5.conf.
 
-Modify ksu so that it performs account and session management for the
-target user account, mimicking the action of regular su.  The default
-service name is "ksu", because on Fedora at least the configuration used
-is determined by whether or not a login shell is being opened, and so
-this may need to vary, too.  At run-time, ksu's behavior can be reset to
-the earlier, non-PAM behavior by setting "use_pam" to false in the [ksu]
-section of /etc/krb5.conf.
+When enabled, ftpd, krshd, and login.krb5 gain dependence on libpam.
+Originally filed as RT#5939.
 
-When enabled, ftpd, krshd, login.krb5, and ksu gain dependence on libpam.
-RT#5939.
-
-diff -up krb5-1.7/src/aclocal.m4 krb5-1.7/src/aclocal.m4
---- krb5-1.7/src/aclocal.m4	2009-02-18 19:38:17.000000000 -0500
-+++ krb5-1.7/src/aclocal.m4	2009-06-04 13:45:57.000000000 -0400
-@@ -1771,3 +1771,86 @@ AC_DEFUN(KRB5_AC_KEYRING_CCACHE,[
-       ]))
+diff -up krb5-appl-1.0/aclocal.m4.pam krb5-appl-1.0/aclocal.m4
+--- krb5-appl-1.0/aclocal.m4.pam	2009-11-21 15:29:19.000000000 -0500
++++ krb5-appl-1.0/aclocal.m4	2010-03-05 10:48:50.000000000 -0500
+@@ -486,3 +486,82 @@ AC_DEFUN([KRB5_AC_LIBUTIL],
+   UTIL_LIB=-lutil])dnl
+ AC_SUBST(UTIL_LIB)
  ])dnl
- dnl
 +dnl
 +dnl Use PAM instead of local crypt() compare for checking local passwords,
 +dnl and perform PAM account, session management, and password-changing where
@@ -62,8 +54,6 @@ diff -up krb5-1.7/src/aclocal.m4 krb5-1.7/src/aclocal.m4
 +	    withekshellpamservice="$withval",withekshellpamservice=ekshell)
 +AC_ARG_WITH(pam-ftp-service,[AC_HELP_STRING(--with-ftp-service,[PAM service name for ftpd ["gssftp"]])],
 +	    withftppamservice="$withval",withftppamservice=gssftp)
-+AC_ARG_WITH(pam-ksu-service,[AC_HELP_STRING(--with-ksu-service,[PAM service name for ksu ["ksu"]])],
-+	    withksupamservice="$withval",withksupamservice=ksu)
 +old_LIBS="$LIBS"
 +if test "$withpam" != no ; then
 +	AC_MSG_RESULT([checking for PAM...])
@@ -114,8 +104,6 @@ diff -up krb5-1.7/src/aclocal.m4 krb5-1.7/src/aclocal.m4
 +				   [Define to the name of the PAM service name to be used by rshd for encrypted sessions.])
 +		AC_DEFINE_UNQUOTED(FTP_PAM_SERVICE,"$withftppamservice",
 +				   [Define to the name of the PAM service name to be used by ftpd.])
-+		AC_DEFINE_UNQUOTED(KSU_PAM_SERVICE,"$withksupamservice",
-+				   [Define to the name of the PAM service name to be used by ksu.])
 +		PAM_LIBS="$LIBS"
 +		NON_PAM_MAN=".\\\" "
 +		PAM_MAN=
@@ -129,21 +117,10 @@ diff -up krb5-1.7/src/aclocal.m4 krb5-1.7/src/aclocal.m4
 +AC_SUBST(PAM_MAN)
 +AC_SUBST(NON_PAM_MAN)
 +])dnl
-diff -up krb5-1.7/src/appl/bsd/configure.in krb5-1.7/src/appl/bsd/configure.in
---- krb5-1.7/src/appl/bsd/configure.in	2008-12-15 15:29:01.000000000 -0500
-+++ krb5-1.7/src/appl/bsd/configure.in	2009-06-04 13:45:57.000000000 -0400
-@@ -24,6 +24,7 @@ AC_CHECK_LIB(odm,main,
-     AC_CHECK_LIB(cfg,main, 
-       LOGINLIBS="$LOGINLIBS -lodm -ls -lcfg" 
-       )))
-+KRB5_WITH_PAM
- dnl
- dnl Make our operating system-specific security checks and definitions for
- dnl login.
-diff -up krb5-1.7/src/appl/bsd/krshd.c krb5-1.7/src/appl/bsd/krshd.c
---- krb5-1.7/src/appl/bsd/krshd.c	2009-04-15 16:07:15.000000000 -0400
-+++ krb5-1.7/src/appl/bsd/krshd.c	2009-06-04 13:45:57.000000000 -0400
-@@ -161,6 +161,10 @@ char copyright[] =
+diff -up krb5-appl-1.0/bsd/krshd.c.pam krb5-appl-1.0/bsd/krshd.c
+--- krb5-appl-1.0/bsd/krshd.c.pam	2009-11-16 05:27:04.000000000 -0500
++++ krb5-appl-1.0/bsd/krshd.c	2010-03-05 10:48:50.000000000 -0500
+@@ -163,6 +163,10 @@ char copyright[] =
  #include <arpa/nameser.h>
  #endif
  
@@ -154,7 +131,7 @@ diff -up krb5-1.7/src/appl/bsd/krshd.c krb5-1.7/src/appl/bsd/krshd.c
  #ifndef MAXDNAME
  #define MAXDNAME 256 /*per the rfc*/
  #endif
-@@ -181,6 +185,7 @@ void fatal(int, const char *);
+@@ -183,6 +187,7 @@ void fatal(int, const char *);
  
  int require_encrypt = 0;
  int do_encrypt = 0;
@@ -162,7 +139,7 @@ diff -up krb5-1.7/src/appl/bsd/krshd.c krb5-1.7/src/appl/bsd/krshd.c
  int anyport = 0;
  char *kprogdir = KPROGDIR;
  int netf;
-@@ -1030,14 +1035,6 @@ void doit(f, fromp)
+@@ -1032,14 +1037,6 @@ void doit(f, fromp)
      }
  #endif /*CRAY*/
      
@@ -177,7 +154,7 @@ diff -up krb5-1.7/src/appl/bsd/krshd.c krb5-1.7/src/appl/bsd/krshd.c
  #ifdef KERBEROS
      /* krb5_kuserok returns 1 if OK */
      if (!krb5_kuserok(bsd_context, client, locuser)){
-@@ -1067,11 +1064,51 @@ void doit(f, fromp)
+@@ -1069,11 +1066,51 @@ void doit(f, fromp)
  	goto signout_please;
      }
      
@@ -229,7 +206,7 @@ diff -up krb5-1.7/src/appl/bsd/krshd.c krb5-1.7/src/appl/bsd/krshd.c
      /* Log access to account */
      pwd = (struct passwd *) getpwnam(locuser);
      if (pwd && (pwd->pw_uid == 0)) {
-@@ -1111,7 +1148,7 @@ void doit(f, fromp)
+@@ -1113,7 +1150,7 @@ void doit(f, fromp)
      
      (void) write(2, "", 1);
      
@@ -238,7 +215,7 @@ diff -up krb5-1.7/src/appl/bsd/krshd.c krb5-1.7/src/appl/bsd/krshd.c
  	if (port&&(pipe(pv) < 0)) {
  	    error("Can't make pipe.\n");
  	    goto signout_please;
-@@ -1416,6 +1453,15 @@ void doit(f, fromp)
+@@ -1418,6 +1455,15 @@ void doit(f, fromp)
  
      environ = envinit;
      
@@ -254,11 +231,11 @@ diff -up krb5-1.7/src/appl/bsd/krshd.c krb5-1.7/src/appl/bsd/krshd.c
  #ifdef KERBEROS
      /* To make Kerberos rcp work correctly, we must ensure that we
         invoke Kerberos rcp on this end, not normal rcp, even if the
-diff -up krb5-1.7/src/appl/bsd/login.c krb5-1.7/src/appl/bsd/login.c
---- krb5-1.7/src/appl/bsd/login.c	2008-12-15 15:29:01.000000000 -0500
-+++ krb5-1.7/src/appl/bsd/login.c	2009-06-04 13:45:57.000000000 -0400
-@@ -145,6 +145,11 @@ typedef sigtype (*handler)();
- #include "osconf.h"
+diff -up krb5-appl-1.0/bsd/login.c.pam krb5-appl-1.0/bsd/login.c
+--- krb5-appl-1.0/bsd/login.c.pam	2009-11-21 15:29:19.000000000 -0500
++++ krb5-appl-1.0/bsd/login.c	2010-03-05 10:48:50.000000000 -0500
+@@ -148,6 +148,11 @@ typedef sigtype (*handler)();
+ #define KRB5_ENV_CCNAME "KRB5CCNAME"
  #endif /* KRB5_GET_TICKETS */
  
 +#ifdef USE_PAM
@@ -269,7 +246,7 @@ diff -up krb5-1.7/src/appl/bsd/login.c krb5-1.7/src/appl/bsd/login.c
  #ifndef __STDC__
  #ifndef volatile
  #define volatile
-@@ -294,6 +299,9 @@ static struct login_confs {
+@@ -293,6 +298,9 @@ static struct login_confs {
      char *flagname;
      int *flag;
  } login_conf_set[] = {
@@ -279,7 +256,7 @@ diff -up krb5-1.7/src/appl/bsd/login.c krb5-1.7/src/appl/bsd/login.c
  #ifdef KRB5_GET_TICKETS
      {"krb5_get_tickets", &login_krb5_get_tickets},
      {"krb_run_aklog", &login_krb_run_aklog},
-@@ -933,6 +941,21 @@ int main(argc, argv)
+@@ -934,6 +942,21 @@ int main(argc, argv)
  	if (!unix_needs_passwd())
  	    break;
  
@@ -301,7 +278,7 @@ diff -up krb5-1.7/src/appl/bsd/login.c krb5-1.7/src/appl/bsd/login.c
  #ifdef KRB5_GET_TICKETS
  	if (login_krb5_get_tickets) {
  	    /* rename these to something more verbose */
-@@ -1020,6 +1043,24 @@ int main(argc, argv)
+@@ -1021,6 +1044,24 @@ int main(argc, argv)
      /* committed to login -- turn off timeout */
      (void) alarm((u_int) 0);
  
@@ -326,7 +303,7 @@ diff -up krb5-1.7/src/appl/bsd/login.c krb5-1.7/src/appl/bsd/login.c
      /*
       * If valid so far and root is logging in, see if root logins on
       * this terminal are permitted.
-@@ -1060,6 +1101,21 @@ int main(argc, argv)
+@@ -1061,6 +1102,21 @@ int main(argc, argv)
  	sleepexit(0);
      }
  #endif
@@ -348,7 +325,7 @@ diff -up krb5-1.7/src/appl/bsd/login.c krb5-1.7/src/appl/bsd/login.c
  
      if (chdir(pwd->pw_dir) < 0) {
  	printf("No directory %s!\n", pwd->pw_dir);
-@@ -1347,6 +1403,11 @@ int main(argc, argv)
+@@ -1343,6 +1399,11 @@ int main(argc, argv)
      }
  #endif /* KRB5_GET_TICKETS */
  
@@ -360,54 +337,55 @@ diff -up krb5-1.7/src/appl/bsd/login.c krb5-1.7/src/appl/bsd/login.c
      if (tty[sizeof("tty")-1] == 'd')
  	syslog(LOG_INFO, "DIALUP %s, %s", tty, pwd->pw_name);
      if (pwd->pw_uid == 0)
-diff -up krb5-1.7/src/appl/bsd/Makefile.in krb5-1.7/src/appl/bsd/Makefile.in
---- krb5-1.7/src/appl/bsd/Makefile.in	2009-01-05 15:27:53.000000000 -0500
-+++ krb5-1.7/src/appl/bsd/Makefile.in	2009-06-04 13:45:57.000000000 -0400
-@@ -11,12 +11,13 @@ SETENVOBJ=@SETENVOBJ@
+diff -up krb5-appl-1.0/bsd/Makefile.in.pam krb5-appl-1.0/bsd/Makefile.in
+--- krb5-appl-1.0/bsd/Makefile.in.pam	2009-11-05 15:10:37.000000000 -0500
++++ krb5-appl-1.0/bsd/Makefile.in	2010-03-05 10:48:50.000000000 -0500
+@@ -3,11 +3,14 @@ BUILDTOP=$(REL)..
+ 
  LOGINLIBS=@LOGINLIBS@
- LIBOBJS=@LIBOBJS@
  KRSHDLIBS=@KRSHDLIBS@
 +PAMOBJS=pam.o
++PAM_LIBS=@PAM_LIBS@
  
  SRCS= $(srcdir)/krcp.c $(srcdir)/krlogin.c $(srcdir)/krsh.c $(srcdir)/kcmd.c \
  	$(srcdir)/forward.c $(srcdir)/login.c $(srcdir)/krshd.c \
  	$(srcdir)/krlogind.c
- OBJS= krcp.o krlogin.o krsh.o kcmd.o forward.o $(SETENVOBJ) login.o krshd.o \
--	krlogind.o $(LIBOBJS)
-+	krlogind.o $(LIBOBJS) $(PAMOBJS)
+-OBJS= krcp.o krlogin.o krsh.o kcmd.o forward.o login.o krshd.o krlogind.o
++OBJS= krcp.o krlogin.o krsh.o kcmd.o forward.o login.o krshd.o krlogind.o \
++	$(PAMOBJS)
  
  UCB_RLOGIN = @UCB_RLOGIN@
  UCB_RSH = @UCB_RSH@
-@@ -53,8 +54,8 @@ install::
+@@ -50,8 +53,8 @@ install::
  	  ) || exit 1; \
  	done
  
--kshd: krshd.o kcmd.o forward.o $(SETENVOBJ) $(LIBOBJS) $(PTY_DEPLIB) $(KRB5_BASE_DEPLIBS) $(APPUTILS_DEPLIB)
--	$(CC_LINK) -o kshd krshd.o kcmd.o forward.o $(SETENVOBJ) $(LIBOBJS) $(KRSHDLIBS) $(PTY_LIB) $(UTIL_LIB) $(KRB5_BASE_LIBS) $(APPUTILS_LIB)
-+kshd: krshd.o kcmd.o forward.o $(PAMOBJS) $(SETENVOBJ) $(LIBOBJS) $(PTY_DEPLIB) $(KRB5_BASE_DEPLIBS) $(APPUTILS_DEPLIB)
-+	$(CC_LINK) -o kshd krshd.o kcmd.o forward.o $(PAMOBJS) $(SETENVOBJ) $(LIBOBJS) $(KRSHDLIBS) $(PTY_LIB) $(UTIL_LIB) $(KRB5_BASE_LIBS) $(PAM_LIBS) $(APPUTILS_LIB)
+-kshd: krshd.o kcmd.o forward.o $(PTY_DEPLIB) $(MISSING_DEPLIB)
+-	$(CC_LINK) -o kshd krshd.o kcmd.o forward.o $(KRSHDLIBS) $(PTY_LIB) $(UTIL_LIB) $(MISSING_LIB) $(KRB5_BASE_LIBS) $(LIBS)
++kshd: krshd.o kcmd.o forward.o $(PAMOBJS) $(PTY_DEPLIB) $(MISSING_DEPLIB)
++	$(CC_LINK) -o kshd krshd.o kcmd.o forward.o $(PAMOBJS) $(KRSHDLIBS) $(PTY_LIB) $(UTIL_LIB) $(MISSING_LIB) $(KRB5_BASE_LIBS) $(PAM_LIBS) $(LIBS)
  
- klogind: krlogind.o kcmd.o forward.o $(SETENVOBJ) $(LIBOBJS) $(PTY_DEPLIB) $(KRB5_BASE_DEPLIBS) $(APPUTILS_DEPLIB)
- 	$(CC_LINK) -o klogind krlogind.o  kcmd.o forward.o $(SETENVOBJ) $(LIBOBJS) $(PTY_LIB) $(UTIL_LIB) $(KRB5_BASE_LIBS) $(APPUTILS_LIB)
-@@ -71,8 +72,8 @@ install::
+ klogind: krlogind.o kcmd.o forward.o $(PTY_DEPLIB) $(MISSING_DEPLIB)
+ 	$(CC_LINK) -o klogind krlogind.o kcmd.o forward.o $(PTY_LIB) $(UTIL_LIB) $(MISSING_LIB) $(KRB5_BASE_LIBS) $(LIBS)
+@@ -68,8 +71,8 @@ install::
  # No program name transformation is done with login.krb5 since it is directly
  # referenced by klogind.
  #
--login.krb5: login.o  $(SETENVOBJ) $(LIBOBJS) $(PTY_DEPLIB) $(KRB5_BASE_DEPLIBS)
--	$(CC_LINK) -o login.krb5 login.o $(SETENVOBJ) $(LIBOBJS) $(LOGINLIBS) $(PTY_LIB) $(KRB5_BASE_LIBS)
-+login.krb5: login.o  $(SETENVOBJ) $(PAMOBJS) $(LIBOBJS) $(PTY_DEPLIB) $(KRB5_BASE_DEPLIBS)
-+	$(CC_LINK) -o login.krb5 login.o $(SETENVOBJ) $(PAMOBJS) $(LIBOBJS) $(LOGINLIBS) $(PTY_LIB) $(KRB5_BASE_LIBS) $(PAM_LIBS)
+-login.krb5: login.o $(PTY_DEPLIB) $(MISSING_DEPLIB)
+-	$(CC_LINK) -o login.krb5 login.o $(LOGINLIBS) $(PTY_LIB) $(KRB5_BASE_LIBS) $(MISSING_LIB) $(LIBS)
++login.krb5: login.o $(PAMOBJS) $(PTY_DEPLIB) $(MISSING_DEPLIB)
++	$(CC_LINK) -o login.krb5 login.o $(PAMOBJS) $(LOGINLIBS) $(PTY_LIB) $(KRB5_BASE_LIBS) $(MISSING_LIB) $(PAM_LIBS) $(LIBS)
  
  install::
  	$(INSTALL_PROGRAM) login.krb5 $(DESTDIR)$(SERVER_BINDIR)/login.krb5
-diff -up /dev/null krb5-1.7/src/appl/bsd/pam.c
---- /dev/null	2009-06-04 10:34:55.169007373 -0400
-+++ krb5-1.7/src/appl/bsd/pam.c	2009-06-04 13:45:57.000000000 -0400
-@@ -0,0 +1,433 @@
+diff -up krb5-appl-1.0/bsd/pam.c.pam krb5-appl-1.0/bsd/pam.c
+--- krb5-appl-1.0/bsd/pam.c.pam	2010-03-05 10:48:50.000000000 -0500
++++ krb5-appl-1.0/bsd/pam.c	2010-03-05 10:48:50.000000000 -0500
+@@ -0,0 +1,438 @@
 +/*
 + * src/appl/bsd/pam.c
 + *
-+ * Copyright 2007,2009 Red Hat, Inc.
++ * Copyright 2007,2009,2010 Red Hat, Inc.
 + *
 + * All Rights Reserved.
 + *
@@ -447,11 +425,15 @@ diff -up /dev/null krb5-1.7/src/appl/bsd/pam.c
 +#include <stdlib.h>
 +#include <string.h>
 +#include <unistd.h>
-+#include "k5-int.h"
++#include <profile.h>
 +#include "pam.h"
 +
 +#ifndef MAXPWSIZE
 +#define MAXPWSIZE 128
++#endif
++
++#ifndef KRB5_ENV_CCNAME
++#define KRB5_ENV_CCNAME "KRB5CCNAME"
 +#endif
 +
 +static int appl_pam_started;
@@ -471,8 +453,9 @@ diff -up /dev/null krb5-1.7/src/appl/bsd/pam.c
 +appl_pam_enabled(krb5_context context, const char *section)
 +{
 +	int enabled = 1;
-+	if ((context != NULL) && (context->profile != NULL)) {
-+		if (profile_get_boolean(context->profile,
++	profile_t profile = NULL;
++	if ((context != NULL) && (krb5_get_profile(context, &profile) == 0)) {
++		if (profile_get_boolean(profile,
 +					section,
 +					USE_PAM_CONFIGURATION_KEYWORD,
 +					NULL,
@@ -837,9 +820,9 @@ diff -up /dev/null krb5-1.7/src/appl/bsd/pam.c
 +	return ret;
 +}
 +#endif
-diff -up /dev/null krb5-1.7/src/appl/bsd/pam.h
---- /dev/null	2009-06-04 10:34:55.169007373 -0400
-+++ krb5-1.7/src/appl/bsd/pam.h	2009-06-04 13:45:57.000000000 -0400
+diff -up krb5-appl-1.0/bsd/pam.h.pam krb5-appl-1.0/bsd/pam.h
+--- krb5-appl-1.0/bsd/pam.h.pam	2010-03-05 10:48:50.000000000 -0500
++++ krb5-appl-1.0/bsd/pam.h	2010-03-05 10:48:50.000000000 -0500
 @@ -0,0 +1,65 @@
 +/*
 + * src/appl/bsd/pam.h
@@ -906,21 +889,22 @@ diff -up /dev/null krb5-1.7/src/appl/bsd/pam.h
 +int appl_pam_cred_init(void);
 +void appl_pam_cleanup(void);
 +#endif
-diff -up krb5-1.7/src/appl/gssftp/configure.in krb5-1.7/src/appl/gssftp/configure.in
---- krb5-1.7/src/appl/gssftp/configure.in	2006-03-31 16:00:40.000000000 -0500
-+++ krb5-1.7/src/appl/gssftp/configure.in	2009-06-04 13:45:57.000000000 -0400
-@@ -17,6 +17,7 @@ DECLARE_SYS_ERRLIST
- AC_REPLACE_FUNCS(getdtablesize)
- AC_CHECK_FUNCS(getcwd getdtablesize getusershell seteuid setreuid setresuid strerror getenv)
- AC_CHECK_LIB(crypt,crypt) dnl 
+diff -up krb5-appl-1.0/configure.ac.pam krb5-appl-1.0/configure.ac
+--- krb5-appl-1.0/configure.ac.pam	2009-11-21 16:46:39.000000000 -0500
++++ krb5-appl-1.0/configure.ac	2010-03-05 10:48:50.000000000 -0500
+@@ -156,6 +156,8 @@ AC_CHECK_FUNC(tgetent, ,
+               [AC_MSG_ERROR([Could not find tgetent; are you missing a curses/ncurses library?])])
+ LIBS="$old_LIBS"
+ 
 +KRB5_WITH_PAM
- KRB5_AC_LIBUTIL
- dnl 
- dnl copied from appl/bsd/configure.in
-diff -up krb5-1.7/src/appl/gssftp/ftpd/ftpd.c krb5-1.7/src/appl/gssftp/ftpd/ftpd.c
---- krb5-1.7/src/appl/gssftp/ftpd/ftpd.c	2009-01-28 00:42:11.000000000 -0500
-+++ krb5-1.7/src/appl/gssftp/ftpd/ftpd.c	2009-06-04 13:45:57.000000000 -0400
-@@ -67,6 +67,9 @@ static char sccsid[] = "@(#)ftpd.c	5.40 
++
+ # Make our operating system-specific security checks and definitions
+ # for libpty, login, and ftpd.  The following code decides what
+ # streams modules will be pushed onto a pty.  In particular, if
+diff -up krb5-appl-1.0/gssftp/ftpd/ftpd.c.pam krb5-appl-1.0/gssftp/ftpd/ftpd.c
+--- krb5-appl-1.0/gssftp/ftpd/ftpd.c.pam	2009-11-18 00:07:46.000000000 -0500
++++ krb5-appl-1.0/gssftp/ftpd/ftpd.c	2010-03-05 10:48:50.000000000 -0500
+@@ -69,6 +69,9 @@ static char sccsid[] = "@(#)ftpd.c	5.40 
  #ifdef HAVE_SHADOW
  #include <shadow.h>
  #endif
@@ -930,7 +914,7 @@ diff -up krb5-1.7/src/appl/gssftp/ftpd/ftpd.c krb5-1.7/src/appl/gssftp/ftpd/ftpd
  #include <grp.h> 
  #include <setjmp.h>
  #ifndef POSIX_SETJMP
-@@ -745,6 +748,22 @@ user(name)
+@@ -743,6 +746,22 @@ user(name)
  				name);
  		}
  #endif /* GSSAPI */
@@ -953,7 +937,7 @@ diff -up krb5-1.7/src/appl/gssftp/ftpd/ftpd.c krb5-1.7/src/appl/gssftp/ftpd/ftpd
  
  		if (!authorized && authlevel == AUTHLEVEL_AUTHORIZE) {
  			strncat(buf, "; Access denied.",
-@@ -846,6 +865,10 @@ end_login()
+@@ -843,6 +862,10 @@ end_login()
  	(void) krb5_seteuid((uid_t)0);
  	if (logged_in)
  		pty_logwtmp(ttyline, "", "");
@@ -964,7 +948,7 @@ diff -up krb5-1.7/src/appl/gssftp/ftpd/ftpd.c krb5-1.7/src/appl/gssftp/ftpd/ftpd
  	if (have_creds) {
  #ifdef GSSAPI
  		krb5_cc_destroy(kcontext, ccache);
-@@ -954,9 +977,19 @@ pass(passwd)
+@@ -951,9 +974,19 @@ pass(passwd)
  		 *   kpass fails and the user has no local password
  		 *   kpass fails and the provided password doesn't match pw
  		 */
@@ -987,7 +971,7 @@ diff -up krb5-1.7/src/appl/gssftp/ftpd/ftpd.c krb5-1.7/src/appl/gssftp/ftpd/ftpd
  			pw = NULL;
  			sleep(5);
  			if (++login_attempts >= 3) {
-@@ -973,6 +1006,23 @@ pass(passwd)
+@@ -970,6 +1003,23 @@ pass(passwd)
  	}
  	login_attempts = 0;		/* this time successful */
  
@@ -1011,7 +995,7 @@ diff -up krb5-1.7/src/appl/gssftp/ftpd/ftpd.c krb5-1.7/src/appl/gssftp/ftpd/ftpd
  	login(passwd, 0);
  	return;
  }
-@@ -988,6 +1038,18 @@ login(passwd, logincode)
+@@ -985,6 +1035,18 @@ login(passwd, logincode)
  		chown(ccname, pw->pw_uid, pw->pw_gid);
  #endif
  	}
@@ -1030,7 +1014,7 @@ diff -up krb5-1.7/src/appl/gssftp/ftpd/ftpd.c krb5-1.7/src/appl/gssftp/ftpd/ftpd
  
  	(void) krb5_setegid((gid_t)pw->pw_gid);
  	(void) initgroups(pw->pw_name, pw->pw_gid);
-@@ -1960,6 +2022,10 @@ dologout(status)
+@@ -1966,6 +2028,10 @@ dologout(status)
  		krb5_cc_destroy(kcontext, ccache);
  #endif
  	}
@@ -1041,12 +1025,12 @@ diff -up krb5-1.7/src/appl/gssftp/ftpd/ftpd.c krb5-1.7/src/appl/gssftp/ftpd/ftpd
  	/* beware of flushing buffers after a SIGPIPE */
  	_exit(status);
  }
-diff -up krb5-1.7/src/appl/gssftp/ftpd/Makefile.in krb5-1.7/src/appl/gssftp/ftpd/Makefile.in
---- krb5-1.7/src/appl/gssftp/ftpd/Makefile.in	2009-01-05 15:27:53.000000000 -0500
-+++ krb5-1.7/src/appl/gssftp/ftpd/Makefile.in	2009-06-04 13:45:57.000000000 -0400
-@@ -14,23 +14,25 @@ SETENVOBJ=@SETENVOBJ@
- LIBOBJS=@LIBOBJS@
- COMERRLIB=$(BUILDTOP)/util/et/libcom_err.a
+diff -up krb5-appl-1.0/gssftp/ftpd/Makefile.in.pam krb5-appl-1.0/gssftp/ftpd/Makefile.in
+--- krb5-appl-1.0/gssftp/ftpd/Makefile.in.pam	2009-07-20 13:21:24.000000000 -0400
++++ krb5-appl-1.0/gssftp/ftpd/Makefile.in	2010-03-05 10:48:50.000000000 -0500
+@@ -6,22 +6,24 @@ PROG_LIBPATH=-L$(TOPLIBD)
+ PROG_RPATH=$(KRB5_LIBDIR)
+ 
  FTPD_LIBS=@FTPD_LIBS@
 +PAM_LIBS=@PAM_LIBS@
  
@@ -1054,218 +1038,29 @@ diff -up krb5-1.7/src/appl/gssftp/ftpd/Makefile.in krb5-1.7/src/appl/gssftp/ftpd
  	  $(srcdir)/vers.c \
  	  $(srcdir)/../ftp/glob.c \
  	  $(srcdir)/../ftp/radix.c \
- 	  $(srcdir)/../ftp/secure.c \
-+	  $(srcdir)/../../bsd/pam.c \
- 	  $(srcdir)/../../bsd/getdtablesize.c $(SETENVSRC)
+-	  $(srcdir)/../ftp/secure.c
++	  $(srcdir)/../ftp/secure.c \
++	  $(srcdir)/../../bsd/pam.c
  
  OBJS	= ftpd.o ftpcmd.o glob.o popen.o vers.o radix.o \
--	  secure.o $(LIBOBJS) $(SETENVOBJ)
-+	  secure.o pam.o getdtablesize.o $(LIBOBJS) $(SETENVOBJ)
+-	  secure.o
++	  secure.o pam.o
  
  LOCALINCLUDES = -I$(srcdir)/.. -I$(srcdir)
  
  all::	ftpd
  
- ftpd:	$(OBJS) $(PTY_DEPLIB) $(GSS_DEPLIBS) $(KRB5_BASE_DEPLIBS)
--	$(CC_LINK) -o $@ $(OBJS) $(FTPD_LIBS) $(PTY_LIB) $(UTIL_LIB) $(GSS_LIBS) $(KRB5_BASE_LIBS)
-+	$(CC_LINK) -o $@ $(OBJS) $(FTPD_LIBS) $(PTY_LIB) $(UTIL_LIB) $(GSS_LIBS) $(KRB5_BASE_LIBS) $(PAM_LIBS)
+ ftpd:	$(OBJS) $(PTY_DEPLIB) $(MISSING_DEPLIB)
+-	$(CC_LINK) -o $@ $(OBJS) $(FTPD_LIBS) $(PTY_LIB) $(UTIL_LIB) $(MISSING_LIB) $(GSS_LIBS) $(LIBS)
++	$(CC_LINK) -o $@ $(OBJS) $(FTPD_LIBS) $(PTY_LIB) $(UTIL_LIB) $(MISSING_LIB) $(GSS_LIBS) $(PAM_LIBS) $(LIBS)
  
  generate-files-mac: ftpcmd.c
  
-@@ -62,6 +64,8 @@ secure.o: $(srcdir)/../ftp/secure.c
+@@ -61,4 +63,7 @@ ftpcmd.o: ftpcmd.c
+ popen.o: $(srcdir)/popen.c
+ vers.o: $(srcdir)/vers.c
  
- getdtablesize.o: $(srcdir)/../../bsd/getdtablesize.c
- 	$(CC) -c $(ALL_CFLAGS) $(srcdir)/../../bsd/getdtablesize.c
 +pam.o: $(srcdir)/../../bsd/pam.c
 +	$(CC) -c $(ALL_CFLAGS) $(srcdir)/../../bsd/pam.c
- 
- setenv.o: $(srcdir)/../../bsd/setenv.c
- 	$(CC) -c $(ALL_CFLAGS) $(srcdir)/../../bsd/setenv.c
-diff -up krb5-1.7/src/clients/ksu/main.c krb5-1.7/src/clients/ksu/main.c
---- krb5-1.7/src/clients/ksu/main.c	2008-12-01 12:09:59.000000000 -0500
-+++ krb5-1.7/src/clients/ksu/main.c	2009-06-04 13:45:57.000000000 -0400
-@@ -25,6 +25,7 @@
-  * KSU was writen by:  Ari Medvinsky, ari@isi.edu
-  */
- 
-+#include "autoconf.h"
- #include "ksu.h"
- #include "adm_proto.h"
- #include <sys/types.h>
-@@ -32,6 +33,10 @@
- #include <signal.h>
- #include <grp.h>
- 
-+#ifdef USE_PAM
-+#include "../../appl/bsd/pam.h"
-+#endif
 +
- /* globals */
- char * prog_name;
- int auth_debug =0;     
-@@ -39,6 +44,7 @@
- char k5users_path[MAXPATHLEN];
- char * gb_err = NULL;
- int quiet = 0;
-+int force_fork = 0;
- /***********/
- 
- #define _DEF_CSH "/bin/csh" 
-@@ -585,6 +591,25 @@
- 	       prog_name,target_user,client_name,
- 	       source_user,ontty());
- 	
-+#ifdef USE_PAM
-+	if (appl_pam_enabled(ksu_context, "ksu")) {
-+	    if (appl_pam_acct_mgmt(KSU_PAM_SERVICE, 1, target_user, NULL,
-+				   NULL, source_user,
-+				   ttyname(STDERR_FILENO)) != 0) {
-+		fprintf(stderr, "Access denied for %s.\n", target_user);
-+		sweep_up(ksu_context, cc_target);
-+		exit(1);
-+	    }
-+	    if (appl_pam_requires_chauthtok()) {
-+		fprintf(stderr, "Password change required for %s.\n",
-+			target_user);
-+		sweep_up(ksu_context, cc_target);
-+		exit(1);
-+	    }
-+	    force_fork++;
-+	}
-+#endif
-+
- 	/* Run authorization as target.*/
- 	if (krb5_seteuid(target_uid)) {
- 	    com_err(prog_name, errno, "while switching to target for authorization check");
-@@ -791,7 +816,7 @@
- 	fprintf(stderr, "program to be execed %s\n",params[0]);
-     }
-     
--    if( keep_target_cache ) {
-+    if( keep_target_cache && !force_fork ) {
- 	execv(params[0], params);
- 	com_err(prog_name, errno, "while trying to execv %s",
- 		params[0]);
-@@ -799,6 +824,33 @@
- 	exit(1);
-     }else{
- 	statusp = 1;
-+
-+#ifdef USE_PAM
-+	if (appl_pam_enabled(ksu_context, "ksu")) {
-+	    if (appl_pam_session_open() != 0) {
-+		fprintf(stderr, "Error opening session for %s.\n", target_user);
-+		sweep_up(ksu_context, cc_target);
-+		exit(1);
-+	    }
-+#ifdef DEBUG
-+	    if (auth_debug){
-+		printf(" Opened PAM session.\n");
-+	    }
-+#endif
-+	    if (appl_pam_cred_init()) {
-+		fprintf(stderr, "Error initializing credentials for %s.\n",
-+			target_user);
-+		sweep_up(ksu_context, cc_target);
-+		exit(1);
-+	    }
-+#ifdef DEBUG
-+	    if (auth_debug){
-+		printf(" Initialized PAM credentials.\n");
-+	    }
-+#endif
-+	}
-+#endif
-+
- 	switch ((child_pid = fork())) {
- 	default:
- 	    if (auth_debug){
-@@ -822,15 +874,34 @@
- 	    if (ret_pid == -1) {
- 	    	com_err(prog_name, errno, "while calling waitpid");
- 	    }
--	    sweep_up(ksu_context, cc_target);
-+	    if( !keep_target_cache ) {
-+	        sweep_up(ksu_context, cc_target);
-+	    }
- 	    exit (statusp);
- 	case -1:
- 	    com_err(prog_name, errno, "while trying to fork.");
- 	    sweep_up(ksu_context, cc_target);
- 	    exit (1);
- 	case 0:
-+#ifdef USE_PAM
-+	    if (appl_pam_enabled(ksu_context, "ksu")) {
-+		if (appl_pam_setenv() != 0) {
-+		    fprintf(stderr, "Error setting up environment for %s.\n",
-+			    target_user);
-+		    exit (1);
-+		}
-+#ifdef DEBUG
-+		if (auth_debug){
-+		    printf(" Set up PAM environment.\n");
-+		}
-+#endif
-+	    }
-+#endif
- 	    execv(params[0], params);
- 	    com_err(prog_name, errno, "while trying to execv %s", params[0]);
-+	    if( keep_target_cache ) {
-+	        sweep_up(ksu_context, cc_target);
-+	    }
- 	    exit (1);
- 	}
-     }
-diff -up krb5-1.7/src/clients/ksu/Makefile.in krb5-1.7/src/clients/ksu/Makefile.in
---- krb5-1.7/src/clients/ksu/Makefile.in	2009-01-05 15:27:53.000000000 -0500
-+++ krb5-1.7/src/clients/ksu/Makefile.in	2009-06-04 13:45:57.000000000 -0400
-@@ -15,6 +15,7 @@ SRCS = \
- 	$(srcdir)/ccache.c \
- 	$(srcdir)/authorization.c \
- 	$(srcdir)/main.c \
-+	$(srcdir)/../../appl/bsd/pam.c \
- 	$(srcdir)/heuristic.c \
- 	$(srcdir)/xmalloc.c \
- 	$(srcdir)/setenv.c
-@@ -23,13 +24,17 @@ OBJS = \
- 	ccache.o \
- 	authorization.o \
- 	main.o \
-+	pam.o \
- 	heuristic.o \
- 	xmalloc.o @SETENVOBJ@
- 
- all:: ksu
- 
- ksu: $(OBJS) $(KRB5_BASE_DEPLIBS)
--	$(CC_LINK) -o $@ $(OBJS) $(KRB5_BASE_LIBS) $(KSU_LIBS)
-+	$(CC_LINK) -o $@ $(OBJS) $(KRB5_BASE_LIBS) $(KSU_LIBS) $(PAM_LIBS)
-+
-+pam.o: $(srcdir)/../../appl/bsd/pam.c
-+	$(CC) $(ALL_CFLAGS) -c $<
- 
- clean::
- 	$(RM) ksu
-diff -up krb5-1.7/src/config/pre.in krb5-1.7/src/config/pre.in
---- krb5-1.7/src/config/pre.in	2009-04-15 16:06:35.000000000 -0400
-+++ krb5-1.7/src/config/pre.in	2009-06-04 13:45:57.000000000 -0400
-@@ -181,6 +181,7 @@ LD_UNRESOLVED_PREFIX = @LD_UNRESOLVED_PR
- LD_SHLIBDIR_PREFIX = @LD_SHLIBDIR_PREFIX@
- LDARGS = @LDARGS@
- LIBS = @LIBS@
-+PAM_LIBS = @PAM_LIBS@
- 
- INSTALL=@INSTALL@
- INSTALL_STRIP=
-diff -up krb5-1.7/src/configure.in krb5-1.7/src/configure.in
---- krb5-1.7/src/configure.in	2009-04-15 16:07:03.000000000 -0400
-+++ krb5-1.7/src/configure.in	2009-06-04 13:45:57.000000000 -0400
-@@ -1040,6 +1040,8 @@ fi
- dnl
- AC_CONFIG_SUBDIRS(appl/libpty appl/bsd appl/gssftp appl/telnet)
- 
-+KRB5_WITH_PAM
-+
- AC_CONFIG_FILES(krb5-config, [chmod +x krb5-config])
- V5_AC_OUTPUT_MAKEFILE(.
- 
+ # NOPOSTFIX
