@@ -110,6 +110,7 @@ Patch83: krb5-CVE-2009-0846.patch
 Patch84: krb5-CVE-2009-0847.patch
 Patch85: http://web.mit.edu/kerberos/advisories/2009-004-patch_1.6.3.txt
 Patch86: krb5-1.7-openssl-1.0.patch
+Patch87: krb5-1.6.3-kpasswd_ipv6.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -242,6 +243,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Mar  8 2010 Nalin Dahyabhai <nalin@redhat.com>
+- pull up patch to get the client libraries to correctly perform password
+  changes over IPv6 (Sumit Bose, RT#6661)
+
 * Wed Mar  3 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.6.3-27
 - fix a null pointer dereference and crash introduced in our PAM patch that
   would happen if ftpd was given the name of a user who wasn't known to the
@@ -1457,6 +1462,7 @@ popd
 %patch84 -p1 -b .CVE-2009-0847
 %patch85 -p0 -b .2009-004
 %patch86 -p0 -b .openssl-1.0
+%patch87 -p0 -b .kpasswd_ipv6
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
