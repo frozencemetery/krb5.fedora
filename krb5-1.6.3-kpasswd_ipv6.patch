@@ -1,5 +1,7 @@
 Get the client libraries to correctly attempt password changes when using IPv6,
 tweaked to apply to older releases.  Original patch by Sumit Bose, RT#6661
+The kadmin service from this package doesn't start listening for IPv6 clients
+until 1.7, but this is still useful in mixed environments.
 
 Index: src/lib/krb5/os/changepw.c
 ===================================================================

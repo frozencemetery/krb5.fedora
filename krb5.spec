@@ -16,7 +16,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 27%{?dist}
+Release: 28%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -243,7 +243,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
-* Mon Mar  8 2010 Nalin Dahyabhai <nalin@redhat.com>
+* Mon Mar  8 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.6.3-28
 - pull up patch to get the client libraries to correctly perform password
   changes over IPv6 (Sumit Bose, RT#6661)
 
