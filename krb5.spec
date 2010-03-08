@@ -89,7 +89,6 @@ Patch73: krb5-1.6.3-ftp_glob_runique.patch
 Patch79: krb5-trunk-ftp_mget_case.patch
 Patch88: krb5-1.7-sizeof.patch
 Patch89: krb5-appl-1.0-largefile.patch
-Patch93: krb5-1.7-create_on_load.patch
 Patch95: krb5-1.8-opte.patch
 Patch96: krb5-1.8-exp_warn.patch
 Patch98: krb5-1.8-kpasswd_ccache.patch
@@ -290,8 +289,6 @@ pushd krb5-appl-%{appl_version}
 %patch88 -p3 -b .sizeof
 %patch89 -p1 -b .largefile
 popd
-# Shouldn't be necessary in 1.8.
-##%patch93 -p1 -b .create_on_load
 %patch95 -p1 -b .opte
 %patch96 -p1 -b .exp_warn
 %patch98 -p1 -b .kpasswd-ccache
