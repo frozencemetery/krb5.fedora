@@ -93,6 +93,7 @@ Patch93: krb5-1.7-create_on_load.patch
 Patch95: krb5-1.8-opte.patch
 Patch96: krb5-1.8-exp_warn.patch
 Patch98: krb5-1.8-kpasswd_ccache.patch
+Patch99: krb5-trunk-kpasswd_ipv6.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -294,6 +295,7 @@ popd
 %patch95 -p1 -b .opte
 %patch96 -p1 -b .exp_warn
 %patch98 -p1 -b .kpasswd-ccache
+%patch99 -p0 -b .kpasswd-ipv6
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -867,6 +869,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Mar  8 2010 Nalin Dahyabhai <nalin@redhat.com>
+- pull up patch to get the client libraries to correctly perform password
+  changes over IPv6 (Sumit Bose, RT#6661)
+
 * Fri Mar  5 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.8-1
 - update to 1.8
   - temporarily bundling the krb5-appl package (split upstream as of 1.8)
