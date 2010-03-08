@@ -7,13 +7,13 @@
 # For consistency with regular login.
 %global login_pam_service remote
 
-# Temporary.
+# Temporary bundling, pending package review #570951.
 %global appl_version 1.0
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -307,7 +307,7 @@ sed -i -e '1c\
 chmod -x doc/krb5-protocol/*.txt doc/*.html doc/*/*.html
 
 # Rename the man pages so that they'll get generated correctly.  Uses the
-# "krb5-trunk-manpaths.txt" source file.
+# "krb5-1.8-manpaths.txt" source file.
 pushd src
 cat %{SOURCE25} | while read manpage ; do
 	mv "$manpage" "$manpage".in
@@ -351,9 +351,9 @@ autoconf
 popd
 
 %build
-cd src
-INCLUDES=-I%{_includedir}/et
+pushd src
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
+INCLUDES=-I%{_includedir}/et
 CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC`"
 CPPFLAGS="`echo $DEFINES $INCLUDES`"
 %configure \
@@ -389,11 +389,12 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--with-selinux
 # Now build it.
 make %{?_smp_mflags}
+popd
 
 # The applications, too.  Build everything position-independent.  We only get
 # away with this if our build dependencies drag an older krb5-devel onto the
 # system.
-pushd ../krb5-appl-%{appl_version}
+pushd krb5-appl-%{appl_version}
 CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIE -fno-strict-aliasing`"
 LDFLAGS="-pie"
 %configure \
@@ -409,7 +410,7 @@ make %{?_smp_mflags}
 popd
 
 # Run the test suite.  We can't actually do this in the build system.
-: make check TMPDIR=%{_tmppath}
+: make -C src check TMPDIR=%{_tmppath}
 
 %install
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
@@ -866,7 +867,7 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Mon Mar  8 2010 Nalin Dahyabhai <nalin@redhat.com>
+* Mon Mar  8 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.8-2
 - pull up patch to get the client libraries to correctly perform password
   changes over IPv6 (Sumit Bose, RT#6661)
 
