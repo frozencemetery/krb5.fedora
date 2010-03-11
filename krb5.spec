@@ -64,7 +64,6 @@ Patch12: krb5-1.7-ktany.patch
 Patch14: krb5-1.3-ftp-glob.patch
 Patch16: krb5-1.7-buildconf.patch
 Patch23: krb5-1.3.1-dns.patch
-Patch26: krb5-1.3.2-efence.patch
 Patch29: krb5-1.8-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch33: krb5-appl-1.0-io.patch
@@ -260,8 +259,6 @@ pushd krb5-appl-%{appl_version}
 popd
 %patch16 -p1 -b .buildconf
 %patch23 -p1 -b .dns
-# Removes a malloc(0) case, nothing more.
-# %patch26 -p1 -b .efence
 %patch29 -p1 -b .kprop-mktemp
 %patch30 -p1 -b .send-pr-tempfile
 pushd krb5-appl-%{appl_version}
