@@ -71,7 +71,6 @@ Patch36: krb5-1.7-rcp-markus.patch
 Patch39: krb5-1.8-api.patch
 Patch40: krb5-1.4.1-telnet-environ.patch
 Patch53: krb5-1.7-nodeplibs.patch
-Patch55: krb5-1.6.1-empty.patch
 Patch56: krb5-1.7-doublelog.patch
 Patch57: krb5-appl-1.0-login_chdir.patch
 Patch58: krb5-1.8-key_exp.patch
@@ -270,7 +269,6 @@ pushd krb5-appl-%{appl_version}
 %patch40 -p3 -b .telnet-environ
 popd
 %patch53 -p1 -b .nodeplibs
-#%patch55 -p1 -b .empty
 %patch56 -p1 -b .doublelog
 pushd krb5-appl-%{appl_version}
 %patch57 -p1 -b .login_chdir
