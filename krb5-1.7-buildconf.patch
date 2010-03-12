@@ -1,7 +1,8 @@
 Build binaries in this package as PIEs and install shared libraries with the
 execute bit set on them.  Prune out the -L/usr/lib*, PIE flags, and CFLAGS
 where they might leak out and affect apps which just want to link with the
-libraries (RT#TBD).
+libraries. FIXME: needs to check and not just assume that the compiler supports
+using these flags.
 
 diff -up krb5-1.7/src/config/shlib.conf krb5-1.7/src/config/shlib.conf
 --- krb5-1.7/src/config/shlib.conf	2008-12-08 17:33:07.000000000 -0500
