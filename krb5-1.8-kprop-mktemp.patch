@@ -1,4 +1,4 @@
-Use an in-memory ccache to silence a compiler warning.
+Use an in-memory ccache to silence a compiler warning, for RT#6414.
 
 diff -up krb5-1.8/src/slave/kprop.c.kprop-mktemp krb5-1.8/src/slave/kprop.c
 --- krb5-1.8/src/slave/kprop.c.kprop-mktemp	2009-11-06 18:29:12.000000000 -0500
