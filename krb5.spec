@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -91,6 +91,7 @@ Patch95: krb5-1.8-opte.patch
 Patch96: krb5-1.8-exp_warn.patch
 Patch98: krb5-1.8-kpasswd_ccache.patch
 Patch99: krb5-trunk-kpasswd_ipv6.patch
+Patch100: krb5-trunk-tktlifetime.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -288,6 +289,7 @@ popd
 %patch96 -p1 -b .exp_warn
 %patch98 -p1 -b .kpasswd-ccache
 %patch99 -p0 -b .kpasswd-ipv6
+%patch100 -p1 -b .tktlifetime
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -862,6 +864,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Mar 12 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.8-3
+- add documentation for the ticket_lifetime option (#561174)
+
 * Mon Mar  8 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.8-2
 - pull up patch to get the client libraries to correctly perform password
   changes over IPv6 (Sumit Bose, RT#6661)
