@@ -8,7 +8,7 @@ section of /etc/krb5.conf.
 
 When enabled, ksu gains a dependency on libpam.
 
-Originally RT#5939, needs updating for 1.8.
+Originally RT#5939.
 
 diff -up krb5-1.8/src/aclocal.m4.pam krb5-1.8/src/aclocal.m4
 --- krb5-1.8/src/aclocal.m4.pam	2009-11-22 12:00:45.000000000 -0500
