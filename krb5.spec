@@ -289,7 +289,7 @@ popd
 %patch96 -p1 -b .exp_warn
 %patch98 -p1 -b .kpasswd-ccache
 %patch99 -p0 -b .kpasswd-ipv6
-%patch100 -p1 -b .tktlifetime
+%patch100 -p0 -b .tktlifetime
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
