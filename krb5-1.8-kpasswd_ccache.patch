@@ -1,5 +1,5 @@
 If we encounter any errors reading the user's principal name from the default
-ccache, fall back to the default of using the current user's name.
+ccache, fall back to the default of using the current user's name.  RT#6683
 
 diff -up krb5-1.8/src/clients/kpasswd/kpasswd.c.kpasswd-ccache krb5-1.8/src/clients/kpasswd/kpasswd.c
 --- krb5-1.8/src/clients/kpasswd/kpasswd.c.kpasswd-ccache	2009-10-30 20:48:38.000000000 -0400

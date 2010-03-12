@@ -1,5 +1,5 @@
 Fall back to the library default for whether or not to prompt for a password-
-change during authentication, if we weren't passed any options.
+change during authentication, if we weren't passed any options.  RT#6681
 
 diff -up krb5-1.8/src/lib/krb5/krb/gic_pwd.c.opte krb5-1.8/src/lib/krb5/krb/gic_pwd.c
 --- krb5-1.8/src/lib/krb5/krb/gic_pwd.c.opte	2009-12-23 11:00:05.000000000 -0500

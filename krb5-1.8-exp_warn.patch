@@ -1,6 +1,6 @@
 Don't warn of expiration reported the new way if it's more than a week from
 now, for consistency with the code that handles expiration times reported the
-old way.
+old way.  RT#6682
 
 diff -up krb5-1.8/src/lib/krb5/krb/gic_pwd.c.exp_warn krb5-1.8/src/lib/krb5/krb/gic_pwd.c
 --- krb5-1.8/src/lib/krb5/krb/gic_pwd.c.exp_warn	2010-03-05 11:04:10.000000000 -0500
