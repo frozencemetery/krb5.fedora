@@ -2,8 +2,6 @@
 %global WITH_OPENSSL 1
 %global WITH_DIRSRV 1
 
-%global krb5prefix %{_prefix}/kerberos
-
 # For consistency with regular login.
 %global login_pam_service remote
 
@@ -13,80 +11,46 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
-# Everything that needs a krb5-appl counterpart will have it with number + 100
-# until we get the package split done, else the telnet/ftp/rcmd stuff will just
-# "vanish".
-Source100: krb5-appl-%{appl_version}.tar.gz
-Source101: krb5-appl-%{appl_version}.tar.gz.asc
 Source2: kpropd.init
 Source4: kadmind.init
 Source5: krb5kdc.init
 Source6: krb5.conf
-Source7: krb5.sh
-Source8: krb5.csh
 Source10: kdc.conf
 Source11: kadm5.acl
-Source12: krsh
-Source13: krlogin
-Source14: eklogin.xinetd
-Source15: klogin.xinetd
-Source16: kshell.xinetd
-Source17: krb5-telnet.xinetd
-Source18: gssftp.xinetd
 Source19: krb5kdc.sysconfig
 Source20: kadmin.sysconfig
-Source22: ekrb5-telnet.xinetd
 # The same source files we "check", generated with "krb5-tex-pdf.sh create"
 # and tarred up.
 Source23: krb5-%{version}-pdf.tar.gz
 Source24: krb5-tex-pdf.sh
 Source25: krb5-1.8-manpaths.txt
-Source125: krb5-appl-1.0-manpaths.txt
-Source26: gssftp.pamd
-Source27: kshell.pamd
-Source28: ekshell.pamd
 Source29: ksu.pamd
 Source30: kerberos-iv.portreserve
 Source31: kerberos-adm.portreserve
 Source32: krb5_prop.portreserve
 
-Patch3: krb5-1.3-netkit-rsh.patch
-Patch4: krb5-appl-1.0-rlogind-environ.patch
 Patch5: krb5-1.8-ksu-access.patch
 Patch6: krb5-1.8-ksu-path.patch
-Patch11: krb5-1.2.1-passive.patch
 Patch12: krb5-1.7-ktany.patch
-Patch14: krb5-1.3-ftp-glob.patch
 Patch16: krb5-1.7-buildconf.patch
 Patch23: krb5-1.3.1-dns.patch
 Patch29: krb5-1.8-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
-Patch33: krb5-appl-1.0-io.patch
-Patch36: krb5-1.7-rcp-markus.patch
 Patch39: krb5-1.8-api.patch
-Patch40: krb5-1.4.1-telnet-environ.patch
 Patch53: krb5-1.7-nodeplibs.patch
 Patch56: krb5-1.7-doublelog.patch
-Patch57: krb5-appl-1.0-login_chdir.patch
 Patch58: krb5-1.8-key_exp.patch
 Patch59: krb5-1.8-kpasswd_tcp.patch
 Patch60: krb5-1.8-pam.patch
-Patch160: krb5-appl-1.0-pam.patch
 Patch61: krb5-1.8-manpaths.patch
-Patch161: krb5-appl-1.0-manpaths.patch
 Patch63: krb5-1.8-selinux-label.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.8-dirsrv-accountlock.patch
-Patch72: krb5-1.6.3-ftp_fdleak.patch
-Patch73: krb5-1.6.3-ftp_glob_runique.patch
-Patch79: krb5-trunk-ftp_mget_case.patch
-Patch88: krb5-1.7-sizeof.patch
-Patch89: krb5-appl-1.0-largefile.patch
 Patch95: krb5-1.8-opte.patch
 Patch96: krb5-1.8-exp_warn.patch
 Patch98: krb5-1.8-kpasswd_ccache.patch
@@ -191,32 +155,6 @@ package contains the basic Kerberos programs (kinit, klist, kdestroy,
 kpasswd). If your network uses Kerberos, this package should be
 installed on every workstation.
 
-%package workstation-clients
-Summary: Kerberos 5 clients for use on workstations
-Group: System Environment/Base
-Requires: %{name}-workstation = %{version}-%{release}
-
-%description workstation-clients
-Kerberos is a network authentication system. The krb5-workstation-clients
-package contains kerberized versions of Telnet, FTP, and rsh/rlogin
-clients. If your network uses these services this package should be
-installed on systems which expect to connect to servers which provide
-these services.
-
-%package workstation-servers
-Summary: Kerberos 5 servers for use on workstations
-Group: System Environment/Base
-Requires: %{name}-workstation = %{version}-%{release}
-Requires(post): initscripts
-Requires(postun): initscripts
-Requires: xinetd, /etc/pam.d/%{login_pam_service}
-
-%description workstation-servers
-Kerberos is a network authentication system. The krb5-workstation-servers
-package contains kerberized versions of Telnet, FTP, and rsh/rlogin
-servers. If your network uses Kerberos, this package should be
-installed on systems which are meant provide these services.
-
 %package pkinit-openssl
 Summary: The PKINIT module for Kerberos 5
 Group: System Environment/Libraries
@@ -229,65 +167,32 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -a 23 -a 100
+%setup -q -a 23
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
-pushd krb5-appl-%{appl_version}
-%patch160 -p1 -b .pam
-popd
 
 %patch61 -p1 -b .manpaths
-pushd krb5-appl-%{appl_version}
-%patch161 -p1 -b .manpaths
-popd
 
 %patch63 -p1 -b .selinux-label
-pushd krb5-appl-%{appl_version}
-%patch3  -p3 -b .netkit-rsh
-%patch4  -p1 -b .rlogind-environ
-popd
 
 %patch5  -p1 -b .ksu-access
 %patch6  -p1 -b .ksu-path
-pushd krb5-appl-%{appl_version}
-%patch11 -p3 -b .passive
-popd
 %patch12 -p1 -b .ktany
-pushd krb5-appl-%{appl_version}
-%patch14 -p3 -b .ftp-glob
-popd
 %patch16 -p1 -b .buildconf
 %patch23 -p1 -b .dns
 %patch29 -p1 -b .kprop-mktemp
 %patch30 -p1 -b .send-pr-tempfile
-pushd krb5-appl-%{appl_version}
-%patch33 -p1 -b .io
-%patch36 -p3 -b .rcp-markus
-popd
 %patch39 -p1 -b .api
-pushd krb5-appl-%{appl_version}
-%patch40 -p3 -b .telnet-environ
-popd
 %patch53 -p1 -b .nodeplibs
 %patch56 -p1 -b .doublelog
-pushd krb5-appl-%{appl_version}
-%patch57 -p1 -b .login_chdir
-popd
 %patch58 -p1 -b .key_exp
 %patch59 -p1 -b .kpasswd_tcp
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
-pushd krb5-appl-%{appl_version}
-%patch72 -p3 -b .ftp_fdleak
-%patch73 -p3 -b .ftp_glob_runique
-%patch79 -p2 -b .ftp_mget_case
-%patch88 -p3 -b .sizeof
-%patch89 -p1 -b .largefile
-popd
 %patch95 -p1 -b .opte
 %patch96 -p1 -b .exp_warn
-%patch98 -p1 -b .kpasswd-ccache
+%patch98 -p0 -b .kpasswd-ccache
 %patch99 -p0 -b .kpasswd-ipv6
 %patch100 -p0 -b .tktlifetime
 gzip doc/*.ps
@@ -307,11 +212,6 @@ chmod -x doc/krb5-protocol/*.txt doc/*.html doc/*/*.html
 # "krb5-1.8-manpaths.txt" source file.
 pushd src
 cat %{SOURCE25} | while read manpage ; do
-	mv "$manpage" "$manpage".in
-done
-popd
-pushd krb5-appl-%{appl_version}
-cat %{SOURCE125} | while read manpage ; do
 	mv "$manpage" "$manpage".in
 done
 popd
@@ -338,11 +238,6 @@ touch -r $inldif 60kerberos.ldif
 
 # Rebuild the configure scripts.
 pushd src
-autoheader
-autoconf
-popd
-
-pushd krb5-appl-%{appl_version}
 autoheader
 autoconf
 popd
@@ -388,34 +283,11 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 make %{?_smp_mflags}
 popd
 
-# The applications, too.  Build everything position-independent.  We only get
-# away with this if our build dependencies drag an older krb5-devel onto the
-# system.
-pushd krb5-appl-%{appl_version}
-CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIE -fno-strict-aliasing`"
-LDFLAGS="-pie"
-%configure \
-	CFLAGS="$CFLAGS" \
-	LDFLAGS="$LDFLAGS" \
-	--bindir=%{krb5prefix}/bin \
-	--mandir=%{krb5prefix}/man \
-	--sbindir=%{krb5prefix}/sbin \
-	--datadir=%{krb5prefix}/share \
-	--with-pam \
-	--with-pam-login-service=%{login_pam_service}
-make %{?_smp_mflags}
-popd
-
 # Run the test suite.  We can't actually do this in the build system.
 : make -C src check TMPDIR=%{_tmppath}
 
 %install
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
-
-# Shell scripts wrappers for Kerberized rsh and rlogin (source files).
-mkdir -p $RPM_BUILD_ROOT%{krb5prefix}/{bin,man/man{1,5,8},sbin,share}
-install -m 755 %{SOURCE12} $RPM_BUILD_ROOT/%{krb5prefix}/bin/
-install -m 755 %{SOURCE13} $RPM_BUILD_ROOT/%{krb5prefix}/bin/
 
 # Info docs.
 mkdir -p $RPM_BUILD_ROOT%{_infodir}
@@ -433,15 +305,6 @@ install -pm 600 %{SOURCE11} $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc/
 # Default configuration file for everything.
 mkdir -p $RPM_BUILD_ROOT/etc
 install -pm 644 %{SOURCE6} $RPM_BUILD_ROOT/etc/krb5.conf
-
-# Login-time scriptlets (krb5.sh, krb5.csh) to fix the PATH variable.
-mkdir -p $RPM_BUILD_ROOT/etc/profile.d
-for subpackage in workstation-clients workstation-servers ; do
-	install -pm 644 %{SOURCE7} \
-	$RPM_BUILD_ROOT/etc/profile.d/krb5-$subpackage.sh
-	install -pm 644 %{SOURCE8} \
-	$RPM_BUILD_ROOT/etc/profile.d/krb5-$subpackage.csh
-done
 
 # Server init scripts (krb5kdc,kadmind,kpropd) and their sysconfig files.
 mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
@@ -474,25 +337,10 @@ for portreserve in \
 	$RPM_BUILD_ROOT/etc/portreserve/`basename ${portreserve} .portreserve`
 done
 
-# Xinetd configuration files.
-mkdir -p $RPM_BUILD_ROOT/etc/xinetd.d/
-for xinetd in \
-	%{SOURCE14} \
-	%{SOURCE15} \
-	%{SOURCE16} \
-	%{SOURCE17} \
-	%{SOURCE18} \
-	%{SOURCE22} ; do
-	install -pm 644 ${xinetd} \
-	$RPM_BUILD_ROOT/etc/xinetd.d/`basename ${xinetd} .xinetd`
-done
 
 # PAM configuration files.
 mkdir -p $RPM_BUILD_ROOT/etc/pam.d/
 for pam in \
-	%{SOURCE26} \
-	%{SOURCE27} \
-	%{SOURCE28} \
 	%{SOURCE29} ; do
 	install -pm 644 ${pam} \
 	$RPM_BUILD_ROOT/etc/pam.d/`basename ${pam} .pamd`
@@ -505,7 +353,6 @@ install -pdm 755 $RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/authdata
 
 # The rest of the binaries, headers, libraries, and docs.
 make -C src DESTDIR=$RPM_BUILD_ROOT EXAMPLEDIR=%{_docdir}/krb5-libs-%{version}/examples install
-make -C krb5-appl-%{appl_version} DESTDIR=$RPM_BUILD_ROOT install
 
 # Munge krb5-config yet again.  This is totally wrong for 64-bit, but chunks
 # of the buildconf patch already conspire to strip out /usr/<anything> from the
@@ -579,21 +426,6 @@ if [ "$2" -eq "0" ] ; then
 fi
 exit 0
 
-%triggerun workstation-servers -- krb5-workstation-servers < 1.6.3-100
-if [ "$2" -eq "0" ] ; then
-	/sbin/service krb524 stop > /dev/null 2>&1 || :
-	/sbin/chkconfig --del krb524 > /dev/null 2>&1 || :
-fi
-exit 0
-
-%post workstation-servers
-/sbin/service xinetd reload > /dev/null 2>&1 || :
-exit 0
-
-%postun workstation-servers
-/sbin/service xinetd reload > /dev/null 2>&1 || :
-exit 0
-
 %post workstation
 /sbin/install-info %{_infodir}/krb5-user.info %{_infodir}/dir
 exit 0
@@ -642,73 +474,6 @@ exit 0
 %dir %{_datadir}/gnats
 %{_datadir}/gnats/mit
 %{_mandir}/man1/krb5-send-pr.1*
-
-%files workstation-clients
-%defattr(-,root,root,-)
-%docdir %{krb5prefix}/man
-%attr(0755,root,root) %doc src/config-files/convert-config-files
-
-%config(noreplace) /etc/profile.d/krb5-workstation-clients.sh
-%config(noreplace) /etc/profile.d/krb5-workstation-clients.csh
-
-%dir %{krb5prefix}
-%dir %{krb5prefix}/bin
-%dir %{krb5prefix}/man
-%dir %{krb5prefix}/man/man1
-
-# Used by both clients and servers.
-%{krb5prefix}/bin/rcp
-%{krb5prefix}/man/man1/rcp.1*
-
-# Client network bits.
-%{krb5prefix}/bin/ftp
-%{krb5prefix}/man/man1/ftp.1*
-%{krb5prefix}/bin/krlogin
-%{krb5prefix}/bin/rlogin
-%{krb5prefix}/man/man1/rlogin.1*
-%{krb5prefix}/bin/krsh
-%{krb5prefix}/bin/rsh
-%{krb5prefix}/man/man1/rsh.1*
-%{krb5prefix}/bin/telnet
-%{krb5prefix}/man/man1/telnet.1*
-%{krb5prefix}/man/man1/tmac.doc*
-
-%files workstation-servers
-%defattr(-,root,root,-)
-%docdir %{krb5prefix}/man
-
-%config(noreplace) /etc/profile.d/krb5-workstation-servers.sh
-%config(noreplace) /etc/profile.d/krb5-workstation-servers.csh
-
-%dir %{krb5prefix}
-%dir %{krb5prefix}/bin
-%dir %{krb5prefix}/man
-%dir %{krb5prefix}/man/man1
-%dir %{krb5prefix}/man/man8
-%dir %{krb5prefix}/sbin
-
-# Used by both clients and servers.
-%{krb5prefix}/bin/rcp
-%{krb5prefix}/man/man1/rcp.1*
-
-%config(noreplace) /etc/xinetd.d/*
-%config(noreplace) /etc/pam.d/kshell
-%config(noreplace) /etc/pam.d/ekshell
-%config(noreplace) /etc/pam.d/gssftp
-
-# Login is used by telnetd and klogind.
-%{krb5prefix}/sbin/login.krb5
-%{krb5prefix}/man/man8/login.krb5.8*
-
-# Application servers.
-%{krb5prefix}/sbin/ftpd
-%{krb5prefix}/man/man8/ftpd.8*
-%{krb5prefix}/sbin/klogind
-%{krb5prefix}/man/man8/klogind.8*
-%{krb5prefix}/sbin/kshd
-%{krb5prefix}/man/man8/kshd.8*
-%{krb5prefix}/sbin/telnetd
-%{krb5prefix}/man/man8/telnetd.8*
 
 %files server
 %defattr(-,root,root,-)
@@ -810,7 +575,6 @@ exit 0
 %dir %{_libdir}/krb5/plugins/*
 %{_libdir}/krb5/plugins/preauth/encrypted_challenge.so
 %{_libdir}/krb5/plugins/kdb/db2.so
-%{krb5prefix}/share
 
 %if %{WITH_OPENSSL}
 %files pkinit-openssl
@@ -864,6 +628,13 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Mar 19 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.8-4
+- remove the krb5-appl bits (the -workstation-clients and -workstation-servers
+  subpackages) now that krb5-appl is its own package
+- replace our patch for #563431 (kpasswd doesn't fall back to guessing your
+  principal name using your user name if you don't have a ccache) with the
+  on upstream uses
+
 * Fri Mar 12 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.8-3
 - add documentation for the ticket_lifetime option (#561174)
 

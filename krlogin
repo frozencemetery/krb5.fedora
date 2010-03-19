@@ -1,2 +1,0 @@
-#!/bin/sh
-/usr/kerberos/bin/rlogin -x "$@"
