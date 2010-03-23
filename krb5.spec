@@ -2,16 +2,10 @@
 %global WITH_OPENSSL 1
 %global WITH_DIRSRV 1
 
-# For consistency with regular login.
-%global login_pam_service remote
-
-# Temporary bundling, pending package review #570951.
-%global appl_version 1.0
-
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -56,6 +50,7 @@ Patch96: krb5-1.8-exp_warn.patch
 Patch98: krb5-1.8-kpasswd_ccache.patch
 Patch99: krb5-trunk-kpasswd_ipv6.patch
 Patch100: krb5-trunk-tktlifetime.patch
+Patch101: http://web.mit.edu/kerberos/advisories/2010-002-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -195,6 +190,7 @@ ln -s NOTICE LICENSE
 %patch98 -p0 -b .kpasswd-ccache
 %patch99 -p0 -b .kpasswd-ipv6
 %patch100 -p0 -b .tktlifetime
+%patch101 -p0 -b .2010-002
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -628,6 +624,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Mar 23 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.8-5
+- add upstream fix for denial-of-service in SPNEGO (CVE-2010-0628)
+
 * Fri Mar 19 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.8-4
 - remove the krb5-appl bits (the -workstation-clients and -workstation-servers
   subpackages) now that krb5-appl is its own package
