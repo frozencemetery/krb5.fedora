@@ -227,7 +227,7 @@ certificate.
 
 %changelog
 * Tue Mar 23 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7.1-7
-- add fix for denial-of-service in SPNEGO (CVE-2010-0628)
+- add fix for denial-of-service in SPNEGO (CVE-2010-0628, #576325)
 
 * Mon Mar  8 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7.1-6
 - pull up patch to get the client libraries to correctly perform password
