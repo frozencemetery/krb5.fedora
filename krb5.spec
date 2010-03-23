@@ -625,7 +625,7 @@ exit 0
 
 %changelog
 * Tue Mar 23 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.8-5
-- add upstream fix for denial-of-service in SPNEGO (CVE-2010-0628)
+- add upstream fix for denial-of-service in SPNEGO (CVE-2010-0628, #576325)
 - kdc.conf: no more need to suggest keeping keys with v4-compatible salting
 
 * Fri Mar 19 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.8-4
