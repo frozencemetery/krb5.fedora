@@ -16,7 +16,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 28%{?dist}
+Release: 29%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -111,6 +111,7 @@ Patch84: krb5-CVE-2009-0847.patch
 Patch85: http://web.mit.edu/kerberos/advisories/2009-004-patch_1.6.3.txt
 Patch86: krb5-1.7-openssl-1.0.patch
 Patch87: krb5-1.6.3-kpasswd_ipv6.patch
+Patch88: krb5-1.6.1-cs22427.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -243,6 +244,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Apr  6 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.6.3-29
+- add backported patch to fix a few use-after-free bugs, including one in
+  kadmind (CVE-2010-0629, #576011)
+
 * Mon Mar  8 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.6.3-28
 - pull up patch to get the client libraries to correctly perform password
   changes over IPv6 (Sumit Bose, RT#6661)
@@ -1463,6 +1468,7 @@ popd
 %patch85 -p0 -b .2009-004
 %patch86 -p0 -b .openssl-1.0
 %patch87 -p0 -b .kpasswd_ipv6
+%patch88 -p0 -b .cs22427
 cp src/krb524/README README.krb524
 gzip doc/*.ps
 
