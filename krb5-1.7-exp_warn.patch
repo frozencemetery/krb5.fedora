@@ -1,6 +1,9 @@
 Don't warn of expiration reported the new way if it's more than a week from
 now, for consistency with the code that handles expiration times reported the
-old way.
+old way.  RT#6682  Discussion in RT leans toward following the code intent
+of depending on the to KDC simply not include the new-style information if
+it's above a configured threshold, thus leaving the timing of warnings to the
+KDC administrator.
 
 diff -up krb5-1.7/src/lib/krb5/krb/gic_pwd.c krb5-1.7/src/lib/krb5/krb/gic_pwd.c
 --- krb5-1.7/src/lib/krb5/krb/gic_pwd.c	2010-01-18 11:12:02.000000000 -0500
