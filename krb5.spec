@@ -83,7 +83,6 @@ Patch89: krb5-1.7-largefile.patch
 Patch90: krb5-1.7-openssl-1.0.patch
 Patch93: krb5-1.7-create_on_load.patch
 Patch95: krb5-1.7-opte.patch
-Patch96: krb5-1.7-exp_warn.patch
 Patch97: http://web.mit.edu/kerberos/advisories/2010-001-patch.txt
 Patch98: krb5-1.7.1-kpasswd_ccache.patch
 Patch99: krb5-1.7.1-kpasswd_ipv6.patch
@@ -226,6 +225,11 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Thu Apr  8 2010 Nalin Dahyabhai <nalin@redhat.com>
+- drop patch to suppress key expiration warnings sent from the KDC in
+  the last-req field, as the KDC is expected to just be configured to either
+  send them or not as a particular key approaches expiration (#556495)
+
 * Tue Mar 23 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7.1-7
 - add fix for denial-of-service in SPNEGO (CVE-2010-0628, #576325)
 
@@ -1609,7 +1613,6 @@ popd
 %patch90 -p0 -b .openssl-1.0
 %patch93 -p1 -b .create_on_load
 %patch95 -p1 -b .opte
-%patch96 -p1 -b .exp_warn
 %patch97 -p1 -b .2010-001
 %patch98 -p1 -b .kpasswd-ccache
 %patch99 -p0 -b .kpasswd-ipv6
