@@ -46,7 +46,6 @@ Patch63: krb5-1.8-selinux-label.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.8-dirsrv-accountlock.patch
 Patch95: krb5-1.8-opte.patch
-Patch96: krb5-1.8-exp_warn.patch
 Patch98: krb5-1.8-kpasswd_ccache.patch
 Patch99: krb5-trunk-kpasswd_ipv6.patch
 Patch100: krb5-trunk-tktlifetime.patch
@@ -186,7 +185,6 @@ ln -s NOTICE LICENSE
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
 %patch95 -p1 -b .opte
-%patch96 -p1 -b .exp_warn
 %patch98 -p0 -b .kpasswd-ccache
 %patch99 -p0 -b .kpasswd-ipv6
 %patch100 -p0 -b .tktlifetime
@@ -624,6 +622,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Apr  8 2010 Nalin Dahyabhai <nalin@redhat.com>
+- drop patch to suppress key expiration warnings sent from the KDC in
+  the last-req field, as the KDC is expected to just be configured to either
+  send them or not as a particular key approaches expiration (#556495)
+
 * Tue Mar 23 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.8-5
 - add upstream fix for denial-of-service in SPNEGO (CVE-2010-0628, #576325)
 - kdc.conf: no more need to suggest keeping keys with v4-compatible salting
