@@ -623,6 +623,9 @@ exit 0
 
 %changelog
 * Thu Apr  8 2010 Nalin Dahyabhai <nalin@redhat.com>
+- kdc.conf: no more need to suggest a v4 mode, or listening on the v4 port
+
+* Thu Apr  8 2010 Nalin Dahyabhai <nalin@redhat.com>
 - drop patch to suppress key expiration warnings sent from the KDC in
   the last-req field, as the KDC is expected to just be configured to either
   send them or not as a particular key approaches expiration (#556495)
