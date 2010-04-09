@@ -4,10 +4,10 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.8
-Release: 5%{?dist}
+Version: 1.8.1
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.1-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -45,11 +45,6 @@ Patch61: krb5-1.8-manpaths.patch
 Patch63: krb5-1.8-selinux-label.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.8-dirsrv-accountlock.patch
-Patch95: krb5-1.8-opte.patch
-Patch98: krb5-1.8-kpasswd_ccache.patch
-Patch99: krb5-trunk-kpasswd_ipv6.patch
-Patch100: krb5-trunk-tktlifetime.patch
-Patch101: http://web.mit.edu/kerberos/advisories/2010-002-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -60,7 +55,7 @@ BuildRequires: autoconf, bison, flex, gawk
 BuildRequires: libcom_err-devel, libss-devel
 %endif
 BuildRequires: gzip, ncurses-devel, rsh, texinfo, texinfo-tex, tar
-BuildRequires: tetex-latex
+BuildRequires: texlive-latex
 BuildRequires: keyutils-libs-devel
 BuildRequires: libselinux-devel
 BuildRequires: pam-devel
@@ -184,11 +179,6 @@ ln -s NOTICE LICENSE
 %patch59 -p1 -b .kpasswd_tcp
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
-%patch95 -p1 -b .opte
-%patch98 -p0 -b .kpasswd-ccache
-%patch99 -p0 -b .kpasswd-ipv6
-%patch100 -p0 -b .tktlifetime
-%patch101 -p0 -b .2010-002
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -622,6 +612,12 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Apr  9 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.1-1
+- update to 1.8.1
+  - no longer need patches for #555875, #561174, #563431, RT#6661, CVE-2010-0628
+- replace buildrequires on tetex-latex with one on texlive-latex, which is
+  the package that provides it now
+
 * Thu Apr  8 2010 Nalin Dahyabhai <nalin@redhat.com>
 - kdc.conf: no more need to suggest a v4 mode, or listening on the v4 port
 
