@@ -5,7 +5,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -210,6 +210,14 @@ doc/kadm5     api-unit-test
 doc/kadm5     api-funcspec
 doc/kadm5     api-server-design
 EOF
+
+# Fix the LDIF file.
+if test %{version} != 1.8.1 ; then
+	# Hopefully this was fixed later.
+	exit 1
+fi
+sed -i s,^attributetype:,attributetypes:,g \
+	src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
 
 # Generate an FDS-compatible LDIF file.
 inldif=src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
@@ -612,6 +620,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Apr 14 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.1-2
+- fix a typo in kerberos.ldif
+
 * Fri Apr  9 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.1-1
 - update to 1.8.1
   - no longer need patches for #555875, #561174, #563431, RT#6661, CVE-2010-0628
