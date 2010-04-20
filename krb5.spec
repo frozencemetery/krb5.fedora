@@ -227,7 +227,7 @@ certificate.
 
 %changelog
 * Tue Apr 20 2010 Nalin Dahyabhai <nalin@redhat.com> 1.7.1-8
-- incorporate patch to fix double-free in the KDC (CVE-2010-1320, #581922)
+- incorporate patch to fix double-free in the KDC (CVE-2010-1320, #584094)
 
 * Thu Apr  8 2010 Nalin Dahyabhai <nalin@redhat.com>
 - drop patch to suppress key expiration warnings sent from the KDC in
