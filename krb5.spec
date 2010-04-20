@@ -5,7 +5,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -45,6 +45,7 @@ Patch61: krb5-1.8-manpaths.patch
 Patch63: krb5-1.8-selinux-label.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.8-dirsrv-accountlock.patch
+Patch72: http://web.mit.edu/kerberos/advisories/2010-004-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -179,6 +180,7 @@ ln -s NOTICE LICENSE
 %patch59 -p1 -b .kpasswd_tcp
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
+%patch72 -p1 -b .2010-004
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -620,6 +622,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Apr 20 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.1-3
+- incorporate patch to fix double-free in the KDC (CVE-2010-1320, #581922)
+
 * Wed Apr 14 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.1-2
 - fix a typo in kerberos.ldif
 
