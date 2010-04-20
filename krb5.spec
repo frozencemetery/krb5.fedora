@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7.1
-Release: 6%{?dist}
+Release: 7%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -86,6 +86,7 @@ Patch95: krb5-1.7-opte.patch
 Patch97: http://web.mit.edu/kerberos/advisories/2010-001-patch.txt
 Patch99: krb5-1.7.1-kpasswd_ipv6.patch
 Patch100: 2010-002-1.7-patch.txt
+Patch101: http://web.mit.edu/kerberos/advisories/2010-004-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -224,6 +225,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Apr 20 2010 Nalin Dahyabhai <nalin@redhat.com> 1.7.1-7
+- incorporate patch to fix double-free in the KDC (CVE-2010-1320, #581922)
+
 * Thu Apr  8 2010 Nalin Dahyabhai <nalin@redhat.com>
 - drop patch to suppress key expiration warnings sent from the KDC in
   the last-req field, as the KDC is expected to just be configured to either
@@ -1611,6 +1615,7 @@ popd
 %patch97 -p1 -b .2010-001
 %patch99 -p0 -b .kpasswd_ipv6
 %patch100 -p0 -b .2010-002
+%patch101 -p1 -b .2010-004
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
