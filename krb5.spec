@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7.1
-Release: 8%{?dist}
+Release: 9%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -226,6 +226,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue May  4 2010 Nalin Dahyabhai <nalin@redhat.com> 1.7.1-9
+- fix output of kprop's init script's "status" and "reload" commands (#588222)
+
 * Tue Apr 20 2010 Nalin Dahyabhai <nalin@redhat.com> 1.7.1-8
 - incorporate patch to fix double-free in the KDC (CVE-2010-1320, #584094)
 
