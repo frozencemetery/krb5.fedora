@@ -60,13 +60,17 @@ case "$1" in
 	stop
 	;;
   # We don't really "do" reload, so treat it as a restart.
-  restart|reload)
+  restart|force-reload)
 	stop
 	start
 	;;
+  reload)
+	echo "can't reload configuration, you have to restart it"
+	RETVAL=3
+	;;
   status)
 	status ${kpropd}
-	retval=$?
+	RETVAL=$?
 	;;
   condrestart)
 	if [ -f /var/lock/subsys/kprop ] ; then
@@ -75,7 +79,7 @@ case "$1" in
 	fi
 	;;
   *)
-	echo $"Usage: $0 {start|stop|status|restart|condrestart}"
+	echo $"Usage: $0 {start|stop|status|reload|restart|condrestart}"
 	RETVAL=2
 	;;
 esac

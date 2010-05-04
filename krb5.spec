@@ -16,7 +16,7 @@
 Summary: The Kerberos network authentication system.
 Name: krb5
 Version: 1.6.3
-Release: 29%{?dist}
+Release: 30%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.6/krb5-1.6.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -244,6 +244,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue May  4 2010 Nalin Dahyabhai <nalin@redhat.com> 1.6.3-30
+- fix output of kprop's init script's "status" and "reload" commands (#588222)
+
 * Tue Apr  6 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.6.3-29
 - add backported patch to fix a few use-after-free bugs, including one in
   kadmind (CVE-2010-0629, #576011)
