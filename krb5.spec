@@ -5,7 +5,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8.1
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -46,6 +46,7 @@ Patch63: krb5-1.8-selinux-label.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.8-dirsrv-accountlock.patch
 Patch72: http://web.mit.edu/kerberos/advisories/2010-004-patch.txt
+Patch73: http://web.mit.edu/kerberos/advisories/2010-005-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -181,6 +182,7 @@ ln -s NOTICE LICENSE
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
 %patch72 -p1 -b .2010-004
+%patch73 -p1 -b .2010-005
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -622,6 +624,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue May 18 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.1-5
+- add patch to correct GSSAPI library null pointer dereference which could be
+  triggered by malformed client requests (CVE-2010-1321, #582466)
+
 * Tue May  4 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.1-4
 - fix output of kprop's init script's "status" and "reload" commands (#588222)
 
