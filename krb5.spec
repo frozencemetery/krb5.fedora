@@ -250,7 +250,7 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	CFLAGS="$CFLAGS" \
 	CPPFLAGS="$CPPFLAGS" \
 %if 0%{?fedora} >= 7 || 0%{?rhel} >= 6
-	SS_LIB="-lss -ltinfo" \
+	SS_LIB="-lss" \
 %else
 	SS_LIB="-lss -lncurses" \
 %endif
@@ -629,6 +629,9 @@ exit 0
 - make krb5-server-ldap also depend on the same version-release of krb5-libs,
   as the other subpackages do, if only to make it clearer than it is when we
   just do it through krb5-server
+- drop explicit linking with libtinfo for applications that use libss, now
+  that readline itself links with libtinfo (as of readline-5.2-3, since
+  fedora 7 or so)
 
 * Tue May 18 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.1-5
 - add patch to correct GSSAPI library null pointer dereference which could be
