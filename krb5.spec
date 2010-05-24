@@ -243,7 +243,7 @@ popd
 pushd src
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
 INCLUDES=-I%{_includedir}/et
-CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC`"
+CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC -fno-strict-aliasing`"
 CPPFLAGS="`echo $DEFINES $INCLUDES`"
 %configure \
 	CC="%{__cc}" \
@@ -632,6 +632,7 @@ exit 0
 - drop explicit linking with libtinfo for applications that use libss, now
   that readline itself links with libtinfo (as of readline-5.2-3, since
   fedora 7 or so)
+- go back to building without strict aliasing (compiler warnings in gssrpc)
 
 * Tue May 18 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.1-5
 - add patch to correct GSSAPI library null pointer dereference which could be
