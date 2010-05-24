@@ -5,7 +5,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8.1
-Release: 5%{?dist}
+Release: 6%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -625,7 +625,7 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Mon May 24 2010 Nalin Dahyabhai <nalin@redhat.com>
+* Mon May 24 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.1-6
 - make krb5-server-ldap also depend on the same version-release of krb5-libs,
   as the other subpackages do, if only to make it clearer than it is when we
   just do it through krb5-server
