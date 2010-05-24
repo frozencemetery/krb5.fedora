@@ -123,6 +123,7 @@ NOT install this package).
 Group: System Environment/Daemons
 Summary: The LDAP storage plugin for the Kerberos 5 KDC
 Requires: %{name}-server = %{version}-%{release}
+Requires: %{name}-libs = %{version}-%{release}
 
 %description server-ldap
 Kerberos is a network authentication system. The krb5-server package
@@ -624,6 +625,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon May 24 2010 Nalin Dahyabhai <nalin@redhat.com>
+- make krb5-server-ldap also depend on the same version-release of krb5-libs,
+  as the other subpackages do, if only to make it clearer than it is when we
+  just do it through krb5-server
+
 * Tue May 18 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.1-5
 - add patch to correct GSSAPI library null pointer dereference which could be
   triggered by malformed client requests (CVE-2010-1321, #582466)
