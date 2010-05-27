@@ -28,8 +28,8 @@ is pretty much always going to be there.  At run-time, login's behavior
 can be reset to the earlier, non-PAM behavior by setting "use_pam" to
 false in the [login] section of /etc/krb5.conf.
 
-Modify ksu so that it performs account and session management for the
-target user account, mimicking the action of regular su.  The default
+Modify ksu so that it performs account and session management on behalf of
+the target user account, mimicking the action of regular su.  The default
 service name is "ksu", because on Fedora at least the configuration used
 is determined by whether or not a login shell is being opened, and so
 this may need to vary, too.  At run-time, ksu's behavior can be reset to
@@ -1137,6 +1137,66 @@ diff -up krb5-1.7/src/clients/ksu/main.c krb5-1.7/src/clients/ksu/main.c
  	/* Run authorization as target.*/
  	if (krb5_seteuid(target_uid)) {
  	    com_err(prog_name, errno, "while switching to target for authorization check");
+@@ -650,6 +675,26 @@
+ 	    sweep_up(ksu_context, cc_target);
+ 	    exit(1);
+ 	}
++#ifdef USE_PAM
++    } else {
++	/* we always do PAM account management, even for root */
++	if (appl_pam_enabled(ksu_context, "ksu")) {
++	    if (appl_pam_acct_mgmt(KSU_PAM_SERVICE, 1, target_user, NULL,
++				   NULL, source_user,
++				   ttyname(STDERR_FILENO)) != 0) {
++		fprintf(stderr, "Access denied for %s.\n", target_user);
++		sweep_up(ksu_context, cc_target);
++		exit(1);
++	    }
++	    if (appl_pam_requires_chauthtok()) {
++		fprintf(stderr, "Password change required for %s.\n",
++			target_user);
++		sweep_up(ksu_context, cc_target);
++		exit(1);
++	    }
++	    force_fork++;
++	}
++#endif
+     }
+     
+     if( some_rest_copy){ 
+@@ -719,6 +744,32 @@
+ 	exit(1);
+     } 			
+     
++#ifdef USE_PAM
++    if (appl_pam_enabled(ksu_context, "ksu")) {
++	if (appl_pam_session_open() != 0) {
++	    fprintf(stderr, "Error opening session for %s.\n", target_user);
++	    sweep_up(ksu_context, cc_target);
++	    exit(1);
++	}
++#ifdef DEBUG
++	if (auth_debug){
++	    printf(" Opened PAM session.\n");
++	}
++#endif
++	if (appl_pam_cred_init()) {
++	    fprintf(stderr, "Error initializing credentials for %s.\n",
++		    target_user);
++	    sweep_up(ksu_context, cc_target);
++	    exit(1);
++	}
++#ifdef DEBUG
++	if (auth_debug){
++	    printf(" Initialized PAM credentials.\n");
++	}
++#endif
++    }
++#endif
++
+     /* set permissions */
+     if (setgid(target_pwd->pw_gid) < 0) {
+ 	perror("ksu: setgid");
 @@ -791,7 +816,7 @@
  	fprintf(stderr, "program to be execed %s\n",params[0]);
      }
@@ -1146,40 +1206,6 @@ diff -up krb5-1.7/src/clients/ksu/main.c krb5-1.7/src/clients/ksu/main.c
  	execv(params[0], params);
  	com_err(prog_name, errno, "while trying to execv %s",
  		params[0]);
-@@ -799,6 +824,33 @@
- 	exit(1);
-     }else{
- 	statusp = 1;
-+
-+#ifdef USE_PAM
-+	if (appl_pam_enabled(ksu_context, "ksu")) {
-+	    if (appl_pam_session_open() != 0) {
-+		fprintf(stderr, "Error opening session for %s.\n", target_user);
-+		sweep_up(ksu_context, cc_target);
-+		exit(1);
-+	    }
-+#ifdef DEBUG
-+	    if (auth_debug){
-+		printf(" Opened PAM session.\n");
-+	    }
-+#endif
-+	    if (appl_pam_cred_init()) {
-+		fprintf(stderr, "Error initializing credentials for %s.\n",
-+			target_user);
-+		sweep_up(ksu_context, cc_target);
-+		exit(1);
-+	    }
-+#ifdef DEBUG
-+	    if (auth_debug){
-+		printf(" Initialized PAM credentials.\n");
-+	    }
-+#endif
-+	}
-+#endif
-+
- 	switch ((child_pid = fork())) {
- 	default:
- 	    if (auth_debug){
 @@ -822,15 +874,34 @@
  	    if (ret_pid == -1) {
  	    	com_err(prog_name, errno, "while calling waitpid");

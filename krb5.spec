@@ -226,6 +226,11 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Thu May 27 2010 Nalin Dahyabhai <nalin@redhat.com>
+- ksu: move session management calls to before we drop privileges, like
+  su does (#596887), and don't skip the PAM account check for root or the
+  same user (more of #540769)
+
 * Tue May 18 2010 Nalin Dahyabhai <nalin@redhat.com> 1.7.1-9
 - add patch to correct GSSAPI library null pointer dereference which could be
   triggered by malformed client requests (CVE-2010-1321, #582466)
