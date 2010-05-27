@@ -627,7 +627,8 @@ exit 0
 %changelog
 * Thu May 27 2010 Nalin Dahyabhai <nalin@redhat.com>
 - ksu: move session management calls to before we drop privileges, like
-  su does (#596887)
+  su does (#596887), and don't skip the PAM account check for root or the
+  same user (more of #477033)
 
 * Mon May 24 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.1-6
 - make krb5-server-ldap also depend on the same version-release of krb5-libs,
