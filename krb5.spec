@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7.1
-Release: 9%{?dist}
+Release: 10%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -226,6 +226,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Wed Jun  9 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7.1-10
+- use the "pathmunge" function to add %%{krb5prefix}/bin to $PATH rather
+  than doing it the harder way ourselves (part of #544652)
+
 * Thu May 27 2010 Nalin Dahyabhai <nalin@redhat.com>
 - ksu: move session management calls to before we drop privileges, like
   su does (#596887), and don't skip the PAM account check for root or the
