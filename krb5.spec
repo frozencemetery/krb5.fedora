@@ -4,10 +4,10 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.8.1
-Release: 6%{?dist}
+Version: 1.8.2
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.1-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.2-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -45,8 +45,6 @@ Patch61: krb5-1.8-manpaths.patch
 Patch63: krb5-1.8-selinux-label.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.8-dirsrv-accountlock.patch
-Patch72: http://web.mit.edu/kerberos/advisories/2010-004-patch.txt
-Patch73: http://web.mit.edu/kerberos/advisories/2010-005-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -182,8 +180,6 @@ ln -s NOTICE LICENSE
 %patch59 -p1 -b .kpasswd_tcp
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
-%patch72 -p1 -b .2010-004
-%patch73 -p1 -b .2010-005
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -217,7 +213,7 @@ doc/kadm5     api-server-design
 EOF
 
 # Fix the LDIF file.
-if test %{version} != 1.8.1 ; then
+if test %{version} != 1.8.2 ; then
 	# Hopefully this was fixed later.
 	exit 1
 fi
@@ -625,6 +621,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Jun 10 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-1
+- update to 1.8.2
+  - drop patches for CVE-2010-1320, CVE-2010-1321
+
 * Thu May 27 2010 Nalin Dahyabhai <nalin@redhat.com>
 - ksu: move session management calls to before we drop privileges, like
   su does (#596887), and don't skip the PAM account check for root or the
