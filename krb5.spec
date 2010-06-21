@@ -45,6 +45,7 @@ Patch61: krb5-1.8-manpaths.patch
 Patch63: krb5-1.8-selinux-label.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.8-dirsrv-accountlock.patch
+Patch72: krb5-1.7.1-24139.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -180,6 +181,7 @@ ln -s NOTICE LICENSE
 %patch59 -p1 -b .kpasswd_tcp
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
+%patch72 -p1 -b .24139
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -621,9 +623,16 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Jun 21 2010 Nalin Dahyabhai <nalin@redhat.com>
+- pull up fix for upstream #6745, in which the gssapi library would add the
+  wrong error table but subsequently attempt to unload the right one
+
 * Thu Jun 10 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-1
 - update to 1.8.2
   - drop patches for CVE-2010-1320, CVE-2010-1321
+
+* Tue Jun  1 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.1-7
+- rebuild
 
 * Thu May 27 2010 Nalin Dahyabhai <nalin@redhat.com>
 - ksu: move session management calls to before we drop privileges, like
