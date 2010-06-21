@@ -1,0 +1,12 @@
+diff -up krb5-1.7.1/src/lib/gssapi/krb5/gssapi_krb5.c krb5-1.7.1/src/lib/gssapi/krb5/gssapi_krb5.c
+--- krb5-1.7.1/src/lib/gssapi/krb5/gssapi_krb5.c	2010-06-21 11:49:23.000000000 -0400
++++ krb5-1.7.1/src/lib/gssapi/krb5/gssapi_krb5.c	2010-06-21 11:49:25.000000000 -0400
+@@ -725,7 +725,7 @@ int gss_krb5int_lib_init(void)
+     printf("gss_krb5int_lib_init\n");
+ #endif
+ 
+-    add_error_table(&et_ggss_error_table);
++    add_error_table(&et_k5g_error_table);
+ 
+ #ifndef LEAN_CLIENT
+     err = k5_mutex_finish_init(&gssint_krb5_keytab_lock);

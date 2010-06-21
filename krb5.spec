@@ -88,6 +88,7 @@ Patch99: krb5-1.7.1-kpasswd_ipv6.patch
 Patch100: 2010-002-1.7-patch.txt
 Patch101: http://web.mit.edu/kerberos/advisories/2010-004-patch.txt
 Patch102: krb5-CVE-2010-1321-1.7.1.patch
+Patch103: krb5-1.7.1-24139.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -226,6 +227,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Jun 21 2010 Nalin Dahyabhai <nalin@redhat.com>
+- pull up fix for upstream #6745, in which the gssapi library would add the
+  wrong error table but subsequently attempt to unload the right one
+
 * Wed Jun  9 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7.1-10
 - use the "pathmunge" function to add %%{krb5prefix}/bin to $PATH rather
   than doing it the harder way ourselves (part of #544652)
@@ -1634,6 +1639,7 @@ popd
 %patch100 -p0 -b .2010-002
 %patch101 -p1 -b .2010-004
 %patch102 -p1 -b .CVE-2010-1321
+%patch103 -p1 -b .24139
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
