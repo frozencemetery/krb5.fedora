@@ -9,6 +9,7 @@
 #              realm.
 # processname: kadmind
 # config: /etc/sysconfig/kadmin
+# pidfile: /var/run/kadmind.pid
 #
 
 ### BEGIN INIT INFO
@@ -34,6 +35,7 @@
 . /etc/init.d/functions
 prog="Kerberos 5 Admin Server"
 kadmind=/usr/sbin/kadmind
+pidfile=/var/run/kadmind.pid
 
 RETVAL=0
 
@@ -56,7 +58,7 @@ start() {
 	echo -n $"Starting $prog: "
 	# tell portreserve to release the kerberos-adm port
 	[ -x /sbin/portrelease ] && /sbin/portrelease kerberos-adm &>/dev/null || :
-	daemon ${kadmind} ${KRB5REALM:+-r ${KRB5REALM}} $KADMIND_ARGS
+	daemon ${kadmind} ${KRB5REALM:+-r ${KRB5REALM}} -P $pidfile $KADMIND_ARGS
 	RETVAL=$?
 	echo
 	if test $RETVAL -ne 0 ; then

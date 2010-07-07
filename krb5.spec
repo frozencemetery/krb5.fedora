@@ -5,7 +5,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8.2
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -625,6 +625,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Jul  7 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-3
+- tell krb5kdc and kadmind to create pid files, since they can
+
 * Mon Jun 21 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-2
 - libgssapi: pull in patch from svn to stop returning context-expired errors
   when the ticket which was used to set up the context expires (#605366,
