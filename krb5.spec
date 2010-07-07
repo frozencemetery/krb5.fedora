@@ -49,6 +49,7 @@ Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.8-dirsrv-accountlock.patch
 Patch72: krb5-1.7.1-24139.patch
 Patch73: krb5-1-8-gss-noexp.patch
+Patch74: krb5-1.8.2-getoptP.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -188,6 +189,7 @@ ln -s NOTICE LICENSE
 %patch71 -p1 -b .dirsrv-accountlock
 %patch72 -p1 -b .24139
 %patch73 -p0 -b .gss-noexp
+%patch74 -p1 -b .getoptP
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -642,6 +644,7 @@ exit 0
 * Wed Jul  7 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-3
 - tell krb5kdc and kadmind to create pid files, since they can
 - add logrotate configuration files for krb5kdc and kadmind (#462658)
+- fix parsing of the pidfile option in the KDC (upstream #6750)
 
 * Mon Jun 21 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-2
 - libgssapi: pull in patch from svn to stop returning context-expired errors
