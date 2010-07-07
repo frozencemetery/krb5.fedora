@@ -27,6 +27,8 @@ Source29: ksu.pamd
 Source30: kerberos-iv.portreserve
 Source31: kerberos-adm.portreserve
 Source32: krb5_prop.portreserve
+Source33: krb5kdc.logrotate
+Source34: kadmind.logrotate
 
 Patch5: krb5-1.8-ksu-access.patch
 Patch6: krb5-1.8-ksu-path.patch
@@ -105,6 +107,8 @@ Requires: %{name}-libs = %{version}-%{release}
 Requires(post): /sbin/install-info, chkconfig
 # we need 'status -l' to work, and that option was added in 8.99
 Requires: initscripts >= 8.99-1
+# we drop files in its directory, but we don't want to own that directory
+Requires: logrotate
 Requires(preun): /sbin/install-info, chkconfig, initscripts
 Requires(postun): initscripts
 # mktemp is used by krb5-send-pr
@@ -334,6 +338,14 @@ for portreserve in \
 	$RPM_BUILD_ROOT/etc/portreserve/`basename ${portreserve} .portreserve`
 done
 
+# logrotate configuration files
+mkdir -p $RPM_BUILD_ROOT/etc/logrotate.d/
+for logrotate in \
+	%{SOURCE33} \
+	%{SOURCE34} ; do
+	install -pm 644 ${logrotate} \
+	$RPM_BUILD_ROOT/etc/logrotate.d/`basename ${logrotate} .logrotate`
+done
 
 # PAM configuration files.
 mkdir -p $RPM_BUILD_ROOT/etc/pam.d/
@@ -484,6 +496,8 @@ exit 0
 %config(noreplace) /etc/portreserve/kerberos-iv
 %config(noreplace) /etc/portreserve/kerberos-adm
 %config(noreplace) /etc/portreserve/krb5_prop
+%config(noreplace) /etc/logrotate.d/krb5kdc
+%config(noreplace) /etc/logrotate.d/kadmind
 
 %doc doc/admin*.ps.gz
 %doc doc/install*.ps.gz
@@ -627,6 +641,7 @@ exit 0
 %changelog
 * Wed Jul  7 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-3
 - tell krb5kdc and kadmind to create pid files, since they can
+- add logrotate configuration files for krb5kdc and kadmind (#462658)
 
 * Mon Jun 21 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-2
 - libgssapi: pull in patch from svn to stop returning context-expired errors
