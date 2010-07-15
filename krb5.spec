@@ -712,7 +712,7 @@ exit 0
   subpackages) now that krb5-appl is its own package
 - replace our patch for #563431 (kpasswd doesn't fall back to guessing your
   principal name using your user name if you don't have a ccache) with the
-  on upstream uses
+  one upstream uses
 
 * Fri Mar 12 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.8-3
 - add documentation for the ticket_lifetime option (#561174)
