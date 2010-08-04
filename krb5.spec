@@ -4,10 +4,10 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.8.2
-Release: 3%{?dist}
+Version: 1.8.3
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.2-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.3-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -47,9 +47,6 @@ Patch61: krb5-1.8-manpaths.patch
 Patch63: krb5-1.8-selinux-label.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.8-dirsrv-accountlock.patch
-Patch72: krb5-1.7.1-24139.patch
-Patch73: krb5-1-8-gss-noexp.patch
-Patch74: krb5-1.8.2-getoptP.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -187,9 +184,6 @@ ln -s NOTICE LICENSE
 %patch59 -p1 -b .kpasswd_tcp
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
-%patch72 -p1 -b .24139
-%patch73 -p0 -b .gss-noexp
-%patch74 -p1 -b .getoptP
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -223,7 +217,7 @@ doc/kadm5     api-server-design
 EOF
 
 # Fix the LDIF file.
-if test %{version} != 1.8.2 ; then
+if test %{version} != 1.8.3 ; then
 	# Hopefully this was fixed later.
 	exit 1
 fi
@@ -641,6 +635,12 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Aug  4 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.3-1
+- update to 1.8.3
+  - drop backports of fixes for gss context expiration and error table
+    registration/deregistration mismatch
+  - drop patch for upstream #6750
+
 * Wed Jul  7 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-3
 - tell krb5kdc and kadmind to create pid files, since they can
 - add logrotate configuration files for krb5kdc and kadmind (#462658)
