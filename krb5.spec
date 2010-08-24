@@ -5,7 +5,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8.2
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -50,6 +50,7 @@ Patch71: krb5-1.8-dirsrv-accountlock.patch
 Patch72: krb5-1.7.1-24139.patch
 Patch73: krb5-1-8-gss-noexp.patch
 Patch74: krb5-1.8.2-getoptP.patch
+Patch75: krb5-trunk-explife.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -190,6 +191,7 @@ ln -s NOTICE LICENSE
 %patch72 -p1 -b .24139
 %patch73 -p0 -b .gss-noexp
 %patch74 -p1 -b .getoptP
+%patch75 -p0 -b .explife
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -641,6 +643,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Aug 24 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-4
+- fix a logic bug in computing key expiration times (RT#6762, #627022)
+
 * Wed Jul  7 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-3
 - tell krb5kdc and kadmind to create pid files, since they can
 - add logrotate configuration files for krb5kdc and kadmind (#462658)
