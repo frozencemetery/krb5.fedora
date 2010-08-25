@@ -2,7 +2,7 @@ Rob Crittenden noticed that, in populate_krb5_db_entry(), key
 expirations weren't being computed as expected.  It turns out
 that neither KDB_PRINC_EXPIRE_TIME_ATTR nor KDB_PWD_EXPIRE_TIME_ATTR
 is defined to 1, so the check for their bits could never succeed as
-written.
+written.  RT#6762.
 
 Index: src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c
 ===================================================================
