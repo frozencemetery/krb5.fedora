@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7.1
-Release: 12%{?dist}
+Release: 13%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -89,7 +89,7 @@ Patch100: 2010-002-1.7-patch.txt
 Patch101: http://web.mit.edu/kerberos/advisories/2010-004-patch.txt
 Patch102: krb5-CVE-2010-1321-1.7.1.patch
 Patch103: krb5-1.7.1-24139.patch
-Patch104: krb5-trunk-explife.patch
+Patch104: krb5-1.7.1-explife.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -228,6 +228,9 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Wed Aug 24 2010 Nalin Dahyabhai <nalin@redhat.com> 1.7.1-13
+- adjust the last patch to apply properly to 1.7.1
+
 * Wed Aug 24 2010 Nalin Dahyabhai <nalin@redhat.com> 1.7.1-12
 - bump release
 
@@ -1647,7 +1650,7 @@ popd
 %patch101 -p1 -b .2010-004
 %patch102 -p1 -b .CVE-2010-1321
 %patch103 -p1 -b .24139
-%patch104 -p1 -b .explife
+%patch104 -p0 -b .explife
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
