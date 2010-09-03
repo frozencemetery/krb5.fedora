@@ -245,7 +245,7 @@ popd
 pushd src
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
 INCLUDES=-I%{_includedir}/et
-CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC -fno-strict-aliasing`"
+CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC -fno-strict-aliasing -fstack-protector-all`"
 CPPFLAGS="`echo $DEFINES $INCLUDES`"
 %configure \
 	CC="%{__cc}" \
@@ -638,6 +638,8 @@ exit 0
 
 %changelog
 * Fri Sep  3 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.3-3
+- build with -fstack-protector-all instead of the default -fstack-protector,
+  so that we add checking to more functions (i.e., all of them) (#629950)
 - also link binaries with -Wl,-z,relro,-z,now (part of #629950)
 
 * Tue Aug 24 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.3-2
