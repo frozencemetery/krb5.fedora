@@ -5,7 +5,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8.3
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -637,6 +637,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Sep  3 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.3-3
+- also link binaries with -Wl,-z,relro,-z,now (part of #629950)
+
 * Tue Aug 24 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.3-2
 - fix a logic bug in computing key expiration times (RT#6762, #627022)
 
