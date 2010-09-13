@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7.1
-Release: 13%{?dist}
+Release: 14%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -229,6 +229,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Mon Sep 13 2010 Nalin Dahyabhai <nalin@redhat.com> 1.7.1-14
+- revert pathmunge-related changes because pathmunge() isn't always there
+  if we've upgraded or anything weird's happened (#633212)
+
 * Wed Aug 25 2010 Nalin Dahyabhai <nalin@redhat.com> 1.7.1-13
 - adjust the last patch to apply properly to 1.7.1
 
