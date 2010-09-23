@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7.1
-Release: 14%{?dist}
+Release: 15%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -229,6 +229,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Thu Sep 23 2010 Nalin Dahyabhai <nalin@redhat.com> 1.7.1-15
+- make -libs actually own /usr/kerberos, because it may be the only reason
+  that directory exists, due to owning /usr/kerberos/share (#636746)
+
 * Mon Sep 13 2010 Nalin Dahyabhai <nalin@redhat.com> 1.7.1-14
 - revert pathmunge-related changes because pathmunge() isn't always there
   if we've upgraded or anything weird's happened (#633212)
@@ -2144,6 +2148,7 @@ exit 0
 %dir %{_libdir}/krb5/plugins/*
 %{_libdir}/krb5/plugins/preauth/encrypted_challenge.so
 %{_libdir}/krb5/plugins/kdb/db2.so
+%dir %{krb5prefix}
 %{krb5prefix}/share
 
 %if %{WITH_OPENSSL}
