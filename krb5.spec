@@ -5,7 +5,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8.3
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -641,6 +641,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Sep 29 2010 jkeating - 1.8.3-5
+- Rebuilt for gcc bug 634757
+
 * Wed Sep 15 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.3-4
 - fix reading of keyUsage extensions when attempting to select pkinit client
   certs (part of #629022, RT#6775)
