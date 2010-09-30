@@ -5,7 +5,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8.2
-Release: 4%{?dist}
+Release: 4%{?dist}.1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -643,6 +643,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Sep 29 2010 jkeating - 1.8.2-4.1
+- Rebuilt for gcc bug 634757
+
 * Tue Aug 24 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-4
 - fix a logic bug in computing key expiration times (RT#6762, #627022)
 
