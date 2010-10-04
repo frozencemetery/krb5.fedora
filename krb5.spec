@@ -5,7 +5,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8.3
-Release: 5%{?dist}
+Release: 7%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -50,6 +50,7 @@ Patch71: krb5-1.8-dirsrv-accountlock.patch
 Patch72: krb5-trunk-explife.patch
 Patch73: krb5-trunk-key_usage.patch
 Patch74: krb5-trunk-signed.patch
+Patch75: krb5-trunk-k5login.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -190,6 +191,7 @@ ln -s NOTICE LICENSE
 %patch72 -p0 -b .explife
 %patch73 -p0 -b .key_usage
 %patch74 -p0 -b .signed
+%patch75 -p1 -b .k5login
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -641,6 +643,13 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Oct  4 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.3-7
+- rebuild
+
+* Mon Oct  4 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.3-6
+- pull down patches from trunk to implement k5login_authoritative and
+  k5login_directory settings for krb5.conf (#539423)
+
 * Wed Sep 29 2010 jkeating - 1.8.3-5
 - Rebuilt for gcc bug 634757
 
