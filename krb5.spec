@@ -5,7 +5,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8.3
-Release: 7%{?dist}
+Release: 8%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -51,6 +51,7 @@ Patch72: krb5-trunk-explife.patch
 Patch73: krb5-trunk-key_usage.patch
 Patch74: krb5-trunk-signed.patch
 Patch75: krb5-trunk-k5login.patch
+Patch76: krb5-1.8.x-authdata.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -192,6 +193,7 @@ ln -s NOTICE LICENSE
 %patch73 -p0 -b .key_usage
 %patch74 -p0 -b .signed
 %patch75 -p1 -b .k5login
+%patch76 -p1 -b .authdata
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -643,6 +645,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Oct  5 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.3-8
+- incorporate upstream patch to fix uninitialized pointer crash in the KDC's
+  authorization data handling (CVE-2010-1322, #636335)
+
 * Mon Oct  4 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.3-7
 - rebuild
 
