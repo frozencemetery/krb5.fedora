@@ -51,6 +51,8 @@ Patch72: krb5-1.7.1-24139.patch
 Patch73: krb5-1-8-gss-noexp.patch
 Patch74: krb5-1.8.2-getoptP.patch
 Patch75: krb5-trunk-explife.patch
+Patch76: krb5-trunk-key_usage.patch
+Patch77: krb5-trunk-signed.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -192,6 +194,8 @@ ln -s NOTICE LICENSE
 %patch73 -p0 -b .gss-noexp
 %patch74 -p1 -b .getoptP
 %patch75 -p0 -b .explife
+%patch76 -p0 -b .key_usage
+%patch77 -p0 -b .signed
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -644,6 +648,10 @@ exit 0
 
 %changelog
 * Tue Oct  5 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-5
+- fix reading of keyUsage extensions when attempting to select pkinit client
+  certs (part of #629022, RT#6775)
+- fix selection of pkinit client certs when one or more don't include a
+  subjectAltName extension (part of #629022, RT#6774)
 - also link binaries with -Wl,-z,relro,-z,now (part of #629950)
 - build with -fstack-protector-all instead of the default -fstack-protector,
   so that we add checking to more functions (i.e., all of them) (#629950)
