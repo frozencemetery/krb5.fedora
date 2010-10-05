@@ -644,6 +644,7 @@ exit 0
 
 %changelog
 * Tue Oct  5 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-5
+- also link binaries with -Wl,-z,relro,-z,now (part of #629950)
 - build with -fstack-protector-all instead of the default -fstack-protector,
   so that we add checking to more functions (i.e., all of them) (#629950)
 
