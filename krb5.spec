@@ -53,6 +53,7 @@ Patch74: krb5-1.8.2-getoptP.patch
 Patch75: krb5-trunk-explife.patch
 Patch76: krb5-trunk-key_usage.patch
 Patch77: krb5-trunk-signed.patch
+Patch78: krb5-trunk-k5login.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -196,6 +197,7 @@ ln -s NOTICE LICENSE
 %patch75 -p0 -b .explife
 %patch76 -p0 -b .key_usage
 %patch77 -p0 -b .signed
+%patch78 -p1 -b .k5login
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -648,6 +650,8 @@ exit 0
 
 %changelog
 * Tue Oct  5 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-5
+- pull down patches from trunk to implement k5login_authoritative and
+  k5login_directory settings for krb5.conf (#539423)
 - fix reading of keyUsage extensions when attempting to select pkinit client
   certs (part of #629022, RT#6775)
 - fix selection of pkinit client certs when one or more don't include a
