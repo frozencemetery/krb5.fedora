@@ -1,5 +1,6 @@
 %global WITH_LDAP 1
 %global WITH_OPENSSL 1
+%global WITH_NSS 0
 %global WITH_DIRSRV 1
 
 Summary: The Kerberos network authentication system
@@ -263,6 +264,9 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--enable-pkinit \
 %else
 	--disable-pkinit \
+%endif
+%if %{WITH_NSS}
+	--with-crypto-impl=nss \
 %endif
 	--with-pam \
 	--with-selinux
@@ -630,6 +634,7 @@ exit 0
   - drop patches for RT#5755, RT#6762, RT#6774, RT#6775
   - drop no-longer-needed backport patch for #539423
   - drop no-longer-needed patch for CVE-2010-1322
+- if WITH_NSS is set, built with --with-crypto-impl=nss (requires NSS 3.12.9)
 
 * Tue Oct  5 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.3-8
 - incorporate upstream patch to fix uninitialized pointer crash in the KDC's
