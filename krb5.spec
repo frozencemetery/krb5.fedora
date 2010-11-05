@@ -4,12 +4,12 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.8.3
-Release: 9%{?dist}
+Version: 1.9
+Release: 0%{?dist}.beta1.0
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.3-signed.tar
-Source0: krb5-%{version}.tar.gz
-Source1: krb5-%{version}.tar.gz.asc
+# http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-beta1-signed.tar
+Source0: krb5-%{version}-beta1.tar.gz
+Source1: krb5-%{version}-beta1.tar.gz.asc
 Source2: kpropd.init
 Source4: kadmind.init
 Source5: krb5kdc.init
@@ -20,7 +20,7 @@ Source19: krb5kdc.sysconfig
 Source20: kadmin.sysconfig
 # The same source files we "check", generated with "krb5-tex-pdf.sh create"
 # and tarred up.
-Source23: krb5-%{version}-pdf.tar.gz
+Source23: krb5-%{version}-beta1-pdf.tar.bz2
 Source24: krb5-tex-pdf.sh
 Source25: krb5-1.8-manpaths.txt
 Source29: ksu.pamd
@@ -40,19 +40,12 @@ Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch39: krb5-1.8-api.patch
 Patch53: krb5-1.7-nodeplibs.patch
 Patch56: krb5-1.7-doublelog.patch
-Patch58: krb5-1.8-key_exp.patch
 Patch59: krb5-1.8-kpasswd_tcp.patch
 Patch60: krb5-1.8-pam.patch
-Patch61: krb5-1.8-manpaths.patch
+Patch61: krb5-1.9-manpaths.patch
 Patch63: krb5-1.8-selinux-label.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
-Patch71: krb5-1.8-dirsrv-accountlock.patch
-Patch72: krb5-trunk-explife.patch
-Patch73: krb5-trunk-key_usage.patch
-Patch74: krb5-trunk-signed.patch
-Patch75: krb5-trunk-k5login.patch
-Patch76: krb5-1.8.x-authdata.patch
-Patch77: http://web.mit.edu/kerberos/advisories/2010-007-patch.txt
+Patch71: krb5-1.9-dirsrv-accountlock.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -167,7 +160,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -a 23
+%setup -q -a 23 -n krb5-%{version}-beta1
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -186,16 +179,9 @@ ln -s NOTICE LICENSE
 %patch39 -p1 -b .api
 %patch53 -p1 -b .nodeplibs
 %patch56 -p1 -b .doublelog
-%patch58 -p1 -b .key_exp
 %patch59 -p1 -b .kpasswd_tcp
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
-%patch72 -p0 -b .explife
-%patch73 -p0 -b .key_usage
-%patch74 -p0 -b .signed
-%patch75 -p1 -b .k5login
-%patch76 -p1 -b .authdata
-%patch77 -p1 -b .2010-007
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -227,14 +213,6 @@ doc/kadm5     api-unit-test
 doc/kadm5     api-funcspec
 doc/kadm5     api-server-design
 EOF
-
-# Fix the LDIF file.
-if test %{version} != 1.8.3 ; then
-	# Hopefully this was fixed later.
-	exit 1
-fi
-sed -i s,^attributetype:,attributetypes:,g \
-	src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
 
 # Generate an FDS-compatible LDIF file.
 inldif=src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
@@ -647,9 +625,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Tue Nov 30 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.3-9
-- add upstream patch to fix various issues from MITKRB5-SA-2010-007
-  (CVE-2010-1323, #648734, CVE-2010-1324, #648674, CVE-2010-4020, #648735)
+* Fri Nov  5 2010 Nalin Dahyabhai <nalin@redhat.com> 1.9-0.beta1.0
+- start moving to 1.9 with beta 1
+  - drop patches for RT#5755, RT#6762, RT#6774, RT#6775
+  - drop no-longer-needed backport patch for #539423
+  - drop no-longer-needed patch for CVE-2010-1322
 
 * Tue Oct  5 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.3-8
 - incorporate upstream patch to fix uninitialized pointer crash in the KDC's
