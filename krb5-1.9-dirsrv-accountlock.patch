@@ -65,5 +65,5 @@ diff -up krb5-1.8/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c.dirsrv-accou
 +                                     "nsaccountlock",
 +#endif
                                       "krbLastPwdChange",
+                                      "krbLastAdminUnlock",
                                       "krbExtraData",
-                                      "krbObjectReferences",
