@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9
-Release: 0%{?dist}.beta1.0
+Release: 0%{?dist}.beta1.1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-beta1-signed.tar
 Source0: krb5-%{version}-beta1.tar.gz
@@ -56,7 +56,7 @@ BuildRequires: autoconf, bison, flex, gawk
 %if 0%{?fedora} >= 12 || 0%{?rhel} >= 6
 BuildRequires: libcom_err-devel, libss-devel
 %endif
-BuildRequires: gzip, ncurses-devel, rsh, texinfo, texinfo-tex, tar
+BuildRequires: gzip, ncurses-devel, texinfo, texinfo-tex, tar
 BuildRequires: texlive-latex
 BuildRequires: keyutils-libs-devel
 BuildRequires: libselinux-devel
@@ -629,6 +629,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Nov  9 2010 Nalin Dahyabhai <nalin@redhat.com> 1.9-0.beta1.1
+- drop not-needed-since-1.8 build dependency on rsh (ssorce)
+
 * Fri Nov  5 2010 Nalin Dahyabhai <nalin@redhat.com> 1.9-0.beta1.0
 - start moving to 1.9 with beta 1
   - drop patches for RT#5755, RT#6762, RT#6774, RT#6775
