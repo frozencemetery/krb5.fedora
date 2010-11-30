@@ -221,7 +221,9 @@ cat > 60kerberos.ldif << EOF
 # This is a variation on kerberos.ldif which 389 Directory Server will like.
 dn: cn=schema
 EOF
-egrep -iv '(^$|^dn:|^changetype:|^add:)' $inldif >> 60kerberos.ldif
+egrep -iv '(^$|^dn:|^changetype:|^add:)' $inldif | \
+sed -r 's,^		,                ,g' | \
+sed -r 's,^	,        ,g' >> 60kerberos.ldif
 touch -r $inldif 60kerberos.ldif
 
 # Rebuild the configure scripts.
