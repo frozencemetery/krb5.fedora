@@ -90,7 +90,7 @@ Patch101: http://web.mit.edu/kerberos/advisories/2010-004-patch.txt
 Patch102: krb5-CVE-2010-1321-1.7.1.patch
 Patch103: krb5-1.7.1-24139.patch
 Patch104: krb5-1.7.1-explife.patch
-Patch105: krb5-1.7-MITKRB5SA-2010-007.patch
+Patch105: http://web.mit.edu/kerberos/advisories/2010-007-patch-r17.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
