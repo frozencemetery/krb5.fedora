@@ -1,7 +1,7 @@
 Index: krb5-1.8/src/plugins/preauth/pkinit/pkinit_srv.c
 ===================================================================
---- krb5-1.8/src/plugins/preauth/pkinit/pkinit_srv.c    (revision 24455)
-+++ krb5-1.8/src/plugins/preauth/pkinit/pkinit_srv.c    (working copy)
+--- krb5-1.8/src/plugins/preauth/pkinit/pkinit_srv.c	(revision 24455)
++++ krb5-1.8/src/plugins/preauth/pkinit/pkinit_srv.c	(working copy)
 @@ -691,8 +691,7 @@
      krb5_reply_key_pack *key_pack = NULL;
      krb5_reply_key_pack_draft9 *key_pack9 = NULL;
@@ -55,8 +55,8 @@ Index: krb5-1.8/src/plugins/preauth/pkinit/pkinit_srv.c
      case KRB5_PADATA_PK_AS_REQ:
 Index: krb5-1.8/src/lib/crypto/krb/cksumtypes.c
 ===================================================================
---- krb5-1.8/src/lib/crypto/krb/cksumtypes.c    (revision 24455)
-+++ krb5-1.8/src/lib/crypto/krb/cksumtypes.c    (working copy)
+--- krb5-1.8/src/lib/crypto/krb/cksumtypes.c	(revision 24455)
++++ krb5-1.8/src/lib/crypto/krb/cksumtypes.c	(working copy)
 @@ -101,7 +101,7 @@
  
      { CKSUMTYPE_MD5_HMAC_ARCFOUR,
@@ -68,8 +68,8 @@ Index: krb5-1.8/src/lib/crypto/krb/cksumtypes.c
  };
 Index: krb5-1.8/src/lib/crypto/krb/keyed_checksum_types.c
 ===================================================================
---- krb5-1.8/src/lib/crypto/krb/keyed_checksum_types.c  (revision 24455)
-+++ krb5-1.8/src/lib/crypto/krb/keyed_checksum_types.c  (working copy)
+--- krb5-1.8/src/lib/crypto/krb/keyed_checksum_types.c	(revision 24455)
++++ krb5-1.8/src/lib/crypto/krb/keyed_checksum_types.c	(working copy)
 @@ -35,6 +35,13 @@
  {
      if (ctp->flags & CKSUM_UNKEYED)
@@ -86,8 +86,8 @@ Index: krb5-1.8/src/lib/crypto/krb/keyed_checksum_types.c
  
 Index: krb5-1.8/src/lib/crypto/krb/dk/derive.c
 ===================================================================
---- krb5-1.8/src/lib/crypto/krb/dk/derive.c     (revision 24455)
-+++ krb5-1.8/src/lib/crypto/krb/dk/derive.c     (working copy)
+--- krb5-1.8/src/lib/crypto/krb/dk/derive.c	(revision 24455)
++++ krb5-1.8/src/lib/crypto/krb/dk/derive.c	(working copy)
 @@ -91,6 +91,8 @@
      blocksize = enc->block_size;
      keybytes = enc->keybytes;
@@ -99,8 +99,8 @@ Index: krb5-1.8/src/lib/crypto/krb/dk/derive.c
  
 Index: krb5-1.8/src/lib/gssapi/krb5/util_crypt.c
 ===================================================================
---- krb5-1.8/src/lib/gssapi/krb5/util_crypt.c   (revision 24455)
-+++ krb5-1.8/src/lib/gssapi/krb5/util_crypt.c   (working copy)
+--- krb5-1.8/src/lib/gssapi/krb5/util_crypt.c	(revision 24455)
++++ krb5-1.8/src/lib/gssapi/krb5/util_crypt.c	(working copy)
 @@ -119,10 +119,22 @@
      if (code != 0)
          return code;
@@ -130,8 +130,8 @@ Index: krb5-1.8/src/lib/gssapi/krb5/util_crypt.c
      case ENCTYPE_DES_CBC_MD5:
 Index: krb5-1.8/src/lib/krb5/krb/pac.c
 ===================================================================
---- krb5-1.8/src/lib/krb5/krb/pac.c     (revision 24455)
-+++ krb5-1.8/src/lib/krb5/krb/pac.c     (working copy)
+--- krb5-1.8/src/lib/krb5/krb/pac.c	(revision 24455)
++++ krb5-1.8/src/lib/krb5/krb/pac.c	(working copy)
 @@ -582,6 +582,8 @@
      checksum.checksum_type = load_32_le(p);
      checksum.length = checksum_data.length - PAC_SIGNATURE_DATA_LENGTH;
@@ -143,8 +143,8 @@ Index: krb5-1.8/src/lib/krb5/krb/pac.c
      pac_data.data = malloc(pac->data.length);
 Index: krb5-1.8/src/lib/krb5/krb/preauth2.c
 ===================================================================
---- krb5-1.8/src/lib/krb5/krb/preauth2.c        (revision 24455)
-+++ krb5-1.8/src/lib/krb5/krb/preauth2.c        (working copy)
+--- krb5-1.8/src/lib/krb5/krb/preauth2.c	(revision 24455)
++++ krb5-1.8/src/lib/krb5/krb/preauth2.c	(working copy)
 @@ -1578,7 +1578,9 @@
  
      cksum = sc2->sam_cksum;
@@ -166,8 +166,8 @@ Index: krb5-1.8/src/lib/krb5/krb/preauth2.c
      if (!valid_cksum) {
 Index: krb5-1.8/src/lib/krb5/krb/mk_safe.c
 ===================================================================
---- krb5-1.8/src/lib/krb5/krb/mk_safe.c (revision 24455)
-+++ krb5-1.8/src/lib/krb5/krb/mk_safe.c (working copy)
+--- krb5-1.8/src/lib/krb5/krb/mk_safe.c	(revision 24455)
++++ krb5-1.8/src/lib/krb5/krb/mk_safe.c	(working copy)
 @@ -215,10 +215,28 @@
              for (i = 0; i < nsumtypes; i++)
                  if (auth_context->safe_cksumtype == sumtypes[i])
@@ -200,4 +200,3 @@ Index: krb5-1.8/src/lib/krb5/krb/mk_safe.c
          }
          if ((retval = krb5_mk_safe_basic(context, userdata, key, &replaydata,
                                           plocal_fulladdr, premote_fulladdr,
-
