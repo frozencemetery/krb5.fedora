@@ -56,6 +56,7 @@ Patch77: krb5-trunk-signed.patch
 Patch78: krb5-trunk-k5login.patch
 Patch79: krb5-1.8.x-authdata.patch
 Patch80: krb5-1.8-MITKRB5SA-2010-007.patch
+Patch81: krb5-1.8.2-1.8.3-crypto.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -201,6 +202,7 @@ ln -s NOTICE LICENSE
 %patch77 -p0 -b .signed
 %patch78 -p1 -b .k5login
 %patch79 -p1 -b .authdata
+%patch81 -p1 -b .crypto
 %patch80 -p1 -b .2010-007
 gzip doc/*.ps
 
@@ -654,6 +656,7 @@ exit 0
 
 %changelog
 * Tue Nov 30 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-7
+- pull up 1.8.2/1.8.3 libk5crypto changes to correct the patch context
 - add upstream patch to fix various issues from MITKRB5-SA-2010-007
   (CVE-2010-1323, #648734, CVE-2010-1324, #648674, CVE-2010-4020, #648735)
 
