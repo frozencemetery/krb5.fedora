@@ -52,7 +52,7 @@ Patch73: krb5-trunk-key_usage.patch
 Patch74: krb5-trunk-signed.patch
 Patch75: krb5-trunk-k5login.patch
 Patch76: krb5-1.8.x-authdata.patch
-Patch77: krb5-1.8-MITKRB5SA-2010-007.patch
+Patch77: http://web.mit.edu/kerberos/advisories/2010-007-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
