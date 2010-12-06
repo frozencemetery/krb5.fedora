@@ -7,8 +7,8 @@ diff -up krb5-1.8/src/slave/kprop.c.kprop-mktemp krb5-1.8/src/slave/kprop.c
  void get_tickets(context)
      krb5_context context;
  {
--    char   buf[BUFSIZ];
-+    char buf[] = "MEMORY:_kproptkt";
+-    char   buf[BUFSIZ], *def_realm;
++    char buf[] = "MEMORY:_kproptkt", *def_realm;
      krb5_error_code retval;
 -    static char tkstring[] = "/tmp/kproptktXXXXXX";
      krb5_keytab keytab = NULL;

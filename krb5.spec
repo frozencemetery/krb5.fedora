@@ -6,11 +6,11 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9
-Release: 0%{?dist}.beta1.1
+Release: 0%{?dist}.beta2.0
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-beta1-signed.tar
-Source0: krb5-%{version}-beta1.tar.gz
-Source1: krb5-%{version}-beta1.tar.gz.asc
+# http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-beta2-signed.tar
+Source0: krb5-%{version}-beta2.tar.gz
+Source1: krb5-%{version}-beta2.tar.gz.asc
 Source2: kpropd.init
 Source4: kadmind.init
 Source5: krb5kdc.init
@@ -32,11 +32,11 @@ Source33: krb5kdc.logrotate
 Source34: kadmind.logrotate
 
 Patch5: krb5-1.8-ksu-access.patch
-Patch6: krb5-1.8-ksu-path.patch
+Patch6: krb5-1.9-ksu-path.patch
 Patch12: krb5-1.7-ktany.patch
 Patch16: krb5-1.7-buildconf.patch
 Patch23: krb5-1.3.1-dns.patch
-Patch29: krb5-1.8-kprop-mktemp.patch
+Patch29: krb5-1.9-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch39: krb5-1.8-api.patch
 Patch53: krb5-1.7-nodeplibs.patch
@@ -161,7 +161,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -a 23 -n krb5-%{version}-beta1
+%setup -q -a 23 -n krb5-%{version}-beta2
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -631,6 +631,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Dec  6 2010 Nalin Dahyabhai <nalin@redhat.com> 1.9-0.beta2.0
+- update to 1.9 beta 2
+
 * Tue Nov  9 2010 Nalin Dahyabhai <nalin@redhat.com> 1.9-0.beta1.1
 - drop not-needed-since-1.8 build dependency on rsh (ssorce)
 
