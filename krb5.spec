@@ -6,11 +6,11 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9
-Release: 0%{?dist}.beta2.0
+Release: 0%{?dist}.beta3.0
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-beta2-signed.tar
-Source0: krb5-%{version}-beta2.tar.gz
-Source1: krb5-%{version}-beta2.tar.gz.asc
+# http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-beta3-signed.tar
+Source0: krb5-%{version}-beta3.tar.gz
+Source1: krb5-%{version}-beta3.tar.gz.asc
 Source2: kpropd.init
 Source4: kadmind.init
 Source5: krb5kdc.init
@@ -21,7 +21,7 @@ Source19: krb5kdc.sysconfig
 Source20: kadmin.sysconfig
 # The same source files we "check", generated with "krb5-tex-pdf.sh create"
 # and tarred up.
-Source23: krb5-%{version}-beta1-pdf.tar.bz2
+Source23: krb5-%{version}-beta3-pdf.tar.bz2
 Source24: krb5-tex-pdf.sh
 Source25: krb5-1.8-manpaths.txt
 Source29: ksu.pamd
@@ -161,7 +161,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -a 23 -n krb5-%{version}-beta2
+%setup -q -a 23 -n krb5-%{version}-beta3
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -631,6 +631,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Dec 16 2010 Nalin Dahyabhai <nalin@redhat.com> 1.9-0.beta3.0
+- update to 1.9 beta 3
+
 * Mon Dec  6 2010 Nalin Dahyabhai <nalin@redhat.com> 1.9-0.beta2.0
 - update to 1.9 beta 2
 
