@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9
-Release: 0%{?dist}.beta3.0
+Release: 0%{?dist}.beta3.1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-beta3-signed.tar
 Source0: krb5-%{version}-beta3.tar.gz
@@ -34,7 +34,7 @@ Source34: kadmind.logrotate
 Patch5: krb5-1.8-ksu-access.patch
 Patch6: krb5-1.9-ksu-path.patch
 Patch12: krb5-1.7-ktany.patch
-Patch16: krb5-1.7-buildconf.patch
+Patch16: krb5-1.9-buildconf.patch
 Patch23: krb5-1.3.1-dns.patch
 Patch29: krb5-1.9-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
@@ -631,6 +631,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Dec 20 2010 Nalin Dahyabhai <nalin@redhat.com> 1.9-0.beta3.1
+- fix link flags and permissions on shared libraries (ausil)
+
 * Thu Dec 16 2010 Nalin Dahyabhai <nalin@redhat.com> 1.9-0.beta3.0
 - update to 1.9 beta 3
 
