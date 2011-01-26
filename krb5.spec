@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -47,6 +47,7 @@ Patch61: krb5-1.9-manpaths.patch
 Patch63: krb5-1.8-selinux-label.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.9-dirsrv-accountlock.patch
+Patch72: krb5-pkinit-cms2.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -183,6 +184,7 @@ ln -s NOTICE LICENSE
 %patch59 -p1 -b .kpasswd_tcp
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
+%patch72 -p1 -b .pkinit_cms2
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -631,6 +633,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Jan 26 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-2
+- pkinit: when verifying signed data, use the CMS APIs for better
+  interoperability (#636985, RT#6851)
+
 * Wed Dec 22 2010 Nalin Dahyabhai <nalin@redhat.com> 1.9-1
 - update to 1.9 final
 
