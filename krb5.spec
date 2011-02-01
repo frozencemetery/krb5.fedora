@@ -633,6 +633,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Feb  1 2011 Nalin Dahyabhai <nalin@redhat.com>
+- properly advertise that the kpropd init script now supports force-reload
+  (Zbysek Mraz #630587)
+
 * Wed Jan 26 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-2
 - pkinit: when verifying signed data, use the CMS APIs for better
   interoperability (#636985, RT#6851)

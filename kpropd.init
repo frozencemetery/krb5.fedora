@@ -84,7 +84,7 @@ case "$1" in
 	fi
 	;;
   *)
-	echo $"Usage: $0 {start|stop|status|reload|restart|condrestart}"
+	echo $"Usage: $0 {start|stop|restart|condrestart|reload|status|force-reload}"
 	RETVAL=2
 	;;
 esac
