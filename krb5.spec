@@ -1,12 +1,12 @@
 %global WITH_LDAP 1
 %global WITH_OPENSSL 1
-%global WITH_NSS 0
+%global WITH_NSS 1
 %global WITH_DIRSRV 1
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9
-Release: 2%{?dist}
+Release: 2%{?dist}.nss.0
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -633,6 +633,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Feb  4 2011 Nalin Dahyabhai <nalin@redhat.com>
+- switch on use of NSS for crypto
+
 * Tue Feb  1 2011 Nalin Dahyabhai <nalin@redhat.com>
 - properly advertise that the kpropd init script now supports force-reload
   (Zbysek Mraz #630587)
