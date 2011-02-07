@@ -44,7 +44,7 @@ Patch56: krb5-1.7-doublelog.patch
 Patch59: krb5-1.8-kpasswd_tcp.patch
 Patch60: krb5-1.8-pam.patch
 Patch61: krb5-1.9-manpaths.patch
-Patch63: krb5-1.8-selinux-label.patch
+Patch63: krb5-1.9-selinux-label.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.9-dirsrv-accountlock.patch
 Patch72: krb5-pkinit-cms2.patch
@@ -633,9 +633,13 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Feb  7 2011 Nalin Dahyabhai <nalin@redhat.com>
+- fix a compile error in the SELinux labeling patch when -DDEBUG is used (Sumit
+  Bose)
+
 * Tue Feb  1 2011 Nalin Dahyabhai <nalin@redhat.com>
 - properly advertise that the kpropd init script now supports force-reload
-  (Zbysek Mraz #630587)
+  (Zbysek Mraz, #630587)
 
 * Wed Jan 26 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-2
 - pkinit: when verifying signed data, use the CMS APIs for better

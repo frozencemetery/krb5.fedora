@@ -676,7 +676,7 @@ diff -up krb5-1.8/src/util/support/selinux.c.selinux-label krb5-1.8/src/util/sup
 +#ifdef DEBUG
 +			if (isatty(fileno(stderr))) {
 +				fprintf(stderr, "Setting file creation context "
-+					"to \"%s\".\n", configured);
++					"to \"%s\".\n", configuredsc);
 +			}
 +#endif
 +			if (setfscreatecon(configuredsc) != 0) {
