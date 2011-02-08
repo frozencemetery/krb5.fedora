@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -633,6 +633,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Feb 07 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.9-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
+
 * Mon Feb  7 2011 Nalin Dahyabhai <nalin@redhat.com>
 - fix a compile error in the SELinux labeling patch when -DDEBUG is used (Sumit
   Bose)
