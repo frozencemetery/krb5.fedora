@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -48,6 +48,8 @@ Patch63: krb5-1.9-selinux-label.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.9-dirsrv-accountlock.patch
 Patch72: krb5-pkinit-cms2.patch
+Patch73: http://web.mit.edu/kerberos/advisories/2011-001-patch.txt
+Patch74: http://web.mit.edu/kerberos/advisories/2011-002-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -185,6 +187,8 @@ ln -s NOTICE LICENSE
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
 %patch72 -p1 -b .pkinit_cms2
+%patch73 -p1 -b .2011-001
+%patch74 -p1 -b .2011-002
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -633,6 +637,13 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Feb  8 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-4
+- add upstream patches to fix standalone kpropd exiting if the per-client
+  child process exits with an error (MITKRB5-SA-2011-001), a hang or crash
+  in the KDC when using the LDAP kdb backend, and an uninitialized pointer
+  use in the KDC (MITKRB5-SA-2011-002) (CVE-2010-4022, #664009,
+  CVE-2011-0281, #668719, CVE-2011-0282, #668726, CVE-2011-0283, #670567)
+
 * Mon Feb 07 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.9-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
 
