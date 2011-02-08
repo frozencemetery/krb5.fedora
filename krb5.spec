@@ -5,7 +5,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8.2
-Release: 7%{?dist}
+Release: 8%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -57,6 +57,8 @@ Patch78: krb5-trunk-k5login.patch
 Patch79: krb5-1.8.x-authdata.patch
 Patch80: http://web.mit.edu/kerberos/advisories/2010-007-patch.txt
 Patch81: krb5-1.8.2-1.8.3-crypto.patch
+Patch82: http://web.mit.edu/kerberos/advisories/2011-001-patch.txt
+Patch83: http://web.mit.edu/kerberos/advisories/2011-002-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -204,6 +206,8 @@ ln -s NOTICE LICENSE
 %patch79 -p1 -b .authdata
 %patch81 -p1 -b .crypto
 %patch80 -p1 -b .2010-007
+%patch82 -p1 -b .2011-001
+%patch83 -p1 -b .2011-002
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -655,6 +659,12 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Feb  8 2011 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-8
+- add upstream patches to fix standalone kpropd exiting if the per-client
+  child process exits with an error (MITKRB5-SA-2011-001), and a hang or
+  crash in the KDC when using the LDAP kdb backend (MITKRB5-SA-2011-002)
+  (CVE-2010-4022, #664009, CVE-2011-0281, #668719, CVE-2011-0282, #668726)
+
 * Tue Nov 30 2010 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-7
 - pull up 1.8.2/1.8.3 libk5crypto changes to correct the patch context
 - add upstream patch to fix various issues from MITKRB5-SA-2010-007
