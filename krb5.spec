@@ -642,7 +642,7 @@ exit 0
   child process exits with an error (MITKRB5-SA-2011-001), a hang or crash
   in the KDC when using the LDAP kdb backend, and an uninitialized pointer
   use in the KDC (MITKRB5-SA-2011-002) (CVE-2010-4022, #664009,
-  CVE-2011-0281, #668719, CVE-2011-0282, #668726, CVE-2011-0283, #670567)
+  CVE-2011-0281, #668719, CVE-2011-0282, #668726, CVE-2011-0283, #676126)
 
 * Mon Feb 07 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.9-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
