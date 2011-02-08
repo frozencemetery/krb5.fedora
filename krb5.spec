@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7.1
-Release: 16%{?dist}
+Release: 17%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -92,6 +92,8 @@ Patch102: krb5-CVE-2010-1321-1.7.1.patch
 Patch103: krb5-1.7.1-24139.patch
 Patch104: krb5-1.7.1-explife.patch
 Patch105: http://web.mit.edu/kerberos/advisories/2010-007-patch-r17.txt
+Patch106: http://web.mit.edu/kerberos/advisories/2011-001-patch.txt
+Patch107: http://web.mit.edu/kerberos/advisories/2011-002-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -230,6 +232,12 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Feb  8 2011 Nalin Dahyabhai <nalin@redhat.com> 1.7.1-17
+- add upstream patches to fix standalone kpropd exiting if the per-client
+  child process exits with an error (MITKRB5-SA-2011-001), and a hang or
+  crash in the KDC when using the LDAP kdb backend (MITKRB5-SA-2011-002)
+  (CVE-2010-4022, #664009, CVE-2011-0281, #668719, CVE-2011-0282, #668726)
+
 * Tue Nov 30 2010 Nalin Dahyabhai <nalin@redhat.com> 1.7.1-16
 - add upstream patch to fix various issues from MITKRB5-SA-2010-007
   (CVE-2010-1323, #648734, CVE-2010-1324, #648674)
@@ -1668,6 +1676,8 @@ popd
 %patch103 -p1 -b .24139
 %patch104 -p0 -b .explife
 %patch105 -p1 -b .2010-007
+%patch106 -p1 -b .2011-001
+%patch107 -p1 -b .2011-002
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
