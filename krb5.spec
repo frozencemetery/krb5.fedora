@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -30,6 +30,7 @@ Source31: kerberos-adm.portreserve
 Source32: krb5_prop.portreserve
 Source33: krb5kdc.logrotate
 Source34: kadmind.logrotate
+Source35: kdb_check_weak.c
 
 Patch5: krb5-1.8-ksu-access.patch
 Patch6: krb5-1.9-ksu-path.patch
@@ -282,6 +283,12 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 make %{?_smp_mflags}
 popd
 
+# A sanity checker for upgrades.
+%{__cc} -o kdb_check_weak \
+	-I src/include `./src/krb5-config --cflags kdb` \
+	%{SOURCE35} \
+	-L src/lib `./src/krb5-config --libs kdb`
+
 # Run the test suite.  We can't actually do this in the build system.
 : make -C src check TMPDIR=%{_tmppath}
 
@@ -380,6 +387,9 @@ for library in libgssapi_krb5 libgssrpc libk5crypto libkrb5 libkrb5support ; do
 	ln -fs ${rellibdir}/%{_lib}/${library}.so.*.* ${library}.so
 	popd
 done
+
+# A sanity checker for upgrades.
+install -m 755 kdb_check_weak $RPM_BUILD_ROOT/%{_libdir}/krb5/
 
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
@@ -511,6 +521,7 @@ exit 0
 %config(noreplace) %{_var}/kerberos/krb5kdc/kadm5.acl
 
 %dir %{_libdir}/krb5
+%{_libdir}/krb5/kdb_check_weak
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/kdb
 %dir %{_libdir}/krb5/plugins/preauth
@@ -637,6 +648,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Feb  9 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-5
+- krb5kdc init script: prototype some changes to do a quick spot-check
+  of the TGS and kadmind keys and warn if there aren't any non-weak keys
+  on file for them (to flush out parts of #651466)
+
 * Tue Feb  8 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-4
 - add upstream patches to fix standalone kpropd exiting if the per-client
   child process exits with an error (MITKRB5-SA-2011-001), a hang or crash
