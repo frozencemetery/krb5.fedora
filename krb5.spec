@@ -51,6 +51,7 @@ Patch71: krb5-1.9-dirsrv-accountlock.patch
 Patch72: krb5-pkinit-cms2.patch
 Patch73: http://web.mit.edu/kerberos/advisories/2011-001-patch.txt
 Patch74: http://web.mit.edu/kerberos/advisories/2011-002-patch.txt
+Patch75: krb5-pkinit-debug.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -193,6 +194,7 @@ ln -s NOTICE LICENSE
 %patch72 -p1 -b .pkinit_cms2
 %patch73 -p1 -b .2011-001
 %patch74 -p1 -b .2011-002
+#%patch75 -p1 -b .pkinit-debug
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -651,6 +653,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Feb 17 2011 Nalin Dahyabhai <nalin@redhat.com>
+- throw in a not-applied-by-default patch to try to make pkinit debugging
+  into a run-time boolean option named "pkinit_debug"
+
 * Wed Feb 16 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-6
 - turn on NSS as the backend for libk5crypto, adding nss-devel as a build
   dependency when that switch is flipped
