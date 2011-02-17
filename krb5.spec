@@ -1,12 +1,12 @@
 %global WITH_LDAP 1
 %global WITH_OPENSSL 1
-%global WITH_NSS 0
+%global WITH_NSS 1
 %global WITH_DIRSRV 1
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9
-Release: 5%{?dist}
+Release: 6%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -71,6 +71,9 @@ BuildRequires: openldap-devel
 %endif
 %if %{WITH_OPENSSL}
 BuildRequires: openssl-devel >= 0.9.8
+%endif
+%if %{WITH_NSS}
+BuildRequires: nss-devel >= 3.12.9
 %endif
 
 %description
@@ -648,6 +651,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Feb 16 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-6
+- turn on NSS as the backend for libk5crypto, adding nss-devel as a build
+  dependency when that switch is flipped
+
 * Wed Feb  9 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-5
 - krb5kdc init script: prototype some changes to do a quick spot-check
   of the TGS and kadmind keys and warn if there aren't any non-weak keys
