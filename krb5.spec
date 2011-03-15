@@ -10,7 +10,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.7.1
-Release: 17%{?dist}
+Release: 18%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.7/krb5-1.7.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -94,6 +94,7 @@ Patch104: krb5-1.7.1-explife.patch
 Patch105: http://web.mit.edu/kerberos/advisories/2010-007-patch-r17.txt
 Patch106: http://web.mit.edu/kerberos/advisories/2011-001-patch.txt
 Patch107: http://web.mit.edu/kerberos/advisories/2011-002-patch.txt
+Patch108: http://web.mit.edu/kerberos/advisories/2011-003-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -232,6 +233,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Tue Mar 15 2011 Nalin Dahyabhai <nalin@redhat.com> 1.7.1-18
+- add revised upstream patch to fix double-free in KDC while returning
+  typed-data with errors (CVE-2011-0284, #674325)
+
 * Tue Feb  8 2011 Nalin Dahyabhai <nalin@redhat.com> 1.7.1-17
 - add upstream patches to fix standalone kpropd exiting if the per-client
   child process exits with an error (MITKRB5-SA-2011-001), and a hang or
@@ -1678,6 +1683,7 @@ popd
 %patch105 -p1 -b .2010-007
 %patch106 -p1 -b .2011-001
 %patch107 -p1 -b .2011-002
+%patch108 -p1 -b .2011-003
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
