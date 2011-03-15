@@ -1,12 +1,12 @@
 %global WITH_LDAP 1
 %global WITH_OPENSSL 1
-%global WITH_NSS 1
+%global WITH_NSS 0
 %global WITH_DIRSRV 1
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9
-Release: 6%{?dist}
+Release: 7%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -52,6 +52,7 @@ Patch72: krb5-pkinit-cms2.patch
 Patch73: http://web.mit.edu/kerberos/advisories/2011-001-patch.txt
 Patch74: http://web.mit.edu/kerberos/advisories/2011-002-patch.txt
 Patch75: krb5-pkinit-debug.patch
+Patch76: http://web.mit.edu/kerberos/advisories/2011-003-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -195,6 +196,7 @@ ln -s NOTICE LICENSE
 %patch73 -p1 -b .2011-001
 %patch74 -p1 -b .2011-002
 #%patch75 -p1 -b .pkinit-debug
+%patch76 -p1 -b .2011-003
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -653,6 +655,12 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Mar 15 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-7
+- turn off NSS as the backend for libk5crypto for now to work around its
+  DES string2key not working (#679012)
+- add revised upstream patch to fix double-free in KDC while returning
+  typed-data with errors (CVE-2011-0284, #674325)
+
 * Thu Feb 17 2011 Nalin Dahyabhai <nalin@redhat.com>
 - throw in a not-applied-by-default patch to try to make pkinit debugging
   into a run-time boolean option named "pkinit_debug"
