@@ -52,6 +52,7 @@ Patch72: krb5-pkinit-cms2.patch
 Patch73: http://web.mit.edu/kerberos/advisories/2011-001-patch.txt
 Patch74: http://web.mit.edu/kerberos/advisories/2011-002-patch.txt
 Patch75: http://web.mit.edu/kerberos/advisories/2011-003-patch.txt
+Patch76: krb5-1.9-paren.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -192,6 +193,7 @@ ln -s NOTICE LICENSE
 %patch73 -p1 -b .2011-001
 %patch74 -p1 -b .2011-002
 %patch75 -p1 -b .2011-003
+%patch76 -p1 -b .paren
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -650,6 +652,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Mar 18 2011 Nalin Dahyabhai <nalin@redhat.com>
+- backport change from SVN to fix a computed-value-not-used warning in
+  kpropd (#684065)
+
 * Tue Mar 15 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-6
 - add revised upstream patch to fix double-free in KDC while returning
   typed-data with errors (CVE-2011-0284, #674325)
