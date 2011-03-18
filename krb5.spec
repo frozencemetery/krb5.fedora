@@ -95,6 +95,7 @@ Patch105: http://web.mit.edu/kerberos/advisories/2010-007-patch-r17.txt
 Patch106: http://web.mit.edu/kerberos/advisories/2011-001-patch.txt
 Patch107: http://web.mit.edu/kerberos/advisories/2011-002-patch.txt
 Patch108: http://web.mit.edu/kerberos/advisories/2011-003-patch.txt
+Patch109: krb5-1.7.1-paren.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -233,6 +234,10 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %changelog
+* Fri Mar 18 2011 Nalin Dahyabhai <nalin@redhat.com>
+- backport change from SVN to fix a computed-value-not-used warning in
+  kpropd (#684065)
+
 * Tue Mar 15 2011 Nalin Dahyabhai <nalin@redhat.com> 1.7.1-18
 - add revised upstream patch to fix double-free in KDC while returning
   typed-data with errors (CVE-2011-0284, #674325)
@@ -1684,6 +1689,7 @@ popd
 %patch106 -p1 -b .2011-001
 %patch107 -p1 -b .2011-002
 %patch108 -p1 -b .2011-003
+%patch109 -p1 -b .paren
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
