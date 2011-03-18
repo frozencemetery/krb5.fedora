@@ -60,6 +60,7 @@ Patch81: krb5-1.8.2-1.8.3-crypto.patch
 Patch82: http://web.mit.edu/kerberos/advisories/2011-001-patch.txt
 Patch83: http://web.mit.edu/kerberos/advisories/2011-002-patch.txt
 Patch84: http://web.mit.edu/kerberos/advisories/2011-003-patch.txt
+Patch85: krb5-1.9-paren.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -210,6 +211,7 @@ ln -s NOTICE LICENSE
 %patch82 -p1 -b .2011-001
 %patch83 -p1 -b .2011-002
 %patch84 -p1 -b .2011-003
+%patch85 -p1 -b .paren
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -661,6 +663,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Mar 18 2011 Nalin Dahyabhai <nalin@redhat.com>
+- backport change from SVN to fix a computed-value-not-used warning in
+  kpropd (#684065)
+
 * Tue Mar 15 2011 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-9
 - add revised upstream patch to fix double-free in KDC while returning
   typed-data with errors (CVE-2011-0284, #674325)
