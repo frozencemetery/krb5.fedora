@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9
-Release: 7%{?dist}
+Release: 8%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -53,6 +53,7 @@ Patch73: http://web.mit.edu/kerberos/advisories/2011-001-patch.txt
 Patch74: http://web.mit.edu/kerberos/advisories/2011-002-patch.txt
 Patch75: krb5-pkinit-debug.patch
 Patch76: http://web.mit.edu/kerberos/advisories/2011-003-patch.txt
+Patch77: krb5-1.9-paren.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -197,6 +198,7 @@ ln -s NOTICE LICENSE
 %patch74 -p1 -b .2011-002
 #%patch75 -p1 -b .pkinit-debug
 %patch76 -p1 -b .2011-003
+%patch77 -p1 -b .paren
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -655,6 +657,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Mar 18 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-8
+- backport change from SVN to fix a computed-value-not-used warning in
+  kpropd (#684065)
+
 * Tue Mar 15 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-7
 - turn off NSS as the backend for libk5crypto for now to work around its
   DES string2key not working (#679012)
