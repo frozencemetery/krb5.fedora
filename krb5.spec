@@ -657,6 +657,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Apr  1 2011 Nalin Dahyabhai <nalin@redhat.com>
+- override INSTALL_SETUID at build-time so that ksu is installed into
+  the buildroot with the right permissions (part of #225974)
+
 * Fri Mar 18 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-8
 - backport change from SVN to fix a computed-value-not-used warning in
   kpropd (#684065)

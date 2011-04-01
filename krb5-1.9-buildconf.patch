@@ -36,3 +36,15 @@ diff -up krb5-1.9/src/krb5-config.in krb5-1.9/src/krb5-config.in
      if test $library = 'kdb'; then
  	lib_flags="$lib_flags -lkdb5 $KDB5_DB_LIB"
  	library=krb5
+diff -up krb5-1.9/src/config/pre.in krb5-1.9/src/config/pre.in
+--- krb5-1.9/src/config/pre.in	2011-04-01 15:45:06.640705226 -0400
++++ krb5-1.9/src/config/pre.in	2011-04-01 15:45:11.179705234 -0400
+@@ -188,7 +188,7 @@
+ INSTALL_SCRIPT=@INSTALL_PROGRAM@
+ INSTALL_DATA=@INSTALL_DATA@
+ INSTALL_SHLIB=@INSTALL_SHLIB@
+-INSTALL_SETUID=$(INSTALL) $(INSTALL_STRIP) -m 4755 -o root
++INSTALL_SETUID=$(INSTALL) $(INSTALL_STRIP) -m 4755
+ ## This is needed because autoconf will sometimes define @exec_prefix@ to be
+ ## ${prefix}.
+ prefix=@prefix@
