@@ -54,6 +54,7 @@ Patch74: http://web.mit.edu/kerberos/advisories/2011-002-patch.txt
 Patch75: krb5-pkinit-debug.patch
 Patch76: http://web.mit.edu/kerberos/advisories/2011-003-patch.txt
 Patch77: krb5-1.9-paren.patch
+Patch78: krb5-trunk-chpw-err.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -199,6 +200,7 @@ ln -s NOTICE LICENSE
 #%patch75 -p1 -b .pkinit-debug
 %patch76 -p1 -b .2011-003
 %patch77 -p1 -b .paren
+%patch78 -p0 -b .chpw-err
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -657,6 +659,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Apr  4 2011 Nalin Dahyabhai <nalin@redhat.com>
+- don't discard the error code from an error message received in response
+  to a change-password request (#658871, RT#6893)
+
 * Fri Apr  1 2011 Nalin Dahyabhai <nalin@redhat.com>
 - override INSTALL_SETUID at build-time so that ksu is installed into
   the buildroot with the right permissions (part of #225974)
