@@ -655,8 +655,8 @@ exit 0
 
 %changelog
 * Wed Apr 13 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-7
-- kadmind: add upstream patch to fix free() on an invalid pointer
-  (MITKRB5-SA-2011-004, CVE-2011-0285)
+- kadmind: add upstream patch to fix free() on an invalid pointer (#696343,
+  MITKRB5-SA-2011-004, CVE-2011-0285)
 
 * Fri Mar 18 2011 Nalin Dahyabhai <nalin@redhat.com>
 - backport change from SVN to fix a computed-value-not-used warning in
