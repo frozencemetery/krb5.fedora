@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9
-Release: 8%{?dist}
+Release: 9%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -55,6 +55,7 @@ Patch75: krb5-pkinit-debug.patch
 Patch76: http://web.mit.edu/kerberos/advisories/2011-003-patch.txt
 Patch77: krb5-1.9-paren.patch
 Patch78: krb5-trunk-chpw-err.patch
+Patch79: http://web.mit.edu/kerberos/advisories/2011-004-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -201,6 +202,7 @@ ln -s NOTICE LICENSE
 %patch76 -p1 -b .2011-003
 %patch77 -p1 -b .paren
 %patch78 -p0 -b .chpw-err
+%patch79 -p1 -b .2011-004
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -659,6 +661,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Apr 13 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-9
+- kadmind: add upstream patch to fix free() on an invalid pointer
+  (MITKRB5-SA-2011-004, CVE-2011-0285)
+
 * Mon Apr  4 2011 Nalin Dahyabhai <nalin@redhat.com>
 - don't discard the error code from an error message received in response
   to a change-password request (#658871, RT#6893)
