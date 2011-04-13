@@ -5,7 +5,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8.2
-Release: 9%{?dist}
+Release: 10%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -61,6 +61,7 @@ Patch82: http://web.mit.edu/kerberos/advisories/2011-001-patch.txt
 Patch83: http://web.mit.edu/kerberos/advisories/2011-002-patch.txt
 Patch84: http://web.mit.edu/kerberos/advisories/2011-003-patch.txt
 Patch85: krb5-1.9-paren.patch
+Patch86: http://web.mit.edu/kerberos/advisories/2011-004-patch-r18.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -212,6 +213,7 @@ ln -s NOTICE LICENSE
 %patch83 -p1 -b .2011-002
 %patch84 -p1 -b .2011-003
 %patch85 -p1 -b .paren
+%patch86 -p1 -b .2011-004
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -663,6 +665,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Apr 13 2011 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-10
+- kadmind: add upstream patch to fix free() on an invalid pointer
+  (MITKRB5-SA-2011-004, CVE-2011-0285)
+
 * Fri Mar 18 2011 Nalin Dahyabhai <nalin@redhat.com>
 - backport change from SVN to fix a computed-value-not-used warning in
   kpropd (#684065)
