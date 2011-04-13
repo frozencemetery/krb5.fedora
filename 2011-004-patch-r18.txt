@@ -1,10 +1,13 @@
+http://web.mit.edu/kerberos/advisories/2011-004-patch-r18.txt, with
+whitespace changes made to allow it to apply without fuzz.
+
 diff --git a/src/kadmin/server/network.c b/src/kadmin/server/network.c
 index c8ce4f1..bb911ff 100644
 --- a/src/kadmin/server/network.c
 +++ b/src/kadmin/server/network.c
 @@ -1384,6 +1384,10 @@ cleanup:
      if (local_kaddrs != NULL)
-         krb5_free_addresses(server_handle->context, local_kaddrs);
+ 	krb5_free_addresses(server_handle->context, local_kaddrs);
  
 +    if ((*response)->data == NULL) {
 +        free(*response);
@@ -22,7 +25,7 @@ index c1b2217..992b55f 100644
      plen = (plen<<8) | (*ptr++ & 0xff);
  
 -    if (plen != req->length)
--        return(KRB5KRB_AP_ERR_MODIFIED);
+-	return(KRB5KRB_AP_ERR_MODIFIED);
 +    if (plen != req->length) {
 +        ret = KRB5KRB_AP_ERR_MODIFIED;
 +        numresult = KRB5_KPASSWD_MALFORMED;
