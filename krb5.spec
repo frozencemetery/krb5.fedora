@@ -5,8 +5,8 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.9
-Release: 9%{?dist}
+Version: 1.9.1
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -49,13 +49,9 @@ Patch63: krb5-1.9-selinux-label.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.9-dirsrv-accountlock.patch
 Patch72: krb5-pkinit-cms2.patch
-Patch73: http://web.mit.edu/kerberos/advisories/2011-001-patch.txt
-Patch74: http://web.mit.edu/kerberos/advisories/2011-002-patch.txt
 Patch75: krb5-pkinit-debug.patch
-Patch76: http://web.mit.edu/kerberos/advisories/2011-003-patch.txt
 Patch77: krb5-1.9-paren.patch
 Patch78: krb5-trunk-chpw-err.patch
-Patch79: http://web.mit.edu/kerberos/advisories/2011-004-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -196,13 +192,9 @@ ln -s NOTICE LICENSE
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
 %patch72 -p1 -b .pkinit_cms2
-%patch73 -p1 -b .2011-001
-%patch74 -p1 -b .2011-002
 #%patch75 -p1 -b .pkinit-debug
-%patch76 -p1 -b .2011-003
 %patch77 -p1 -b .paren
 %patch78 -p0 -b .chpw-err
-%patch79 -p1 -b .2011-004
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -661,6 +653,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu May  5 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-1
+- update to 1.9.1:
+  - drop no-longer-needed patches for CVE-2010-4022, CVE-2011-0281,
+    CVE-2011-0282, CVE-2011-0283, CVE-2011-0284, CVE-2011-0285
+
 * Wed Apr 13 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-9
 - kadmind: add upstream patch to fix free() on an invalid pointer (#696343,
   MITKRB5-SA-2011-004, CVE-2011-0285)
@@ -681,7 +678,7 @@ exit 0
 - turn off NSS as the backend for libk5crypto for now to work around its
   DES string2key not working (#679012)
 - add revised upstream patch to fix double-free in KDC while returning
-  typed-data with errors (CVE-2011-0284, #674325)
+  typed-data with errors (MITKRB5-SA-2011-003, CVE-2011-0284, #674325)
 
 * Thu Feb 17 2011 Nalin Dahyabhai <nalin@redhat.com>
 - throw in a not-applied-by-default patch to try to make pkinit debugging
