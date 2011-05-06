@@ -8,7 +8,7 @@ Name: krb5
 Version: 1.9.1
 Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -74,7 +74,7 @@ BuildRequires: openldap-devel
 BuildRequires: openssl-devel >= 0.9.8
 %endif
 %if %{WITH_NSS}
-BuildRequires: nss-devel >= 3.12.9
+BuildRequires: nss-devel >= 3.12.10
 %endif
 
 %description
@@ -653,6 +653,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri May  6 2011 Nalin Dahyabhai <nalin@redhat.com>
+- fixup URL in a comment
+- when built with NSS, require 3.12.10 rather than 3.12.9
+
 * Thu May  5 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-1
 - update to 1.9.1:
   - drop no-longer-needed patches for CVE-2010-4022, CVE-2011-0281,
