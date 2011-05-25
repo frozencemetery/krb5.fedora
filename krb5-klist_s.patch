@@ -1,0 +1,14 @@
+Don't trip over referral entries.  RT#6915
+
+Index: krb5/src/clients/klist/klist.c
+===================================================================
+--- krb5/src/clients/klist/klist.c	(revision 24943)
++++ krb5/src/clients/klist/klist.c	(working copy)
+@@ -386,6 +386,7 @@
+             continue;
+         if (status_only) {
+             if (exit_status && creds.server->length == 2 &&
++                creds.server->realm.length > 0 &&
+                 strcmp(creds.server->realm.data, princ->realm.data) == 0 &&
+                 strcmp((char *)creds.server->data[0].data, "krbtgt") == 0 &&
+                 strcmp((char *)creds.server->data[1].data,
