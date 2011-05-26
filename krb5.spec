@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -655,6 +655,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu May 26 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-3
+- switch to the upstream patch for #707145
+
 * Wed May 25 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-2
 - klist: don't trip over referral entries when invoked with -s (#707145,
   RT#6915)
