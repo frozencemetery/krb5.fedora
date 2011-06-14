@@ -658,7 +658,7 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Tue Jun 14 2011 Nalin Dahyabhai <nalin@redhat.com>
+* Tue Jun 14 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-3
 - pull a fix from SVN to get libgssrpc clients (e.g. kadmin) authenticating
   using the old protocol over IPv4 again (RT#6920)
 
@@ -666,7 +666,7 @@ exit 0
 - incorporate a fix to teach the file labeling bits about when replay caches
   are expunged (#576093)
 
-* Thu May 26 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-3
+* Thu May 26 2011 Nalin Dahyabhai <nalin@redhat.com>
 - switch to the upstream patch for #707145
 
 * Wed May 25 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-2
