@@ -53,6 +53,7 @@ Patch75: krb5-pkinit-debug.patch
 Patch77: krb5-1.9-paren.patch
 Patch78: krb5-trunk-chpw-err.patch
 Patch79: krb5-klist_s.patch
+Patch80: krb5-trunk-kadmin-oldproto.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -197,6 +198,7 @@ ln -s NOTICE LICENSE
 %patch77 -p1 -b .paren
 %patch78 -p0 -b .chpw-err
 %patch79 -p1 -b .klist_s
+%patch80 -p0 -b .kadmin-oldproto
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -656,6 +658,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Jun 14 2011 Nalin Dahyabhai <nalin@redhat.com>
+- pull a fix from SVN to get libgssrpc clients (e.g. kadmin) authenticating
+  using the old protocol over IPv4 again (RT#6920)
+
 * Tue Jun 14 2011 Nalin Dahyabhai <nalin@redhat.com>
 - incorporate a fix to teach the file labeling bits about when replay caches
   are expunged (#576093)
