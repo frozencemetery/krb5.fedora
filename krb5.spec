@@ -291,6 +291,7 @@ make %{?_smp_mflags}
 popd
 
 # A sanity checker for upgrades.
+env LD_LIBRARY_PATH=`pwd`/src/lib \
 %{__cc} -o kdb_check_weak \
 	-I src/include `./src/krb5-config --cflags kdb` \
 	%{SOURCE35} \
@@ -655,6 +656,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Jun 14 2011 Nalin Dahyabhai <nalin@redhat.com>
+- incorporate a fix to teach the file labeling bits about when replay caches
+  are expunged (#576093)
+
 * Thu May 26 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-3
 - switch to the upstream patch for #707145
 
