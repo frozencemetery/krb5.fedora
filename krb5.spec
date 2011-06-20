@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.1
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -54,6 +54,7 @@ Patch77: krb5-1.9-paren.patch
 Patch78: krb5-trunk-chpw-err.patch
 Patch79: krb5-klist_s.patch
 Patch80: krb5-trunk-kadmin-oldproto.patch
+Patch81: krb5-1.9-canonicalize-fallback.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -199,6 +200,7 @@ ln -s NOTICE LICENSE
 %patch78 -p0 -b .chpw-err
 %patch79 -p1 -b .klist_s
 %patch80 -p0 -b .kadmin-oldproto
+%patch81 -p1 -b .canonicalize-fallback
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -658,6 +660,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Jun 20 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-4
+- apply upstream patch by way of Burt Holzman to fall back to a non-referral
+  method in cases where we might be derailed by a KDC that rejects the
+  canonicalize option (for example, those from the RHEL 2.1 or 3 era) (#713518)
+
 * Tue Jun 14 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-3
 - pull a fix from SVN to get libgssrpc clients (e.g. kadmin) authenticating
   using the old protocol over IPv4 again (RT#6920)
