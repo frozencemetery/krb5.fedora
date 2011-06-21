@@ -663,7 +663,7 @@ exit 0
 * Mon Jun 20 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-4
 - apply upstream patch by way of Burt Holzman to fall back to a non-referral
   method in cases where we might be derailed by a KDC that rejects the
-  canonicalize option (for example, those from the RHEL 2.1 or 3 era) (#713518)
+  canonicalize option (for example, those from the RHEL 2.1 or 3 era) (#715074)
 
 * Tue Jun 14 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-3
 - pull a fix from SVN to get libgssrpc clients (e.g. kadmin) authenticating
