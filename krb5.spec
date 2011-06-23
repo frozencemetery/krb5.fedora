@@ -4,10 +4,10 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.8.2
-Release: 11%{?dist}
+Version: 1.8.4
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.2-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.4-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -47,21 +47,11 @@ Patch61: krb5-1.8-manpaths.patch
 Patch63: krb5-1.8-selinux-label.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.8-dirsrv-accountlock.patch
-Patch72: krb5-1.7.1-24139.patch
-Patch73: krb5-1-8-gss-noexp.patch
-Patch74: krb5-1.8.2-getoptP.patch
 Patch75: krb5-trunk-explife.patch
 Patch76: krb5-trunk-key_usage.patch
 Patch77: krb5-trunk-signed.patch
 Patch78: krb5-trunk-k5login.patch
-Patch79: krb5-1.8.x-authdata.patch
-Patch80: http://web.mit.edu/kerberos/advisories/2010-007-patch.txt
-Patch81: krb5-1.8.2-1.8.3-crypto.patch
-Patch82: http://web.mit.edu/kerberos/advisories/2011-001-patch.txt
-Patch83: http://web.mit.edu/kerberos/advisories/2011-002-patch.txt
-Patch84: http://web.mit.edu/kerberos/advisories/2011-003-patch.txt
 Patch85: krb5-1.9-paren.patch
-Patch86: http://web.mit.edu/kerberos/advisories/2011-004-patch-r18.txt
 Patch87: krb5-klist_s.patch
 
 License: MIT
@@ -200,21 +190,11 @@ ln -s NOTICE LICENSE
 %patch59 -p1 -b .kpasswd_tcp
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
-%patch72 -p1 -b .24139
-%patch73 -p0 -b .gss-noexp
-%patch74 -p1 -b .getoptP
 %patch75 -p0 -b .explife
 %patch76 -p0 -b .key_usage
 %patch77 -p0 -b .signed
 %patch78 -p1 -b .k5login
-%patch79 -p1 -b .authdata
-%patch81 -p1 -b .crypto
-%patch80 -p1 -b .2010-007
-%patch82 -p1 -b .2011-001
-%patch83 -p1 -b .2011-002
-%patch84 -p1 -b .2011-003
 %patch85 -p1 -b .paren
-%patch86 -p1 -b .2011-004
 %patch87 -p1 -b .klist_s
 gzip doc/*.ps
 
@@ -247,14 +227,6 @@ doc/kadm5     api-unit-test
 doc/kadm5     api-funcspec
 doc/kadm5     api-server-design
 EOF
-
-# Fix the LDIF file.
-if test %{version} != 1.8.2 ; then
-	# Hopefully this was fixed later.
-	exit 1
-fi
-sed -i s,^attributetype:,attributetypes:,g \
-	src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
 
 # Generate an FDS-compatible LDIF file.
 inldif=src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
@@ -667,6 +639,21 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Jun 23 2011 Nalin Dahyabhai <nalin@redhat.com> 1.8.4-1
+- update to 1.8.4
+  - drop obsolete patch for upstream #6745
+  - drop obsolete patch for upstream #6739, to stop returning context-expired
+    errors when the ticket which was used to set up the context expires
+  - drop obsolete patch for upstream #6745, to fix KDC parsing of the -P option
+  - drop obsolete patch for CVE-2010-1322
+  - drop obsolete prerequisite patch for MITKRB5-SA-2010-007
+  - drop obsolete patch for MITKRB5-SA-2010-007
+  - drop obsolete patch for MITKRB5-SA-2011-001
+  - drop obsolete patch for MITKRB5-SA-2011-002
+  - drop obsolete patch for MITKRB5-SA-2011-003
+  - drop obsolete patch for MITKRB5-SA-2011-004
+  - no more need to munge the kdb ldif to fix upstream #6701
+
 * Wed May 25 2011 Nalin Dahyabhai <nalin@redhat.com> 1.8.2-11
 - klist: don't trip over referral entries when invoked with -s (#707145,
   RT#6915)
