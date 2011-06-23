@@ -55,6 +55,7 @@ Patch78: krb5-trunk-chpw-err.patch
 Patch79: krb5-klist_s.patch
 Patch80: krb5-trunk-kadmin-oldproto.patch
 Patch81: krb5-1.9-canonicalize-fallback.patch
+Patch82: krb5-1.9.1-ai_addrconfig.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -201,6 +202,7 @@ ln -s NOTICE LICENSE
 %patch79 -p1 -b .klist_s
 %patch80 -p0 -b .kadmin-oldproto
 %patch81 -p1 -b .canonicalize-fallback
+%patch82 -p0 -b .ai_addrconfig
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -660,6 +662,12 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Jun 23 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-5
+- pull a fix from SVN to try to avoid triggering a PTR lookup in getaddrinfo()
+  during krb5_sname_to_principal(), and to let getaddrinfo() decide whether or
+  not to ask for an IPv6 address based on the set of configured interfaces
+  (RT#6922)
+
 * Mon Jun 20 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-4
 - apply upstream patch by way of Burt Holzman to fall back to a non-referral
   method in cases where we might be derailed by a KDC that rejects the
