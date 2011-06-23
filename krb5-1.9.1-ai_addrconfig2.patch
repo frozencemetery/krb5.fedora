@@ -1,0 +1,120 @@
+Most of RT#6923, except for the part that depends on the sendto_kdc rewrite
+(it's still in locate_kdc in this version): pass AI_ADDRCONFIG whenever we
+specify hints to getaddrinfo() to get the address of a server.
+
+Index: src/plugins/locate/python/py-locate.c
+===================================================================
+--- src/plugins/locate/python/py-locate.c	(revision 24977)
++++ src/plugins/locate/python/py-locate.c	(revision 24978)
+@@ -302,6 +302,7 @@
+             return -1;
+         }
+         aihints.ai_socktype = thissocktype;
++        aihints.ai_flags = AI_ADDRCONFIG;
+         x = getaddrinfo (hoststr, portstr, &aihints, &airesult);
+         if (x != 0)
+             continue;
+Index: src/appl/sample/sclient/sclient.c
+===================================================================
+--- src/appl/sample/sclient/sclient.c	(revision 24977)
++++ src/appl/sample/sclient/sclient.c	(revision 24978)
+@@ -125,6 +125,7 @@
+ 
+     memset(&aihints, 0, sizeof(aihints));
+     aihints.ai_socktype = SOCK_STREAM;
++    aihints.ai_flags = AI_ADDRCONFIG;
+     aierr = getaddrinfo(argv[1], portstr, &aihints, &ap);
+     if (aierr) {
+         fprintf(stderr, "%s: error looking up host '%s' port '%s'/tcp: %s\n",
+Index: src/kadmin/dbutil/kadm5_create.c
+===================================================================
+--- src/kadmin/dbutil/kadm5_create.c	(revision 24977)
++++ src/kadmin/dbutil/kadm5_create.c	(revision 24978)
+@@ -184,7 +184,7 @@
+         goto clean_and_exit;
+     }
+     memset(&ai_hints, 0, sizeof(ai_hints));
+-    ai_hints.ai_flags = AI_CANONNAME;
++    ai_hints.ai_flags = AI_CANONNAME | AI_ADDRCONFIG;
+     gai_error = getaddrinfo(localname, (char *)NULL, &ai_hints, &ai);
+     if (gai_error) {
+         ret = EINVAL;
+Index: src/lib/kadm5/alt_prof.c
+===================================================================
+--- src/lib/kadm5/alt_prof.c	(revision 24977)
++++ src/lib/kadm5/alt_prof.c	(revision 24978)
+@@ -897,7 +897,7 @@
+     }
+ 
+     memset(&hint, 0, sizeof(hint));
+-    hint.ai_flags = AI_CANONNAME;
++    hint.ai_flags = AI_CANONNAME | AI_ADDRCONFIG;
+     err = getaddrinfo(params_out.admin_server, NULL, &hint, &ai);
+     if (err != 0) {
+         ret = KADM5_CANT_RESOLVE;
+Index: src/lib/kadm5/clnt/client_init.c
+===================================================================
+--- src/lib/kadm5/clnt/client_init.c	(revision 24977)
++++ src/lib/kadm5/clnt/client_init.c	(revision 24978)
+@@ -563,8 +563,9 @@
+     (void) snprintf(portbuf, sizeof(portbuf), "%d", port);
+     memset(&hint, 0, sizeof(hint));
+     hint.ai_socktype = SOCK_STREAM;
++    hint.ai_flags = AI_ADDRCONFIG;
+ #ifdef AI_NUMERICSERV
+-    hint.ai_flags = AI_NUMERICSERV;
++    hint.ai_flags |= AI_NUMERICSERV;
+ #endif
+     err = getaddrinfo(hostname, portbuf, &hint, &addrs);
+     if (err != 0)
+Index: src/lib/krb5/os/hostaddr.c
+===================================================================
+--- src/lib/krb5/os/hostaddr.c	(revision 24977)
++++ src/lib/krb5/os/hostaddr.c	(revision 24978)
+@@ -41,7 +41,7 @@
+         return KRB5_ERR_BAD_HOSTNAME;
+ 
+     memset (&hints, 0, sizeof (hints));
+-    hints.ai_flags = AI_NUMERICHOST;
++    hints.ai_flags = AI_NUMERICHOST | AI_ADDRCONFIG;
+     /* We don't care what kind at this point, really, but without
+        this, we can get back multiple sockaddrs per address, for
+        SOCK_DGRAM, SOCK_STREAM, and SOCK_RAW.  I haven't checked if
+Index: src/lib/krb5/os/hst_realm.c
+===================================================================
+--- src/lib/krb5/os/hst_realm.c	(revision 24977)
++++ src/lib/krb5/os/hst_realm.c	(revision 24978)
+@@ -107,7 +107,7 @@
+     int err;
+ 
+     memset (&hints, 0, sizeof (hints));
+-    hints.ai_flags = AI_CANONNAME;
++    hints.ai_flags = AI_CANONNAME | AI_ADDRCONFIG;
+     err = getaddrinfo (name, 0, &hints, &ai);
+     if (err)
+         return krb5int_translate_gai_error (err);
+Index: src/slave/kprop.c
+===================================================================
+--- src/slave/kprop.c	(revision 24977)
++++ src/slave/kprop.c	(revision 24978)
+@@ -322,6 +322,7 @@
+     memset(&hints, 0, sizeof(hints));
+     hints.ai_family = PF_UNSPEC;
+     hints.ai_socktype = SOCK_STREAM;
++    hints.ai_flags = AI_ADDRCONFIG;
+     error = getaddrinfo(host, port, &hints, &answers);
+     if (error != 0) {
+         com_err(progname, 0, "%s: %s", host, gai_strerror(error));
+--- src/lib/krb5/os/locate_kdc.c
++++ src/lib/krb5/os/locate_kdc.c
+@@ -259,8 +259,9 @@
+     memset(&hint, 0, sizeof(hint));
+     hint.ai_family = family;
+     hint.ai_socktype = socktype;
++    hint.ai_flags = AI_ADDRCONFIG;
+ #ifdef AI_NUMERICSERV
+-    hint.ai_flags = AI_NUMERICSERV;
++    hint.ai_flags |= AI_NUMERICSERV;
+ #endif
+     result = snprintf(portbuf, sizeof(portbuf), "%d", ntohs(port));
+     if (SNPRINTF_OVERFLOW(result, sizeof(portbuf)))
