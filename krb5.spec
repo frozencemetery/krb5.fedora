@@ -62,7 +62,7 @@ BuildRequires: autoconf, bison, flex, gawk
 %if 0%{?fedora} >= 12 || 0%{?rhel} >= 6
 BuildRequires: libcom_err-devel, libss-devel
 %endif
-BuildRequires: gzip, ncurses-devel, rsh, texinfo, texinfo-tex, tar
+BuildRequires: gzip, ncurses-devel, texinfo, texinfo-tex, tar
 BuildRequires: texlive-latex
 BuildRequires: keyutils-libs-devel
 BuildRequires: libselinux-devel
@@ -639,6 +639,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Jun 23 2011 Nalin Dahyabhai <nalin@redhat.com>
+- drop not-needed-since-1.8 build dependency on rsh (ssorce)
+
 * Thu Jun 23 2011 Nalin Dahyabhai <nalin@redhat.com> 1.8.4-1
 - update to 1.8.4
   - drop obsolete patch for upstream #6745
