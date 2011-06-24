@@ -642,6 +642,7 @@ exit 0
 * Fri Jun 24 2011 Nalin Dahyabhai <nalin@redhat.com>
 - incorporate a fix to teach the file labeling patch about when replay caches
   are expunged (#576093)
+- switch to the upstream patch for #707145
 
 * Thu Jun 23 2011 Nalin Dahyabhai <nalin@redhat.com>
 - drop not-needed-since-1.8 build dependency on rsh (ssorce)

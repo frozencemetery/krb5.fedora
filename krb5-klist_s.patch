@@ -2,13 +2,28 @@ Don't trip over referral entries.  RT#6915
 
 Index: krb5/src/clients/klist/klist.c
 ===================================================================
---- krb5/src/clients/klist/klist.c	(revision 24943)
-+++ krb5/src/clients/klist/klist.c	(working copy)
-@@ -386,6 +386,7 @@
+--- krb5/src/clients/klist/klist.c
++++ krb5/src/clients/klist/klist.c
+@@ -24,7 +24,7 @@
+  * List out the contents of your credential cache or keytab.
+  */
+ 
+-#include "autoconf.h"
++#include "k5-int.h"
+ #include <krb5.h>
+ #include <com_err.h>
+ #include <stdlib.h>
+@@ -386,10 +386,9 @@
              continue;
          if (status_only) {
              if (exit_status && creds.server->length == 2 &&
-+                creds.server->realm.length > 0 &&
-                 strcmp(creds.server->realm.data, princ->realm.data) == 0 &&
-                 strcmp((char *)creds.server->data[0].data, "krbtgt") == 0 &&
-                 strcmp((char *)creds.server->data[1].data,
+-                strcmp(creds.server->realm.data, princ->realm.data) == 0 &&
+-                strcmp((char *)creds.server->data[0].data, "krbtgt") == 0 &&
+-                strcmp((char *)creds.server->data[1].data,
+-                       princ->realm.data) == 0 &&
++                data_eq(creds.server->realm, princ->realm) &&
++                data_eq_string(creds.server->data[0], "krbtgt") &&
++                data_eq(creds.server->data[1], princ->realm) &&
+                 creds.times.endtime > now)
+                 exit_status = 0;
+         } else {
