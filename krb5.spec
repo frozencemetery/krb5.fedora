@@ -5,7 +5,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8.4
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.4-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -639,7 +639,7 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Fri Jun 24 2011 Nalin Dahyabhai <nalin@redhat.com>
+* Fri Jun 24 2011 Nalin Dahyabhai <nalin@redhat.com> 1.8.4-2
 - incorporate a fix to teach the file labeling patch about when replay caches
   are expunged (#576093)
 - switch to the upstream patch for #707145
