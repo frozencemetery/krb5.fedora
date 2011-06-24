@@ -42,7 +42,7 @@ diff -up krb5-1.8/src/aclocal.m4.selinux-label krb5-1.8/src/aclocal.m4
  KRB5_LIB_PARAMS
  KRB5_AC_INITFINI
  KRB5_AC_ENABLE_THREADS
-@@ -1791,3 +1792,53 @@ AC_SUBST(manlocalstatedir)
+@@ -1791,3 +1792,51 @@ AC_SUBST(manlocalstatedir)
  AC_SUBST(manlibexecdir)
  AC_CONFIG_FILES($1)
  ])
@@ -71,9 +71,7 @@ diff -up krb5-1.8/src/aclocal.m4.selinux-label krb5-1.8/src/aclocal.m4
 +       AC_CHECK_FUNCS(setfscreatecon selabel_open)
 +       if test "x$ac_cv_func_setfscreatecon" = xno ; then
 +               AC_CHECK_LIB(selinux,setfscreatecon)
-+               AC_CHECK_LIB(selinux,selabel_open)
 +               unset ac_cv_func_setfscreatecon
-+               unset ac_cv_func_selabel_open
 +               AC_CHECK_FUNCS(setfscreatecon selabel_open)
 +               if test "x$ac_cv_func_setfscreatecon" = xyes ; then
 +                       SELINUX_LIBS="$LIBS"
@@ -90,7 +88,7 @@ diff -up krb5-1.8/src/aclocal.m4.selinux-label krb5-1.8/src/aclocal.m4
 +               AC_MSG_NOTICE([building with SELinux labeling support])
 +               AC_DEFINE(USE_SELINUX,1,[Define if Kerberos-aware tools should set SELinux file contexts when creating files.])
 +               SELINUX_LIBS="$LIBS"
-+		EXTRA_SUPPORT_SYMS="$EXTRA_SUPPORT_SYMS krb5int_labeled_open krb5int_labeled_fopen"
++		EXTRA_SUPPORT_SYMS="$EXTRA_SUPPORT_SYMS krb5int_labeled_open krb5int_labeled_fopen krb5int_push_fscreatecon_for krb5int_pop_fscreatecon"
 +       fi
 +fi
 +LIBS="$old_LIBS"
@@ -142,7 +140,7 @@ diff -up krb5-1.8/src/include/k5-int.h.selinux-label krb5-1.8/src/include/k5-int
 diff -up krb5-1.8/src/include/k5-label.h.selinux-label krb5-1.8/src/include/k5-label.h
 --- krb5-1.8/src/include/k5-label.h.selinux-label	2010-03-05 10:57:23.000000000 -0500
 +++ krb5-1.8/src/include/k5-label.h	2010-03-05 10:57:23.000000000 -0500
-@@ -0,0 +1,30 @@
+@@ -0,0 +1,32 @@
 +#ifndef _KRB5_LABEL_H
 +#define _KRB5_LABEL_H
 +
@@ -168,6 +166,8 @@ diff -up krb5-1.8/src/include/k5-label.h.selinux-label krb5-1.8/src/include/k5-l
 +int krb5int_labeled_mknod(const char *path, mode_t mode, dev_t device);
 +#define THREEPARAMOPEN(x,y,z) krb5int_labeled_open(x,y,z)
 +#define WRITABLEFOPEN(x,y) krb5int_labeled_fopen(x,y)
++void *krb5int_push_fscreatecon_for(const char *pathname);
++void krb5int_pop_fscreatecon(void *previous);
 +#else
 +#define WRITABLEFOPEN(x,y) fopen(x,y)
 +#define THREEPARAMOPEN(x,y,z) open(x,y,z)
@@ -501,9 +501,9 @@ diff -up krb5-1.8/src/util/support/Makefile.in.selinux-label krb5-1.8/src/util/s
 diff -up krb5-1.8/src/util/support/selinux.c.selinux-label krb5-1.8/src/util/support/selinux.c
 --- krb5-1.8/src/util/support/selinux.c.selinux-label	2010-03-05 10:57:23.000000000 -0500
 +++ krb5-1.8/src/util/support/selinux.c	2010-03-05 10:57:23.000000000 -0500
-@@ -0,0 +1,346 @@
+@@ -0,0 +1,362 @@
 +/*
-+ * Copyright 2007,2008,2009 Red Hat, Inc.  All Rights Reserved.
++ * Copyright 2007,2008,2009,2011 Red Hat, Inc.  All Rights Reserved.
 + *
 + * Redistribution and use in source and binary forms, with or without
 + * modification, are permitted provided that the following conditions are met:
@@ -676,7 +676,7 @@ diff -up krb5-1.8/src/util/support/selinux.c.selinux-label krb5-1.8/src/util/sup
 +#ifdef DEBUG
 +			if (isatty(fileno(stderr))) {
 +				fprintf(stderr, "Setting file creation context "
-+					"to \"%s\".\n", configured);
++					"to \"%s\".\n", configuredsc);
 +			}
 +#endif
 +			if (setfscreatecon(configuredsc) != 0) {
@@ -719,6 +719,22 @@ diff -up krb5-1.8/src/util/support/selinux.c.selinux-label krb5-1.8/src/util/sup
 +			freecon(previous);
 +		}
 +	}
++}
++
++void *
++krb5int_push_fscreatecon_for(const char *pathname)
++{
++	struct stat st;
++	if (stat(pathname, &st) != 0) {
++		st.st_mode = S_IRUSR | S_IWUSR;
++	}
++	return push_fscreatecon(pathname, st.st_mode);
++}
++
++void
++krb5int_pop_fscreatecon(void *con)
++{
++	pop_fscreatecon(con);
 +}
 +
 +FILE *
@@ -848,3 +864,34 @@ diff -up krb5-1.8/src/util/support/selinux.c.selinux-label krb5-1.8/src/util/sup
 +}
 +
 +#endif
+diff -up krb5-1.8/src/lib/krb5/rcache/rc_dfl.c krb5-1.8/src/lib/krb5/rcache/rc_dfl.c
+--- krb5-1.8/src/lib/krb5/rcache/rc_dfl.c	2011-06-13 21:04:04.994208850 -0400
++++ krb5-1.8/src/lib/krb5/rcache/rc_dfl.c	2011-06-13 21:05:07.416208760 -0400
+@@ -813,6 +813,9 @@ krb5_rc_dfl_expunge_locked(krb5_context 
+     krb5_error_code retval = 0;
+     krb5_rcache tmp;
+     krb5_deltat lifespan = t->lifespan;  /* save original lifespan */
++#ifdef USE_SELINUX
++    void *selabel;
++#endif
+ 
+     if (! t->recovering) {
+         name = t->name;
+@@ -834,7 +837,17 @@ krb5_rc_dfl_expunge_locked(krb5_context 
+     retval = krb5_rc_resolve(context, tmp, 0);
+     if (retval)
+         goto cleanup;
++#ifdef USE_SELINUX
++    if (t->d.fn != NULL)
++        selabel = krb5int_push_fscreatecon_for(t->d.fn);
++    else
++        selabel = NULL;
++#endif
+     retval = krb5_rc_initialize(context, tmp, lifespan);
++#ifdef USE_SELINUX
++    if (selabel != NULL)
++        krb5int_pop_fscreatecon(selabel);
++#endif
+     if (retval)
+         goto cleanup;
+     for (q = t->a; q; q = q->na) {
