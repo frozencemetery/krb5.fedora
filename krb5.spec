@@ -5,10 +5,10 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.9
-Release: 8%{?dist}
+Version: 1.9.1
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -49,12 +49,14 @@ Patch63: krb5-1.9-selinux-label.patch
 Patch70: krb5-trunk-kpasswd_tcp2.patch
 Patch71: krb5-1.9-dirsrv-accountlock.patch
 Patch72: krb5-pkinit-cms2.patch
-Patch73: http://web.mit.edu/kerberos/advisories/2011-001-patch.txt
-Patch74: http://web.mit.edu/kerberos/advisories/2011-002-patch.txt
-Patch75: http://web.mit.edu/kerberos/advisories/2011-003-patch.txt
-Patch76: krb5-1.9-paren.patch
-Patch77: http://web.mit.edu/kerberos/advisories/2011-004-patch.txt
-Patch78: krb5-klist_s.patch
+Patch75: krb5-pkinit-debug.patch
+Patch77: krb5-1.9-paren.patch
+Patch78: krb5-trunk-chpw-err.patch
+Patch79: krb5-klist_s.patch
+Patch80: krb5-trunk-kadmin-oldproto.patch
+Patch81: krb5-1.9-canonicalize-fallback.patch
+Patch82: krb5-1.9.1-ai_addrconfig.patch
+Patch83: krb5-1.9.1-ai_addrconfig2.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -75,6 +77,9 @@ BuildRequires: openldap-devel
 %endif
 %if %{WITH_OPENSSL}
 BuildRequires: openssl-devel >= 0.9.8
+%endif
+%if %{WITH_NSS}
+BuildRequires: nss-devel >= 3.12.10
 %endif
 
 %description
@@ -192,12 +197,14 @@ ln -s NOTICE LICENSE
 #%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
 %patch72 -p1 -b .pkinit_cms2
-%patch73 -p1 -b .2011-001
-%patch74 -p1 -b .2011-002
-%patch75 -p1 -b .2011-003
-%patch76 -p1 -b .paren
-%patch77 -p1 -b .2011-004
-%patch78 -p1 -b .klist_s
+#%patch75 -p1 -b .pkinit-debug
+%patch77 -p1 -b .paren
+%patch78 -p0 -b .chpw-err
+%patch79 -p1 -b .klist_s
+%patch80 -p0 -b .kadmin-oldproto
+%patch81 -p1 -b .canonicalize-fallback
+%patch82 -p0 -b .ai_addrconfig
+%patch83 -p0 -b .ai_addrconfig2
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -292,6 +299,7 @@ make %{?_smp_mflags}
 popd
 
 # A sanity checker for upgrades.
+env LD_LIBRARY_PATH=`pwd`/src/lib \
 %{__cc} -o kdb_check_weak \
 	-I src/include `./src/krb5-config --cflags kdb` \
 	%{SOURCE35} \
@@ -656,21 +664,71 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Wed May 25 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-8
+* Thu Jun 23 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-5
+- pull a fix from SVN to try to avoid triggering a PTR lookup in getaddrinfo()
+  during krb5_sname_to_principal(), and to let getaddrinfo() decide whether or
+  not to ask for an IPv6 address based on the set of configured interfaces
+  (RT#6922)
+- pull a fix from SVN to use AI_ADDRCONFIG more often (RT#6923)
+
+* Mon Jun 20 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-4
+- apply upstream patch by way of Burt Holzman to fall back to a non-referral
+  method in cases where we might be derailed by a KDC that rejects the
+  canonicalize option (for example, those from the RHEL 2.1 or 3 era) (#715074)
+
+* Tue Jun 14 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-3
+- pull a fix from SVN to get libgssrpc clients (e.g. kadmin) authenticating
+  using the old protocol over IPv4 again (RT#6920)
+
+* Tue Jun 14 2011 Nalin Dahyabhai <nalin@redhat.com>
+- incorporate a fix to teach the file labeling bits about when replay caches
+  are expunged (#576093)
+
+* Thu May 26 2011 Nalin Dahyabhai <nalin@redhat.com>
+- switch to the upstream patch for #707145
+
+* Wed May 25 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-2
 - klist: don't trip over referral entries when invoked with -s (#707145,
   RT#6915)
 
-* Wed Apr 13 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-7
+* Fri May  6 2011 Nalin Dahyabhai <nalin@redhat.com>
+- fixup URL in a comment
+- when built with NSS, require 3.12.10 rather than 3.12.9
+
+* Thu May  5 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-1
+- update to 1.9.1:
+  - drop no-longer-needed patches for CVE-2010-4022, CVE-2011-0281,
+    CVE-2011-0282, CVE-2011-0283, CVE-2011-0284, CVE-2011-0285
+
+* Wed Apr 13 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-9
 - kadmind: add upstream patch to fix free() on an invalid pointer (#696343,
   MITKRB5-SA-2011-004, CVE-2011-0285)
 
-* Fri Mar 18 2011 Nalin Dahyabhai <nalin@redhat.com>
+* Mon Apr  4 2011 Nalin Dahyabhai <nalin@redhat.com>
+- don't discard the error code from an error message received in response
+  to a change-password request (#658871, RT#6893)
+
+* Fri Apr  1 2011 Nalin Dahyabhai <nalin@redhat.com>
+- override INSTALL_SETUID at build-time so that ksu is installed into
+  the buildroot with the right permissions (part of #225974)
+
+* Fri Mar 18 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-8
 - backport change from SVN to fix a computed-value-not-used warning in
   kpropd (#684065)
 
-* Tue Mar 15 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-6
+* Tue Mar 15 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-7
+- turn off NSS as the backend for libk5crypto for now to work around its
+  DES string2key not working (#679012)
 - add revised upstream patch to fix double-free in KDC while returning
-  typed-data with errors (CVE-2011-0284, #674325)
+  typed-data with errors (MITKRB5-SA-2011-003, CVE-2011-0284, #674325)
+
+* Thu Feb 17 2011 Nalin Dahyabhai <nalin@redhat.com>
+- throw in a not-applied-by-default patch to try to make pkinit debugging
+  into a run-time boolean option named "pkinit_debug"
+
+* Wed Feb 16 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-6
+- turn on NSS as the backend for libk5crypto, adding nss-devel as a build
+  dependency when that switch is flipped
 
 * Wed Feb  9 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9-5
 - krb5kdc init script: prototype some changes to do a quick spot-check
