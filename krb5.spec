@@ -668,7 +668,7 @@ exit 0
 - pull a fix from SVN to try to avoid triggering a PTR lookup in getaddrinfo()
   during krb5_sname_to_principal(), and to let getaddrinfo() decide whether or
   not to ask for an IPv6 address based on the set of configured interfaces
-  (RT#6922)
+  (#717378, RT#6922)
 - pull a fix from SVN to use AI_ADDRCONFIG more often (RT#6923)
 
 * Mon Jun 20 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-4
