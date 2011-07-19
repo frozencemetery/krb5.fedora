@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.1
-Release: 5%{?dist}
+Release: 6%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -57,6 +57,7 @@ Patch80: krb5-trunk-kadmin-oldproto.patch
 Patch81: krb5-1.9-canonicalize-fallback.patch
 Patch82: krb5-1.9.1-ai_addrconfig.patch
 Patch83: krb5-1.9.1-ai_addrconfig2.patch
+Patch84: krb5-1.9.1-sendto_poll.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -205,6 +206,7 @@ ln -s NOTICE LICENSE
 %patch81 -p1 -b .canonicalize-fallback
 %patch82 -p0 -b .ai_addrconfig
 %patch83 -p0 -b .ai_addrconfig2
+%patch84 -p0 -b .sendto_poll
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -664,6 +666,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Jul 19 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-6
+- backport fixes to teach libkrb5 to use descriptors higher than FD_SETSIZE
+  to talk to a KDC by using poll() if it's detected at compile-time (#701446,
+  RT#6905)
+
 * Thu Jun 23 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-5
 - pull a fix from SVN to try to avoid triggering a PTR lookup in getaddrinfo()
   during krb5_sname_to_principal(), and to let getaddrinfo() decide whether or
