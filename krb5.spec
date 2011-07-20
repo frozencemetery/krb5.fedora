@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.1
-Release: 6%{?dist}
+Release: 7%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -666,6 +666,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Jul 20 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-7
+- kadmind.init: drop the attempt to detect no-database-present errors (#723723)
+
 * Tue Jul 19 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-6
 - backport fixes to teach libkrb5 to use descriptors higher than FD_SETSIZE
   to talk to a KDC by using poll() if it's detected at compile-time (#701446,
