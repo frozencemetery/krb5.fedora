@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.1
-Release: 7%{?dist}
+Release: 8%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -35,7 +35,7 @@ Source35: kdb_check_weak.c
 Patch5: krb5-1.8-ksu-access.patch
 Patch6: krb5-1.9-ksu-path.patch
 Patch12: krb5-1.7-ktany.patch
-Patch16: krb5-1.9-buildconf.patch
+Patch16: krb5-1.9.1-buildconf.patch
 Patch23: krb5-1.3.1-dns.patch
 Patch29: krb5-1.9-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
@@ -666,6 +666,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Jul 22 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-8
+- build shared libraries with partial RELRO support (#723995)
+- filter out potentially multiple instances of -Wl,-z,relro from krb5-config
+  output, now that it's in the buildroot's default LDFLAGS
+
 * Wed Jul 20 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-7
 - kadmind.init: drop the attempt to detect no-database-present errors (#723723)
 
