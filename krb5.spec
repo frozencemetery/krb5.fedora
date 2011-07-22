@@ -58,6 +58,7 @@ Patch81: krb5-1.9-canonicalize-fallback.patch
 Patch82: krb5-1.9.1-ai_addrconfig.patch
 Patch83: krb5-1.9.1-ai_addrconfig2.patch
 Patch84: krb5-1.9.1-sendto_poll.patch
+Patch85: krb5-trunk-gss_delete_sec.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -207,6 +208,7 @@ ln -s NOTICE LICENSE
 %patch82 -p0 -b .ai_addrconfig
 %patch83 -p0 -b .ai_addrconfig2
 %patch84 -p0 -b .sendto_poll
+%patch85 -p1 -b .gss_delete_sec
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -670,6 +672,8 @@ exit 0
 - build shared libraries with partial RELRO support (#723995)
 - filter out potentially multiple instances of -Wl,-z,relro from krb5-config
   output, now that it's in the buildroot's default LDFLAGS
+- pull in a patch to fix losing track of the replay cache FD, from SVN by
+  way of Kevin Coffman
 
 * Wed Jul 20 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-7
 - kadmind.init: drop the attempt to detect no-database-present errors (#723723)
