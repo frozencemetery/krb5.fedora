@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.1
-Release: 8%{?dist}
+Release: 9%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -59,6 +59,7 @@ Patch82: krb5-1.9.1-ai_addrconfig.patch
 Patch83: krb5-1.9.1-ai_addrconfig2.patch
 Patch84: krb5-1.9.1-sendto_poll.patch
 Patch85: krb5-trunk-gss_delete_sec.patch
+Patch86: krb5-1.9-debuginfo.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -209,6 +210,7 @@ ln -s NOTICE LICENSE
 %patch83 -p0 -b .ai_addrconfig2
 %patch84 -p0 -b .sendto_poll
 %patch85 -p1 -b .gss_delete_sec
+%patch86 -p0 -b .debuginfo
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -668,6 +670,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Aug  8 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-9
+- override the default build rules to not delete temporary y.tab.c files,
+  so that they can be packaged, allowing debuginfo files which point to them
+  do so usefully (#729044)
+
 * Fri Jul 22 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-8
 - build shared libraries with partial RELRO support (#723995)
 - filter out potentially multiple instances of -Wl,-z,relro from krb5-config
