@@ -60,6 +60,7 @@ Patch83: krb5-1.9.1-ai_addrconfig2.patch
 Patch84: krb5-1.9.1-sendto_poll.patch
 Patch85: krb5-trunk-gss_delete_sec.patch
 Patch86: krb5-1.9-debuginfo.patch
+Patch87: krb5-1.9.1-sendto_poll2.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -211,6 +212,7 @@ ln -s NOTICE LICENSE
 %patch84 -p0 -b .sendto_poll
 %patch85 -p1 -b .gss_delete_sec
 %patch86 -p0 -b .debuginfo
+%patch87 -p1 -b .sendto_poll2
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -670,6 +672,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Aug 31 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-10
+- handle an assertion failure that starts cropping up when the patch for
+  using poll (#701446) meets servers that aren't running KDCs or against
+  which the connection fails for other reasons (#727829, #734172)
+
 * Mon Aug  8 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-9
 - override the default build rules to not delete temporary y.tab.c files,
   so that they can be packaged, allowing debuginfo files which point to them

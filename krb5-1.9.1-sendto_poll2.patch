@@ -1,0 +1,11 @@
+--- krb5/src/lib/krb5/os/sendto_kdc.c
++++ krb5/src/lib/krb5/os/sendto_kdc.c
+@@ -1176,7 +1176,7 @@
+         for (i = 0; i < n_conns; i++) {
+             int ssflags;
+ 
+-            if (conns[i].fd == INVALID_SOCKET)
++            if (conns[i].state == FAILED || conns[i].fd == INVALID_SOCKET)
+                 continue;
+             ssflags = cm_get_ssflags(seltemp, conns[i].fd);
+             if (!ssflags)
