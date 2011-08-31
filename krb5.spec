@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.1
-Release: 5%{?dist}
+Release: 10%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -35,7 +35,7 @@ Source35: kdb_check_weak.c
 Patch5: krb5-1.8-ksu-access.patch
 Patch6: krb5-1.9-ksu-path.patch
 Patch12: krb5-1.7-ktany.patch
-Patch16: krb5-1.9-buildconf.patch
+Patch16: krb5-1.9.1-buildconf.patch
 Patch23: krb5-1.3.1-dns.patch
 Patch29: krb5-1.9-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
@@ -57,6 +57,10 @@ Patch80: krb5-trunk-kadmin-oldproto.patch
 Patch81: krb5-1.9-canonicalize-fallback.patch
 Patch82: krb5-1.9.1-ai_addrconfig.patch
 Patch83: krb5-1.9.1-ai_addrconfig2.patch
+Patch84: krb5-1.9.1-sendto_poll.patch
+Patch85: krb5-trunk-gss_delete_sec.patch
+Patch86: krb5-1.9-debuginfo.patch
+Patch87: krb5-1.9.1-sendto_poll2.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -205,6 +209,10 @@ ln -s NOTICE LICENSE
 %patch81 -p1 -b .canonicalize-fallback
 %patch82 -p0 -b .ai_addrconfig
 %patch83 -p0 -b .ai_addrconfig2
+%patch84 -p0 -b .sendto_poll
+%patch85 -p1 -b .gss_delete_sec
+%patch86 -p0 -b .debuginfo
+%patch87 -p1 -b .sendto_poll2
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -664,11 +672,36 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Aug 31 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-10
+- handle an assertion failure that starts cropping up when the patch for
+  using poll (#701446) meets servers that aren't running KDCs or against
+  which the connection fails for other reasons (#727829, #734172)
+
+* Mon Aug  8 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-9
+- override the default build rules to not delete temporary y.tab.c files,
+  so that they can be packaged, allowing debuginfo files which point to them
+  do so usefully (#729044)
+
+* Fri Jul 22 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-8
+- build shared libraries with partial RELRO support (#723995)
+- filter out potentially multiple instances of -Wl,-z,relro from krb5-config
+  output, now that it's in the buildroot's default LDFLAGS
+- pull in a patch to fix losing track of the replay cache FD, from SVN by
+  way of Kevin Coffman
+
+* Wed Jul 20 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-7
+- kadmind.init: drop the attempt to detect no-database-present errors (#723723)
+
+* Tue Jul 19 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-6
+- backport fixes to teach libkrb5 to use descriptors higher than FD_SETSIZE
+  to talk to a KDC by using poll() if it's detected at compile-time (#701446,
+  RT#6905)
+
 * Thu Jun 23 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-5
 - pull a fix from SVN to try to avoid triggering a PTR lookup in getaddrinfo()
   during krb5_sname_to_principal(), and to let getaddrinfo() decide whether or
   not to ask for an IPv6 address based on the set of configured interfaces
-  (RT#6922)
+  (#717378, RT#6922)
 - pull a fix from SVN to use AI_ADDRCONFIG more often (RT#6923)
 
 * Mon Jun 20 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-4
