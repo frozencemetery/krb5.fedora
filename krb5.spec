@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.1
-Release: 10%{?dist}
+Release: 11%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -672,6 +672,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Sep  1 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-11
+- switch to the upstream patch for #727829
+
 * Wed Aug 31 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-10
 - handle an assertion failure that starts cropping up when the patch for
   using poll (#701446) meets servers that aren't running KDCs or against
