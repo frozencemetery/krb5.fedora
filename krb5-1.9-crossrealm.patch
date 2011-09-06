@@ -1,0 +1,14 @@
+RT#6952
+Index: krb5/src/lib/krb5/krb/get_creds.c
+===================================================================
+--- krb5/src/lib/krb5/krb/get_creds.c	(revision 25120)
++++ krb5/src/lib/krb5/krb/get_creds.c	(revision 25121)
+@@ -289,7 +289,7 @@
+     /* Construct the principal krbtgt/<realm>@<cur-tgt-realm>. */
+     krb5_free_principal(context, ctx->tgt_princ);
+     ctx->tgt_princ = NULL;
+-    code = krb5int_tgtname(context, realm, &ctx->cur_tgt->server->realm,
++    code = krb5int_tgtname(context, realm, &ctx->cur_tgt->server->data[1],
+                            &ctx->tgt_princ);
+     if (code != 0)
+         return code;
