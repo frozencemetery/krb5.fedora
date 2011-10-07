@@ -1,11 +1,11 @@
 [Unit]
-Description=Kerberos 5 Propagation Client
+Description=Kerberos 5 Propagation
 After=syslog.target network.target
-ConditionPathExists=!/var/kerberos/krb5kdc/kpropd.acl
+ConditionPathExists=/var/kerberos/krb5kdc/kpropd.acl
 
 [Service]
-ExecStart=/usr/sbin/kpropd -S 
+Type=forking
+ExecStart=/usr/sbin/kpropd -S
 
 [Install]
 WantedBy=multi-user.target
-
