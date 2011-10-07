@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.1
-Release: 15%{?dist}
+Release: 16%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -62,6 +62,7 @@ Patch85: krb5-trunk-gss_delete_sec.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch87: krb5-1.9.1-sendto_poll2.patch
 Patch88: krb5-1.9-crossrealm.patch
+Patch89: krb5-1.9.1-sendto_poll3.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -221,6 +222,7 @@ ln -s NOTICE LICENSE
 %patch86 -p0 -b .debuginfo
 %patch87 -p1 -b .sendto_poll2
 %patch88 -p1 -b .crossrealm
+%patch89 -p1 -b .sendto_poll3
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -706,6 +708,8 @@ exit 0
   syntax
 - kprop.service: add missing Type=forking so that systemd doesn't assume simple
 - kprop.service: expect the ACL configuration to be there, not absent
+- handle a harder-to-trigger assertion failure that starts cropping up when we
+  exit the transmit loop on time (#739853)
 
 * Sun Oct  2 2011 Tom Callaway <spot@fedoraproject.org> 1.9.1-15
 - hardcode pid file as option in krb5kdc.service

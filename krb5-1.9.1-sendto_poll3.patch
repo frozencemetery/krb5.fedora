@@ -1,0 +1,18 @@
+If we exit the transmit loop cleanly, don't overestimate the size of the
+connections array.  This bug appears to have been removed upstream when
+this function was rewritten in trunk, and the select()-based implementation
+is still what's in 1.9, so this patch has nowhere to go.
+--- krb5-1.9.1/src/lib/krb5/os/sendto_kdc.c	2011-09-28 14:54:20.560811664 -0400
++++ krb5-1.9.1/src/lib/krb5/os/sendto_kdc.c	2011-09-28 14:54:11.396812292 -0400
+@@ -1317,7 +1319,10 @@ krb5int_sendto (krb5_context context, co
+            call with the last one from the above loop, if the loop
+            actually calls select.  */
+         sel_state->end_time.tv_sec += delay_this_pass;
+-        e = service_fds(context, sel_state, conns, host+1, &winning_conn,
++        i = host+1;
++        if (i > n_conns)
++            i = n_conns;
++        e = service_fds(context, sel_state, conns, i, &winning_conn,
+                         sel_state+1, msg_handler, msg_handler_data);
+         if (e)
+             break;
