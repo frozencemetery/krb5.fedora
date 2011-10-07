@@ -699,6 +699,14 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Oct  7 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-16
+- kadmin.service: fix #723723 again
+- kadmin.service,krb5kdc.service: remove optional use of $KRB5REALM in command
+  lines, because systemd parsing doesn't handle alternate value shell variable
+  syntax
+- kprop.service: add missing Type=forking so that systemd doesn't assume simple
+- kprop.service: expect the ACL configuration to be there, not absent
+
 * Sun Oct  2 2011 Tom Callaway <spot@fedoraproject.org> 1.9.1-15
 - hardcode pid file as option in krb5kdc.service
 
@@ -734,7 +742,9 @@ exit 0
   way of Kevin Coffman
 
 * Wed Jul 20 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-7
-- kadmind.init: drop the attempt to detect no-database-present errors (#723723)
+- kadmind.init: drop the attempt to detect no-database-present errors (#723723),
+  which is too fragile in cases where the database has been manually moved or
+  is accessed through another kdb plugin
 
 * Tue Jul 19 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-6
 - backport fixes to teach libkrb5 to use descriptors higher than FD_SETSIZE
