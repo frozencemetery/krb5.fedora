@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.1
-Release: 10%{?dist}
+Release: 12%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -61,6 +61,7 @@ Patch84: krb5-1.9.1-sendto_poll.patch
 Patch85: krb5-trunk-gss_delete_sec.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch87: krb5-1.9.1-sendto_poll2.patch
+Patch88: krb5-1.9-crossrealm.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -75,6 +76,8 @@ BuildRequires: texlive-latex
 BuildRequires: keyutils-libs-devel
 BuildRequires: libselinux-devel
 BuildRequires: pam-devel
+# For the test framework.
+BuildRequires: perl, dejagnu, tcl-devel
 
 %if %{WITH_LDAP}
 BuildRequires: openldap-devel
@@ -213,6 +216,7 @@ ln -s NOTICE LICENSE
 %patch85 -p1 -b .gss_delete_sec
 %patch86 -p0 -b .debuginfo
 %patch87 -p1 -b .sendto_poll2
+%patch88 -p1 -b .crossrealm
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -263,6 +267,8 @@ autoconf
 popd
 
 %build
+# Go ahead and supply tcl info, because configure doesn't know how to find it.
+. %{_libdir}/tclConfig.sh
 pushd src
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
 INCLUDES=-I%{_includedir}/et
@@ -283,7 +289,7 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--with-system-et \
 	--with-system-ss \
 	--with-netlib=-lresolv \
-	--without-tcl \
+	--with-tcl \
 	--enable-dns-for-realm \
 %if %{WITH_LDAP}
 %if %{WITH_DIRSRV}
@@ -672,6 +678,14 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Sep  6 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-12
+- pull in upstream patch for RT#6952, confusion following referrals for
+  cross-realm auth (#734341)
+- pull in build-time deps for the tests
+
+* Thu Sep  1 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-11
+- switch to the upstream patch for #727829
+
 * Wed Aug 31 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-10
 - handle an assertion failure that starts cropping up when the patch for
   using poll (#701446) meets servers that aren't running KDCs or against
