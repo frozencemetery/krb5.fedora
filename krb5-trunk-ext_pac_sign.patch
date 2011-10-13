@@ -1,0 +1,150 @@
+* dropped hunk that modified src/lib/krb5_32.def
+* adjusted to apply to 1.9.1
+* try to keep the old symbol name around in case someone's basing which one
+  they use on a version check (a wild guess, but it's inexpensive to do it)
+
+commit 297cb47b92892daa52092c932bc5345b2fcb9285
+Author: ghudson <ghudson@dc483132-0cff-0310-8789-dd5450dbe970>
+Date:   Wed Oct 12 16:34:07 2011 +0000
+
+    ticket: 6974
+    subject: Make krb5_pac_sign public
+    
+    krb5int_pac_sign was created as a private API because it is only
+    needed by the KDC.  But it is actually used by DAL or authdata plugin
+    modules, not the core KDC code.  Since plugin modules should not need
+    to consume internal libkrb5 functions, rename krb5int_pac_sign to
+    krb5_pac_sign and make it public.
+    
+    git-svn-id: svn://anonsvn.mit.edu/krb5/trunk@25325 dc483132-0cff-0310-8789-dd5450dbe970
+
+diff --git a/src/include/k5-int.h b/src/include/k5-int.h
+index 1682a34..d2498a8 100644
+--- a/src/include/k5-int.h
++++ b/src/include/k5-int.h
+@@ -2786,15 +2786,6 @@ k5alloc(size_t len, krb5_error_code *code)
+ }
+ 
+ krb5_error_code KRB5_CALLCONV
+-krb5int_pac_sign(krb5_context context,
+-                 krb5_pac pac,
+-                 krb5_timestamp authtime,
+-                 krb5_const_principal principal,
+-                 const krb5_keyblock *server_key,
+-                 const krb5_keyblock *privsvr_key,
+-                 krb5_data *data);
+-
+-krb5_error_code KRB5_CALLCONV
+ krb5_get_credentials_for_user(krb5_context context, krb5_flags options,
+                               krb5_ccache ccache,
+                               krb5_creds *in_creds,
+diff --git a/src/include/krb5/krb5.hin b/src/include/krb5/krb5.hin
+index 3d9dbbf..3327977 100644
+--- a/src/include/krb5/krb5.hin
++++ b/src/include/krb5/krb5.hin
+@@ -7495,6 +7495,27 @@ krb5_pac_verify(krb5_context context, const krb5_pac pac,
+                 krb5_timestamp authtime, krb5_const_principal principal,
+                 const krb5_keyblock *server, const krb5_keyblock *privsvr);
+ 
++/**
++ * Sign a PAC.
++ *
++ * @param [in]  context         Library context
++ * @param [in]  pac             PAC handle
++ * @param [in]  authtime        Expected timestamp
++ * @param [in]  principal       Expected principal name (or NULL)
++ * @param [in]  server          Key for server checksum
++ * @param [in]  privsvr         Key for KDC checksum
++ * @param [out] data            Signed PAC encoding
++ *
++ * This function signs @a pac using the keys @a server and @a privsvr and
++ * returns the signed encoding in @a data.  @a pac is modified to include the
++ * server and KDC checksum buffers.  Use krb5_free_data_contents() to free @a
++ * data when it is no longer needed.
++ */
++krb5_error_code KRB5_CALLCONV
++krb5_pac_sign(krb5_context context, krb5_pac pac, krb5_timestamp authtime,
++              krb5_const_principal principal, const krb5_keyblock *server_key,
++              const krb5_keyblock *privsvr_key, krb5_data *data);
++
+ /* Allows the appplication to override the profile's allow_weak_crypto setting.
+  * Primarily for use by aklog. */
+ krb5_error_code KRB5_CALLCONV
+diff --git a/src/lib/krb5/krb/pac_sign.c b/src/lib/krb5/krb/pac_sign.c
+index ae11a0c..26b1f13 100644
+--- a/src/lib/krb5/krb/pac_sign.c
++++ b/src/lib/krb5/krb/pac_sign.c
+@@ -190,6 +190,15 @@ k5_pac_encode_header(krb5_context context, krb5_pac pac)
+                  const krb5_keyblock *server_key,
+                  const krb5_keyblock *privsvr_key,
+                  krb5_data *data)
++{
++    return krb5_pac_sign(context, pac, authtime, principal,
++                         server_key, privsvr_key, data);
++}
++
++krb5_error_code KRB5_CALLCONV
++krb5_pac_sign(krb5_context context, krb5_pac pac, krb5_timestamp authtime,
++              krb5_const_principal principal, const krb5_keyblock *server_key,
++              const krb5_keyblock *privsvr_key, krb5_data *data)
+ {
+     krb5_error_code ret;
+     krb5_data server_cksum, privsvr_cksum;
+diff --git a/src/lib/krb5/krb/t_pac.c b/src/lib/krb5/krb/t_pac.c
+index 9e96b69..61fb51a 100644
+--- a/src/lib/krb5/krb/t_pac.c
++++ b/src/lib/krb5/krb/t_pac.c
+@@ -149,10 +149,10 @@ main(int argc, char **argv)
+     if (ret)
+         err(context, ret, "krb5_pac_verify");
+ 
+-    ret = krb5int_pac_sign(context, pac, authtime, p,
+-                           &member_keyblock, &kdc_keyblock, &data);
++    ret = krb5_pac_sign(context, pac, authtime, p,
++                        &member_keyblock, &kdc_keyblock, &data);
+     if (ret)
+-        err(context, ret, "krb5int_pac_sign");
++        err(context, ret, "krb5_pac_sign");
+ 
+     krb5_pac_free(context, pac);
+ 
+@@ -204,10 +204,10 @@ main(int argc, char **argv)
+         }
+         free(list);
+ 
+-        ret = krb5int_pac_sign(context, pac2, authtime, p,
+-                               &member_keyblock, &kdc_keyblock, &data);
++        ret = krb5_pac_sign(context, pac2, authtime, p,
++                            &member_keyblock, &kdc_keyblock, &data);
+         if (ret)
+-            err(context, ret, "krb5int_pac_sign 4");
++            err(context, ret, "krb5_pac_sign 4");
+ 
+         krb5_pac_free(context, pac2);
+ 
+@@ -283,10 +283,10 @@ main(int argc, char **argv)
+         krb5_free_data_contents(context, &data);
+     }
+ 
+-    ret = krb5int_pac_sign(context, pac, authtime, p,
+-                           &member_keyblock, &kdc_keyblock, &data);
++    ret = krb5_pac_sign(context, pac, authtime, p,
++                        &member_keyblock, &kdc_keyblock, &data);
+     if (ret)
+-        err(context, ret, "krb5int_pac_sign");
++        err(context, ret, "krb5_pac_sign");
+ 
+     krb5_pac_free(context, pac);
+ 
+diff --git a/src/lib/krb5/libkrb5.exports b/src/lib/krb5/libkrb5.exports
+index e31ebb9..c4a0015 100644
+--- a/src/lib/krb5/libkrb5.exports
++++ b/src/lib/krb5/libkrb5.exports
+@@ -465,6 +465,7 @@ krb5_pac_get_buffer
+ krb5_pac_get_types
+ krb5_pac_init
+ krb5_pac_parse
++krb5_pac_sign
+ krb5_pac_verify
+ krb5_parse_name
+ krb5_parse_name_flags
