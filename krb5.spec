@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.1
-Release: 16%{?dist}
+Release: 17%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -63,6 +63,7 @@ Patch86: krb5-1.9-debuginfo.patch
 Patch87: krb5-1.9.1-sendto_poll2.patch
 Patch88: krb5-1.9-crossrealm.patch
 Patch89: krb5-1.9.1-sendto_poll3.patch
+Patch90: krb5-1.9-MITKRB5-SA-2011-006.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -223,6 +224,7 @@ ln -s NOTICE LICENSE
 %patch87 -p1 -b .sendto_poll2
 %patch88 -p1 -b .crossrealm
 %patch89 -p1 -b .sendto_poll3
+%patch90 -p1 -b .2011-006
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -701,6 +703,12 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Oct 18 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-17
+- apply upstream patch to fix a null pointer dereference with the LDAP kdb
+  backend (CVE-2011-1527, #744125), an assertion failure with multiple kdb
+  backends (CVE-2011-1528), and a null pointer dereference with multiple kdb
+  backends (CVE-2011-1529) (#737711)
+
 * Fri Oct  7 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-16
 - kadmin.service: fix #723723 again
 - kadmin.service,krb5kdc.service: remove optional use of $KRB5REALM in command
