@@ -5,7 +5,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.8.4
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.8/krb5-1.8.4-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -53,6 +53,7 @@ Patch77: krb5-trunk-signed.patch
 Patch78: krb5-trunk-k5login.patch
 Patch85: krb5-1.9-paren.patch
 Patch87: krb5-klist_s.patch
+Patch88: krb5-1.8-MITKRB5-SA-2011-006.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -196,6 +197,7 @@ ln -s NOTICE LICENSE
 %patch78 -p1 -b .k5login
 %patch85 -p1 -b .paren
 %patch87 -p1 -b .klist_s
+%patch88 -p1 -b .2011-006
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -639,6 +641,12 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Oct 18 2011 Nalin Dahyabhai <nalin@redhat.com> 1.8.4-3
+- apply upstream patch to fix a null pointer dereference with the LDAP kdb
+  backend (CVE-2011-1527, #744125), an assertion failure with multiple kdb
+  backends (CVE-2011-1528), and a null pointer dereference with multiple kdb
+  backends (CVE-2011-1529) (#737711)
+
 * Fri Jun 24 2011 Nalin Dahyabhai <nalin@redhat.com> 1.8.4-2
 - incorporate a fix to teach the file labeling patch about when replay caches
   are expunged (#576093)
