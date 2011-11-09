@@ -17,4 +17,4 @@ diff -up krb5-1.7/src/krb5-config.in krb5-1.7/src/krb5-config.in
 +	fi
      fi
  
-     echo $lib_flags
+     # If we ever support a flag to generate output suitable for static
