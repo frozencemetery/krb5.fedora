@@ -140,7 +140,7 @@ diff -up krb5-1.8/src/clients/ksu/main.c.pam krb5-1.8/src/clients/ksu/main.c
 +
          /* Run authorization as target.*/
          if (krb5_seteuid(target_uid)) {
-             com_err(prog_name, errno, "while switching to target for authorization check");
+             com_err(prog_name, errno, _("while switching to target for "
 @@ -651,6 +676,26 @@
              sweep_up(ksu_context, cc_target);
              exit(1);
@@ -208,11 +208,11 @@ diff -up krb5-1.8/src/clients/ksu/main.c.pam krb5-1.8/src/clients/ksu/main.c
 -    if( keep_target_cache ) {
 +    if( keep_target_cache && !force_fork ) {
          execv(params[0], params);
-         com_err(prog_name, errno, "while trying to execv %s",
-                 params[0]);
-@@ -823,15 +875,34 @@ main (argc, argv)
+         com_err(prog_name, errno, _("while trying to execv %s"), params[0]);
+         sweep_up(ksu_context, cc_target);
+@@ -823,16 +875,35 @@ main (argc, argv)
              if (ret_pid == -1) {
-                 com_err(prog_name, errno, "while calling waitpid");
+                 com_err(prog_name, errno, _("while calling waitpid"));
              }
 -            sweep_up(ksu_context, cc_target);
 +            if( !keep_target_cache ) {
@@ -220,7 +220,7 @@ diff -up krb5-1.8/src/clients/ksu/main.c.pam krb5-1.8/src/clients/ksu/main.c
 +            }
              exit (statusp);
          case -1:
-             com_err(prog_name, errno, "while trying to fork.");
+             com_err(prog_name, errno, _("while trying to fork."));
              sweep_up(ksu_context, cc_target);
              exit (1);
          case 0:
@@ -239,7 +239,8 @@ diff -up krb5-1.8/src/clients/ksu/main.c.pam krb5-1.8/src/clients/ksu/main.c
 +            }
 +#endif
              execv(params[0], params);
-             com_err(prog_name, errno, "while trying to execv %s", params[0]);
+             com_err(prog_name, errno, _("while trying to execv %s"),
+                     params[0]);
 +            if( keep_target_cache ) {
 +                sweep_up(ksu_context, cc_target);
 +            }
@@ -741,8 +742,8 @@ diff -up krb5-1.8/src/configure.in.pam krb5-1.8/src/configure.in
 --- krb5-1.8/src/configure.in.pam	2009-12-31 18:13:56.000000000 -0500
 +++ krb5-1.8/src/configure.in	2010-03-05 10:48:08.000000000 -0500
 @@ -1051,6 +1051,8 @@ if test "$ac_cv_lib_socket" = "yes" -a "
- 	AC_DEFINE(BROKEN_STREAMS_SOCKETS,1,[Define if socket can't be bound to 0.0.0.0])
- fi
+ AC_SUBST([VERTO_LIBS])
+ AC_SUBST([VERTO_VERSION])
  
 +KRB5_WITH_PAM
 +
