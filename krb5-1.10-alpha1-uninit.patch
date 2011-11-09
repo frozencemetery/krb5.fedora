@@ -1,0 +1,59 @@
+commit 47cccb49b34ce88def9e171cef475f1b193fb4e5
+Author: ghudson <ghudson@dc483132-0cff-0310-8789-dd5450dbe970>
+Date:   Mon Nov 7 00:47:20 2011 +0000
+
+    ticket: 6999
+    target_version: 1.10
+    tags: pullup
+    
+    Fix warnings and version check for NSS pkinit
+    
+    From nalin@redhat.com.
+    
+    git-svn-id: svn://anonsvn.mit.edu/krb5/trunk@25445 dc483132-0cff-0310-8789-dd5450dbe970
+
+diff --git a/src/configure.in b/src/configure.in
+index e5de903..6aae2f5 100644
+--- a/src/configure.in
++++ b/src/configure.in
+@@ -162,12 +162,10 @@ nss)
+   CFLAGS="$CFLAGS $CRYPTO_IMPL_CFLAGS"
+   AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+ #include <nss.h>
+-#if NSS_VMAJOR < 3 || (NSS_VMAJOR == 3 && NSS_VMINOR < 12)
+-#error
+-#elif NSS_VMAJOR == 3 && NSS_VMINOR == 12 && NSS_VPATCH < 9
++#if NSS_VMAJOR < 3 || (NSS_VMAJOR == 3 && NSS_VMINOR < 13)
+ #error
+ #endif
+-  ])], [], [AC_MSG_ERROR([NSS version 3.12.9 or later required.])])
++  ])], [], [AC_MSG_ERROR([NSS version 3.13 or later required.])])
+   CFLAGS=$save_CFLAGS
+   ;;
+ *)
+diff --git a/src/plugins/preauth/pkinit/pkinit_crypto_nss.c b/src/plugins/preauth/pkinit/pkinit_crypto_nss.c
+index 7955324..1a83083 100644
+--- a/src/plugins/preauth/pkinit/pkinit_crypto_nss.c
++++ b/src/plugins/preauth/pkinit/pkinit_crypto_nss.c
+@@ -2190,7 +2190,7 @@ crypto_get_pem_slot(struct _pkinit_identity_crypto_context *id)
+ /* Resolve any ambiguities from having a duplicate nickname in the PKCS12
+  * bundle and in the database, or the bag not providing a nickname.  Note: you
+  * might expect "arg" to be a wincx, but it's actually a certificate!  (Mozilla
+- * bug #321584) */
++ * bug #321584, fixed in 3.12, documented by #586163, in 3.13.) */
+ static SECItem *
+ crypto_nickname_c_cb(SECItem *old_nickname, PRBool *cancel, void *arg)
+ {
+@@ -3527,10 +3527,10 @@ pkinit_create_td_trusted_certifiers(krb5_context context,
+                  !CERT_LIST_END(node, sclist);
+              node = CERT_LIST_NEXT(node)) {
+             /* If we have no trust for it, we can't trust it. */
+-            if (cert->trust == NULL)
++            if (node->cert->trust == NULL)
+                 continue;
+             /* We need to trust it to issue client certs. */
+-            trustf = SEC_GET_TRUST_FLAGS(cert->trust, trustSSL);
++            trustf = SEC_GET_TRUST_FLAGS(node->cert->trust, trustSSL);
+             if (!(trustf & CERTDB_TRUSTED_CLIENT_CA))
+                 continue;
+             /* DestroyCertList frees all of the certs in the list,
