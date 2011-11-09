@@ -1,8 +1,7 @@
 Use an in-memory ccache to silence a compiler warning, for RT#6414.
 
-diff -up krb5-1.8/src/slave/kprop.c.kprop-mktemp krb5-1.8/src/slave/kprop.c
---- krb5-1.8/src/slave/kprop.c.kprop-mktemp	2009-11-06 18:29:12.000000000 -0500
-+++ krb5-1.8/src/slave/kprop.c	2010-03-05 10:59:06.000000000 -0500
+--- krb5/src/slave/kprop.c
++++ krb5/src/slave/kprop.c
 @@ -202,9 +202,8 @@ void PRS(argc, argv)
  void get_tickets(context)
      krb5_context context;
@@ -26,4 +25,4 @@ diff -up krb5-1.8/src/slave/kprop.c.kprop-mktemp krb5-1.8/src/slave/kprop.c
 -
      retval = krb5_cc_resolve(context, buf, &ccache);
      if (retval) {
-         com_err(progname, retval, "while opening credential cache %s",
+         com_err(progname, retval, _("while opening credential cache %s"), buf);
