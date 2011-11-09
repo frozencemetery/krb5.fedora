@@ -3,9 +3,8 @@ values can be dropped in by config.status.  After applying this patch,
 these files should be renamed to their ".in" counterparts, and then the
 configure scripts should be rebuilt.  Originally RT#6525
 
-diff -up krb5-1.8/src/aclocal.m4.manpaths krb5-1.8/src/aclocal.m4
---- krb5-1.8/src/aclocal.m4.manpaths	2010-03-05 10:55:28.000000000 -0500
-+++ krb5-1.8/src/aclocal.m4	2010-03-05 10:55:29.000000000 -0500
+--- krb5/src/aclocal.m4
++++ krb5/src/aclocal.m4
 @@ -1770,3 +1770,24 @@ AC_SUBST(PAM_LIBS)
  AC_SUBST(PAM_MAN)
  AC_SUBST(NON_PAM_MAN)
@@ -31,9 +30,28 @@ diff -up krb5-1.8/src/aclocal.m4.manpaths krb5-1.8/src/aclocal.m4
 +AC_SUBST(manlibexecdir)
 +AC_CONFIG_FILES($1)
 +])
-diff -up krb5-1.8/src/appl/sample/sserver/sserver.M.manpaths krb5-1.8/src/appl/sample/sserver/sserver.M
---- krb5-1.8/src/appl/sample/sserver/sserver.M.manpaths	1999-09-24 17:20:59.000000000 -0400
-+++ krb5-1.8/src/appl/sample/sserver/sserver.M	2010-03-05 10:55:29.000000000 -0500
+--- krb5/src/configure.in
++++ krb5/src/configure.in
+@@ -1054,6 +1054,17 @@ fi
+ KRB5_WITH_PAM
+ 
+ AC_CONFIG_FILES(krb5-config, [chmod +x krb5-config])
++
++V5_AC_OUTPUT_MANPAGE([
++	appl/sample/sserver/sserver.M
++	config-files/kdc.conf.M
++	config-files/krb5.conf.M
++	gen-manpages/kerberos.M
++	kadmin/cli/kadmin.M
++	slave/kpropd.M
++	slave/kprop.M
++])
++
+ V5_AC_OUTPUT_MAKEFILE(.
+ 
+ 	util util/support util/profile util/profile/testmod util/send-pr
+--- krb5/src/appl/sample/sserver/sserver.M
++++ krb5/src/appl/sample/sserver/sserver.M
 @@ -59,7 +59,7 @@ option allows for a different keytab tha
  using a line in
  /etc/inetd.conf that looks like this:
@@ -43,9 +61,8 @@ diff -up krb5-1.8/src/appl/sample/sserver/sserver.M.manpaths krb5-1.8/src/appl/s
  .PP
  Since \fBsample\fP is normally not a port defined in /etc/services, you will
  usually have to add a line to /etc/services which looks like this:
-diff -up krb5-1.8/src/config-files/kdc.conf.M.manpaths krb5-1.8/src/config-files/kdc.conf.M
---- krb5-1.8/src/config-files/kdc.conf.M.manpaths	2010-01-04 14:34:33.000000000 -0500
-+++ krb5-1.8/src/config-files/kdc.conf.M	2010-03-05 10:55:29.000000000 -0500
+--- krb5/src/config-files/kdc.conf.M
++++ krb5/src/config-files/kdc.conf.M
 @@ -82,14 +82,14 @@ This
  .B string
  specifies the location of the access control list (acl) file that
@@ -72,40 +89,29 @@ diff -up krb5-1.8/src/config-files/kdc.conf.M.manpaths krb5-1.8/src/config-files
  
  .SH SEE ALSO
  krb5.conf(5), krb5kdc(8)
-diff -up krb5-1.8/src/config-files/krb5.conf.M.manpaths krb5-1.8/src/config-files/krb5.conf.M
---- krb5-1.8/src/config-files/krb5.conf.M.manpaths	2010-02-25 15:14:21.000000000 -0500
-+++ krb5-1.8/src/config-files/krb5.conf.M	2010-03-05 10:55:29.000000000 -0500
-@@ -651,6 +651,6 @@ is whitespace-separated. The LDAP server
- in for this interface.
+--- krb5/src/config-files/krb5.conf.M
++++ krb5/src/config-files/krb5.conf.M
+@@ -808,6 +808,6 @@ is whitespace-separated. The LDAP server
+ This module implements the encrypted timestamp mechanism.
  
  .SH FILES 
 -/etc/krb5.conf
 +@mansysconfdir@/krb5.conf
  .SH SEE ALSO
  syslog(3)
-diff -up krb5-1.8/src/configure.in.manpaths krb5-1.8/src/configure.in
---- krb5-1.8/src/configure.in.manpaths	2010-03-05 10:55:29.000000000 -0500
-+++ krb5-1.8/src/configure.in	2010-03-05 10:55:29.000000000 -0500
-@@ -1054,6 +1054,16 @@ fi
- KRB5_WITH_PAM
- 
- AC_CONFIG_FILES(krb5-config, [chmod +x krb5-config])
-+
-+V5_AC_OUTPUT_MANPAGE([
-+	appl/sample/sserver/sserver.M
-+	config-files/kdc.conf.M
-+	config-files/krb5.conf.M
-+	kadmin/cli/kadmin.M
-+	slave/kpropd.M
-+	slave/kprop.M
-+])
-+
- V5_AC_OUTPUT_MAKEFILE(.
- 
- 	util util/support util/profile util/send-pr
-diff -up krb5-1.8/src/kadmin/cli/kadmin.M.manpaths krb5-1.8/src/kadmin/cli/kadmin.M
---- krb5-1.8/src/kadmin/cli/kadmin.M.manpaths	2010-01-04 14:59:25.000000000 -0500
-+++ krb5-1.8/src/kadmin/cli/kadmin.M	2010-03-05 10:55:29.000000000 -0500
+--- krb5/src/gen-manpages/kerberos.M
++++ krb5/src/gen-manpages/kerberos.M
+@@ -126,7 +126,7 @@
+ Specifies the location of the KDC configuration file, which contains
+ additional configuration directives for the Key Distribution Center
+ daemon and associated programs.  The default is
+-/usr/local/var/krb5kdc/kdc.conf.
++@manlocalstatedir@/krb5kdc/kdc.conf.
+ .TP
+ .B KRB5RCACHETYPE
+ Specifies the default type of replay cache to use for servers.  Valid
+--- krb5/src/kadmin/cli/kadmin.M
++++ krb5/src/kadmin/cli/kadmin.M
 @@ -869,9 +869,9 @@ option is specified, less verbose status
  .RS
  .TP
@@ -118,18 +124,8 @@ diff -up krb5-1.8/src/kadmin/cli/kadmin.M.manpaths krb5-1.8/src/kadmin/cli/kadmi
  kadmin:
  .RE
  .fi
-@@ -913,7 +913,7 @@ passwords.
- .SH HISTORY
- The
- .B kadmin
--prorgam was originally written by Tom Yu at MIT, as an interface to the
-+program was originally written by Tom Yu at MIT, as an interface to the
- OpenVision Kerberos administration program.
- .SH SEE ALSO
- .IR kerberos (1),
-diff -up krb5-1.8/src/slave/kpropd.M.manpaths krb5-1.8/src/slave/kpropd.M
---- krb5-1.8/src/slave/kpropd.M.manpaths	2009-12-30 23:21:34.000000000 -0500
-+++ krb5-1.8/src/slave/kpropd.M	2010-03-05 10:55:29.000000000 -0500
+--- krb5/src/slave/kpropd.M
++++ krb5/src/slave/kpropd.M
 @@ -74,7 +74,7 @@ Normally, kpropd is invoked out of 
  This is done by adding a line to the inetd.conf file which looks like
  this:
@@ -172,9 +168,8 @@ diff -up krb5-1.8/src/slave/kpropd.M.manpaths krb5-1.8/src/slave/kpropd.M
  Each entry is a line containing the principal of a host from which the
  local machine will allow Kerberos database propagation via kprop.
  .SH SEE ALSO
-diff -up krb5-1.8/src/slave/kprop.M.manpaths krb5-1.8/src/slave/kprop.M
---- krb5-1.8/src/slave/kprop.M.manpaths	1999-09-24 17:20:59.000000000 -0400
-+++ krb5-1.8/src/slave/kprop.M	2010-03-05 10:55:29.000000000 -0500
+--- krb5/src/slave/kprop.M
++++ krb5/src/slave/kprop.M
 @@ -39,7 +39,7 @@ Kerberos server to a slave Kerberos serv
  This is done by transmitting the dumped database file to the slave
  server over an encrypted, secure channel.  The dump file must be created
