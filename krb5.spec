@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.1
-Release: 18%{?dist}
+Release: 19%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -703,6 +703,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Nov 15 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-19
+- selinux: reset the creation context properly after expunging replay caches
+  if they were previously set to the default value (#754001)
+
 * Wed Oct 26 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.9.1-18
 - Rebuilt for glibc bug#747377
 

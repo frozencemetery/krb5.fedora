@@ -501,7 +501,7 @@ diff -up krb5-1.8/src/util/support/Makefile.in.selinux-label krb5-1.8/src/util/s
 diff -up krb5-1.8/src/util/support/selinux.c.selinux-label krb5-1.8/src/util/support/selinux.c
 --- krb5-1.8/src/util/support/selinux.c.selinux-label	2010-03-05 10:57:23.000000000 -0500
 +++ krb5-1.8/src/util/support/selinux.c	2010-03-05 10:57:23.000000000 -0500
-@@ -0,0 +1,362 @@
+@@ -0,0 +1,374 @@
 +/*
 + * Copyright 2007,2008,2009,2011 Red Hat, Inc.  All Rights Reserved.
 + *
@@ -725,16 +725,28 @@ diff -up krb5-1.8/src/util/support/selinux.c.selinux-label krb5-1.8/src/util/sup
 +krb5int_push_fscreatecon_for(const char *pathname)
 +{
 +	struct stat st;
-+	if (stat(pathname, &st) != 0) {
-+		st.st_mode = S_IRUSR | S_IWUSR;
++	void *retval;
++	k5_once(&labeled_once, label_mutex_init);
++	if (k5_mutex_lock(&labeled_mutex) == 0) {
++		if (stat(pathname, &st) != 0) {
++			st.st_mode = S_IRUSR | S_IWUSR;
++		}
++		retval = push_fscreatecon(pathname, st.st_mode);
++		return retval ? retval : (void *) -1;
++	} else {
++		return NULL;
 +	}
-+	return push_fscreatecon(pathname, st.st_mode);
 +}
 +
 +void
 +krb5int_pop_fscreatecon(void *con)
 +{
-+	pop_fscreatecon(con);
++	if (con != NULL) {
++		if (con != (void *) -1) {
++			pop_fscreatecon(con);
++		}
++		k5_mutex_unlock(&labeled_mutex);
++	}
 +}
 +
 +FILE *
