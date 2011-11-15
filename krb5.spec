@@ -1,16 +1,25 @@
 %global WITH_LDAP 1
+%global WITH_DIRSRV 1
+%if 0%{?fedora} >= 17 || 0%{?rhel} >= 6
+# These next two *will* change.
 %global WITH_OPENSSL 1
 %global WITH_NSS 0
-%global WITH_DIRSRV 1
+%global WITH_SYSVERTO 1
+%else
+%global WITH_OPENSSL 1
+%global WITH_NSS 0
+%global WITH_SYSVERTO 0
+%endif
+%global gettext_domain mit-krb5
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.9.1
-Release: 19%{?dist}
+Version: 1.10
+Release: 0%{?dist}.alpha1.0
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
-Source0: krb5-%{version}.tar.gz
-Source1: krb5-%{version}.tar.gz.asc
+# http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-alpha1-signed.tar
+Source0: krb5-%{version}-alpha1.tar.gz
+Source1: krb5-%{version}-alpha1.tar.gz.asc
 Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
@@ -23,7 +32,7 @@ Source20: kadmin.sysconfig
 # and tarred up.
 Source23: krb5-%{version}-pdf.tar.bz2
 Source24: krb5-tex-pdf.sh
-Source25: krb5-1.8-manpaths.txt
+Source25: krb5-1.10-manpaths.txt
 Source29: ksu.pamd
 Source30: kerberos-iv.portreserve
 Source31: kerberos-adm.portreserve
@@ -32,45 +41,29 @@ Source33: krb5kdc.logrotate
 Source34: kadmind.logrotate
 Source35: kdb_check_weak.c
 
-Patch5: krb5-1.8-ksu-access.patch
-Patch6: krb5-1.9-ksu-path.patch
+Patch5: krb5-1.10-ksu-access.patch
+Patch6: krb5-1.10-ksu-path.patch
 Patch12: krb5-1.7-ktany.patch
-Patch16: krb5-1.9.1-buildconf.patch
+Patch16: krb5-1.10-buildconf.patch
 Patch23: krb5-1.3.1-dns.patch
-Patch29: krb5-1.9-kprop-mktemp.patch
+Patch29: krb5-1.10-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch39: krb5-1.8-api.patch
-Patch53: krb5-1.7-nodeplibs.patch
-Patch56: krb5-1.7-doublelog.patch
-Patch59: krb5-1.8-kpasswd_tcp.patch
-Patch60: krb5-1.8-pam.patch
-Patch61: krb5-1.9-manpaths.patch
-Patch63: krb5-1.9-selinux-label.patch
-Patch70: krb5-trunk-kpasswd_tcp2.patch
+Patch56: krb5-1.10-doublelog.patch
+Patch59: krb5-1.10-kpasswd_tcp.patch
+Patch60: krb5-1.10-pam.patch
+Patch61: krb5-1.10-manpaths.patch
+Patch63: krb5-1.10-selinux-label.patch
 Patch71: krb5-1.9-dirsrv-accountlock.patch
-Patch72: krb5-pkinit-cms2.patch
 Patch75: krb5-pkinit-debug.patch
-Patch77: krb5-1.9-paren.patch
-Patch78: krb5-trunk-chpw-err.patch
-Patch79: krb5-klist_s.patch
-Patch80: krb5-trunk-kadmin-oldproto.patch
-Patch81: krb5-1.9-canonicalize-fallback.patch
-Patch82: krb5-1.9.1-ai_addrconfig.patch
-Patch83: krb5-1.9.1-ai_addrconfig2.patch
-Patch84: krb5-1.9.1-sendto_poll.patch
-Patch85: krb5-trunk-gss_delete_sec.patch
 Patch86: krb5-1.9-debuginfo.patch
-Patch87: krb5-1.9.1-sendto_poll2.patch
-Patch88: krb5-1.9-crossrealm.patch
-Patch89: krb5-1.9.1-sendto_poll3.patch
-Patch90: krb5-trunk-ext_pac_sign.patch
-Patch91: krb5-1.9-MITKRB5-SA-2011-006.patch
+Patch92: krb5-1.10-alpha1-uninit.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: autoconf, bison, flex, gawk
+BuildRequires: autoconf, bison, flex, gawk, gettext
 %if 0%{?fedora} >= 12 || 0%{?rhel} >= 6
 BuildRequires: libcom_err-devel, libss-devel
 %endif
@@ -86,17 +79,20 @@ BuildRequires: perl, dejagnu, tcl-devel
 %if %{WITH_LDAP}
 BuildRequires: openldap-devel
 %endif
-%if %{WITH_OPENSSL}
+%if %{WITH_OPENSSL} || %{WITH_NSS}
 BuildRequires: openssl-devel >= 0.9.8
 %endif
 %if %{WITH_NSS}
-BuildRequires: nss-devel >= 3.12.10
+BuildRequires: nss-devel >= 3.13
+%endif
+%if %{WITH_SYSVERTO}
+BuildRequires: libverto-devel
 %endif
 
 %description
 Kerberos V5 is a trusted-third-party network authentication system,
 which can improve your network's security by eliminating the insecure
-practice of cleartext passwords.
+practice of sending passwords over the network in unencrypted form.
 
 %package devel
 Summary: Development files needed to compile Kerberos 5 programs
@@ -176,19 +172,31 @@ package contains the basic Kerberos programs (kinit, klist, kdestroy,
 kpasswd). If your network uses Kerberos, this package should be
 installed on every workstation.
 
+%if 0%{?fedora} >= 17 || 0%{?rhel} >= 6
+%package pkinit
+%else
 %package pkinit-openssl
+%endif
 Summary: The PKINIT module for Kerberos 5
 Group: System Environment/Libraries
 Requires: %{name}-libs = %{version}-%{release}
+%if 0%{?fedora} >= 17 || 0%{?rhel} >= 6
+Obsoletes: krb5-pkinit-openssl
+Provides: krb5-pkinit-openssl = %{version}-%{release}
+%endif
 
+%if 0%{?fedora} >= 17 || 0%{?rhel} >= 6
+%description pkinit
+%else
 %description pkinit-openssl
-Kerberos is a network authentication system. The krb5-pkinit-openssl
-package contains the PKINIT plugin, which uses OpenSSL to allow clients
+%endif
+Kerberos is a network authentication system. The krb5-pkinit
+package contains the PKINIT plugin, which allows clients
 to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -a 23
+%setup -q -a 23 -n krb5-%{version}-alpha1
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -205,28 +213,16 @@ ln -s NOTICE LICENSE
 %patch29 -p1 -b .kprop-mktemp
 %patch30 -p1 -b .send-pr-tempfile
 %patch39 -p1 -b .api
-%patch53 -p1 -b .nodeplibs
 %patch56 -p1 -b .doublelog
 %patch59 -p1 -b .kpasswd_tcp
-#%patch70 -p0 -b .kpasswd_tcp2
 %patch71 -p1 -b .dirsrv-accountlock
-%patch72 -p1 -b .pkinit_cms2
 #%patch75 -p1 -b .pkinit-debug
-%patch77 -p1 -b .paren
-%patch78 -p0 -b .chpw-err
-%patch79 -p1 -b .klist_s
-%patch80 -p0 -b .kadmin-oldproto
-%patch81 -p1 -b .canonicalize-fallback
-%patch82 -p0 -b .ai_addrconfig
-%patch83 -p0 -b .ai_addrconfig2
-%patch84 -p0 -b .sendto_poll
-%patch85 -p1 -b .gss_delete_sec
 %patch86 -p0 -b .debuginfo
-%patch87 -p1 -b .sendto_poll2
-%patch88 -p1 -b .crossrealm
-%patch89 -p1 -b .sendto_poll3
-%patch90 -p1 -b .ext_pac_sign
-%patch91 -p1 -b .2011-006
+# XXX Temporary, backported from trunk.
+%patch92 -p1 -b .uninit
+# XXX Temporary, fixed properly in trunk.
+ln -s /usr/include/et/com_err.h src/include
+
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -308,18 +304,26 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--with-ldap \
 %endif
 %endif
-%if %{WITH_OPENSSL}
+%if %{WITH_OPENSSL} || %{WITH_NSS}
 	--enable-pkinit \
 %else
 	--disable-pkinit \
 %endif
+%if %{WITH_OPENSSL}
+	--with-pkinit-crypto-impl=openssl \
+%endif
 %if %{WITH_NSS}
 	--with-crypto-impl=nss \
+%endif
+%if %{WITH_SYSVERTO}
+	--with-system-verto \
+%else
+	--without-system-verto \
 %endif
 	--with-pam \
 	--with-selinux
 # Now build it.
-make %{?_smp_mflags}
+make
 popd
 
 # A sanity checker for upgrades.
@@ -329,8 +333,12 @@ env LD_LIBRARY_PATH=`pwd`/src/lib \
 	%{SOURCE35} \
 	-L src/lib `./src/krb5-config --libs kdb`
 
-# Run the test suite.  We can't actually do this in the build system.
+%check
+# Run the test suite. We can't actually run the whole thing in the build system.
+make -C src fake-install
 : make -C src check TMPDIR=%{_tmppath}
+make -C src/lib check TMPDIR=%{_tmppath}
+make -C src/kdc check TMPDIR=%{_tmppath}
 
 %install
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
@@ -428,6 +436,8 @@ done
 
 # A sanity checker for upgrades.
 install -m 755 kdb_check_weak $RPM_BUILD_ROOT/%{_libdir}/krb5/
+
+%find_lang %{gettext_domain}
 
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
@@ -528,6 +538,8 @@ exit 0
 %{_mandir}/man1/klist.1*
 %{_bindir}/kpasswd
 %{_mandir}/man1/kpasswd.1*
+%{_bindir}/kswitch
+%{_mandir}/man1/kswitch.1*
 
 %{_bindir}/kvno
 %{_mandir}/man1/kvno.1*
@@ -578,6 +590,10 @@ exit 0
 %config(noreplace) %{_var}/kerberos/krb5kdc/kadm5.acl
 
 %dir %{_libdir}/krb5
+%if ! %{WITH_SYSVERTO}
+%{_libdir}/libverto-k5ev.so
+%{_libdir}/libverto-k5ev.so.*
+%endif
 %{_libdir}/krb5/kdb_check_weak
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/kdb
@@ -631,13 +647,16 @@ exit 0
 %{_sbindir}/kdb5_ldap_util
 %endif
 
-%files libs
+%files libs -f %{gettext_domain}.lang
 %defattr(-,root,root,-)
 %doc README NOTICE LICENSE
 %docdir %{_mandir}
 %verify(not md5 size mtime) %config(noreplace) /etc/krb5.conf
 /%{_mandir}/man1/kerberos.1*
+/%{_mandir}/man5/.k5identity.5*
 /%{_mandir}/man5/.k5login.5*
+/%{_mandir}/man5/k5identity.5*
+/%{_mandir}/man5/k5login.5*
 /%{_mandir}/man5/krb5.conf.5*
 /%{_lib}/libgssapi_krb5.so.*
 /%{_lib}/libgssrpc.so.*
@@ -650,17 +669,25 @@ exit 0
 %dir %{_libdir}/krb5
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/*
-%{_libdir}/krb5/plugins/preauth/encrypted_challenge.so
 %{_libdir}/krb5/plugins/kdb/db2.so
+%if ! %{WITH_SYSVERTO}
+# These really shouldn't be here, but until we have a system copy of libverto,
+# don't force people who are using libverto to install the KDC just to get the
+# shared library.  Not that there are any development headers, but anyway.
+%{_libdir}/libverto.so
+%{_libdir}/libverto.so.*
+%endif
 
-%if %{WITH_OPENSSL}
+%if 0%{?fedora} >= 17 || 0%{?rhel} >= 6
+%files pkinit
+%else
 %files pkinit-openssl
+%endif
 %defattr(-,root,root,-)
 %dir %{_libdir}/krb5
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/preauth
 %{_libdir}/krb5/plugins/preauth/pkinit.so
-%endif
 
 %files devel
 %defattr(-,root,root,-)
@@ -705,6 +732,17 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Nov 15 2011 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.alpha1.0
+- update to 1.10 alpha 1
+- on newer releases where we can assume NSS >= 3.13, configure PKINIT to build
+  using NSS
+- on newer releases where we build PKINIT using NSS, configure libk5crypto to
+  build using NSS
+- rename krb5-pkinit-openssl to krb5-pkinit on newer releases where we're
+  expecting to build PKINIT using NSS instead
+- during %%check, run check in the library and kdc subdirectories, which
+  should be able to run inside of the build system without issue
+
 * Wed Oct 26 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.9.1-19
 - Rebuilt for glibc bug#747377
 
