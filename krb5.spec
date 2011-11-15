@@ -693,7 +693,7 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Wed Nov 15 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.2-9
+* Wed Nov 15 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.2-1
 - update to 1.9.2, incorporating the recent security update and some of the
   things we were previously backporting, among other fixes
 
