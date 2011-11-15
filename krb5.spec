@@ -5,8 +5,8 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.9.1
-Release: 14%{?dist}
+Version: 1.9.2
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -53,17 +53,12 @@ Patch75: krb5-pkinit-debug.patch
 Patch77: krb5-1.9-paren.patch
 Patch78: krb5-trunk-chpw-err.patch
 Patch79: krb5-klist_s.patch
-Patch80: krb5-trunk-kadmin-oldproto.patch
-Patch81: krb5-1.9-canonicalize-fallback.patch
 Patch82: krb5-1.9.1-ai_addrconfig.patch
 Patch83: krb5-1.9.1-ai_addrconfig2.patch
 Patch84: krb5-1.9.1-sendto_poll.patch
-Patch85: krb5-trunk-gss_delete_sec.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch87: krb5-1.9.1-sendto_poll2.patch
-Patch88: krb5-1.9-crossrealm.patch
 Patch89: krb5-1.9.1-sendto_poll3.patch
-Patch90: krb5-1.9-MITKRB5-SA-2011-006.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -210,17 +205,12 @@ ln -s NOTICE LICENSE
 %patch77 -p1 -b .paren
 %patch78 -p0 -b .chpw-err
 %patch79 -p1 -b .klist_s
-%patch80 -p0 -b .kadmin-oldproto
-%patch81 -p1 -b .canonicalize-fallback
 %patch82 -p0 -b .ai_addrconfig
 %patch83 -p0 -b .ai_addrconfig2
 %patch84 -p0 -b .sendto_poll
-%patch85 -p1 -b .gss_delete_sec
 %patch86 -p0 -b .debuginfo
 %patch87 -p1 -b .sendto_poll2
-%patch88 -p1 -b .crossrealm
 %patch89 -p1 -b .sendto_poll3
-%patch90 -p1 -b .2011-006
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -682,6 +672,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Nov 15 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.2-1
+- update to 1.9.2, incorporating the recent security update and some of the
+  things we were previously backporting, among other fixes
+
 * Tue Oct 18 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.1-14
 - apply upstream patch to fix a null pointer dereference with the LDAP kdb
   backend (CVE-2011-1527, #744125), an assertion failure with multiple kdb
