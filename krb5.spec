@@ -136,6 +136,11 @@ Requires(preun): /sbin/install-info
 Requires: mktemp
 # portreserve is used by init scripts for kadmind, kpropd, and krb5kdc
 Requires: portreserve
+%if %{WITH_SYSVERTO}
+# for run-time, and for parts of the test suite
+BuildRequires: libverto-module-base
+Requires: libverto-module-base
+%endif
 
 %description server
 Kerberos is a network authentication system. The krb5-server package
