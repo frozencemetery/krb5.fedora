@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10
-Release: 0%{?dist}.alpha1.0
+Release: 0%{?dist}.alpha1.0.1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-alpha1-signed.tar
 Source0: krb5-%{version}-alpha1.tar.gz
@@ -737,6 +737,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Nov 30 2011 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.alpha1.1
+- correct a bug in the fix for #754001 so that the file creation context is
+  consistently reset
+
 * Tue Nov 15 2011 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.alpha1.0
 - update to 1.10 alpha 1
 - on newer releases where we can assume NSS >= 3.13, configure PKINIT to build

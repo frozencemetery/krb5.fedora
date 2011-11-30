@@ -465,7 +465,7 @@ which we used earlier, is some improvement.
  
 --- krb5/src/util/support/selinux.c
 +++ krb5/src/util/support/selinux.c
-@@ -0,0 +1,374 @@
+@@ -0,0 +1,372 @@
 +/*
 + * Copyright 2007,2008,2009,2011 Red Hat, Inc.  All Rights Reserved.
 + *
@@ -706,9 +706,7 @@ which we used earlier, is some improvement.
 +krb5int_pop_fscreatecon(void *con)
 +{
 +	if (con != NULL) {
-+		if (con != (void *) -1) {
-+			pop_fscreatecon(con);
-+		}
++		pop_fscreatecon((con == (void *) -1) ? NULL : con);
 +		k5_mutex_unlock(&labeled_mutex);
 +	}
 +}
