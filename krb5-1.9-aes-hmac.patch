@@ -1,0 +1,12 @@
+Early pull of the patch for RT#6994.
+--- krb5/src/lib/crypto/krb/checksum/hmac_md5.c
++++ krb5/src/lib/crypto/krb/checksum/hmac_md5.c
+@@ -61,7 +61,7 @@ krb5_error_code krb5int_hmacmd5_checksum
+ 	ret = krb5int_hmac(ctp->hash, key, &iov, 1, &ds);
+ 	if (ret)
+ 	    goto cleanup;
+-	ks.length = key->keyblock.length;
++	ks.length = ds.length;
+ 	ks.contents = (krb5_octet *) ds.data;
+ 	keyblock = &ks;
+     } else  /* For md5-hmac, just use the key. */

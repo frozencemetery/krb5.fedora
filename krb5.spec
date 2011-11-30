@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.2
-Release: 1%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -59,6 +59,7 @@ Patch84: krb5-1.9.1-sendto_poll.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch87: krb5-1.9.1-sendto_poll2.patch
 Patch89: krb5-1.9.1-sendto_poll3.patch
+Patch90: krb5-1.9-aes-hmac.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -215,6 +216,7 @@ ln -s NOTICE LICENSE
 %patch86 -p0 -b .debuginfo
 %patch87 -p1 -b .sendto_poll2
 %patch89 -p1 -b .sendto_poll3
+%patch90 -p1 -b .aes-hmac
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -693,6 +695,14 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Nov 30 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.2-3
+- correct a bug in the fix for #754001 so that the file creation context is
+  consistently reset
+
+* Tue Nov 22 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.2-2
+- pull patch from trunk so that when computing an HMAC, we don't assume that
+  the HMAC output size is the same as the input key length (RT#6994, #756139)
+
 * Wed Nov 15 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.2-1
 - update to 1.9.2, incorporating the recent security update and some of the
   things we were previously backporting, among other fixes
