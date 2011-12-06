@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.2
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -60,6 +60,7 @@ Patch86: krb5-1.9-debuginfo.patch
 Patch87: krb5-1.9.1-sendto_poll2.patch
 Patch89: krb5-1.9.1-sendto_poll3.patch
 Patch90: krb5-1.9-aes-hmac.patch
+Patch91: http://web.mit.edu/kerberos/advisories/2011-007-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -213,6 +214,7 @@ ln -s NOTICE LICENSE
 %patch87 -p1 -b .sendto_poll2
 %patch89 -p1 -b .sendto_poll3
 %patch90 -p1 -b .aes-hmac
+%patch91 -p1 -b .2011-007
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -674,6 +676,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Dec  6 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.2-4
+- apply upstream patch to fix a null pointer dereference when processing
+  TGS requests (CVE-2011-1530, #753748)
+
 * Wed Nov 30 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.2-3
 - correct a bug in the fix for #754001 so that the file creation context is
   consistently reset
