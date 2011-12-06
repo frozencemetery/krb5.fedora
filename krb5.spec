@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10
-Release: 0%{?dist}.alpha1.1
+Release: 0%{?dist}.alpha1.2
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-alpha1-signed.tar
 Source0: krb5-%{version}-alpha1.tar.gz
@@ -58,6 +58,7 @@ Patch71: krb5-1.9-dirsrv-accountlock.patch
 Patch75: krb5-pkinit-debug.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch92: krb5-1.10-alpha1-uninit.patch
+Patch93: http://web.mit.edu/kerberos/advisories/2011-007-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -223,6 +224,7 @@ ln -s NOTICE LICENSE
 %patch71 -p1 -b .dirsrv-accountlock
 #%patch75 -p1 -b .pkinit-debug
 %patch86 -p0 -b .debuginfo
+%patch93 -p1 -b .2011-007
 # XXX Temporary, backported from trunk.
 %patch92 -p1 -b .uninit
 # XXX Temporary, fixed properly in trunk.
@@ -737,6 +739,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Dec  6 2011 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.alpha1.2
+- apply upstream patch to fix a null pointer dereference when processing
+  TGS requests (CVE-2011-1530, #753748)
+
 * Wed Nov 30 2011 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.alpha1.1
 - correct a bug in the fix for #754001 so that the file creation context is
   consistently reset
