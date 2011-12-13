@@ -60,6 +60,7 @@ Patch86: krb5-1.9-debuginfo.patch
 Patch92: krb5-1.10-alpha1-uninit.patch
 Patch93: http://web.mit.edu/kerberos/advisories/2011-007-patch.txt
 Patch100: krb5-trunk-7046.patch
+Patch101: krb5-trunk-7047.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -227,6 +228,7 @@ ln -s NOTICE LICENSE
 %patch86 -p0 -b .debuginfo
 %patch93 -p1 -b .2011-007
 %patch100 -p1 -b .7046
+%patch101 -p1 -b .7047
 # XXX Temporary, backported from trunk.
 %patch92 -p1 -b .uninit
 # XXX Temporary, fixed properly in trunk.
@@ -744,6 +746,8 @@ exit 0
 * Tue Dec 13 2011 Nalin Dahyabhai <nalin@redhat.com>
 - pull in patch for RT#7046: tag a ccache containing credentials obtained via
   S4U2Proxy with the principal name of the proxying principal (part of #761317)
+- pull in patch for RT#7047: allow tickets obtained via S4U2Proxy to be cached
+  (more of #761317)
 
 * Tue Dec  6 2011 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.alpha1.2
 - apply upstream patch to fix a null pointer dereference when processing
