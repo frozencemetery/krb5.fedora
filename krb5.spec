@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10
-Release: 0%{?dist}.alpha1.2
+Release: 0%{?dist}.alpha1.3
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-alpha1-signed.tar
 Source0: krb5-%{version}-alpha1.tar.gz
@@ -61,6 +61,7 @@ Patch92: krb5-1.10-alpha1-uninit.patch
 Patch93: http://web.mit.edu/kerberos/advisories/2011-007-patch.txt
 Patch100: krb5-trunk-7046.patch
 Patch101: krb5-trunk-7047.patch
+Patch102: krb5-trunk-7048.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -229,6 +230,7 @@ ln -s NOTICE LICENSE
 %patch93 -p1 -b .2011-007
 %patch100 -p1 -b .7046
 %patch101 -p1 -b .7047
+%patch102 -p1 -b .7048
 # XXX Temporary, backported from trunk.
 %patch92 -p1 -b .uninit
 # XXX Temporary, fixed properly in trunk.
@@ -743,11 +745,16 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Tue Dec 13 2011 Nalin Dahyabhai <nalin@redhat.com>
+* Tue Dec 13 2011 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.alpha1.3
 - pull in patch for RT#7046: tag a ccache containing credentials obtained via
   S4U2Proxy with the principal name of the proxying principal (part of #761317)
+  so that the default principal name can be set to that of the client for which
+  it is proxying, which results in the ccache looking more normal to consumers
+  of the ccache that don't care that there's proxying going on
 - pull in patch for RT#7047: allow tickets obtained via S4U2Proxy to be cached
   (more of #761317)
+- pull in patch for RT#7048: allow PAC verification to only bother trying to
+  verify the signature with keys that it's given (still more of #761317)
 
 * Tue Dec  6 2011 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.alpha1.2
 - apply upstream patch to fix a null pointer dereference when processing
