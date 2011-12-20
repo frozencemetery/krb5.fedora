@@ -15,11 +15,11 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10
-Release: 0%{?dist}.alpha1.3
+Release: 0%{?dist}.alpha2.1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-alpha1-signed.tar
-Source0: krb5-%{version}-alpha1.tar.gz
-Source1: krb5-%{version}-alpha1.tar.gz.asc
+# http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-alpha2-signed.tar
+Source0: krb5-%{version}-alpha2.tar.gz
+Source1: krb5-%{version}-alpha2.tar.gz.asc
 Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
@@ -57,8 +57,6 @@ Patch63: krb5-1.10-selinux-label.patch
 Patch71: krb5-1.9-dirsrv-accountlock.patch
 Patch75: krb5-pkinit-debug.patch
 Patch86: krb5-1.9-debuginfo.patch
-Patch92: krb5-1.10-alpha1-uninit.patch
-Patch93: http://web.mit.edu/kerberos/advisories/2011-007-patch.txt
 Patch100: krb5-trunk-7046.patch
 Patch101: krb5-trunk-7047.patch
 Patch102: krb5-trunk-7048.patch
@@ -205,7 +203,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -a 23 -n krb5-%{version}-alpha1
+%setup -q -a 23 -n krb5-%{version}-alpha2
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -227,14 +225,9 @@ ln -s NOTICE LICENSE
 %patch71 -p1 -b .dirsrv-accountlock
 #%patch75 -p1 -b .pkinit-debug
 %patch86 -p0 -b .debuginfo
-%patch93 -p1 -b .2011-007
 %patch100 -p1 -b .7046
 %patch101 -p1 -b .7047
 %patch102 -p1 -b .7048
-# XXX Temporary, backported from trunk.
-%patch92 -p1 -b .uninit
-# XXX Temporary, fixed properly in trunk.
-ln -s /usr/include/et/com_err.h src/include
 
 gzip doc/*.ps
 
@@ -745,6 +738,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Dec 20 2011 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.alpha2.1
+- update to alpha 2
+- drop a couple of patches which were integrated for alpha 2
+
 * Tue Dec 13 2011 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.alpha1.3
 - pull in patch for RT#7046: tag a ccache containing credentials obtained via
   S4U2Proxy with the principal name of the proxying principal (part of #761317)
