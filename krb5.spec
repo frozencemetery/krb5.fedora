@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10
-Release: 0%{?dist}.alpha2.1
+Release: 0%{?dist}.alpha2.2
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-alpha2-signed.tar
 Source0: krb5-%{version}-alpha2.tar.gz
@@ -60,6 +60,7 @@ Patch86: krb5-1.9-debuginfo.patch
 Patch100: krb5-trunk-7046.patch
 Patch101: krb5-trunk-7047.patch
 Patch102: krb5-trunk-7048.patch
+Patch103: krb5-1.10-gcc47.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -228,6 +229,8 @@ ln -s NOTICE LICENSE
 %patch100 -p1 -b .7046
 %patch101 -p1 -b .7047
 %patch102 -p1 -b .7048
+%patch103 -p0 -b .gcc47
+rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
 
@@ -738,6 +741,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Jan  4 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.alpha2.2
+- modify the deltat grammar to also tell gcc (4.7) to suppress
+  "maybe-uninitialized" warnings in addition to the "uninitialized" warnings
+  it's already being told to suppress
+
 * Tue Dec 20 2011 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.alpha2.1
 - update to alpha 2
 - drop a couple of patches which were integrated for alpha 2
