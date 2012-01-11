@@ -136,7 +136,7 @@ Requires: initscripts >= 8.99-1
 Requires: logrotate
 Requires(preun): /sbin/install-info
 # mktemp is used by krb5-send-pr
-Requires: mktemp
+Requires: coreutils
 # portreserve is used by init scripts for kadmind, kpropd, and krb5kdc
 Requires: portreserve
 %if %{WITH_SYSVERTO}
@@ -172,7 +172,7 @@ Requires: %{name}-libs = %{version}-%{release}
 Requires(post): /sbin/install-info
 Requires(preun): /sbin/install-info
 # mktemp is used by krb5-send-pr
-Requires: mktemp
+Requires: coreutils
 
 %description workstation
 Kerberos is a network authentication system. The krb5-workstation
