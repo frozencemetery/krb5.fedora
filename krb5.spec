@@ -741,6 +741,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Jan 11 2012 Peter Robinson <pbrobinson@gmail.com>
+- mktemp was long obsoleted by coreutils
+
 * Wed Jan  4 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.alpha2.2
 - modify the deltat grammar to also tell gcc (4.7) to suppress
   "maybe-uninitialized" warnings in addition to the "uninitialized" warnings
