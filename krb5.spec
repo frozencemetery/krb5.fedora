@@ -15,11 +15,11 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10
-Release: 0%{?dist}.alpha2.2
+Release: 0%{?dist}.beta1.1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-alpha2-signed.tar
-Source0: krb5-%{version}-alpha2.tar.gz
-Source1: krb5-%{version}-alpha2.tar.gz.asc
+# http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-beta1-signed.tar
+Source0: krb5-%{version}-beta1.tar.gz
+Source1: krb5-%{version}-beta1.tar.gz.asc
 Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
@@ -204,7 +204,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -a 23 -n krb5-%{version}-alpha2
+%setup -q -a 23 -n krb5-%{version}-beta1
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -741,6 +741,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Jan 12 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.beta1.1
+- update to beta 1
+
 * Wed Jan 11 2012 Peter Robinson <pbrobinson@gmail.com>
 - mktemp was long obsoleted by coreutils
 
