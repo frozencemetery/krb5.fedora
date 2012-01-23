@@ -750,7 +750,7 @@ exit 0
 * Wed Jan  4 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.alpha2.2
 - modify the deltat grammar to also tell gcc (4.7) to suppress
   "maybe-uninitialized" warnings in addition to the "uninitialized" warnings
-  it's already being told to suppress
+  it's already being told to suppress (RT#7080)
 
 * Tue Dec 20 2011 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.alpha2.1
 - update to alpha 2
