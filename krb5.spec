@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10
-Release: 0%{?dist}.beta1.1
+Release: 1%{?dist}.beta1.1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-beta1-signed.tar
 Source0: krb5-%{version}-beta1.tar.gz
@@ -61,6 +61,7 @@ Patch100: krb5-trunk-7046.patch
 Patch101: krb5-trunk-7047.patch
 Patch102: krb5-trunk-7048.patch
 Patch103: krb5-1.10-gcc47.patch
+Patch104: krb5-1.10-crashfix.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -230,6 +231,7 @@ ln -s NOTICE LICENSE
 %patch101 -p1 -b .7047
 %patch102 -p1 -b .7048
 %patch103 -p0 -b .gcc47
+%patch104 -p1 -b .crashfix
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -741,6 +743,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Jan 26 2012 Nathaniel McCallum <nathaniel@natemccallum.com> - 1.10-1.beta1.1
+- Add upstream crashfix patch
+
 * Thu Jan 12 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.beta1.1
 - update to beta 1
 
