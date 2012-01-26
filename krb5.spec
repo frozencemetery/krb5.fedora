@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10
-Release: 1%{?dist}.beta1.1
+Release: 0%{?dist}.beta1.2
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-beta1-signed.tar
 Source0: krb5-%{version}-beta1.tar.gz
@@ -743,7 +743,7 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Thu Jan 26 2012 Nathaniel McCallum <nathaniel@natemccallum.com> - 1.10-1.beta1.1
+* Thu Jan 26 2012 Nathaniel McCallum <nathaniel@natemccallum.com> - 1.10-0.beta1.2
 - Add upstream crashfix patch
 
 * Thu Jan 12 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.beta1.1
