@@ -747,7 +747,7 @@ exit 0
 - update to 1.10 final
 
 * Thu Jan 26 2012 Nathaniel McCallum <nathaniel@natemccallum.com> - 1.10-0.beta1.2
-- Add upstream crashfix patch
+- Add upstream crashfix patch (RT#7081)
 
 * Thu Jan 12 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10-0.beta1.1
 - update to beta 1

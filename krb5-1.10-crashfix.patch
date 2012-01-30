@@ -1,3 +1,5 @@
+RT #7081
+
 diff --git a/src/kdc/do_as_req.c b/src/kdc/do_as_req.c
 index 5e69653..4651b72 100644
 --- a/src/kdc/do_as_req.c
