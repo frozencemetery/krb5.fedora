@@ -15,11 +15,11 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10
-Release: 0%{?dist}.beta1.2
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-beta1-signed.tar
-Source0: krb5-%{version}-beta1.tar.gz
-Source1: krb5-%{version}-beta1.tar.gz.asc
+# http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-signed.tar
+Source0: krb5-%{version}.tar.gz
+Source1: krb5-%{version}.tar.gz.asc
 Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
@@ -30,7 +30,7 @@ Source19: krb5kdc.sysconfig
 Source20: kadmin.sysconfig
 # The same source files we "check", generated with "krb5-tex-pdf.sh create"
 # and tarred up.
-Source23: krb5-%{version}-pdf.tar.bz2
+Source23: krb5-%{version}-pdf.tar.xz
 Source24: krb5-tex-pdf.sh
 Source25: krb5-1.10-manpaths.txt
 Source29: ksu.pamd
@@ -205,7 +205,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -a 23 -n krb5-%{version}-beta1
+%setup -q -a 23 -n krb5-%{version}
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -743,6 +743,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Jan 30 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10-1
+- update to 1.10 final
+
 * Thu Jan 26 2012 Nathaniel McCallum <nathaniel@natemccallum.com> - 1.10-0.beta1.2
 - Add upstream crashfix patch
 
