@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.2
-Release: 5%{?dist}
+Release: 6%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -64,6 +64,7 @@ Patch91: http://web.mit.edu/kerberos/advisories/2011-007-patch.txt
 Patch100: krb5-1.9-7046.patch
 Patch101: krb5-trunk-7047.patch
 Patch102: krb5-1.9-7048.patch
+Patch103: krb5-kvno-230379.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -221,6 +222,7 @@ ln -s NOTICE LICENSE
 %patch100 -p1 -b .7046
 %patch101 -p1 -b .7047
 %patch102 -p1 -b .7048
+%patch103 -p1 -b .kvno
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -682,6 +684,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Jan 30 2012 Nalin Dahyabhai <nalin@redhat.com> 1.9.2-6
+- add patch to accept keytab entries with vno==0 as matches when we're
+  searching for an entry with a specific name/kvno (#230382/#782211,RT#3349)
+
 * Mon Jan 30 2012 Nalin Dahyabhai <nalin@redhat.com> 1.9.2-5
 - backport patch for RT#7046: tag a ccache containing credentials obtained via
   S4U2Proxy with the principal name of the proxying principal (part of #761317)
