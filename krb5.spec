@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.2
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -61,6 +61,9 @@ Patch87: krb5-1.9.1-sendto_poll2.patch
 Patch89: krb5-1.9.1-sendto_poll3.patch
 Patch90: krb5-1.9-aes-hmac.patch
 Patch91: http://web.mit.edu/kerberos/advisories/2011-007-patch.txt
+Patch100: krb5-1.9-7046.patch
+Patch101: krb5-trunk-7047.patch
+Patch102: krb5-1.9-7048.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -215,6 +218,9 @@ ln -s NOTICE LICENSE
 %patch89 -p1 -b .sendto_poll3
 %patch90 -p1 -b .aes-hmac
 %patch91 -p1 -b .2011-007
+%patch100 -p1 -b .7046
+%patch101 -p1 -b .7047
+%patch102 -p1 -b .7048
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -676,6 +682,17 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Jan 30 2012 Nalin Dahyabhai <nalin@redhat.com> 1.9.2-5
+- backport patch for RT#7046: tag a ccache containing credentials obtained via
+  S4U2Proxy with the principal name of the proxying principal (part of #761317)
+  so that the default principal name can be set to that of the client for which
+  it is proxying, which results in the ccache looking more normal to consumers
+  of the ccache that don't care that there's proxying going on
+- pull in patch for RT#7047: allow tickets obtained via S4U2Proxy to be cached
+  (more of #761317)
+- backport patch for RT#7048: allow PAC verification to only bother trying to
+  verify the signature with keys that it's given (still more of #761317)
+
 * Tue Dec  6 2011 Nalin Dahyabhai <nalin@redhat.com> 1.9.2-4
 - apply upstream patch to fix a null pointer dereference when processing
   TGS requests (CVE-2011-1530, #753748)

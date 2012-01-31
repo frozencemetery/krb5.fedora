@@ -1,0 +1,60 @@
+Portions updating comments in krb5.hin removed because they weren't there
+in 1.9.  The rest is unchanged from trunk.
+
+commit 1c2f5144de0f15f7d9c8659a71adc10c2755b57e
+Author: ghudson <ghudson@dc483132-0cff-0310-8789-dd5450dbe970>
+Date:   Wed Dec 7 19:38:32 2011 +0000
+
+    ticket: 7048
+    subject: Allow null server key to krb5_pac_verify
+    
+    When the KDC verifies a PAC, it doesn't really need to check the
+    server signature, since it can't trust that anyway.  Allow the caller
+    to pass only a TGT key.
+    
+    git-svn-id: svn://anonsvn.mit.edu/krb5/trunk@25532 dc483132-0cff-0310-8789-dd5450dbe970
+
+diff --git a/src/lib/krb5/krb/pac.c b/src/lib/krb5/krb/pac.c
+index f173b04..23aa930 100644
+--- a/src/lib/krb5/krb/pac.c
++++ b/src/lib/krb5/krb/pac.c
+@@ -637,9 +637,11 @@ krb5_pac_verify(krb5_context context,
+     if (server == NULL)
+         return EINVAL;
+ 
+-    ret = k5_pac_verify_server_checksum(context, pac, server);
+-    if (ret != 0)
+-        return ret;
++    if (server != NULL) {
++        ret = k5_pac_verify_server_checksum(context, pac, server);
++        if (ret != 0)
++            return ret;
++    }
+ 
+     if (privsvr != NULL) {
+         ret = k5_pac_verify_kdc_checksum(context, pac, privsvr);
+
+commit e31486a84380647e49ba6199a3e10ac739fa1a45
+Author: ghudson <ghudson@dc483132-0cff-0310-8789-dd5450dbe970>
+Date:   Thu Dec 8 04:21:23 2011 +0000
+
+    ticket: 7048
+    
+    Actually allow null server key in krb5_pac_verify
+    
+    git-svn-id: svn://anonsvn.mit.edu/krb5/trunk@25534 dc483132-0cff-0310-8789-dd5450dbe970
+
+diff --git a/src/lib/krb5/krb/pac.c b/src/lib/krb5/krb/pac.c
+index 23aa930..3262d21 100644
+--- a/src/lib/krb5/krb/pac.c
++++ b/src/lib/krb5/krb/pac.c
+@@ -634,9 +634,6 @@ krb5_pac_verify(krb5_context context,
+ {
+     krb5_error_code ret;
+ 
+-    if (server == NULL)
+-        return EINVAL;
+-
+     if (server != NULL) {
+         ret = k5_pac_verify_server_checksum(context, pac, server);
+         if (ret != 0)
