@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -62,6 +62,7 @@ Patch101: krb5-trunk-7047.patch
 Patch102: krb5-trunk-7048.patch
 Patch103: krb5-1.10-gcc47.patch
 Patch104: krb5-1.10-crashfix.patch
+Patch105: krb5-kvno-230379.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -232,6 +233,7 @@ ln -s NOTICE LICENSE
 %patch102 -p1 -b .7048
 %patch103 -p0 -b .gcc47
 %patch104 -p1 -b .crashfix
+%patch105 -p1 -b .kvno
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -743,6 +745,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Jan 30 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10-2
+- add patch to accept keytab entries with vno==0 as matches when we're
+  searching for an entry with a specific name/kvno (#230382/#782211,RT#3349)
+
 * Mon Jan 30 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10-1
 - update to 1.10 final
 
