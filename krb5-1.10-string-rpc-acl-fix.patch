@@ -1,0 +1,61 @@
+From 725b97bfba7067907a5fc534c21349c0d28bf6b8 Mon Sep 17 00:00:00 2001
+From: ghudson <ghudson@dc483132-0cff-0310-8789-dd5450dbe970>
+Date: Tue, 21 Feb 2012 19:14:47 +0000
+Subject: [PATCH] ticket: 7093 subject: Access controls for string RPCs
+ [CVE-2012-1012] target_version: 1.10.1 tags: pullup
+
+In the kadmin protocol, make the access controls for
+get_strings/set_string mirror those of get_principal/modify_principal.
+Previously, anyone with global list privileges could get or modify
+string attributes on any principal.  The impact of this depends on how
+generous the kadmind acl is with list permission and whether string
+attributes are used in a deployment (nothing in the core code uses
+them yet).
+
+CVSSv2 vector: AV:N/AC:M/Au:S/C:P/I:P/A:N/E:H/RL:O/RC:C
+
+git-svn-id: svn://anonsvn.mit.edu/krb5/trunk@25704 dc483132-0cff-0310-8789-dd5450dbe970
+---
+ src/kadmin/server/server_stubs.c |   19 +++++++++++--------
+ 1 files changed, 11 insertions(+), 8 deletions(-)
+
+diff --git a/src/kadmin/server/server_stubs.c b/src/kadmin/server/server_stubs.c
+index 8dbe756..0de627f 100644
+--- a/src/kadmin/server/server_stubs.c
++++ b/src/kadmin/server/server_stubs.c
+@@ -1634,10 +1634,13 @@ get_strings_2_svc(gstrings_arg *arg, struct svc_req *rqstp)
+         goto exit_func;
+     }
+ 
+-    if (CHANGEPW_SERVICE(rqstp) || !kadm5int_acl_check(handle->context,
+-                                                       rqst2name(rqstp),
+-                                                       ACL_LIST, NULL, NULL)) {
+-        ret.code = KADM5_AUTH_LIST;
++    if (! cmp_gss_krb5_name(handle, rqst2name(rqstp), arg->princ) &&
++        (CHANGEPW_SERVICE(rqstp) || !kadm5int_acl_check(handle->context,
++                                                        rqst2name(rqstp),
++                                                        ACL_INQUIRE,
++                                                        arg->princ,
++                                                        NULL))) {
++        ret.code = KADM5_AUTH_GET;
+         log_unauth("kadm5_get_strings", prime_arg,
+                    &client_name, &service_name, rqstp);
+     } else {
+@@ -1690,10 +1693,10 @@ set_string_2_svc(sstring_arg *arg, struct svc_req *rqstp)
+         goto exit_func;
+     }
+ 
+-    if (CHANGEPW_SERVICE(rqstp) || !kadm5int_acl_check(handle->context,
+-                                                       rqst2name(rqstp),
+-                                                       ACL_LIST, NULL, NULL)) {
+-        ret.code = KADM5_AUTH_LIST;
++    if (CHANGEPW_SERVICE(rqstp)
++        || !kadm5int_acl_check(handle->context, rqst2name(rqstp), ACL_MODIFY,
++                               arg->princ, NULL)) {
++        ret.code = KADM5_AUTH_MODIFY;
+         log_unauth("kadm5_mod_strings", prime_arg,
+                    &client_name, &service_name, rqstp);
+     } else {
+-- 
+1.7.7.6
+

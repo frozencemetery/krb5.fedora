@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -64,6 +64,7 @@ Patch103: krb5-1.10-gcc47.patch
 Patch104: krb5-1.10-crashfix.patch
 Patch105: krb5-kvno-230379.patch
 Patch106: krb5-1.10-lookaside.patch
+Patch107: krb5-1.10-string-rpc-acl-fix.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -236,6 +237,7 @@ ln -s NOTICE LICENSE
 %patch104 -p1 -b .crashfix
 %patch105 -p1 -b .kvno
 %patch106 -p1 -b .7082
+%patch107 -p1 -b .7093
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -747,6 +749,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Feb 21 2012 Nathaniel McCallum <nathaniel@natemccallum.com> - 1.10-4
+- Fix string RPC ACLs (RT#7093); CVE-2012-1012
+
 * Tue Jan 31 2012 Nathaniel McCallum <nathaniel@natemccallum.com> - 1.10-3
 - Add upstream lookaside cache behavior fix (RT#7082)
 
