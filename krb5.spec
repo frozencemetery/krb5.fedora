@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -528,12 +528,12 @@ fi
 exit 0
 
 %post workstation
-/sbin/install-info %{_infodir}/krb5-user.info %{_infodir}/dir
+/sbin/install-info %{_infodir}/krb5-user.info.gz %{_infodir}/dir
 exit 0
 
-%postun workstation
+%preun workstation
 if [ "$1" -eq "0" ] ; then
-	/sbin/install-info --delete %{_infodir}/krb5-user.info %{_infodir}/dir
+	/sbin/install-info --delete %{_infodir}/krb5-user.info.gz %{_infodir}/dir
 fi
 exit 0
 
@@ -749,6 +749,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Mar  7 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10-5
+- when removing -workstation, remove our files from the info index while
+  the file is still there, in %%preun, rather than %%postun, and use the
+  compressed file's name (#801035)
+
 * Tue Feb 21 2012 Nathaniel McCallum <nathaniel@natemccallum.com> - 1.10-4
 - Fix string RPC ACLs (RT#7093); CVE-2012-1012
 
