@@ -5,10 +5,10 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.9.2
-Release: 6%{?dist}
+Version: 1.9.3
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.1-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.3-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kpropd.init
@@ -59,8 +59,6 @@ Patch84: krb5-1.9.1-sendto_poll.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch87: krb5-1.9.1-sendto_poll2.patch
 Patch89: krb5-1.9.1-sendto_poll3.patch
-Patch90: krb5-1.9-aes-hmac.patch
-Patch91: http://web.mit.edu/kerberos/advisories/2011-007-patch.txt
 Patch100: krb5-1.9-7046.patch
 Patch101: krb5-trunk-7047.patch
 Patch102: krb5-1.9-7048.patch
@@ -217,8 +215,6 @@ ln -s NOTICE LICENSE
 %patch86 -p0 -b .debuginfo
 %patch87 -p1 -b .sendto_poll2
 %patch89 -p1 -b .sendto_poll3
-%patch90 -p1 -b .aes-hmac
-%patch91 -p1 -b .2011-007
 %patch100 -p1 -b .7046
 %patch101 -p1 -b .7047
 %patch102 -p1 -b .7048
@@ -483,9 +479,9 @@ exit 0
 /sbin/install-info %{_infodir}/krb5-user.info %{_infodir}/dir
 exit 0
 
-%postun workstation
+%preun workstation
 if [ "$1" -eq "0" ] ; then
-	/sbin/install-info --delete %{_infodir}/krb5-user.info %{_infodir}/dir
+	/sbin/install-info --delete %{_infodir}/krb5-user.info.gz %{_infodir}/dir
 fi
 exit 0
 
@@ -684,6 +680,14 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Mar  8 2012 Nalin Dahyabhai <nalin@redhat.com> 1.9.3-1
+- update to 1.9.3
+  - drop patch for CVE-2011-1530, incorporated upstream
+  - drop patch for #756139, incorporated into 1.9 as RT#7007
+- when removing -workstation, remove our files from the info index while
+  the file is still there, in %%preun, rather than %%postun, and use the
+  compressed file's name (#801035)
+
 * Mon Jan 30 2012 Nalin Dahyabhai <nalin@redhat.com> 1.9.2-6
 - add patch to accept keytab entries with vno==0 as matches when we're
   searching for an entry with a specific name/kvno (#230382/#782211,RT#3349)
