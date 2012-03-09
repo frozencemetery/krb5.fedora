@@ -14,10 +14,10 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.10
-Release: 5%{?dist}
+Version: 1.10.1
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.1-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kprop.service
@@ -61,10 +61,7 @@ Patch100: krb5-trunk-7046.patch
 Patch101: krb5-trunk-7047.patch
 Patch102: krb5-trunk-7048.patch
 Patch103: krb5-1.10-gcc47.patch
-Patch104: krb5-1.10-crashfix.patch
 Patch105: krb5-kvno-230379.patch
-Patch106: krb5-1.10-lookaside.patch
-Patch107: krb5-1.10-string-rpc-acl-fix.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -234,10 +231,7 @@ ln -s NOTICE LICENSE
 %patch101 -p1 -b .7047
 %patch102 -p1 -b .7048
 %patch103 -p0 -b .gcc47
-%patch104 -p1 -b .crashfix
 %patch105 -p1 -b .kvno
-%patch106 -p1 -b .7082
-%patch107 -p1 -b .7093
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -749,6 +743,12 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Mar  9 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.1-1
+- update to 1.10.1
+  - drop the KDC crash fix
+  - drop the KDC lookaside cache fix
+  - drop the fix for kadmind RPC ACLs (CVE-2012-1012)
+
 * Wed Mar  7 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10-5
 - when removing -workstation, remove our files from the info index while
   the file is still there, in %%preun, rather than %%postun, and use the
