@@ -745,6 +745,7 @@ exit 0
 %changelog
 * Tue Mar 20 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.1-2
 - change back dns_lookup_kdc to the default setting (Stef Walter, #805318)
+- comment out example.com examples in default krb5.conf (Stef Walter, #805320)
 
 * Fri Mar  9 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.1-1
 - update to 1.10.1
