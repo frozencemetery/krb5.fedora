@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -743,6 +743,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Mar 20 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.1-2
+- change back dns_lookup_kdc to the default setting (Stef Walter, #805318)
+
 * Fri Mar  9 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.1-1
 - update to 1.10.1
   - drop the KDC crash fix
