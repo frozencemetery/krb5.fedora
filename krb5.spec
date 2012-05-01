@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -138,6 +138,8 @@ Requires: logrotate
 Requires(preun): /sbin/install-info
 # mktemp is used by krb5-send-pr
 Requires: coreutils
+# we specify /usr/share/dict/words as the default dict_file in kdc.conf
+Requires: /usr/share/dict/words
 # portreserve is used by init scripts for kadmind, kpropd, and krb5kdc
 Requires: portreserve
 %if %{WITH_SYSVERTO}
@@ -743,6 +745,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue May  1 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.1-3
+- have -server require /usr/share/dict/words, which we set as the default
+  dict_file in kdc.conf (#817089)
+
 * Tue Mar 20 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.1-2
 - change back dns_lookup_kdc to the default setting (Stef Walter, #805318)
 - comment out example.com examples in default krb5.conf (Stef Walter, #805320)
