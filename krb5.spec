@@ -745,6 +745,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon May  7 2012 Nalin Dahyabhai <nalin@redhat.com>
+- skip the setfscreatecon() if fopen() is passed "rb" as the open mode (part
+  of #819115)
+
 * Tue May  1 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.1-3
 - have -server require /usr/share/dict/words, which we set as the default
   dict_file in kdc.conf (#817089)
