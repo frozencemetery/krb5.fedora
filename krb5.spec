@@ -749,6 +749,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon May  7 2012 Nalin Dahyabhai <nalin@redhat.com>
+- skip the setfscreatecon() if fopen() is passed "rb" as the open mode (part
+  of #819115)
+
 * Mon Mar 20 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10-6
 - change back dns_lookup_kdc to the default setting (Stef Walter, #805318)
 - comment out example.com examples in default krb5.conf (Stef Walter, #805320)
