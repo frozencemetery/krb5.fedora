@@ -85,6 +85,10 @@ BuildRequires: pam-devel
 BuildRequires: systemd-units
 # For the test framework.
 BuildRequires: perl, dejagnu, tcl-devel
+BuildRequires: net-tools
+%if 0%{?fedora} >= 13 || 0%{?rhel} > 6
+BuildRequires: hostname
+%endif
 
 %if %{WITH_LDAP}
 BuildRequires: openldap-devel
@@ -761,6 +765,9 @@ exit 0
   an AS reply that we can't encrypt (RT#2131, #748528)
 - don't shuffle around any shared libraries on releases with no-separate-/usr,
   since /usr/lib is the same place as /lib
+- add explicit buildrequires: on 'hostname', for the tests, on systems where
+  it's in its own package, and require net-tools, which used to provide the
+  command, everywhere
 
 * Mon May  7 2012 Nalin Dahyabhai <nalin@redhat.com>
 - skip the setfscreatecon() if fopen() is passed "rb" as the open mode (part
