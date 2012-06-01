@@ -10,6 +10,11 @@
 %global WITH_NSS 0
 %global WITH_SYSVERTO 0
 %endif
+%if 0%{?fedora} >= 17 || 0%{?rhel} > 6
+%global no_separate_usr 1
+%else
+%global no_separate_usr 0
+%endif
 %global gettext_domain mit-krb5
 
 Summary: The Kerberos network authentication system
@@ -430,6 +435,7 @@ make -C src DESTDIR=$RPM_BUILD_ROOT EXAMPLEDIR=%{_docdir}/krb5-libs-%{version}/e
 # list of link flags, and it helps prevent file conflicts on multilib systems.
 sed -r -i -e 's|^libdir=/usr/lib(64)?$|libdir=/usr/lib|g' $RPM_BUILD_ROOT%{_bindir}/krb5-config
 
+%if %{no_separate_usr}
 # Move specific libraries from %{_libdir} to /%{_lib}, and fixup the symlinks.
 touch $RPM_BUILD_ROOT/rootfile
 rellibdir=..
@@ -444,6 +450,7 @@ for library in libgssapi_krb5 libgssrpc libk5crypto libkrb5 libkrb5support ; do
 	ln -fs ${rellibdir}/%{_lib}/${library}.so.*.* ${library}.so
 	popd
 done
+%endif
 
 # A sanity checker for upgrades.
 install -m 755 kdb_check_weak $RPM_BUILD_ROOT/%{_libdir}/krb5/
@@ -752,6 +759,8 @@ exit 0
   enctypes to match the types of keys that we have when we are using a
   keytab to try to get initial credentials, so that a KDC won't send us
   an AS reply that we can't encrypt (RT#2131, #748528)
+- don't shuffle around any shared libraries on releases with no-separate-/usr,
+  since /usr/lib is the same place as /lib
 
 * Mon May  7 2012 Nalin Dahyabhai <nalin@redhat.com>
 - skip the setfscreatecon() if fopen() is passed "rb" as the open mode (part
