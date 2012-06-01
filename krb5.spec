@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -63,6 +63,7 @@ Patch100: krb5-1.9-7046.patch
 Patch101: krb5-trunk-7047.patch
 Patch102: krb5-1.9-7048.patch
 Patch103: krb5-kvno-230379.patch
+Patch104: krb5-kadmind-null-password.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -219,6 +220,7 @@ ln -s NOTICE LICENSE
 %patch101 -p1 -b .7047
 %patch102 -p1 -b .7048
 %patch103 -p1 -b .kvno
+%patch104 -p1 -b .kadmind-null-password
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -680,6 +682,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Jun  1 2012 Nalin Dahyabhai <nalin@redhat.com> 1.9.3-2
+- pull up the patch to correct a possible NULL pointer dereference in
+  kadmind (CVE-2012-1013, #827598)
+
 * Thu Mar  8 2012 Nalin Dahyabhai <nalin@redhat.com> 1.9.3-1
 - update to 1.9.3
   - drop patch for CVE-2011-1530, incorporated upstream
