@@ -14,10 +14,10 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.10.1
-Release: 3%{?dist}
+Version: 1.10.2
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.1-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.2-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kprop.service
@@ -51,9 +51,9 @@ Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch39: krb5-1.8-api.patch
 Patch56: krb5-1.10-doublelog.patch
 Patch59: krb5-1.10-kpasswd_tcp.patch
-Patch60: krb5-1.10-pam.patch
-Patch61: krb5-1.10-manpaths.patch
-Patch63: krb5-1.10-selinux-label.patch
+Patch60: krb5-1.10.2-pam.patch
+Patch61: krb5-1.10.2-manpaths.patch
+Patch63: krb5-1.10.2-selinux-label.patch
 Patch71: krb5-1.9-dirsrv-accountlock.patch
 Patch75: krb5-pkinit-debug.patch
 Patch86: krb5-1.9-debuginfo.patch
@@ -262,10 +262,6 @@ popd
 sh %{SOURCE24} check << EOF
 doc/api       library krb5
 doc/implement implement
-doc/kadm5     adb-unit-test
-doc/kadm5     api-unit-test
-doc/kadm5     api-funcspec
-doc/kadm5     api-server-design
 EOF
 
 # Generate an FDS-compatible LDIF file.
@@ -535,7 +531,7 @@ exit 0
 
 %files workstation
 %defattr(-,root,root,-)
-%doc doc/user*.ps.gz src/config-files/services.append
+%doc doc/user*.ps.gz doc/user*.pdf src/config-files/services.append
 %doc doc/{kdestroy,kinit,klist,kpasswd,ksu}.html
 %doc doc/krb5-user.html
 %attr(0755,root,root) %doc src/config-files/convert-config-files
@@ -589,6 +585,8 @@ exit 0
 %config(noreplace) /etc/logrotate.d/krb5kdc
 %config(noreplace) /etc/logrotate.d/kadmind
 
+%doc doc/admin*.pdf
+%doc doc/install*.pdf
 %doc doc/admin*.ps.gz
 %doc doc/install*.ps.gz
 %doc doc/krb5-admin.html
@@ -705,10 +703,7 @@ exit 0
 %files devel
 %defattr(-,root,root,-)
 %docdir %{_mandir}
-%doc doc/api/*.pdf
 %doc doc/ccapi
-%doc doc/implement/*.pdf
-%doc doc/kadm5/*.pdf
 %doc doc/kadmin
 %doc doc/kim
 %doc doc/krb5-protocol
@@ -745,6 +740,13 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Jun  1 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-1
+- update to 1.10.2
+  - when building the new label for a file we're about to create, also mix
+    in the current range, in addition to the current user
+  - also package the PDF format admin, user, and install guides
+  - drop some PDFs that no longer get built right
+
 * Mon May  7 2012 Nalin Dahyabhai <nalin@redhat.com>
 - skip the setfscreatecon() if fopen() is passed "rb" as the open mode (part
   of #819115)

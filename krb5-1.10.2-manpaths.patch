@@ -33,7 +33,7 @@ configure scripts should be rebuilt.  Originally RT#6525
 --- krb5/src/configure.in
 +++ krb5/src/configure.in
 @@ -1054,6 +1054,17 @@ fi
- KRB5_WITH_PAM
+ AC_SUBST(localedir)
  
  AC_CONFIG_FILES(krb5-config, [chmod +x krb5-config])
 +

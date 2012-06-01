@@ -120,9 +120,9 @@ which we used earlier, is some improvement.
  
 +KRB5_WITH_SELINUX
 +
- AC_CONFIG_FILES(krb5-config, [chmod +x krb5-config])
- 
- V5_AC_OUTPUT_MANPAGE([
+ # Make localedir work in autoconf 2.5x.
+ if test "${localedir+set}" != set; then
+     localedir='$(datadir)/locale'
 --- krb5/src/include/k5-int.h
 +++ krb5/src/include/k5-int.h
 @@ -133,6 +133,7 @@ typedef unsigned char   u_char;
@@ -465,7 +465,7 @@ which we used earlier, is some improvement.
  
 --- krb5/src/util/support/selinux.c
 +++ krb5/src/util/support/selinux.c
-@@ -0,0 +1,373 @@
+@@ -0,0 +1,379 @@
 +/*
 + * Copyright 2007,2008,2009,2011,2012 Red Hat, Inc.  All Rights Reserved.
 + *
@@ -540,7 +540,7 @@ which we used earlier, is some improvement.
 +{
 +	security_context_t previous, configuredsc, currentsc, derivedsc;
 +	context_t current, derived;
-+	const char *fullpath, *currentuser;
++	const char *fullpath, *currentuser, *currentrange;
 +#ifdef HAVE_SELINUX_LABEL_H
 +	struct selabel_handle *ctx;
 +#endif
@@ -624,10 +624,16 @@ which we used earlier, is some improvement.
 +						if (currentuser != NULL) {
 +							if (context_user_set(derived,
 +									     currentuser) == 0) {
-+								derivedsc = context_str(derived);
-+								if (derivedsc != NULL) {
-+									freecon(configuredsc);
-+									configuredsc = strdup(derivedsc);
++								currentrange = context_range_get(current);
++								if (currentrange != NULL) {
++									if (context_range_set(derived,
++											      currentrange) == 0) {
++										derivedsc = context_str(derived);
++										if (derivedsc != NULL) {
++											freecon(configuredsc);
++											configuredsc = strdup(derivedsc);
++										}
++									}
 +								}
 +							}
 +						}
