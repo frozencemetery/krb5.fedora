@@ -15,7 +15,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10
-Release: 6%{?dist}
+Release: 7%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -65,6 +65,7 @@ Patch104: krb5-1.10-crashfix.patch
 Patch105: krb5-kvno-230379.patch
 Patch106: krb5-1.10-lookaside.patch
 Patch107: krb5-1.10-string-rpc-acl-fix.patch
+Patch108: krb5-kadmind-null-password.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -238,6 +239,7 @@ ln -s NOTICE LICENSE
 %patch105 -p1 -b .kvno
 %patch106 -p1 -b .7082
 %patch107 -p1 -b .7093
+%patch108 -p1 -b .kadmind-null-password
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -749,6 +751,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Jun  1 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10-7
+- pull up the patch to correct a possible NULL pointer dereference in
+  kadmind (CVE-2012-1013, #827598)
+
 * Mon May  7 2012 Nalin Dahyabhai <nalin@redhat.com>
 - skip the setfscreatecon() if fopen() is passed "rb" as the open mode (part
   of #819115)
