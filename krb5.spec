@@ -62,6 +62,7 @@ Patch101: krb5-trunk-7047.patch
 Patch102: krb5-trunk-7048.patch
 Patch103: krb5-1.10-gcc47.patch
 Patch105: krb5-kvno-230379.patch
+Patch106: krb5-1.10.2-keytab-etype.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -234,6 +235,7 @@ ln -s NOTICE LICENSE
 %patch102 -p1 -b .7048
 %patch103 -p0 -b .gcc47
 %patch105 -p1 -b .kvno
+%patch106 -p1 -b .keytab-etype
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -746,6 +748,10 @@ exit 0
     in the current range, in addition to the current user
   - also package the PDF format admin, user, and install guides
   - drop some PDFs that no longer get built right
+- add a backport of Stef's patch to set the client's list of supported
+  enctypes to match the types of keys that we have when we are using a
+  keytab to try to get initial credentials, so that a KDC won't send us
+  an AS reply that we can't encrypt (RT#2131, #748528)
 
 * Mon May  7 2012 Nalin Dahyabhai <nalin@redhat.com>
 - skip the setfscreatecon() if fopen() is passed "rb" as the open mode (part
