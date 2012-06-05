@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -753,6 +753,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Jun  5 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-2
+- back out this labeling change (dwalsh):
+  - when building the new label for a file we're about to create, also mix
+    in the current range, in addition to the current user
+
 * Fri Jun  1 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-1
 - update to 1.10.2
   - when building the new label for a file we're about to create, also mix
