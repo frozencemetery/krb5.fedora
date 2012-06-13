@@ -747,6 +747,6 @@ diff -up krb5-1.8/src/configure.in.pam krb5-1.8/src/configure.in
  
 +KRB5_WITH_PAM
 +
- AC_CONFIG_FILES(krb5-config, [chmod +x krb5-config])
- V5_AC_OUTPUT_MAKEFILE(.
- 
+ # Make localedir work in autoconf 2.5x.
+ if test "${localedir+set}" != set; then
+     localedir='$(datadir)/locale'

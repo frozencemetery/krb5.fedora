@@ -10,14 +10,19 @@
 %global WITH_NSS 0
 %global WITH_SYSVERTO 0
 %endif
+%if 0%{?fedora} >= 17 || 0%{?rhel} > 6
+%global no_separate_usr 1
+%else
+%global no_separate_usr 0
+%endif
 %global gettext_domain mit-krb5
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.10
-Release: 7%{?dist}
+Version: 1.10.2
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.2-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kprop.service
@@ -51,9 +56,9 @@ Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch39: krb5-1.8-api.patch
 Patch56: krb5-1.10-doublelog.patch
 Patch59: krb5-1.10-kpasswd_tcp.patch
-Patch60: krb5-1.10-pam.patch
-Patch61: krb5-1.10-manpaths.patch
-Patch63: krb5-1.10-selinux-label.patch
+Patch60: krb5-1.10.2-pam.patch
+Patch61: krb5-1.10.2-manpaths.patch
+Patch63: krb5-1.10.2-selinux-label.patch
 Patch71: krb5-1.9-dirsrv-accountlock.patch
 Patch75: krb5-pkinit-debug.patch
 Patch86: krb5-1.9-debuginfo.patch
@@ -61,11 +66,8 @@ Patch100: krb5-trunk-7046.patch
 Patch101: krb5-trunk-7047.patch
 Patch102: krb5-trunk-7048.patch
 Patch103: krb5-1.10-gcc47.patch
-Patch104: krb5-1.10-crashfix.patch
 Patch105: krb5-kvno-230379.patch
-Patch106: krb5-1.10-lookaside.patch
-Patch107: krb5-1.10-string-rpc-acl-fix.patch
-Patch108: krb5-kadmind-null-password.patch
+Patch106: krb5-1.10.2-keytab-etype.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -83,6 +85,10 @@ BuildRequires: pam-devel
 BuildRequires: systemd-units
 # For the test framework.
 BuildRequires: perl, dejagnu, tcl-devel
+BuildRequires: net-tools
+%if 0%{?fedora} >= 13 || 0%{?rhel} > 6
+BuildRequires: hostname
+%endif
 
 %if %{WITH_LDAP}
 BuildRequires: openldap-devel
@@ -142,6 +148,8 @@ Requires: logrotate
 Requires(preun): /sbin/install-info
 # mktemp is used by krb5-send-pr
 Requires: coreutils
+# we specify /usr/share/dict/words as the default dict_file in kdc.conf
+Requires: /usr/share/dict/words
 # portreserve is used by init scripts for kadmind, kpropd, and krb5kdc
 Requires: portreserve
 %if %{WITH_SYSVERTO}
@@ -235,11 +243,8 @@ ln -s NOTICE LICENSE
 %patch101 -p1 -b .7047
 %patch102 -p1 -b .7048
 %patch103 -p0 -b .gcc47
-%patch104 -p1 -b .crashfix
 %patch105 -p1 -b .kvno
-%patch106 -p1 -b .7082
-%patch107 -p1 -b .7093
-%patch108 -p1 -b .kadmind-null-password
+%patch106 -p1 -b .keytab-etype
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -268,10 +273,6 @@ popd
 sh %{SOURCE24} check << EOF
 doc/api       library krb5
 doc/implement implement
-doc/kadm5     adb-unit-test
-doc/kadm5     api-unit-test
-doc/kadm5     api-funcspec
-doc/kadm5     api-server-design
 EOF
 
 # Generate an FDS-compatible LDIF file.
@@ -438,6 +439,7 @@ make -C src DESTDIR=$RPM_BUILD_ROOT EXAMPLEDIR=%{_docdir}/krb5-libs-%{version}/e
 # list of link flags, and it helps prevent file conflicts on multilib systems.
 sed -r -i -e 's|^libdir=/usr/lib(64)?$|libdir=/usr/lib|g' $RPM_BUILD_ROOT%{_bindir}/krb5-config
 
+%if %{no_separate_usr}
 # Move specific libraries from %{_libdir} to /%{_lib}, and fixup the symlinks.
 touch $RPM_BUILD_ROOT/rootfile
 rellibdir=..
@@ -452,6 +454,7 @@ for library in libgssapi_krb5 libgssrpc libk5crypto libkrb5 libkrb5support ; do
 	ln -fs ${rellibdir}/%{_lib}/${library}.so.*.* ${library}.so
 	popd
 done
+%endif
 
 # A sanity checker for upgrades.
 install -m 755 kdb_check_weak $RPM_BUILD_ROOT/%{_libdir}/krb5/
@@ -541,7 +544,7 @@ exit 0
 
 %files workstation
 %defattr(-,root,root,-)
-%doc doc/user*.ps.gz src/config-files/services.append
+%doc doc/user*.ps.gz doc/user*.pdf src/config-files/services.append
 %doc doc/{kdestroy,kinit,klist,kpasswd,ksu}.html
 %doc doc/krb5-user.html
 %attr(0755,root,root) %doc src/config-files/convert-config-files
@@ -595,6 +598,8 @@ exit 0
 %config(noreplace) /etc/logrotate.d/krb5kdc
 %config(noreplace) /etc/logrotate.d/kadmind
 
+%doc doc/admin*.pdf
+%doc doc/install*.pdf
 %doc doc/admin*.ps.gz
 %doc doc/install*.ps.gz
 %doc doc/krb5-admin.html
@@ -711,10 +716,7 @@ exit 0
 %files devel
 %defattr(-,root,root,-)
 %docdir %{_mandir}
-%doc doc/api/*.pdf
 %doc doc/ccapi
-%doc doc/implement/*.pdf
-%doc doc/kadm5/*.pdf
 %doc doc/kadmin
 %doc doc/kim
 %doc doc/krb5-protocol
@@ -751,17 +753,44 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Fri Jun  1 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10-7
-- pull up the patch to correct a possible NULL pointer dereference in
-  kadmind (CVE-2012-1013, #827598)
+* Tue Jun  5 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-2
+- back out this labeling change (dwalsh):
+  - when building the new label for a file we're about to create, also mix
+    in the current range, in addition to the current user
+
+* Fri Jun  1 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-1
+- update to 1.10.2
+  - when building the new label for a file we're about to create, also mix
+    in the current range, in addition to the current user
+  - also package the PDF format admin, user, and install guides
+  - drop some PDFs that no longer get built right
+- add a backport of Stef's patch to set the client's list of supported
+  enctypes to match the types of keys that we have when we are using a
+  keytab to try to get initial credentials, so that a KDC won't send us
+  an AS reply that we can't encrypt (RT#2131, #748528)
+- don't shuffle around any shared libraries on releases with no-separate-/usr,
+  since /usr/lib is the same place as /lib
+- add explicit buildrequires: on 'hostname', for the tests, on systems where
+  it's in its own package, and require net-tools, which used to provide the
+  command, everywhere
 
 * Mon May  7 2012 Nalin Dahyabhai <nalin@redhat.com>
 - skip the setfscreatecon() if fopen() is passed "rb" as the open mode (part
   of #819115)
 
-* Mon Mar 20 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10-6
+* Tue May  1 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.1-3
+- have -server require /usr/share/dict/words, which we set as the default
+  dict_file in kdc.conf (#817089)
+
+* Tue Mar 20 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.1-2
 - change back dns_lookup_kdc to the default setting (Stef Walter, #805318)
 - comment out example.com examples in default krb5.conf (Stef Walter, #805320)
+
+* Fri Mar  9 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.1-1
+- update to 1.10.1
+  - drop the KDC crash fix
+  - drop the KDC lookaside cache fix
+  - drop the fix for kadmind RPC ACLs (CVE-2012-1012)
 
 * Wed Mar  7 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10-5
 - when removing -workstation, remove our files from the info index while

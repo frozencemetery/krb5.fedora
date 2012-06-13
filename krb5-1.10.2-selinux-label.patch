@@ -120,9 +120,9 @@ which we used earlier, is some improvement.
  
 +KRB5_WITH_SELINUX
 +
- AC_CONFIG_FILES(krb5-config, [chmod +x krb5-config])
- 
- V5_AC_OUTPUT_MANPAGE([
+ # Make localedir work in autoconf 2.5x.
+ if test "${localedir+set}" != set; then
+     localedir='$(datadir)/locale'
 --- krb5/src/include/k5-int.h
 +++ krb5/src/include/k5-int.h
 @@ -133,6 +133,7 @@ typedef unsigned char   u_char;
