@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.2
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -68,6 +68,7 @@ Patch102: krb5-trunk-7048.patch
 Patch103: krb5-1.10-gcc47.patch
 Patch105: krb5-kvno-230379.patch
 Patch106: krb5-1.10.2-keytab-etype.patch
+Patch107: krb5-trunk-pkinit-anchorsign.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -245,6 +246,7 @@ ln -s NOTICE LICENSE
 %patch103 -p0 -b .gcc47
 %patch105 -p1 -b .kvno
 %patch106 -p1 -b .keytab-etype
+%patch107 -p1 -b .pkinit-anchorsign
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -753,6 +755,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Jun 22 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-3
+- backport a fix to allow a PKINIT client to handle SignedData from a KDC
+  that's signed with a certificate that isn't in the SignedData, but which
+  is available as an anchor or intermediate on the client (RT#7183)
+
 * Tue Jun  5 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-2
 - back out this labeling change (dwalsh):
   - when building the new label for a file we're about to create, also mix
