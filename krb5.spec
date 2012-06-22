@@ -5,10 +5,10 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.9.3
-Release: 2%{?dist}
+Version: 1.9.4
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.3-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.4-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kprop.service
@@ -53,7 +53,6 @@ Patch75: krb5-pkinit-debug.patch
 Patch77: krb5-1.9-paren.patch
 Patch78: krb5-trunk-chpw-err.patch
 Patch79: krb5-klist_s.patch
-Patch82: krb5-1.9.1-ai_addrconfig.patch
 Patch83: krb5-1.9.1-ai_addrconfig2.patch
 Patch84: krb5-1.9.1-sendto_poll.patch
 Patch86: krb5-1.9-debuginfo.patch
@@ -63,7 +62,7 @@ Patch100: krb5-1.9-7046.patch
 Patch101: krb5-trunk-7047.patch
 Patch102: krb5-1.9-7048.patch
 Patch103: krb5-kvno-230379.patch
-Patch104: krb5-kadmind-null-password.patch
+Patch105: krb5-1.9-pkinit-anchorsign.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -214,7 +213,6 @@ ln -s NOTICE LICENSE
 %patch77 -p1 -b .paren
 %patch78 -p0 -b .chpw-err
 %patch79 -p1 -b .klist_s
-%patch82 -p0 -b .ai_addrconfig
 %patch83 -p0 -b .ai_addrconfig2
 %patch84 -p0 -b .sendto_poll
 %patch86 -p0 -b .debuginfo
@@ -224,7 +222,7 @@ ln -s NOTICE LICENSE
 %patch101 -p1 -b .7047
 %patch102 -p1 -b .7048
 %patch103 -p1 -b .kvno
-%patch104 -p1 -b .kadmind-null-password
+%patch105 -p1 -b .pkinit-anchorsign
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -251,10 +249,6 @@ popd
 sh %{SOURCE24} check << EOF
 doc/api       library krb5
 doc/implement implement
-doc/kadm5     adb-unit-test
-doc/kadm5     api-unit-test
-doc/kadm5     api-funcspec
-doc/kadm5     api-server-design
 EOF
 
 # Generate an FDS-compatible LDIF file.
@@ -666,7 +660,6 @@ exit 0
 %doc doc/api/*.pdf
 %doc doc/ccapi
 %doc doc/implement/*.pdf
-%doc doc/kadm5/*.pdf
 %doc doc/kadmin
 %doc doc/kim
 %doc doc/krb5-protocol
@@ -703,6 +696,15 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Jun 22 2012 Nalin Dahyabhai <nalin@redhat.com> 1.9.4-1
+- rebase to 1.9.4
+  - drop the backport patch for CVE-2012-1013, no longer needed
+  - drop some PDFs that no longer get built right
+  - drop the backport patch for RT#6922, merged in as RT#7164
+- backport a fix to allow a PKINIT client to handle SignedData from a KDC
+  that's signed with a certificate that isn't in the SignedData, but which
+  is available as an anchor or intermediate on the client (RT#7183)
+
 * Fri Jun  1 2012 Nalin Dahyabhai <nalin@redhat.com> 1.9.3-2
 - pull up the patch to correct a possible NULL pointer dereference in
   kadmind (CVE-2012-1013, #827598)
