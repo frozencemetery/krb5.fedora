@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.2
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -755,6 +755,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Jul 27 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.10.2-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_18_Mass_Rebuild
+
 * Fri Jun 22 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-3
 - backport a fix to allow a PKINIT client to handle SignedData from a KDC
   that's signed with a certificate that isn't in the SignedData, but which
