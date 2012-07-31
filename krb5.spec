@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.4
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.4-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -698,6 +698,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Jul 31 2012 Nalin Dahyabhai <nalin@redhat.com> 1.9.4-3
+- rebuild
+
 * Tue Jul 31 2012 Nalin Dahyabhai <nalin@redhat.com> 1.9.4-2
 - add upstream patch to fix freeing an uninitialized pointer in the KDC
   (MITKRB5-SA-2012-001, CVE-2012-1015, #844777)
