@@ -771,7 +771,7 @@ exit 0
 * Tue Jul 31 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-5
 - add upstream patch to fix freeing an uninitialized pointer and dereferencing
   another uninitialized pointer in the KDC (MITKRB5-SA-2012-001, CVE-2012-1014
-  and CVE-2012-1015, #838012)
+  and CVE-2012-1015, #844779 and #844777)
 - fix a thinko in whether or not we mess around with devel .so symlinks on
   systems without a separate /usr (sbose)
 
