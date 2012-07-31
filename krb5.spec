@@ -6,7 +6,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.9.4
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.9/krb5-1.9.4-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -63,6 +63,7 @@ Patch101: krb5-trunk-7047.patch
 Patch102: krb5-1.9-7048.patch
 Patch103: krb5-kvno-230379.patch
 Patch105: krb5-1.9-pkinit-anchorsign.patch
+Patch106: 2012-001-1.9-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -223,6 +224,7 @@ ln -s NOTICE LICENSE
 %patch102 -p1 -b .7048
 %patch103 -p1 -b .kvno
 %patch105 -p1 -b .pkinit-anchorsign
+%patch106 -p1 -b .2012-001
 gzip doc/*.ps
 
 sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
@@ -696,6 +698,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Jul 31 2012 Nalin Dahyabhai <nalin@redhat.com> 1.9.4-2
+- add upstream patch to fix freeing an uninitialized pointer in the KDC
+  (MITKRB5-SA-2012-001, CVE-2012-1015, #838012)
+
 * Fri Jun 22 2012 Nalin Dahyabhai <nalin@redhat.com> 1.9.4-1
 - rebase to 1.9.4
   - drop the backport patch for CVE-2012-1013, no longer needed
