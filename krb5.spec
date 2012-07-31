@@ -700,7 +700,7 @@ exit 0
 %changelog
 * Tue Jul 31 2012 Nalin Dahyabhai <nalin@redhat.com> 1.9.4-2
 - add upstream patch to fix freeing an uninitialized pointer in the KDC
-  (MITKRB5-SA-2012-001, CVE-2012-1015, #838012)
+  (MITKRB5-SA-2012-001, CVE-2012-1015, #844777)
 
 * Fri Jun 22 2012 Nalin Dahyabhai <nalin@redhat.com> 1.9.4-1
 - rebase to 1.9.4
