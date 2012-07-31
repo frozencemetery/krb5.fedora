@@ -11,16 +11,16 @@
 %global WITH_SYSVERTO 0
 %endif
 %if 0%{?fedora} >= 17 || 0%{?rhel} > 6
-%global no_separate_usr 1
+%global separate_usr 0
 %else
-%global no_separate_usr 0
+%global separate_usr 1
 %endif
 %global gettext_domain mit-krb5
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.2
-Release: 3%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -69,6 +69,7 @@ Patch103: krb5-1.10-gcc47.patch
 Patch105: krb5-kvno-230379.patch
 Patch106: krb5-1.10.2-keytab-etype.patch
 Patch107: krb5-trunk-pkinit-anchorsign.patch
+Patch108: http://web.mit.edu/kerberos/advisories/2012-001-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -247,6 +248,7 @@ ln -s NOTICE LICENSE
 %patch105 -p1 -b .kvno
 %patch106 -p1 -b .keytab-etype
 %patch107 -p1 -b .pkinit-anchorsign
+%patch108 -p1 -b .2012-001
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -441,7 +443,7 @@ make -C src DESTDIR=$RPM_BUILD_ROOT EXAMPLEDIR=%{_docdir}/krb5-libs-%{version}/e
 # list of link flags, and it helps prevent file conflicts on multilib systems.
 sed -r -i -e 's|^libdir=/usr/lib(64)?$|libdir=/usr/lib|g' $RPM_BUILD_ROOT%{_bindir}/krb5-config
 
-%if %{no_separate_usr}
+%if %{separate_usr}
 # Move specific libraries from %{_libdir} to /%{_lib}, and fixup the symlinks.
 touch $RPM_BUILD_ROOT/rootfile
 rellibdir=..
@@ -684,14 +686,25 @@ exit 0
 /%{_mandir}/man5/k5identity.5*
 /%{_mandir}/man5/k5login.5*
 /%{_mandir}/man5/krb5.conf.5*
+%if %{separate_usr}
 /%{_lib}/libgssapi_krb5.so.*
 /%{_lib}/libgssrpc.so.*
 /%{_lib}/libk5crypto.so.*
+%else
+%{_libdir}/libgssapi_krb5.so.*
+%{_libdir}/libgssrpc.so.*
+%{_libdir}/libk5crypto.so.*
+%endif
 %{_libdir}/libkadm5clnt_mit.so.*
 %{_libdir}/libkadm5srv_mit.so.*
 %{_libdir}/libkdb5.so.*
+%if %{separate_usr}
 /%{_lib}/libkrb5.so.*
 /%{_lib}/libkrb5support.so.*
+%else
+%{_libdir}/libkrb5.so.*
+%{_libdir}/libkrb5support.so.*
+%endif
 %dir %{_libdir}/krb5
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/*
@@ -755,6 +768,16 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Jul 31 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-5
+- add upstream patch to fix freeing an uninitialized pointer and dereferencing
+  another uninitialized pointer in the KDC (MITKRB5-SA-2012-001, CVE-2012-1014
+  and CVE-2012-1015, #838012)
+- fix a thinko in whether or not we mess around with devel .so symlinks on
+  systems without a separate /usr (sbose)
+
+* Fri Jul 27 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.10.2-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_18_Mass_Rebuild
+
 * Fri Jun 22 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-3
 - backport a fix to allow a PKINIT client to handle SignedData from a KDC
   that's signed with a certificate that isn't in the SignedData, but which
