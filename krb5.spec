@@ -10,7 +10,7 @@
 %global WITH_NSS 0
 %global WITH_SYSVERTO 0
 %endif
-%if 0%{?fedora} >= 17 || 0%{?rhel} > 6
+%if 0%{?fedora} > 17 || 0%{?rhel} > 6
 %global separate_usr 0
 %else
 %global separate_usr 1
@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.2
-Release: 5%{?dist}
+Release: 6%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -768,6 +768,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Jul 31 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-6
+- go back to not messing with library file paths on Fedora 17: it breaks
+  file path dependencies in other packages, and since Fedora 17 is already
+  released, breaking that is our fault
+
 * Tue Jul 31 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-5
 - add upstream patch to fix freeing an uninitialized pointer and dereferencing
   another uninitialized pointer in the KDC (MITKRB5-SA-2012-001, CVE-2012-1014
