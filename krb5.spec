@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.2
-Release: 6%{?dist}
+Release: 7%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -768,7 +768,12 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Tue Jul 31 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-6
+* Thu Aug  2 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-7
+- selinux: hang on to the list of selinux contexts, freeing and reloading
+  it only when the file we read it from is modified, freeing it when the
+  shared library is being unloaded (#845125)
+
+* Thu Aug  2 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-6
 - go back to not messing with library file paths on Fedora 17: it breaks
   file path dependencies in other packages, and since Fedora 17 is already
   released, breaking that is our fault
