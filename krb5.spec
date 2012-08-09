@@ -19,10 +19,10 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.10.2
-Release: 7%{?dist}
+Version: 1.10.3
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.2-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.3-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kprop.service
@@ -69,7 +69,6 @@ Patch103: krb5-1.10-gcc47.patch
 Patch105: krb5-kvno-230379.patch
 Patch106: krb5-1.10.2-keytab-etype.patch
 Patch107: krb5-trunk-pkinit-anchorsign.patch
-Patch108: http://web.mit.edu/kerberos/advisories/2012-001-patch.txt
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -248,7 +247,6 @@ ln -s NOTICE LICENSE
 %patch105 -p1 -b .kvno
 %patch106 -p1 -b .keytab-etype
 %patch107 -p1 -b .pkinit-anchorsign
-%patch108 -p1 -b .2012-001
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -768,6 +766,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Aug  9 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-1
+- update to 1.10.3, rolling in the fixes from MITKRB5-SA-2012-001
+
 * Thu Aug  2 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-7
 - selinux: hang on to the list of selinux contexts, freeing and reloading
   it only when the file we read it from is modified, freeing it when the
