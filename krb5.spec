@@ -29,7 +29,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.3
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -81,6 +81,7 @@ Patch103: krb5-1.10-gcc47.patch
 Patch105: krb5-kvno-230379.patch
 Patch106: krb5-1.10.2-keytab-etype.patch
 Patch107: krb5-trunk-pkinit-anchorsign.patch
+Patch108: krb5-1.10.2-replay.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -269,6 +270,7 @@ ln -s NOTICE LICENSE
 %patch105 -p1 -b .kvno
 %patch106 -p1 -b .keytab-etype
 %patch107 -p1 -b .pkinit-anchorsign
+%patch108 -p1 -b .replay
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -837,6 +839,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Aug 30 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-3
+- backport patch to disable replay detection in krb5_verify_init_creds()
+  while reading the AP-REQ that's generated in the same function (RT#7229)
+
 * Thu Aug 30 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-2
 - undo rename from krb5-pkinit-openssl to krb5-pkinit on EL6
 - version the Obsoletes: on the krb5-pkinit-openssl to krb5-pkinit rename
