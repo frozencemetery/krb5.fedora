@@ -1,6 +1,6 @@
 %global WITH_LDAP 1
 %global WITH_DIRSRV 1
-%if 0%{?fedora} >= 17 || 0%{?rhel} >= 6
+%if 0%{?fedora} >= 17 || 0%{?rhel} > 6
 # These next two *will* change.
 %global WITH_OPENSSL 1
 %global WITH_NSS 0
@@ -10,17 +10,26 @@
 %global WITH_NSS 0
 %global WITH_SYSVERTO 0
 %endif
+# The "move everything to /usr" feature landed in Fedora 17, but we didn't
+# catch up until the Fedora 18 development cycle, at which point we found
+# that some packages were hard-coding paths.
 %if 0%{?fedora} > 17 || 0%{?rhel} > 6
 %global separate_usr 0
 %else
 %global separate_usr 1
+%endif
+# Systemd landed in Fedora 15, but this package was cut over for Fedora 16.
+%if 0%{?fedora} >= 16 || 0%{?rhel} > 6
+%global WITH_SYSTEMD 1
+%else
+%global WITH_SYSTEMD 0
 %endif
 %global gettext_domain mit-krb5
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -45,6 +54,9 @@ Source32: krb5_prop.portreserve
 Source33: krb5kdc.logrotate
 Source34: kadmind.logrotate
 Source35: kdb_check_weak.c
+Source36: kpropd.init
+Source37: kadmind.init
+Source38: krb5kdc.init
 
 Patch5: krb5-1.10-ksu-access.patch
 Patch6: krb5-1.10-ksu-path.patch
@@ -83,7 +95,9 @@ BuildRequires: texlive-latex
 BuildRequires: keyutils-libs-devel
 BuildRequires: libselinux-devel
 BuildRequires: pam-devel
+%if %{WITH_SYSTEMD}
 BuildRequires: systemd-units
+%endif
 # For the test framework.
 BuildRequires: perl, dejagnu, tcl-devel
 BuildRequires: net-tools
@@ -137,16 +151,24 @@ Kerberos, you need to install this package.
 Group: System Environment/Daemons
 Summary: The KDC and related programs for Kerberos 5
 Requires: %{name}-libs = %{version}-%{release}
-Requires(post): /sbin/install-info
+Requires(post): /sbin/install-info, chkconfig
+%if %{WITH_SYSTEMD}
 Requires(post): systemd-sysv
 Requires(post): systemd-units
 Requires(preun): systemd-units
 Requires(postun): systemd-units
+%else
+Requires(preun): chkconfig
+%endif
+Requires(post): initscripts
+Requires(postun): initscripts
 # we need 'status -l' to work, and that option was added in 8.99
 Requires: initscripts >= 8.99-1
+# used by the triggers
+Requires: chkconfig
 # we drop files in its directory, but we don't want to own that directory
 Requires: logrotate
-Requires(preun): /sbin/install-info
+Requires(preun): /sbin/install-info, initscripts
 # mktemp is used by krb5-send-pr
 Requires: coreutils
 # we specify /usr/share/dict/words as the default dict_file in kdc.conf
@@ -194,7 +216,7 @@ package contains the basic Kerberos programs (kinit, klist, kdestroy,
 kpasswd). If your network uses Kerberos, this package should be
 installed on every workstation.
 
-%if 0%{?fedora} >= 17 || 0%{?rhel} >= 6
+%if 0%{?fedora} >= 17 || 0%{?rhel} > 6
 %package pkinit
 %else
 %package pkinit-openssl
@@ -203,11 +225,11 @@ Summary: The PKINIT module for Kerberos 5
 Group: System Environment/Libraries
 Requires: %{name}-libs = %{version}-%{release}
 %if 0%{?fedora} >= 17 || 0%{?rhel} >= 6
-Obsoletes: krb5-pkinit-openssl
+Obsoletes: krb5-pkinit-openssl < %{version}-%{release}
 Provides: krb5-pkinit-openssl = %{version}-%{release}
 %endif
 
-%if 0%{?fedora} >= 17 || 0%{?rhel} >= 6
+%if 0%{?fedora} >= 17 || 0%{?rhel} > 6
 %description pkinit
 %else
 %description pkinit-openssl
@@ -218,7 +240,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -a 23 -n krb5-%{version}
+%setup -q -a 23
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -230,12 +252,12 @@ ln -s NOTICE LICENSE
 %patch5  -p1 -b .ksu-access
 %patch6  -p1 -b .ksu-path
 %patch12 -p1 -b .ktany
-%patch16 -p1 -b .buildconf
-%patch23 -p1 -b .dns
+%patch16 -p1 -b .buildconf %{?_rawbuild}
+%patch23 -p1 -b .dns %{?_rawbuild}
 %patch29 -p1 -b .kprop-mktemp
-%patch30 -p1 -b .send-pr-tempfile
+%patch30 -p1 -b .send-pr-tempfile %{?_rawbuild}
 %patch39 -p1 -b .api
-%patch56 -p1 -b .doublelog
+%patch56 -p1 -b .doublelog %{?_rawbuild}
 %patch59 -p1 -b .kpasswd_tcp
 %patch71 -p1 -b .dirsrv-accountlock
 #%patch75 -p1 -b .pkinit-debug
@@ -264,11 +286,13 @@ chmod -x doc/krb5-protocol/*.txt doc/*.html doc/*/*.html
 
 # Rename the man pages so that they'll get generated correctly.  Uses the
 # "krb5-1.8-manpaths.txt" source file.
-pushd src
-cat %{SOURCE25} | while read manpage ; do
-	mv "$manpage" "$manpage".in
-done
-popd
+if test -z "%{?_rawbuild}" ; then
+	pushd src
+	cat %{SOURCE25} | while read manpage ; do
+		mv "$manpage" "$manpage".in
+	done
+	popd
+fi
 
 # Check that the PDFs we built earlier match this source tree, using the
 # "krb5-tex-pdf.sh" source file.
@@ -383,16 +407,31 @@ mkdir -p $RPM_BUILD_ROOT/etc
 install -pm 644 %{SOURCE6} $RPM_BUILD_ROOT/etc/krb5.conf
 
 # Server init scripts (krb5kdc,kadmind,kpropd) and their sysconfig files.
+%if %{WITH_SYSTEMD}
 mkdir -p $RPM_BUILD_ROOT%{_unitdir}
-for init in \
+for unit in \
 	%{SOURCE5}\
 	%{SOURCE4} \
 	%{SOURCE2} ; do
 	# In the past, the init script was supposed to be named after the
 	# service that the started daemon provided.  Changing their names
 	# is an upgrade-time problem I'm in no hurry to deal with.
-	install -pm 644 ${init} $RPM_BUILD_ROOT%{_unitdir}
+	install -pm 644 ${unit} $RPM_BUILD_ROOT%{_unitdir}
 done
+%else
+mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
+for init in \
+	%{SOURCE36}\
+	%{SOURCE37} \
+	%{SOURCE38} ; do
+	# In the past, the init script was supposed to be named after the
+	# service that the started daemon provided.  Changing their names
+	# is an upgrade-time problem I'm in no hurry to deal with.
+	service=`basename ${init} .init`
+	install -pm 755 ${init} \
+	$RPM_BUILD_ROOT/etc/rc.d/init.d/${service%d}
+done
+%endif
 mkdir -p $RPM_BUILD_ROOT/etc/sysconfig
 for sysconfig in \
 	%{SOURCE19}\
@@ -475,12 +514,19 @@ install -m 755 kdb_check_weak $RPM_BUILD_ROOT/%{_libdir}/krb5/
 %postun server-ldap -p /sbin/ldconfig
 
 %post server
+# Remove the init script for older servers.
+[ -x /etc/rc.d/init.d/krb5server ] && /sbin/chkconfig --del krb5server
+%if %{WITH_SYSTEMD}
 if [ $1 -eq 1 ] ; then 
     # Initial installation 
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 fi
-# Remove the init script for older servers.
-[ -x /etc/rc.d/init.d/krb5server ] && /sbin/chkconfig --del krb5server
+%else
+# Install the new ones.
+/sbin/chkconfig --add krb5kdc
+/sbin/chkconfig --add kadmin
+/sbin/chkconfig --add kprop
+%endif
 # Install info pages.
 /sbin/install-info %{_infodir}/krb5-admin.info.gz %{_infodir}/dir
 /sbin/install-info %{_infodir}/krb5-install.info.gz %{_infodir}/dir
@@ -488,25 +534,44 @@ exit 0
 
 %preun server
 if [ "$1" -eq "0" ] ; then
+%if %{WITH_SYSTEMD}
 	/bin/systemctl --no-reload disable krb5kdc.service > /dev/null 2>&1 || :
 	/bin/systemctl --no-reload disable kadmin.service > /dev/null 2>&1 || :
 	/bin/systemctl --no-reload disable kprop.service > /dev/null 2>&1 || :
 	/bin/systemctl stop krb5kdc.service > /dev/null 2>&1 || :
 	/bin/systemctl stop kadmin.service > /dev/null 2>&1 || :
 	/bin/systemctl stop kprop.service > /dev/null 2>&1 || :
+%else
+	/sbin/chkconfig --del krb5kdc
+	/sbin/chkconfig --del kadmin
+	/sbin/chkconfig --del kprop
+	/sbin/service krb5kdc stop > /dev/null 2>&1 || :
+	/sbin/service kadmin stop > /dev/null 2>&1 || :
+	/sbin/service kprop stop > /dev/null 2>&1 || :
+%endif
 	/sbin/install-info --delete %{_infodir}/krb5-admin.info.gz %{_infodir}/dir
 	/sbin/install-info --delete %{_infodir}/krb5-install.info.gz %{_infodir}/dir
 fi
 exit 0
 
 %postun server
+%if %{WITH_SYSTEMD}
 /bin/systemctl daemon-reload >/dev/null 2>&1 || :
-if [ $1 -ge 1 ] ; then
+if [ "$1" -ge 1 ] ; then
 	/bin/systemctl try-restart krb5kdc.service >/dev/null 2>&1 || :
 	/bin/systemctl try-restart kadmin.service >/dev/null 2>&1 || :
 	/bin/systemctl try-restart kprop.service >/dev/null 2>&1 || :
 fi
+%else
+if [ "$1" -ge 1 ] ; then
+	/sbin/service krb5kdc condrestart > /dev/null 2>&1 || :
+	/sbin/service kadmin condrestart > /dev/null 2>&1 || :
+	/sbin/service kprop condrestart > /dev/null 2>&1 || :
+fi
+%endif
+exit 0
 
+%if %{WITH_SYSTEMD}
 %triggerun server -- krb5-server < 1.9.1-13
 # Save the current service runlevel info
 # User must manually run 
@@ -525,6 +590,7 @@ fi
 /bin/systemctl try-restart krb5kdc.service >/dev/null 2>&1 || :
 /bin/systemctl try-restart kadmin.service >/dev/null 2>&1 || :
 /bin/systemctl try-restart kprop.service >/dev/null 2>&1 || :
+%endif
 
 %triggerun server -- krb5-server < 1.6.3-100
 if [ "$2" -eq "0" ] ; then
@@ -588,10 +654,15 @@ exit 0
 %files server
 %defattr(-,root,root,-)
 %docdir %{_mandir}
-
+%if %{WITH_SYSTEMD}
 %{_unitdir}/krb5kdc.service
 %{_unitdir}/kadmin.service
 %{_unitdir}/kprop.service
+%else
+/etc/rc.d/init.d/krb5kdc
+/etc/rc.d/init.d/kadmin
+/etc/rc.d/init.d/kprop
+%endif
 %config(noreplace) /etc/sysconfig/krb5kdc
 %config(noreplace) /etc/sysconfig/kadmin
 %config(noreplace) /etc/portreserve/kerberos-iv
@@ -715,7 +786,7 @@ exit 0
 %{_libdir}/libverto.so.*
 %endif
 
-%if 0%{?fedora} >= 17 || 0%{?rhel} >= 6
+%if 0%{?fedora} >= 17 || 0%{?rhel} > 6
 %files pkinit
 %else
 %files pkinit-openssl
@@ -766,6 +837,12 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Aug 30 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-2
+- undo rename from krb5-pkinit-openssl to krb5-pkinit on EL6
+- version the Obsoletes: on the krb5-pkinit-openssl to krb5-pkinit rename
+- reintroduce the init scripts for non-systemd releases
+- forward-port %%{_?rawbuild} annotations from EL6 packaging
+
 * Thu Aug  9 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-1
 - update to 1.10.3, rolling in the fixes from MITKRB5-SA-2012-001
 
