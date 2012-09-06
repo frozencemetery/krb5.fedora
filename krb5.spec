@@ -29,7 +29,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.3
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -839,6 +839,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Sep  6 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-4
+- cut down the number of times we load SELinux labeling configuration from
+  a minimum of two times to actually one (more of #845125)
+
 * Thu Aug 30 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-3
 - backport patch to disable replay detection in krb5_verify_init_creds()
   while reading the AP-REQ that's generated in the same function (RT#7229)
