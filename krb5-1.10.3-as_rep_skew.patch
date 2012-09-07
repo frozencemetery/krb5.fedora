@@ -1,0 +1,60 @@
+Test suite hunks dropped because we didn't previously have a skew test.
+
+commit 39629e9df44ce8c4ad72fde951390acc6864407d
+Author: Greg Hudson <ghudson@mit.edu>
+Date:   Fri May 11 18:07:30 2012 +0000
+
+    Omit start time in common AS requests
+    
+    MIT and Heimdal KDCs ignore the start time for non-postdated ticket
+    requests, but AD yields an error if the start time is in the KDC's
+    future, defeating the kdc_timesync option.  Omit the start time if the
+    caller did not specify a start time offset.
+    
+    This change reenables the client check for too much clock skew in the
+    KDC reply in the non-timesync configuration.  That check had been
+    unintentionally suppressed since the introduction of the
+    get_init_creds interfaces.  Adjust the t_skew test script to expect
+    the new error behavior.
+    
+    Code changes from stefw@gnome.org with slight modifications.
+    
+    ticket: 7130
+    
+    git-svn-id: svn://anonsvn.mit.edu/krb5/trunk@25864 dc483132-0cff-0310-8789-dd5450dbe970
+
+diff --git a/src/lib/krb5/krb/get_in_tkt.c b/src/lib/krb5/krb/get_in_tkt.c
+index 21b92e0..1ae8021 100644
+--- a/src/lib/krb5/krb/get_in_tkt.c
++++ b/src/lib/krb5/krb/get_in_tkt.c
+@@ -666,6 +666,8 @@ restart_init_creds_loop(krb5_context context, krb5_init_creds_context ctx,
+     krb5_error_code code = 0;
+     unsigned char random_buf[4];
+     krb5_data random_data;
++    krb5_timestamp from;
++
+     if (ctx->preauth_to_use) {
+         krb5_free_pa_data(context, ctx->preauth_to_use);
+         ctx->preauth_to_use = NULL;
+@@ -728,14 +730,16 @@ restart_init_creds_loop(krb5_context context, krb5_init_creds_context ctx,
+     /* give the preauth plugins a chance to prep the request body */
+     krb5_preauth_prepare_request(context, ctx->opte, ctx->request);
+ 
+-    ctx->request->from = krb5int_addint32(ctx->request_time,
+-                                          ctx->start_time);
+-    ctx->request->till = krb5int_addint32(ctx->request->from,
+-                                          ctx->tkt_life);
++    /* Omit request start time in the common case.  MIT and Heimdal KDCs will
++     * ignore it for non-postdated tickets anyway. */
++    from = krb5int_addint32(ctx->request_time, ctx->start_time);
++    if (ctx->start_time != 0)
++        ctx->request->from = from;
++    ctx->request->till = krb5int_addint32(from, ctx->tkt_life);
+ 
+     if (ctx->renew_life > 0) {
+         ctx->request->rtime =
+-            krb5int_addint32(ctx->request->from, ctx->renew_life);
++            krb5int_addint32(from, ctx->renew_life);
+         if (ctx->request->rtime < ctx->request->till) {
+             /* don't ask for a smaller renewable time than the lifetime */
+             ctx->request->rtime = ctx->request->till;
