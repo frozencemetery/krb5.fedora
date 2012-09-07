@@ -83,6 +83,8 @@ Patch106: krb5-1.10.2-keytab-etype.patch
 Patch107: krb5-trunk-pkinit-anchorsign.patch
 Patch108: krb5-1.10.2-replay.patch
 Patch109: krb5-1.10.3-as_rep_skew.patch
+Patch110: krb5-1.10.3-keytab-etype-corners-prep.patch
+Patch111: krb5-1.10.3-keytab-etype-corners.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -278,6 +280,8 @@ ln -s NOTICE LICENSE
 %patch107 -p1 -b .pkinit-anchorsign
 %patch108 -p1 -b .replay
 %patch109 -p1 -b .as_rep_skew
+%patch110 -p1 -b .keytab-etype-corners-prep
+%patch111 -p1 -b .keytab-etype-corners
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -852,6 +856,11 @@ exit 0
 - pull up patch for RT#7063, in which not noticing a prompt for a long
   time throws the client library's idea of the time difference between it
   and the KDC really far out of whack (#773496)
+- add a backport of more patches to set the client's list of supported enctypes
+  when using a keytab to be the list of types of keys in the keytab, plus the
+  list of other types the client supports but for which it doesn't have keys,
+  in that order, so that KDCs have a better chance of being able to issue
+  tickets with session keys of types that the client can use (#837855)
 
 * Thu Sep  6 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-4
 - cut down the number of times we load SELinux labeling configuration from
