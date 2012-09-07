@@ -142,6 +142,11 @@ to install this package.
 %package libs
 Summary: The shared libraries used by Kerberos 5
 Group: System Environment/Libraries
+%if 0%{?rhel} == 6
+# Some of the older libsmbclient builds here incorrectly called
+# krb5_locate_kdc(), which was mistakenly exported in 1.9.
+Conflicts: libsmbclient < 3.5.10-124
+%endif
 
 %description libs
 Kerberos is a network authentication system. The krb5-libs package
@@ -839,6 +844,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Sep  6 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-5
+- on EL6, conflict with libsmbclient before 3.5.10-124, which is when it
+  stopped linking with a symbol which we no longer export (#771687)
+
 * Thu Sep  6 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-4
 - cut down the number of times we load SELinux labeling configuration from
   a minimum of two times to actually one (more of #845125)
