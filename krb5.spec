@@ -29,7 +29,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.3
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -85,6 +85,7 @@ Patch108: krb5-1.10.2-replay.patch
 Patch109: krb5-1.10.3-as_rep_skew.patch
 Patch110: krb5-1.10.3-keytab-etype-corners-prep.patch
 Patch111: krb5-1.10.3-keytab-etype-corners.patch
+Patch112: krb5-1.10.3-timeout_over.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -282,6 +283,7 @@ ln -s NOTICE LICENSE
 %patch109 -p1 -b .as_rep_skew
 %patch110 -p1 -b .keytab-etype-corners-prep
 %patch111 -p1 -b .keytab-etype-corners
+%patch112 -p1 -b .timeout_over
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -851,6 +853,10 @@ exit 0
 
 %changelog
 * Fri Sep  6 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-5
+- add patch from Filip Krska to abort a transmit attempt when we've given
+  poll() a negative timeout (#838548)
+
+* Fri Sep  6 2012 Nalin Dahyabhai <nalin@redhat.com>
 - on EL6, conflict with libsmbclient before 3.5.10-124, which is when it
   stopped linking with a symbol which we no longer export (#771687)
 - pull up patch for RT#7063, in which not noticing a prompt for a long

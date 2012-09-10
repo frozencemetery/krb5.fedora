@@ -1,0 +1,14 @@
+Filip Krska's patch to abort the current pass after poll() returns when
+we've given it an indefinite timeout.
+
+--- krb5/src/lib/krb5/os/sendto_kdc.c
++++ krb5/src/lib/krb5/os/sendto_kdc.c
+@@ -529,6 +529,8 @@ cm_select_or_poll(const struct select_st
+     *out = *in;
+     *sret = poll(out->fds, out->nfds, timeout);
+     e = SOCKET_ERRNO;
++    if (timeout < 0)
++        return e;
+     return (*sret < 0) ? e : 0;
+ #else
+     /* Use the select wrapper from cm.c. */
