@@ -1,14 +1,17 @@
-Filip Krska's patch to abort the current pass after poll() returns when
-we've given it an indefinite timeout.
+When wrapping poll(), if we compute a negative timeout, just return a
+no-results status, as the krb5int_cm_call_select() wrapper for select()
+does.  Based on a patch by Filip Krska.
 
 --- krb5/src/lib/krb5/os/sendto_kdc.c
 +++ krb5/src/lib/krb5/os/sendto_kdc.c
-@@ -529,6 +529,8 @@ cm_select_or_poll(const struct select_st
-     *out = *in;
-     *sret = poll(out->fds, out->nfds, timeout);
-     e = SOCKET_ERRNO;
-+    if (timeout < 0)
-+        return e;
-     return (*sret < 0) ? e : 0;
- #else
-     /* Use the select wrapper from cm.c. */
+@@ -523,6 +523,10 @@ cm_select_or_poll(const struct select_st
+             return e;
+         timeout = (in->end_time.tv_sec - now.tv_sec) * 1000 +
+             (in->end_time.tv_usec - now.tv_usec) / 1000;
++        if (timeout < 0) {
++            *sret = 0;
++            return 0;
++        }
+     }
+     /* We don't need a separate copy of the selstate for poll, but use one
+      * anyone for consistency with the select wrapper. */

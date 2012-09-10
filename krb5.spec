@@ -852,11 +852,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Fri Sep  6 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-5
-- add patch from Filip Krska to abort a transmit attempt when we've given
-  poll() a negative timeout (#838548)
+* Mon Sep 10 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-5
+- add patch based on one from Filip Krska to not call poll() with a negative
+  timeout when the caller's intent is for us to just stop calling it (#838548)
 
-* Fri Sep  6 2012 Nalin Dahyabhai <nalin@redhat.com>
+* Fri Sep  7 2012 Nalin Dahyabhai <nalin@redhat.com>
 - on EL6, conflict with libsmbclient before 3.5.10-124, which is when it
   stopped linking with a symbol which we no longer export (#771687)
 - pull up patch for RT#7063, in which not noticing a prompt for a long
