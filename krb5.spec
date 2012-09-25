@@ -29,7 +29,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.3
-Release: 5%{?dist}
+Release: 6%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -852,6 +852,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Sep 25 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-6
+- actually pull up the patch for RT#7063, and not some other ticket (#773496)
+
 * Mon Sep 10 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-5
 - add patch based on one from Filip Krska to not call poll() with a negative
   timeout when the caller's intent is for us to just stop calling it (#838548)

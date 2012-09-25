@@ -1,60 +1,57 @@
-Test suite hunks dropped because we didn't previously have a skew test.
+commit 2626c89efd8019853edab29c52bac951f5ba2794
+Author: ghudson <ghudson@dc483132-0cff-0310-8789-dd5450dbe970>
+Date:   Wed Jan 11 21:20:08 2012 +0000
 
-commit 39629e9df44ce8c4ad72fde951390acc6864407d
-Author: Greg Hudson <ghudson@mit.edu>
-Date:   Fri May 11 18:07:30 2012 +0000
-
-    Omit start time in common AS requests
+    ticket: 7063
     
-    MIT and Heimdal KDCs ignore the start time for non-postdated ticket
-    requests, but AD yields an error if the start time is in the KDC's
-    future, defeating the kdc_timesync option.  Omit the start time if the
-    caller did not specify a start time offset.
+    Fix spurious clock skew caused by gak_fct delay
     
-    This change reenables the client check for too much clock skew in the
-    KDC reply in the non-timesync configuration.  That check had been
-    unintentionally suppressed since the introduction of the
-    get_init_creds interfaces.  Adjust the t_skew test script to expect
-    the new error behavior.
+    In get_in_tkt.c, a time offset is computed between the KDC's auth_time
+    and the current system time after the reply is decrypted.  Time may
+    have elapsed between these events because of a gak_fct invocation
+    which blocks on user input.  The resulting spurious time offset can
+    cause subsequent TGS-REQs to fail and can also cause the end time of
+    the next AS request to be in the past (issue #889) in cases where the
+    old ccache is opened to find the default principal.
     
-    Code changes from stefw@gnome.org with slight modifications.
+    Use the system time, without offset, for the request time of an AS
+    request, for more predictable kinit behavior.  Use this request time,
+    rather than the current time, when computing the clock skew after the
+    reply is decrypted.
     
-    ticket: 7130
-    
-    git-svn-id: svn://anonsvn.mit.edu/krb5/trunk@25864 dc483132-0cff-0310-8789-dd5450dbe970
+    git-svn-id: svn://anonsvn.mit.edu/krb5/trunk@25644 dc483132-0cff-0310-8789-dd5450dbe970
 
 diff --git a/src/lib/krb5/krb/get_in_tkt.c b/src/lib/krb5/krb/get_in_tkt.c
-index 21b92e0..1ae8021 100644
+index 2dd3947..fc8df83 100644
 --- a/src/lib/krb5/krb/get_in_tkt.c
 +++ b/src/lib/krb5/krb/get_in_tkt.c
-@@ -666,6 +666,8 @@ restart_init_creds_loop(krb5_context context, krb5_init_creds_context ctx,
-     krb5_error_code code = 0;
-     unsigned char random_buf[4];
-     krb5_data random_data;
-+    krb5_timestamp from;
-+
-     if (ctx->preauth_to_use) {
-         krb5_free_pa_data(context, ctx->preauth_to_use);
-         ctx->preauth_to_use = NULL;
-@@ -728,14 +730,16 @@ restart_init_creds_loop(krb5_context context, krb5_init_creds_context ctx,
-     /* give the preauth plugins a chance to prep the request body */
-     krb5_preauth_prepare_request(context, ctx->opte, ctx->request);
+@@ -154,6 +154,7 @@ verify_as_reply(krb5_context            context,
+     krb5_error_code             retval;
+     int                         canon_req;
+     int                         canon_ok;
++    krb5_timestamp              time_offset;
  
--    ctx->request->from = krb5int_addint32(ctx->request_time,
--                                          ctx->start_time);
--    ctx->request->till = krb5int_addint32(ctx->request->from,
--                                          ctx->tkt_life);
-+    /* Omit request start time in the common case.  MIT and Heimdal KDCs will
-+     * ignore it for non-postdated tickets anyway. */
-+    from = krb5int_addint32(ctx->request_time, ctx->start_time);
-+    if (ctx->start_time != 0)
-+        ctx->request->from = from;
-+    ctx->request->till = krb5int_addint32(from, ctx->tkt_life);
+     /* check the contents for sanity: */
+     if (!as_reply->enc_part2->times.starttime)
+@@ -216,8 +217,8 @@ verify_as_reply(krb5_context            context,
+     }
  
-     if (ctx->renew_life > 0) {
-         ctx->request->rtime =
--            krb5int_addint32(ctx->request->from, ctx->renew_life);
-+            krb5int_addint32(from, ctx->renew_life);
-         if (ctx->request->rtime < ctx->request->till) {
-             /* don't ask for a smaller renewable time than the lifetime */
-             ctx->request->rtime = ctx->request->till;
+     if (context->library_options & KRB5_LIBOPT_SYNC_KDCTIME) {
+-        retval = krb5_set_real_time(context,
+-                                    as_reply->enc_part2->times.authtime, -1);
++        time_offset = as_reply->enc_part2->times.authtime - time_now;
++        retval = krb5_set_time_offsets(context, time_offset, 0);
+         if (retval)
+             return retval;
+     } else {
+@@ -742,9 +743,7 @@ restart_init_creds_loop(krb5_context context, krb5_init_creds_context ctx,
+     if (code != 0)
+         goto cleanup;
+ 
+-    code = krb5_timeofday(context, &ctx->request_time);
+-    if (code != 0)
+-        goto cleanup;
++    ctx->request_time = time(NULL);
+ 
+     code = krb5int_fast_as_armor(context, ctx->fast_state,
+                                  ctx->opte, ctx->request);
