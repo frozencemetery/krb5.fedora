@@ -29,7 +29,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.3
-Release: 6%{?dist}
+Release: 7%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -269,13 +269,13 @@ ln -s NOTICE LICENSE
 %patch39 -p1 -b .api
 %patch56 -p1 -b .doublelog %{?_rawbuild}
 %patch59 -p1 -b .kpasswd_tcp
-%patch71 -p1 -b .dirsrv-accountlock
+%patch71 -p1 -b .dirsrv-accountlock %{?_rawbuild}
 #%patch75 -p1 -b .pkinit-debug
 %patch86 -p0 -b .debuginfo
 %patch100 -p1 -b .7046
 %patch101 -p1 -b .7047
 %patch102 -p1 -b .7048
-%patch103 -p0 -b .gcc47
+%patch103 -p0 -b .gcc47 %{?_rawbuild}
 %patch105 -p1 -b .kvno
 %patch106 -p1 -b .keytab-etype
 %patch107 -p1 -b .pkinit-anchorsign
@@ -852,6 +852,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Oct 17 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-7
+- tag a couple of other patches which we still need to be applied during
+  %%{?_rawbuild} builds (zmraz)
+
 * Tue Sep 25 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-6
 - actually pull up the patch for RT#7063, and not some other ticket (#773496)
 
@@ -883,7 +887,7 @@ exit 0
 - undo rename from krb5-pkinit-openssl to krb5-pkinit on EL6
 - version the Obsoletes: on the krb5-pkinit-openssl to krb5-pkinit rename
 - reintroduce the init scripts for non-systemd releases
-- forward-port %%{_?rawbuild} annotations from EL6 packaging
+- forward-port %%{?_rawbuild} annotations from EL6 packaging
 
 * Thu Aug  9 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-1
 - update to 1.10.3, rolling in the fixes from MITKRB5-SA-2012-001
