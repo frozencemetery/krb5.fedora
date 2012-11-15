@@ -71,10 +71,7 @@ Patch71: krb5-1.9-dirsrv-accountlock.patch
 Patch75: krb5-pkinit-debug.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
-Patch106: krb5-1.10.2-keytab-etype.patch
 Patch109: krb5-1.10.3-as_rep_skew.patch
-Patch110: krb5-1.10.3-keytab-etype-corners-prep.patch
-Patch111: krb5-1.10.3-keytab-etype-corners.patch
 Patch112: krb5-1.10.3-timeout_over.patch
 
 License: MIT
@@ -263,10 +260,7 @@ ln -s NOTICE LICENSE
 #%patch75 -p1 -b .pkinit-debug
 %patch86 -p0 -b .debuginfo
 %patch105 -p1 -b .kvno
-%patch106 -p1 -b .keytab-etype
 %patch109 -p1 -b .as_rep_skew
-%patch110 -p1 -b .keytab-etype-corners-prep
-%patch111 -p1 -b .keytab-etype-corners
 %patch112 -p1 -b .timeout_over
 
 # Take the execute bit off of documentation.
@@ -832,6 +826,9 @@ exit 0
     certificate directly to verify signed-data messages that are signed with
     the KDC's certificate, when the blobs don't include a copy of the KDC's
     certificate
+  - drop backported patches to make keytab-based authentication attempts
+    work better when the client tells the KDC that it supports a particular
+    cipher, but doesn't have a key for it in the keytab
 
 * Wed Oct 17 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-7
 - tag a couple of other patches which we still need to be applied during
