@@ -71,7 +71,6 @@ Patch71: krb5-1.9-dirsrv-accountlock.patch
 Patch75: krb5-pkinit-debug.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
-Patch109: krb5-1.10.3-as_rep_skew.patch
 Patch112: krb5-1.10.3-timeout_over.patch
 
 License: MIT
@@ -260,7 +259,6 @@ ln -s NOTICE LICENSE
 #%patch75 -p1 -b .pkinit-debug
 %patch86 -p0 -b .debuginfo
 %patch105 -p1 -b .kvno
-%patch109 -p1 -b .as_rep_skew
 %patch112 -p1 -b .timeout_over
 
 # Take the execute bit off of documentation.
@@ -829,6 +827,8 @@ exit 0
   - drop backported patches to make keytab-based authentication attempts
     work better when the client tells the KDC that it supports a particular
     cipher, but doesn't have a key for it in the keytab
+  - drop backported fix for avoiding spurious clock skew when a TGT is
+    decrypted long after the KDC sent it to the client which decrypts it
 
 * Wed Oct 17 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-7
 - tag a couple of other patches which we still need to be applied during
