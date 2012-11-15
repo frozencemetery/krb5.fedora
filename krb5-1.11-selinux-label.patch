@@ -185,30 +185,43 @@ which we used earlier, is some improvement.
  #include <stdlib.h>
 --- krb5/src/kadmin/dbutil/dump.c
 +++ krb5/src/kadmin/dbutil/dump.c
-@@ -346,7 +346,7 @@
-         exit_status++;
-         return;
+@@ -376,12 +376,21 @@ create_ofile(char *ofile, char **tmpname
+ {
+     int fd = -1;
+     FILE *f;
++#ifdef USE_SELINUX
++    void *selabel;
++#endif
+ 
+     *tmpname = NULL;
+     if (asprintf(tmpname, "%s-XXXXXX", ofile) < 0)
+         goto error;
+ 
++#ifdef USE_SELINUX
++    selabel = krb5int_push_fscreatecon_for(ofile);
++#endif
+     fd = mkstemp(*tmpname);
++#ifdef USE_SELINUX
++    krb5int_pop_fscreatecon(selabel);
++#endif
+     if (fd == -1)
+         goto error;
+ 
+@@ -514,7 +514,7 @@ prep_ok_file(krb5_context context, char
+         return 0;
      }
--    if ((fd = open(file_ok, O_WRONLY|O_CREAT|O_TRUNC, 0600)) < 0) {
-+    if ((fd = THREEPARAMOPEN(file_ok, O_WRONLY|O_CREAT|O_TRUNC, 0600)) < 0) {
-         com_err(progname, errno, _("while creating 'ok' file, '%s'"),
-                 file_ok);
+ 
+-    *fd = open(file_ok, O_WRONLY | O_CREAT | O_TRUNC, 0600);
++    *fd = THREEPARAMOPEN(file_ok, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+     if (*fd == -1) {
+         com_err(progname, errno, _("while creating 'ok' file, '%s'"), file_ok);
          exit_status++;
-@@ -1274,7 +1274,7 @@ dump_db(argc, argv)
-          * want to get into.
-          */
-         unlink(ofile);
--        if (!(f = fopen(ofile, "w"))) {
-+        if (!(f = WRITABLEFOPEN(ofile, "w"))) {
-             fprintf(stderr, ofopen_error,
-                     progname, ofile, error_message(errno));
-             exit_status++;
 --- krb5/src/krb5-config.in
 +++ krb5/src/krb5-config.in
 @@ -38,6 +38,7 @@ RPATH_FLAG='@RPATH_FLAG@'
- PROG_RPATH_FLAGS='@PROG_RPATH_FLAGS@'
- PTHREAD_CFLAGS='@PTHREAD_CFLAGS@'
- DL_LIB='@DL_LIB@'
+ DEFCCNAME='@DEFCCNAME@'
+ DEFKTNAME='@DEFKTNAME@'
+ DEFCKTNAME='@DEFCKTNAME@'
 +SELINUX_LIBS='@SELINUX_LIBS@'
  
  LIBS='@LIBS@'
@@ -325,52 +338,7 @@ which we used earlier, is some improvement.
  all::
 --- krb5/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c
 +++ krb5/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c
-@@ -1091,7 +1091,7 @@
- 
-     /* Create a temporary file which contains all the entries except the
-        entry for the given service dn */
--    pfile = fopen(file_name, "r+");
-+    pfile = WRITABLEFOPEN(file_name, "r+");
-     if (pfile == NULL) {
-         com_err(me, errno, "while deleting entry from file %s", file_name);
-         goto cleanup;
-@@ -1108,7 +1108,7 @@
-     snprintf (tmp_file, strlen(file_name) + 4 + 1, "%s%s", file_name, ".tmp");
- 
- 
--    tmpfd = creat(tmp_file, S_IRUSR|S_IWUSR);
-+    tmpfd = THREEPARAMOPEN(tmp_file, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR);
-     umask(omask);
-     if (tmpfd == -1) {
-         com_err(me, errno, "while deleting entry from file\n");
-@@ -1728,7 +1728,7 @@
- 
-             printf("File does not exist. Creating the file %s...\n", file_name);
-             omask = umask(077);
--            fd = creat(file_name, S_IRUSR|S_IWUSR);
-+            fd = THREEPARAMOPEN(file_name, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR);
-             umask(omask);
-             if (fd == -1) {
-                 com_err(me, errno, "Error creating file %s", file_name);
-@@ -1756,7 +1756,7 @@
- 
-     /* TODO: file lock for the service password file */
-     /* set password in the file */
--    pfile = fopen(file_name, "r+");
-+    pfile = WRITABLEFOPEN(file_name, "r+");
-     if (pfile == NULL) {
-         com_err(me, errno, "Failed to open file %s", file_name);
-         goto cleanup;
-@@ -1797,7 +1797,7 @@
-         }
- 
-         omask = umask(077);
--        newfile = fopen(tmp_file, "w+");
-+        newfile = WRITABLEFOPEN(tmp_file, "w+");
-         umask(omask);
-         if (newfile == NULL) {
-             com_err(me, errno, "Error creating file %s", tmp_file);
-@@ -2019,7 +2019,7 @@
+@@ -179,7 +179,7 @@ done:
  
      /* set password in the file */
      old_mode = umask(0177);
@@ -379,26 +347,32 @@ which we used earlier, is some improvement.
      if (pfile == NULL) {
          com_err(me, errno, _("Failed to open file %s: %s"), file_name,
                  strerror (errno));
-@@ -2069,7 +2069,7 @@
+@@ -220,6 +220,9 @@ done:
+          * Delete the existing entry and add the new entry
+          */
+         FILE *newfile;
++#ifdef USE_SELINUX
++        void *selabel;
++#endif
+ 
+         mode_t omask;
+ 
+@@ -231,7 +234,13 @@ done:
          }
  
          omask = umask(077);
--        newfile = fopen(tmp_file, "w");
-+        newfile = WRITABLEFOPEN(tmp_file, "w");
++#ifdef USE_SELINUX
++        selabel = krb5int_push_fscreatecon_for(file_name);
++#endif
+         newfile = fopen(tmp_file, "w");
++#ifdef USE_SELINUX
++        krb5int_pop_fscreatecon(selabel);
++#endif
          umask (omask);
          if (newfile == NULL) {
              com_err(me, errno, _("Error creating file %s"), tmp_file);
 --- krb5/src/slave/kpropd.c
 +++ krb5/src/slave/kpropd.c
-@@ -328,7 +328,7 @@ retry:
-     if (!debug && iproprole != IPROP_SLAVE)
-         daemon(1, 0);
- #ifdef PID_FILE
--    if ((pidfile = fopen(PID_FILE, "w")) != NULL) {
-+    if ((pidfile = WRITABLEFOPEN(PID_FILE, "w")) != NULL) {
-         fprintf(pidfile, "%d\n", getpid());
-         fclose(pidfile);
-     } else
 @@ -437,6 +437,9 @@ void doit(fd)
      krb5_enctype etype;
      int database_fd;
@@ -407,8 +381,8 @@ which we used earlier, is some improvement.
 +    void *selabel;
 +#endif
  
-     if (kpropd_context->kdblog_context &&
-         kpropd_context->kdblog_context->iproprole == IPROP_SLAVE) {
+     signal_wrapper(SIGALRM, alarm_handler);
+     alarm(params.iprop_resync_timeout);
 @@ -515,9 +518,15 @@ void doit(fd)
          free(name);
          exit(1);
@@ -901,6 +875,39 @@ which we used earlier, is some improvement.
      if (retval)
          goto cleanup;
      for (q = t->a; q; q = q->na) {
+--- krb5/src/lib/krb5/ccache/cc_dir.c
++++ krb5/src/lib/krb5/ccache/cc_dir.c
+@@ -185,10 +185,19 @@ write_primary_file(const char *primary_p
+     char *newpath = NULL;
+     FILE *fp = NULL;
+     int fd = -1, status;
++#ifdef USE_SELINUX
++    void *selabel;
++#endif
+ 
+     if (asprintf(&newpath, "%s.XXXXXX", primary_path) < 0)
+         return ENOMEM;
++#ifdef USE_SELINUX
++    selabel = krb5int_push_fscreatecon_for(primary_path);
++#endif
+     fd = mkstemp(newpath);
++#ifdef USE_SELINUX
++    krb5int_pop_fscreatecon(selabel);
++#endif
+     if (fd < 0)
+         goto cleanup;
+ #ifdef HAVE_CHMOD
+--- krb5/src/lib/krb5/os/trace.c
++++ krb5/src/lib/krb5/os/trace.c
+@@ -401,7 +401,7 @@ krb5_set_trace_filename(krb5_context con
+     fd = malloc(sizeof(*fd));
+     if (fd == NULL)
+         return ENOMEM;
+-    *fd = open(filename, O_WRONLY|O_CREAT|O_APPEND, 0600);
++    *fd = THREEPARAMOPEN(filename, O_WRONLY|O_CREAT|O_APPEND, 0600);
+     if (*fd == -1) {
+         free(fd);
+         return errno;
 --- krb5/src/plugins/kdb/db2/kdb_db2.c
 +++ krb5/src/plugins/kdb/db2/kdb_db2.c
 @@ -683,8 +683,8 @@
@@ -951,11 +958,11 @@ which we used earlier, is some improvement.
              return (errno);
          }
  
--        if ((ulogfd = open(logname, O_RDWR+O_CREAT, 0600)) == -1) {
-+        if ((ulogfd = THREEPARAMOPEN(logname, O_RDWR | O_CREAT, 0600)) == -1) {
+-        ulogfd = open(logname, O_RDWR | O_CREAT, 0600);
++        ulogfd = THREEPARAMOPEN(logname, O_RDWR | O_CREAT, 0600);
+         if (ulogfd == -1) {
              return (errno);
          }
- 
 --- krb5/src/util/gss-kernel-lib/Makefile.in
 +++ krb5/src/util/gss-kernel-lib/Makefile.in
 @@ -60,6 +60,7 @@ HEADERS= \

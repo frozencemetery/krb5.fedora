@@ -66,7 +66,7 @@ Patch56: krb5-1.10-doublelog.patch
 Patch59: krb5-1.10-kpasswd_tcp.patch
 Patch60: krb5-1.11-pam.patch
 Patch61: krb5-1.11-manpaths.patch
-Patch63: krb5-1.10.2-selinux-label.patch
+Patch63: krb5-1.11-selinux-label.patch
 Patch71: krb5-1.9-dirsrv-accountlock.patch
 Patch75: krb5-pkinit-debug.patch
 Patch86: krb5-1.9-debuginfo.patch
