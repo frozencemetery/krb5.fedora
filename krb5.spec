@@ -42,7 +42,7 @@ Source10: kdc.conf
 Source11: kadm5.acl
 Source19: krb5kdc.sysconfig
 Source20: kadmin.sysconfig
-Source25: krb5-1.10-manpaths.txt
+Source25: krb5-1.11-manpaths.txt
 Source29: ksu.pamd
 Source30: kerberos-iv.portreserve
 Source31: kerberos-adm.portreserve
@@ -65,7 +65,7 @@ Patch39: krb5-1.8-api.patch
 Patch56: krb5-1.10-doublelog.patch
 Patch59: krb5-1.10-kpasswd_tcp.patch
 Patch60: krb5-1.11-pam.patch
-Patch61: krb5-1.10.2-manpaths.patch
+Patch61: krb5-1.11-manpaths.patch
 Patch63: krb5-1.10.2-selinux-label.patch
 Patch71: krb5-1.9-dirsrv-accountlock.patch
 Patch75: krb5-pkinit-debug.patch
@@ -236,7 +236,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -a 23 -n %{name}-%{version}-alpha1
+%setup -q -n %{name}-%{version}-alpha1
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -265,13 +265,11 @@ ln -s NOTICE LICENSE
 chmod -x doc/krb5-protocol/*.txt
 
 # Rename the man pages so that they'll get generated correctly.  Uses the
-# "krb5-1.8-manpaths.txt" source file.
+# "krb5-1.11-manpaths.txt" source file.
 if test -z "%{?_rawbuild}" ; then
-	pushd src
 	cat %{SOURCE25} | while read manpage ; do
 		mv "$manpage" "$manpage".in
 	done
-	popd
 fi
 
 # Generate an FDS-compatible LDIF file.
