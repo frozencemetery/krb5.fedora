@@ -42,10 +42,6 @@ Source10: kdc.conf
 Source11: kadm5.acl
 Source19: krb5kdc.sysconfig
 Source20: kadmin.sysconfig
-# The same source files we "check", generated with "krb5-tex-pdf.sh create"
-# and tarred up.
-Source23: krb5-%{version}-pdf.tar.xz
-Source24: krb5-tex-pdf.sh
 Source25: krb5-1.10-manpaths.txt
 Source29: ksu.pamd
 Source30: kerberos-iv.portreserve
@@ -280,18 +276,8 @@ ln -s NOTICE LICENSE
 %patch112 -p1 -b .timeout_over
 rm src/lib/krb5/krb/deltat.c
 
-gzip doc/*.ps
-
-sed -i -e '1s!\[twoside\]!!;s!%\(\\usepackage{hyperref}\)!\1!' doc/api/library.tex
-sed -i -e '1c\
-\\documentclass{article}\
-\\usepackage{fixunder}\
-\\usepackage{functions}\
-\\usepackage{fancyheadings}\
-\\usepackage{hyperref}' doc/implement/implement.tex
-
 # Take the execute bit off of documentation.
-chmod -x doc/krb5-protocol/*.txt doc/*.html doc/*/*.html
+chmod -x doc/krb5-protocol/*.txt
 
 # Rename the man pages so that they'll get generated correctly.  Uses the
 # "krb5-1.8-manpaths.txt" source file.
@@ -302,13 +288,6 @@ if test -z "%{?_rawbuild}" ; then
 	done
 	popd
 fi
-
-# Check that the PDFs we built earlier match this source tree, using the
-# "krb5-tex-pdf.sh" source file.
-sh %{SOURCE24} check << EOF
-doc/api       library krb5
-doc/implement implement
-EOF
 
 # Generate an FDS-compatible LDIF file.
 inldif=src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
@@ -851,6 +830,7 @@ exit 0
   - drop backported patch for RT #7406
   - drop backported patch for RT #7407
   - drop backported patch for RT #7408
+  - the new docs system generates PDFs, so stop including them
 
 * Wed Oct 17 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-7
 - tag a couple of other patches which we still need to be applied during
