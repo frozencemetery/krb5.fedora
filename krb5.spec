@@ -67,7 +67,7 @@ Patch59: krb5-1.10-kpasswd_tcp.patch
 Patch60: krb5-1.11-pam.patch
 Patch61: krb5-1.11-manpaths.patch
 Patch63: krb5-1.11-selinux-label.patch
-Patch71: krb5-1.9-dirsrv-accountlock.patch
+Patch71: krb5-1.11-dirsrv-accountlock.patch
 Patch75: krb5-pkinit-debug.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
@@ -315,10 +315,9 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--with-tcl \
 	--enable-dns-for-realm \
 %if %{WITH_LDAP}
-%if %{WITH_DIRSRV}
-	--with-dirsrv \
-%else
 	--with-ldap \
+%if %{WITH_DIRSRV}
+	--with-dirsrv-account-locking \
 %endif
 %endif
 %if %{WITH_OPENSSL} || %{WITH_NSS}
