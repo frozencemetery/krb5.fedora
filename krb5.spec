@@ -74,9 +74,6 @@ Patch63: krb5-1.10.2-selinux-label.patch
 Patch71: krb5-1.9-dirsrv-accountlock.patch
 Patch75: krb5-pkinit-debug.patch
 Patch86: krb5-1.9-debuginfo.patch
-Patch100: krb5-trunk-7046.patch
-Patch101: krb5-trunk-7047.patch
-Patch102: krb5-trunk-7048.patch
 Patch103: krb5-1.10-gcc47.patch
 Patch105: krb5-kvno-230379.patch
 Patch106: krb5-1.10.2-keytab-etype.patch
@@ -272,9 +269,6 @@ ln -s NOTICE LICENSE
 %patch71 -p1 -b .dirsrv-accountlock %{?_rawbuild}
 #%patch75 -p1 -b .pkinit-debug
 %patch86 -p0 -b .debuginfo
-%patch100 -p1 -b .7046
-%patch101 -p1 -b .7047
-%patch102 -p1 -b .7048
 %patch103 -p0 -b .gcc47 %{?_rawbuild}
 %patch105 -p1 -b .kvno
 %patch106 -p1 -b .keytab-etype
@@ -852,6 +846,12 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Nov 15 2012 Nalin Dahyabhai <nalin@redhat.com> 1.11.0-0.alpha1.0
+- update to 1.11 alpha 1
+  - drop backported patch for RT #7406
+  - drop backported patch for RT #7407
+  - drop backported patch for RT #7408
+
 * Wed Oct 17 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-7
 - tag a couple of other patches which we still need to be applied during
   %%{?_rawbuild} builds (zmraz)
