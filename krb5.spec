@@ -28,12 +28,12 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.10.3
-Release: 7%{?dist}
+Version: 1.11
+Release: 0%{?dist}.alpha1.0
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.3-signed.tar
-Source0: krb5-%{version}.tar.gz
-Source1: krb5-%{version}.tar.gz.asc
+# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11-alpha1-signed.tar
+Source0: krb5-%{version}-alpha1.tar.gz
+Source1: krb5-%{version}-alpha1.tar.gz.asc
 Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
@@ -68,7 +68,7 @@ Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch39: krb5-1.8-api.patch
 Patch56: krb5-1.10-doublelog.patch
 Patch59: krb5-1.10-kpasswd_tcp.patch
-Patch60: krb5-1.10.2-pam.patch
+Patch60: krb5-1.11-pam.patch
 Patch61: krb5-1.10.2-manpaths.patch
 Patch63: krb5-1.10.2-selinux-label.patch
 Patch71: krb5-1.9-dirsrv-accountlock.patch
@@ -250,7 +250,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -a 23
+%setup -q -a 23 -n %{name}-%{version}-alpha1
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
