@@ -736,6 +736,9 @@ exit 0
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/*
 %{_libdir}/krb5/plugins/kdb/db2.so
+%dir %{_var}/kerberos
+%dir %{_var}/kerberos/kdc
+%dir %{_var}/kerberos/kdc/user
 %if ! %{WITH_SYSVERTO}
 # These really shouldn't be here, but until we have a system copy of libverto,
 # don't force people who are using libverto to install the KDC just to get the
