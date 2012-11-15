@@ -49,7 +49,6 @@ Source31: kerberos-adm.portreserve
 Source32: krb5_prop.portreserve
 Source33: krb5kdc.logrotate
 Source34: kadmind.logrotate
-Source35: kdb_check_weak.c
 Source36: kpropd.init
 Source37: kadmind.init
 Source38: krb5kdc.init
@@ -342,13 +341,6 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 make
 popd
 
-# A sanity checker for upgrades.
-env LD_LIBRARY_PATH=`pwd`/src/lib \
-%{__cc} -o kdb_check_weak \
-	-I src/include `./src/krb5-config --cflags kdb` \
-	%{SOURCE35} \
-	-L src/lib `./src/krb5-config --libs kdb`
-
 %check
 # Run the test suite. We can't actually run the whole thing in the build system.
 make -C src fake-install
@@ -466,9 +458,6 @@ for library in libgssapi_krb5 libgssrpc libk5crypto libkrb5 libkrb5support ; do
 	popd
 done
 %endif
-
-# A sanity checker for upgrades.
-install -m 755 kdb_check_weak $RPM_BUILD_ROOT/%{_libdir}/krb5/
 
 %find_lang %{gettext_domain}
 
@@ -661,7 +650,6 @@ exit 0
 %{_libdir}/libverto-k5ev.so
 %{_libdir}/libverto-k5ev.so.*
 %endif
-%{_libdir}/krb5/kdb_check_weak
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/kdb
 %dir %{_libdir}/krb5/plugins/preauth
