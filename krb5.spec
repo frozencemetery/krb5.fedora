@@ -70,7 +70,6 @@ Patch63: krb5-1.10.2-selinux-label.patch
 Patch71: krb5-1.9-dirsrv-accountlock.patch
 Patch75: krb5-pkinit-debug.patch
 Patch86: krb5-1.9-debuginfo.patch
-Patch103: krb5-1.10-gcc47.patch
 Patch105: krb5-kvno-230379.patch
 Patch106: krb5-1.10.2-keytab-etype.patch
 Patch107: krb5-trunk-pkinit-anchorsign.patch
@@ -265,7 +264,6 @@ ln -s NOTICE LICENSE
 %patch71 -p1 -b .dirsrv-accountlock %{?_rawbuild}
 #%patch75 -p1 -b .pkinit-debug
 %patch86 -p0 -b .debuginfo
-%patch103 -p0 -b .gcc47 %{?_rawbuild}
 %patch105 -p1 -b .kvno
 %patch106 -p1 -b .keytab-etype
 %patch107 -p1 -b .pkinit-anchorsign
@@ -274,7 +272,6 @@ ln -s NOTICE LICENSE
 %patch110 -p1 -b .keytab-etype-corners-prep
 %patch111 -p1 -b .keytab-etype-corners
 %patch112 -p1 -b .timeout_over
-rm src/lib/krb5/krb/deltat.c
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
@@ -831,6 +828,8 @@ exit 0
   - drop backported patch for RT #7407
   - drop backported patch for RT #7408
   - the new docs system generates PDFs, so stop including them
+  - drop backported patch to allow deltat.y to build with the usual
+    warning flags and the current gcc
 
 * Wed Oct 17 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-7
 - tag a couple of other patches which we still need to be applied during
