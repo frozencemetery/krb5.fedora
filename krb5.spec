@@ -73,7 +73,6 @@ Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
 Patch106: krb5-1.10.2-keytab-etype.patch
 Patch107: krb5-trunk-pkinit-anchorsign.patch
-Patch108: krb5-1.10.2-replay.patch
 Patch109: krb5-1.10.3-as_rep_skew.patch
 Patch110: krb5-1.10.3-keytab-etype-corners-prep.patch
 Patch111: krb5-1.10.3-keytab-etype-corners.patch
@@ -267,7 +266,6 @@ ln -s NOTICE LICENSE
 %patch105 -p1 -b .kvno
 %patch106 -p1 -b .keytab-etype
 %patch107 -p1 -b .pkinit-anchorsign
-%patch108 -p1 -b .replay
 %patch109 -p1 -b .as_rep_skew
 %patch110 -p1 -b .keytab-etype-corners-prep
 %patch111 -p1 -b .keytab-etype-corners
@@ -830,6 +828,8 @@ exit 0
   - the new docs system generates PDFs, so stop including them
   - drop backported patch to allow deltat.y to build with the usual
     warning flags and the current gcc
+  - drop backported fix for disabling use of a replay cache when verifying
+    initial credentials
 
 * Wed Oct 17 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-7
 - tag a couple of other patches which we still need to be applied during
