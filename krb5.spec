@@ -42,7 +42,6 @@ Source10: kdc.conf
 Source11: kadm5.acl
 Source19: krb5kdc.sysconfig
 Source20: kadmin.sysconfig
-Source25: krb5-1.11-manpaths.txt
 Source29: ksu.pamd
 Source30: kerberos-iv.portreserve
 Source31: kerberos-adm.portreserve
@@ -64,7 +63,6 @@ Patch39: krb5-1.8-api.patch
 Patch56: krb5-1.10-doublelog.patch
 Patch59: krb5-1.10-kpasswd_tcp.patch
 Patch60: krb5-1.11-pam.patch
-Patch61: krb5-1.11-manpaths.patch
 Patch63: krb5-1.11-selinux-label.patch
 Patch71: krb5-1.11-dirsrv-accountlock.patch
 Patch75: krb5-pkinit-debug.patch
@@ -82,6 +80,7 @@ BuildRequires: libcom_err-devel, libss-devel
 %endif
 BuildRequires: gzip, ncurses-devel, texinfo, texinfo-tex, tar
 BuildRequires: texlive-latex
+BuildRequires: python-sphinx
 BuildRequires: keyutils-libs-devel
 BuildRequires: libselinux-devel
 BuildRequires: pam-devel
@@ -146,7 +145,7 @@ Kerberos, you need to install this package.
 Group: System Environment/Daemons
 Summary: The KDC and related programs for Kerberos 5
 Requires: %{name}-libs = %{version}-%{release}
-Requires(post): /sbin/install-info, chkconfig
+Requires(post): chkconfig
 %if %{WITH_SYSTEMD}
 Requires(post): systemd-sysv
 Requires(post): systemd-units
@@ -163,7 +162,7 @@ Requires: initscripts >= 8.99-1
 Requires: chkconfig
 # we drop files in its directory, but we don't want to own that directory
 Requires: logrotate
-Requires(preun): /sbin/install-info, initscripts
+Requires(preun): initscripts
 # mktemp is used by krb5-send-pr
 Requires: coreutils
 # we specify /usr/share/dict/words as the default dict_file in kdc.conf
@@ -200,8 +199,6 @@ realm, you need to install this package.
 Summary: Kerberos 5 programs for use on workstations
 Group: System Environment/Base
 Requires: %{name}-libs = %{version}-%{release}
-Requires(post): /sbin/install-info
-Requires(preun): /sbin/install-info
 # mktemp is used by krb5-send-pr
 Requires: coreutils
 
@@ -240,8 +237,6 @@ ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
 
-%patch61 -p1 -b .manpaths
-
 %patch63 -p1 -b .selinux-label
 
 %patch5  -p1 -b .ksu-access
@@ -262,14 +257,6 @@ ln -s NOTICE LICENSE
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
-
-# Rename the man pages so that they'll get generated correctly.  Uses the
-# "krb5-1.11-manpaths.txt" source file.
-if test -z "%{?_rawbuild}" ; then
-	cat %{SOURCE25} | while read manpage ; do
-		mv "$manpage" "$manpage".in
-	done
-fi
 
 # Generate an FDS-compatible LDIF file.
 inldif=src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
@@ -341,23 +328,28 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 make
 popd
 
+# Build the docs.
+make -C src/doc paths.py
+cp src/doc/paths.py doc/
+mkdir -p build-man build-html build-pdf
+sphinx-build -a -b man   -t pathsubs doc build-man
+sphinx-build -a -b html  -t pathsubs doc build-html
+rm -fr build-html/_sources
+sphinx-build -a -b latex -t pathsubs doc build-pdf
+touch build-pdf/wrapfig.sty build-pdf/threeparttable.sty
+pushd build-pdf
+pdflatex -interaction nonstopmode "MIT Kerberos.tex"
+makeindex "MIT Kerberos.idx"
+pdflatex -interaction nonstopmode "MIT Kerberos.tex"
+
 %check
 # Run the test suite. We can't actually run the whole thing in the build system.
-make -C src fake-install
 : make -C src check TMPDIR=%{_tmppath}
 make -C src/lib check TMPDIR=%{_tmppath}
 make -C src/kdc check TMPDIR=%{_tmppath}
 
 %install
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
-
-# Info docs.
-mkdir -p $RPM_BUILD_ROOT%{_infodir}
-install -m 644 doc/*.info* $RPM_BUILD_ROOT%{_infodir}/
-
-# Unconditionally compress the info pages so that we know the right file name
-# to pass to install-info in %%post.
-gzip $RPM_BUILD_ROOT%{_infodir}/*.info*
 
 # Sample KDC config files (bundled kdc.conf and kadm5.acl).
 mkdir -p $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc
@@ -459,6 +451,12 @@ for library in libgssapi_krb5 libgssrpc libk5crypto libkrb5 libkrb5support ; do
 done
 %endif
 
+# Install processed man pages.
+for section in 1 5 8 ; do
+	install -m 644 build-man/*.${section} \
+		       $RPM_BUILD_ROOT/%{_mandir}/man${section}/
+done
+
 %find_lang %{gettext_domain}
 
 %clean
@@ -486,9 +484,6 @@ fi
 /sbin/chkconfig --add kadmin
 /sbin/chkconfig --add kprop
 %endif
-# Install info pages.
-/sbin/install-info %{_infodir}/krb5-admin.info.gz %{_infodir}/dir
-/sbin/install-info %{_infodir}/krb5-install.info.gz %{_infodir}/dir
 exit 0
 
 %preun server
@@ -508,8 +503,6 @@ if [ "$1" -eq "0" ] ; then
 	/sbin/service kadmin stop > /dev/null 2>&1 || :
 	/sbin/service kprop stop > /dev/null 2>&1 || :
 %endif
-	/sbin/install-info --delete %{_infodir}/krb5-admin.info.gz %{_infodir}/dir
-	/sbin/install-info --delete %{_infodir}/krb5-install.info.gz %{_infodir}/dir
 fi
 exit 0
 
@@ -559,23 +552,10 @@ if [ "$2" -eq "0" ] ; then
 fi
 exit 0
 
-%post workstation
-/sbin/install-info %{_infodir}/krb5-user.info.gz %{_infodir}/dir
-exit 0
-
-%preun workstation
-if [ "$1" -eq "0" ] ; then
-	/sbin/install-info --delete %{_infodir}/krb5-user.info.gz %{_infodir}/dir
-fi
-exit 0
-
 %files workstation
 %defattr(-,root,root,-)
-%doc doc/user*.ps.gz doc/user*.pdf src/config-files/services.append
-%doc doc/{kdestroy,kinit,klist,kpasswd,ksu}.html
-%doc doc/krb5-user.html
+%doc src/config-files/services.append
 %attr(0755,root,root) %doc src/config-files/convert-config-files
-%{_infodir}/krb5-user.info*
 
 # Clients of the KDC, including tools you're likely to need if you're running
 # app servers other than those built from this source package.
@@ -629,16 +609,6 @@ exit 0
 %config(noreplace) /etc/portreserve/krb5_prop
 %config(noreplace) /etc/logrotate.d/krb5kdc
 %config(noreplace) /etc/logrotate.d/kadmind
-
-%doc doc/admin*.pdf
-%doc doc/install*.pdf
-%doc doc/admin*.ps.gz
-%doc doc/install*.ps.gz
-%doc doc/krb5-admin.html
-%doc doc/krb5-install.html
-
-%{_infodir}/krb5-admin.info*
-%{_infodir}/krb5-install.info*
 
 %dir %{_var}/kerberos
 %dir %{_var}/kerberos/krb5kdc
@@ -706,6 +676,7 @@ exit 0
 %defattr(-,root,root,-)
 %doc README NOTICE LICENSE
 %docdir %{_mandir}
+%doc build-html/* build-pdf/*.pdf
 %verify(not md5 size mtime) %config(noreplace) /etc/krb5.conf
 /%{_mandir}/man1/kerberos.1*
 /%{_mandir}/man5/.k5identity.5*
@@ -761,12 +732,7 @@ exit 0
 %files devel
 %defattr(-,root,root,-)
 %docdir %{_mandir}
-%doc doc/ccapi
-%doc doc/kadmin
-%doc doc/kim
 %doc doc/krb5-protocol
-%doc doc/rpc
-%doc doc/threads.txt
 
 %{_includedir}/*
 %{_libdir}/libgssapi_krb5.so
@@ -782,7 +748,6 @@ exit 0
 
 %{_bindir}/krb5-config
 %{_bindir}/sclient
-%{_mandir}/man1/krb5-config.1*
 %{_mandir}/man1/sclient.1*
 %{_mandir}/man8/sserver.8*
 %{_sbindir}/sserver
@@ -803,7 +768,7 @@ exit 0
   - drop backported patch for RT #7406
   - drop backported patch for RT #7407
   - drop backported patch for RT #7408
-  - the new docs system generates PDFs, so stop including them
+  - the new docs system generates PDFs, so stop including them as sources
   - drop backported patch to allow deltat.y to build with the usual
     warning flags and the current gcc
   - drop backported fix for disabling use of a replay cache when verifying
@@ -817,6 +782,9 @@ exit 0
     cipher, but doesn't have a key for it in the keytab
   - drop backported fix for avoiding spurious clock skew when a TGT is
     decrypted long after the KDC sent it to the client which decrypts it
+  - move the cross-referenced HTML docs into the -libs package to avoid
+    broken internal links
+  - drop patches to fixup paths in man pages, shouldn't be needed any more
 
 * Wed Oct 17 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-7
 - tag a couple of other patches which we still need to be applied during

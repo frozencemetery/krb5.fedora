@@ -1,6 +1,0 @@
-doc/admins/admin_commands/sserver.rst
-doc/admins/admin_commands/kadmin_local.rst
-doc/admins/admin_commands/kprop.rst
-doc/admins/admin_commands/kpropd.rst
-doc/admins/conf_files/kdc_conf.rst
-doc/admins/conf_files/krb5_conf.rst

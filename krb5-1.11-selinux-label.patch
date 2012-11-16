@@ -42,9 +42,9 @@ which we used earlier, is some improvement.
  KRB5_AC_INITFINI
  KRB5_AC_ENABLE_THREADS
 @@ -1791,3 +1792,51 @@ AC_SUBST(manlocalstatedir)
- AC_SUBST(manlibexecdir)
- AC_CONFIG_FILES($1)
- ])
+ AC_SUBST(PAM_MAN)
+ AC_SUBST(NON_PAM_MAN)
+ ])dnl
 +dnl
 +dnl Use libselinux to set file contexts on newly-created files.
 +dnl 
