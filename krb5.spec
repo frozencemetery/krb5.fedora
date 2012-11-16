@@ -78,8 +78,7 @@ BuildRequires: autoconf, bison, flex, gawk, gettext
 %if 0%{?fedora} >= 12 || 0%{?rhel} >= 6
 BuildRequires: libcom_err-devel, libss-devel
 %endif
-BuildRequires: gzip, ncurses-devel, texinfo, texinfo-tex, tar
-BuildRequires: texlive-latex
+BuildRequires: gzip, ncurses-devel, tar
 BuildRequires: python-sphinx
 # Taken from \usepackage directives produced by sphinx:
 BuildRequires: tex(babel.sty)
@@ -351,10 +350,10 @@ sphinx-build -a -b html  -t pathsubs doc build-html
 rm -fr build-html/_sources
 sphinx-build -a -b latex -t pathsubs doc build-pdf
 pushd build-pdf
-pdflatex -interaction batchmode "MIT Kerberos.tex" || true
-pdflatex -interaction batchmode "MIT Kerberos.tex" || true
+pdflatex -interaction nonstopmode "MIT Kerberos.tex" || true
+pdflatex -interaction nonstopmode "MIT Kerberos.tex" || true
 makeindex "MIT Kerberos.idx"
-pdflatex -interaction batchmode "MIT Kerberos.tex" || true
+pdflatex -interaction nonstopmode "MIT Kerberos.tex" || true
 
 %check
 # Run the test suite. We can't actually run the whole thing in the build system.
