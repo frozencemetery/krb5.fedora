@@ -81,6 +81,19 @@ BuildRequires: libcom_err-devel, libss-devel
 BuildRequires: gzip, ncurses-devel, texinfo, texinfo-tex, tar
 BuildRequires: texlive-latex
 BuildRequires: python-sphinx
+# Taken from \usepackage directives produced by sphinx:
+BuildRequires: tex(babel.sty)
+BuildRequires: tex(fncychap.sty)
+BuildRequires: tex(fontenc.sty)
+BuildRequires: tex(framed.sty)
+BuildRequires: tex(ifthen.sty)
+BuildRequires: tex(inputenc.sty)
+BuildRequires: tex(longtable.sty)
+BuildRequires: tex(multirow.sty)
+BuildRequires: tex(times.sty)
+BuildRequires: tex(titlesec.sty)
+BuildRequires: tex(threeparttable.sty)
+BuildRequires: tex(wrapfig.sty)
 BuildRequires: keyutils-libs-devel
 BuildRequires: libselinux-devel
 BuildRequires: pam-devel
@@ -336,7 +349,6 @@ sphinx-build -a -b man   -t pathsubs doc build-man
 sphinx-build -a -b html  -t pathsubs doc build-html
 rm -fr build-html/_sources
 sphinx-build -a -b latex -t pathsubs doc build-pdf
-touch build-pdf/wrapfig.sty build-pdf/threeparttable.sty
 pushd build-pdf
 pdflatex -interaction batchmode "MIT Kerberos.tex" || true
 pdflatex -interaction batchmode "MIT Kerberos.tex" || true
@@ -775,6 +787,7 @@ exit 0
   that include %%{_libdir} showing up in docs in multilib packages
 - actually create %%{_var}/kerberos/kdc/user, so that it can be packaged
 - correct the list of packaged man pages
+- don't dummy up required tex stylesheets, require them
 
 * Thu Nov 15 2012 Nalin Dahyabhai <nalin@redhat.com>
 - update to 1.11 alpha 1
