@@ -338,12 +338,14 @@ rm -fr build-html/_sources
 sphinx-build -a -b latex -t pathsubs doc build-pdf
 touch build-pdf/wrapfig.sty build-pdf/threeparttable.sty
 pushd build-pdf
-pdflatex -interaction nonstopmode "MIT Kerberos.tex"
+pdflatex -interaction batchmode "MIT Kerberos.tex" || true
+pdflatex -interaction batchmode "MIT Kerberos.tex" || true
 makeindex "MIT Kerberos.idx"
-pdflatex -interaction nonstopmode "MIT Kerberos.tex"
+pdflatex -interaction batchmode "MIT Kerberos.tex" || true
 
 %check
 # Run the test suite. We can't actually run the whole thing in the build system.
+make -C src runenv.py
 : make -C src check TMPDIR=%{_tmppath}
 make -C src/lib check TMPDIR=%{_tmppath}
 make -C src/kdc check TMPDIR=%{_tmppath}
@@ -355,6 +357,9 @@ make -C src/kdc check TMPDIR=%{_tmppath}
 mkdir -p $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc
 install -pm 600 %{SOURCE10} $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc/
 install -pm 600 %{SOURCE11} $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc/
+
+# Where per-user keytabs live by default.
+mkdir -p $RPM_BUILD_ROOT%{_var}/kerberos/kdc/user
 
 # Default configuration file for everything.
 mkdir -p $RPM_BUILD_ROOT/etc
@@ -555,6 +560,7 @@ exit 0
 %files workstation
 %defattr(-,root,root,-)
 %doc src/config-files/services.append
+%doc build-html/* build-pdf/*.pdf
 %attr(0755,root,root) %doc src/config-files/convert-config-files
 
 # Clients of the KDC, including tools you're likely to need if you're running
@@ -632,6 +638,7 @@ exit 0
 %{_mandir}/man1/krb5-send-pr.1*
 
 # KDC binaries and configuration.
+%{_mandir}/man5/kadm5.acl.5*
 %{_mandir}/man5/kdc.conf.5*
 %{_sbindir}/kadmin.local
 %{_mandir}/man8/kadmin.local.8*
@@ -676,9 +683,7 @@ exit 0
 %defattr(-,root,root,-)
 %doc README NOTICE LICENSE
 %docdir %{_mandir}
-%doc build-html/* build-pdf/*.pdf
 %verify(not md5 size mtime) %config(noreplace) /etc/krb5.conf
-/%{_mandir}/man1/kerberos.1*
 /%{_mandir}/man5/.k5identity.5*
 /%{_mandir}/man5/.k5login.5*
 /%{_mandir}/man5/k5identity.5*
@@ -763,7 +768,14 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Thu Nov 15 2012 Nalin Dahyabhai <nalin@redhat.com> 1.11.0-0.alpha1.0
+* Fri Nov 16 2012 Nalin Dahyabhai <nalin@redhat.com> 1.11.0-0.alpha1.0
+- move the rather large pile of html and pdf docs to -workstation, so
+  that just having something that links to the libraries won't drag
+  them onto a system
+- actually create %%{_var}/kerberos/kdc/user, so that it can be packaged
+- correct the list of packaged man pages
+
+* Thu Nov 15 2012 Nalin Dahyabhai <nalin@redhat.com>
 - update to 1.11 alpha 1
   - drop backported patch for RT #7406
   - drop backported patch for RT #7407
