@@ -82,9 +82,12 @@ BuildRequires: gzip, ncurses-devel, tar
 BuildRequires: python-sphinx
 # Taken from \usepackage directives produced by sphinx:
 BuildRequires: tex(babel.sty)
+BuildRequires: tex(bookmark.sty)
+BuildRequires: tex(fancybox.sty)
 BuildRequires: tex(fncychap.sty)
 BuildRequires: tex(fontenc.sty)
 BuildRequires: tex(framed.sty)
+BuildRequires: tex(hyperref.sty)
 BuildRequires: tex(ifthen.sty)
 BuildRequires: tex(inputenc.sty)
 BuildRequires: tex(longtable.sty)
@@ -93,6 +96,9 @@ BuildRequires: tex(times.sty)
 BuildRequires: tex(titlesec.sty)
 BuildRequires: tex(threeparttable.sty)
 BuildRequires: tex(wrapfig.sty)
+BuildRequires: tex(report.cls)
+# Typical fonts, and the commands which we need to have present.
+BuildRequires: texlive, texlive-latex, texlive-texmf-fonts
 BuildRequires: /usr/bin/pdflatex /usr/bin/makeindex
 BuildRequires: keyutils-libs-devel
 BuildRequires: libselinux-devel
@@ -353,6 +359,7 @@ pushd build-pdf
 pdflatex -interaction nonstopmode "MIT Kerberos.tex" || true
 pdflatex -interaction nonstopmode "MIT Kerberos.tex" || true
 makeindex "MIT Kerberos.idx"
+pdflatex -interaction nonstopmode "MIT Kerberos.tex" || true
 pdflatex -interaction nonstopmode "MIT Kerberos.tex" || true
 
 %check
