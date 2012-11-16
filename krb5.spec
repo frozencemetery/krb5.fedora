@@ -771,7 +771,8 @@ exit 0
 * Fri Nov 16 2012 Nalin Dahyabhai <nalin@redhat.com> 1.11.0-0.alpha1.0
 - move the rather large pile of html and pdf docs to -workstation, so
   that just having something that links to the libraries won't drag
-  them onto a system
+  them onto a system, and we avoid having to sort out hard-coded paths
+  that include %%{_libdir} showing up in docs in multilib packages
 - actually create %%{_var}/kerberos/kdc/user, so that it can be packaged
 - correct the list of packaged man pages
 
