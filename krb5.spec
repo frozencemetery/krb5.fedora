@@ -94,6 +94,7 @@ BuildRequires: tex(times.sty)
 BuildRequires: tex(titlesec.sty)
 BuildRequires: tex(threeparttable.sty)
 BuildRequires: tex(wrapfig.sty)
+BuildRequires: /usr/bin/pdflatex /usr/bin/makeindex
 BuildRequires: keyutils-libs-devel
 BuildRequires: libselinux-devel
 BuildRequires: pam-devel
@@ -788,6 +789,7 @@ exit 0
 - actually create %%{_var}/kerberos/kdc/user, so that it can be packaged
 - correct the list of packaged man pages
 - don't dummy up required tex stylesheets, require them
+- require pdflatex and makeindex
 
 * Thu Nov 15 2012 Nalin Dahyabhai <nalin@redhat.com>
 - update to 1.11 alpha 1
