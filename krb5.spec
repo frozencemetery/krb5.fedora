@@ -29,7 +29,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11
-Release: 0%{?dist}.alpha1.0
+Release: 0%{?dist}.alpha1.1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11-alpha1-signed.tar
 Source0: krb5-%{version}-alpha1.tar.gz
@@ -69,6 +69,7 @@ Patch75: krb5-pkinit-debug.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
 Patch112: krb5-1.10.3-timeout_over.patch
+Patch113: krb5-1.11-alpha1-init.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -80,6 +81,8 @@ BuildRequires: libcom_err-devel, libss-devel
 %endif
 BuildRequires: gzip, ncurses-devel, tar
 BuildRequires: python-sphinx
+# The texlive package got a lot more complicated here.
+%if 0%{?fedora} > 17 || 0%{?rhel} > 7
 # Taken from \usepackage directives produced by sphinx:
 BuildRequires: tex(babel.sty)
 BuildRequires: tex(bookmark.sty)
@@ -97,6 +100,9 @@ BuildRequires: tex(titlesec.sty)
 BuildRequires: tex(threeparttable.sty)
 BuildRequires: tex(wrapfig.sty)
 BuildRequires: tex(report.cls)
+%else
+BuildRequires: texlive-texmf, texlive-texmf-latex
+%endif
 # Typical fonts, and the commands which we need to have present.
 BuildRequires: texlive, texlive-latex, texlive-texmf-fonts
 BuildRequires: /usr/bin/pdflatex /usr/bin/makeindex
@@ -273,6 +279,7 @@ ln -s NOTICE LICENSE
 %patch86 -p0 -b .debuginfo
 %patch105 -p1 -b .kvno
 %patch112 -p1 -b .timeout_over
+%patch113 -p1 -b .init
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
@@ -787,6 +794,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Nov 16 2012 Nalin Dahyabhai <nalin@redhat.com> 1.11.0-0.alpha1.1
+- handle releases where texlive packaging wasn't yet as complicated as it
+  is in Fedora 18
+- fix an uninitialized-variable error building one of the test programs
+
 * Fri Nov 16 2012 Nalin Dahyabhai <nalin@redhat.com> 1.11.0-0.alpha1.0
 - move the rather large pile of html and pdf docs to -workstation, so
   that just having something that links to the libraries won't drag
