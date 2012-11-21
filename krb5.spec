@@ -29,11 +29,11 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11
-Release: 0%{?dist}.alpha1.1
+Release: 0%{?dist}.beta1.0
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11-alpha1-signed.tar
-Source0: krb5-%{version}-alpha1.tar.gz
-Source1: krb5-%{version}-alpha1.tar.gz.asc
+# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11-beta1-signed.tar
+Source0: krb5-%{version}-beta1.tar.gz
+Source1: krb5-%{version}-beta1.tar.gz.asc
 Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
@@ -257,7 +257,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -n %{name}-%{version}-alpha1
+%setup -q -n %{name}-%{version}-beta1
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -355,19 +355,14 @@ make
 popd
 
 # Build the docs.
-make -C src/doc paths.py
+make -C src/doc paths.py version.py
 cp src/doc/paths.py doc/
 mkdir -p build-man build-html build-pdf
 sphinx-build -a -b man   -t pathsubs doc build-man
 sphinx-build -a -b html  -t pathsubs doc build-html
 rm -fr build-html/_sources
 sphinx-build -a -b latex -t pathsubs doc build-pdf
-pushd build-pdf
-pdflatex -interaction nonstopmode "MIT Kerberos.tex" || true
-pdflatex -interaction nonstopmode "MIT Kerberos.tex" || true
-makeindex "MIT Kerberos.idx"
-pdflatex -interaction nonstopmode "MIT Kerberos.tex" || true
-pdflatex -interaction nonstopmode "MIT Kerberos.tex" || true
+make -C build-pdf
 
 %check
 # Run the test suite. We can't actually run the whole thing in the build system.
@@ -586,7 +581,8 @@ exit 0
 %files workstation
 %defattr(-,root,root,-)
 %doc src/config-files/services.append
-%doc build-html/* build-pdf/*.pdf
+%doc build-html/*
+%doc build-pdf/user.pdf build-pdf/basic.pdf
 %attr(0755,root,root) %doc src/config-files/convert-config-files
 
 # Clients of the KDC, including tools you're likely to need if you're running
@@ -625,6 +621,7 @@ exit 0
 %files server
 %defattr(-,root,root,-)
 %docdir %{_mandir}
+%doc build-pdf/admin.pdf build-pdf/build.pdf
 %if %{WITH_SYSTEMD}
 %{_unitdir}/krb5kdc.service
 %{_unitdir}/kadmin.service
@@ -764,6 +761,7 @@ exit 0
 %defattr(-,root,root,-)
 %docdir %{_mandir}
 %doc doc/krb5-protocol
+%doc build-pdf/appdev.pdf build-pdf/plugindev.pdf
 
 %{_includedir}/*
 %{_libdir}/libgssapi_krb5.so
@@ -794,12 +792,15 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Fri Nov 16 2012 Nalin Dahyabhai <nalin@redhat.com> 1.11.0-0.alpha1.1
+* Wed Nov 21 2012 Nalin Dahyabhai <nalin@redhat.com> 1.11-0.beta1.0
+- update to 1.11 beta 1
+
+* Fri Nov 16 2012 Nalin Dahyabhai <nalin@redhat.com> 1.11-0.alpha1.1
 - handle releases where texlive packaging wasn't yet as complicated as it
   is in Fedora 18
 - fix an uninitialized-variable error building one of the test programs
 
-* Fri Nov 16 2012 Nalin Dahyabhai <nalin@redhat.com> 1.11.0-0.alpha1.0
+* Fri Nov 16 2012 Nalin Dahyabhai <nalin@redhat.com> 1.11-0.alpha1.0
 - move the rather large pile of html and pdf docs to -workstation, so
   that just having something that links to the libraries won't drag
   them onto a system, and we avoid having to sort out hard-coded paths
