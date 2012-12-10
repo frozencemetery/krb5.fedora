@@ -29,7 +29,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.3
-Release: 7%{?dist}
+Release: 8%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -265,9 +265,9 @@ ln -s NOTICE LICENSE
 %patch16 -p1 -b .buildconf %{?_rawbuild}
 %patch23 -p1 -b .dns %{?_rawbuild}
 %patch29 -p1 -b .kprop-mktemp
-%patch30 -p1 -b .send-pr-tempfile %{?_rawbuild}
+%patch30 -p1 -b .send-pr-tempfile
 %patch39 -p1 -b .api
-%patch56 -p1 -b .doublelog %{?_rawbuild}
+%patch56 -p1 -b .doublelog
 %patch59 -p1 -b .kpasswd_tcp
 %patch71 -p1 -b .dirsrv-accountlock %{?_rawbuild}
 #%patch75 -p1 -b .pkinit-debug
@@ -852,6 +852,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Dec 12 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-8
+- untag a couple of other patches which don't strictly need to apply during
+  %%{?_rawbuild} builds (more of #874177)
+
 * Wed Oct 17 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-7
 - tag a couple of other patches which we still need to be applied during
   %%{?_rawbuild} builds (zmraz, #874177)
