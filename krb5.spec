@@ -854,7 +854,7 @@ exit 0
 %changelog
 * Wed Oct 17 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-7
 - tag a couple of other patches which we still need to be applied during
-  %%{?_rawbuild} builds (zmraz)
+  %%{?_rawbuild} builds (zmraz, #874177)
 
 * Tue Sep 25 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-6
 - actually pull up the patch for RT#7063, and not some other ticket (#773496)
