@@ -29,7 +29,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.3
-Release: 8%{?dist}
+Release: 9%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -702,10 +702,6 @@ exit 0
 %config(noreplace) %{_var}/kerberos/krb5kdc/kadm5.acl
 
 %dir %{_libdir}/krb5
-%if ! %{WITH_SYSVERTO}
-%{_libdir}/libverto-k5ev.so
-%{_libdir}/libverto-k5ev.so.*
-%endif
 %{_libdir}/krb5/kdb_check_weak
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/kdb
@@ -794,6 +790,8 @@ exit 0
 %dir %{_libdir}/krb5/plugins/*
 %{_libdir}/krb5/plugins/kdb/db2.so
 %if ! %{WITH_SYSVERTO}
+%{_libdir}/libverto-k5ev.so
+%{_libdir}/libverto-k5ev.so.*
 # These really shouldn't be here, but until we have a system copy of libverto,
 # don't force people who are using libverto to install the KDC just to get the
 # shared library.  Not that there are any development headers, but anyway.
@@ -852,6 +850,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Dec 13 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-9
+- when building with our bundled copy of libverto, package it in with -libs
+  rather than with -server (#886049)
+
 * Mon Dec 12 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-8
 - untag a couple of other patches which don't strictly need to apply during
   %%{?_rawbuild} builds (more of #874177)
