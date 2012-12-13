@@ -29,7 +29,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.3
-Release: 9%{?dist}
+Release: 10%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -86,6 +86,7 @@ Patch109: krb5-1.10.3-as_rep_skew.patch
 Patch110: krb5-1.10.3-keytab-etype-corners-prep.patch
 Patch111: krb5-1.10.3-keytab-etype-corners.patch
 Patch112: krb5-1.10.3-timeout_over.patch
+Patch113: krb5-kldap-lastadminunlock.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -284,6 +285,7 @@ ln -s NOTICE LICENSE
 %patch110 -p1 -b .keytab-etype-corners-prep
 %patch111 -p1 -b .keytab-etype-corners
 %patch112 -p1 -b .timeout_over
+%patch113 -p1 -b .kldap-lastadminunlock
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -850,11 +852,15 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Tue Dec 13 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-9
+* Thu Dec 13 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-10
+- libkdb_ldap: add a workaround to keep the KDC from attempting to write to an
+  entry's krbLastAdminUnlock attribute on every AS request (#860759, RT#7502)
+
+* Tue Dec 11 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-9
 - when building with our bundled copy of libverto, package it in with -libs
   rather than with -server (#886049)
 
-* Mon Dec 12 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-8
+* Mon Dec 10 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-8
 - untag a couple of other patches which don't strictly need to apply during
   %%{?_rawbuild} builds (more of #874177)
 

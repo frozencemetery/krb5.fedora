@@ -1,0 +1,27 @@
+Submitted as RT#7502.
+
+Try to avoid writing krbLastAdminUnlock when we're just doing auditing
+in the KDC.  Because we know that kdb5_ldap_put_principal() only writes
+the attribute when it's nonzero, we temporarily set the value to zero to
+make sure that it isn't written.
+
+--- src/plugins/kdb/ldap/libkdb_ldap/lockout.c
++++ src/plugins/kdb/ldap/libkdb_ldap/lockout.c
+@@ -217,8 +217,14 @@ krb5_ldap_lockout_audit(krb5_context context,
+     }
+ 
+     if (entry->mask) {
+-        code = krb5_ldap_put_principal(context, entry, NULL);
+-        if (code != 0)
++        /* temporarily clear the last-admin-unlock time so that we don't try
++         * to write to it -- we're just here to update audit data */
++        if ((code = krb5_dbe_lookup_last_admin_unlock(context, entry,
++                                                      &unlock_time)) ||
++            (code = krb5_dbe_update_last_admin_unlock(context, entry, 0)) ||
++            (code = krb5_ldap_put_principal(context, entry, NULL)) ||
++            (code = krb5_dbe_update_last_admin_unlock(context, entry,
++                                                      unlock_time)))
+             return code;
+     }
+ 
+
