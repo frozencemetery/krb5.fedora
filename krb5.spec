@@ -855,6 +855,7 @@ exit 0
 * Thu Dec 13 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-10
 - libkdb_ldap: add a workaround to keep the KDC from attempting to write to an
   entry's krbLastAdminUnlock attribute on every AS request (#860759, RT#7502)
+- revise proposed patch for #860759 based on upstream feedback
 
 * Tue Dec 11 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-9
 - when building with our bundled copy of libverto, package it in with -libs
