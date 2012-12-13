@@ -645,10 +645,6 @@ exit 0
 %config(noreplace) %{_var}/kerberos/krb5kdc/kadm5.acl
 
 %dir %{_libdir}/krb5
-%if ! %{WITH_SYSVERTO}
-%{_libdir}/libverto-k5ev.so
-%{_libdir}/libverto-k5ev.so.*
-%endif
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/kdb
 %dir %{_libdir}/krb5/plugins/preauth
@@ -739,6 +735,8 @@ exit 0
 %dir %{_var}/kerberos/kdc
 %dir %{_var}/kerberos/kdc/user
 %if ! %{WITH_SYSVERTO}
+%{_libdir}/libverto-k5ev.so
+%{_libdir}/libverto-k5ev.so.*
 # These really shouldn't be here, but until we have a system copy of libverto,
 # don't force people who are using libverto to install the KDC just to get the
 # shared library.  Not that there are any development headers, but anyway.
@@ -792,6 +790,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Dec 13 2012 Nalin Dahyabhai <nalin@redhat.com>
+- when building with our bundled copy of libverto, package it in with -libs
+  rather than with -server (#886049)
+
 * Wed Nov 21 2012 Nalin Dahyabhai <nalin@redhat.com> 1.11-0.beta1.0
 - update to 1.11 beta 1
 
