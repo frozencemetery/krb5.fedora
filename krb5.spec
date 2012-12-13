@@ -29,11 +29,11 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11
-Release: 0%{?dist}.beta1.0
+Release: 0%{?dist}.beta2.0
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11-beta1-signed.tar
-Source0: krb5-%{version}-beta1.tar.gz
-Source1: krb5-%{version}-beta1.tar.gz.asc
+# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11-beta2-signed.tar
+Source0: krb5-%{version}-beta2.tar.gz
+Source1: krb5-%{version}-beta2.tar.gz.asc
 Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
@@ -257,7 +257,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -n %{name}-%{version}-beta1
+%setup -q -n %{name}-%{version}-beta2
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -790,6 +790,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Dec 13 2012 Nalin Dahyabhai <nalin@redhat.com> 1.11-0.beta2.0
+- update to 1.11 beta 2
+
 * Thu Dec 13 2012 Nalin Dahyabhai <nalin@redhat.com>
 - when building with our bundled copy of libverto, package it in with -libs
   rather than with -server (#886049)
