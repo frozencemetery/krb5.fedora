@@ -1,33 +1,27 @@
-Revised from RT#7502.
+Submitted as RT#7502.
 
 Try to avoid writing krbLastAdminUnlock when we're just doing auditing
-in the KDC.  Because the attributes that we want to update are not in
-the tl_data sequence, and krbLastAdminUnlock is, we NULL it out
-temporarily to avoid updating any of the attributes that are used for
-holding tl_data values.
+in the KDC.  Because we know that kdb5_ldap_put_principal() only writes
+the attribute when it's nonzero, we temporarily set the value to zero to
+make sure that it isn't written.
 
 --- src/plugins/kdb/ldap/libkdb_ldap/lockout.c
 +++ src/plugins/kdb/ldap/libkdb_ldap/lockout.c
-@@ -149,6 +149,8 @@ krb5_ldap_lockout_audit(krb5_context con
-     krb5_deltat failcnt_interval = 0;
-     krb5_deltat lockout_duration = 0;
-     krb5_timestamp unlock_time;
-+    krb5_tl_data *tl_data;
-+    krb5_int16 n_tl_data;
- 
-     SETUP_CONTEXT();
- 
-@@ -217,7 +219,13 @@ krb5_ldap_lockout_audit(krb5_context con
+@@ -217,8 +217,14 @@ krb5_ldap_lockout_audit(krb5_context context,
      }
  
      if (entry->mask) {
-+        tl_data = entry->tl_data;
-+        n_tl_data = entry->n_tl_data;
-+        entry->tl_data = NULL;
-+        entry->n_tl_data = 0;
-         code = krb5_ldap_put_principal(context, entry, NULL);
-+        entry->tl_data = tl_data;
-+        entry->n_tl_data = n_tl_data;
-         if (code != 0)
+-        code = krb5_ldap_put_principal(context, entry, NULL);
+-        if (code != 0)
++        /* temporarily clear the last-admin-unlock time so that we don't try
++         * to write to it -- we're just here to update audit data */
++        if ((code = krb5_dbe_lookup_last_admin_unlock(context, entry,
++                                                      &unlock_time)) ||
++            (code = krb5_dbe_update_last_admin_unlock(context, entry, 0)) ||
++            (code = krb5_ldap_put_principal(context, entry, NULL)) ||
++            (code = krb5_dbe_update_last_admin_unlock(context, entry,
++                                                      unlock_time)))
              return code;
      }
+ 
+
