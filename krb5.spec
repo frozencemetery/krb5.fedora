@@ -24,16 +24,17 @@
 %else
 %global WITH_SYSTEMD 0
 %endif
+# Set this so that find-lang.sh will recognize the .po files.
 %global gettext_domain mit-krb5
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11
-Release: 0%{?dist}.beta2.0
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11-beta2-signed.tar
-Source0: krb5-%{version}-beta2.tar.gz
-Source1: krb5-%{version}-beta2.tar.gz.asc
+# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11-signed.tar
+Source0: krb5-%{version}.tar.gz
+Source1: krb5-%{version}.tar.gz.asc
 Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
@@ -257,7 +258,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -n %{name}-%{version}-beta2
+%setup -q -n %{name}-%{version}
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -270,9 +271,9 @@ ln -s NOTICE LICENSE
 %patch16 -p1 -b .buildconf %{?_rawbuild}
 %patch23 -p1 -b .dns %{?_rawbuild}
 %patch29 -p1 -b .kprop-mktemp
-%patch30 -p1 -b .send-pr-tempfile %{?_rawbuild}
+%patch30 -p1 -b .send-pr-tempfile
 %patch39 -p1 -b .api
-%patch56 -p1 -b .doublelog %{?_rawbuild}
+%patch56 -p1 -b .doublelog
 %patch59 -p1 -b .kpasswd_tcp
 %patch71 -p1 -b .dirsrv-accountlock %{?_rawbuild}
 #%patch75 -p1 -b .pkinit-debug
@@ -790,6 +791,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Dec 18 2012 Nalin Dahyabhai <nalin@redhat.com> 1.11-1
+- update to 1.11 release
+
 * Thu Dec 13 2012 Nalin Dahyabhai <nalin@redhat.com> 1.11-0.beta2.0
 - update to 1.11 beta 2
 
