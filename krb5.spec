@@ -29,7 +29,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.3
-Release: 10%{?dist}
+Release: 11%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -186,6 +186,8 @@ Requires: coreutils
 Requires: /usr/share/dict/words
 # portreserve is used by init scripts for kadmind, kpropd, and krb5kdc
 Requires: portreserve
+# conflict with policy that didn't allow us to use eventfds, which libverto uses
+Conflicts: selinux-policy < 3.7.19-177.el6
 %if %{WITH_SYSVERTO}
 # for run-time, and for parts of the test suite
 BuildRequires: libverto-module-base
@@ -285,7 +287,7 @@ ln -s NOTICE LICENSE
 %patch110 -p1 -b .keytab-etype-corners-prep
 %patch111 -p1 -b .keytab-etype-corners
 %patch112 -p1 -b .timeout_over
-%patch113 -p1 -b .kldap-lastadminunlock
+%patch113 -p0 -b .kldap-lastadminunlock
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -397,7 +399,7 @@ env LD_LIBRARY_PATH=`pwd`/src/lib \
 	-L src/lib `./src/krb5-config --libs kdb`
 
 %check
-# Run the test suite. We can't actually run the whole thing in the build system.
+# Run the test suite.  Just parts that we can actually run in the build system.
 make -C src fake-install
 : make -C src check TMPDIR=%{_tmppath}
 make -C src/lib check TMPDIR=%{_tmppath}
@@ -852,6 +854,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Jan  7 2013 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-11
+- make -server conflict with older versions of SELinux policy that didn't
+  allow us to use eventfds, which libverto's backend may depend on in order
+  to properly shut down a multi-worker KDC (#871524)
+
 * Thu Dec 13 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-10
 - libkdb_ldap: add a workaround to keep the KDC from attempting to write to an
   entry's krbLastAdminUnlock attribute on every AS request (#860759, RT#7502)
