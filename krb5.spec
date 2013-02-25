@@ -29,10 +29,10 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.11
-Release: 2%{?dist}
+Version: 1.11.1
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.1-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 Source2: kprop.service
@@ -69,7 +69,6 @@ Patch71: krb5-1.11-dirsrv-accountlock.patch
 Patch75: krb5-pkinit-debug.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
-Patch112: krb5-1.10.3-timeout_over.patch
 Patch113: krb5-1.11-alpha1-init.patch
 
 License: MIT
@@ -279,7 +278,6 @@ ln -s NOTICE LICENSE
 #%patch75 -p1 -b .pkinit-debug
 %patch86 -p0 -b .debuginfo
 %patch105 -p1 -b .kvno
-%patch112 -p1 -b .timeout_over
 %patch113 -p1 -b .init
 
 # Take the execute bit off of documentation.
@@ -791,6 +789,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Feb 25 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-1
+- update to 1.11.1
+  - drop patch for noticing negative timeouts being passed to the poll()
+    wrapper in the client transmit functions
+
 * Fri Feb  8 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11-2
 - set "rdns = false" in the default krb5.conf (#908323)
 
