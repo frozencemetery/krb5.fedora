@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.2
-Release: 6%{?dist}
+Release: 7%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -70,6 +70,7 @@ Patch105: krb5-kvno-230379.patch
 Patch106: krb5-1.10.2-keytab-etype.patch
 Patch107: krb5-trunk-pkinit-anchorsign.patch
 Patch108: http://web.mit.edu/kerberos/advisories/2012-001-patch.txt
+Patch109: krb5-1.10-pkinit-null.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -249,6 +250,7 @@ ln -s NOTICE LICENSE
 %patch106 -p1 -b .keytab-etype
 %patch107 -p1 -b .pkinit-anchorsign
 %patch108 -p1 -b .2012-001
+%patch109 -p1 -b .pkinit-null
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -768,6 +770,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Feb 25 2013 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-7
+- incorporate upstream patch to fix a NULL pointer dereference when the client
+  supplies an otherwise-normal-looking PKINIT request (CVE-2013-1415, #914756)
+
 * Tue Jul 31 2012 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-6
 - go back to not messing with library file paths on Fedora 17: it breaks
   file path dependencies in other packages, and since Fedora 17 is already
