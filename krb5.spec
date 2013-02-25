@@ -29,7 +29,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.3
-Release: 11%{?dist}
+Release: 12%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -87,6 +87,7 @@ Patch110: krb5-1.10.3-keytab-etype-corners-prep.patch
 Patch111: krb5-1.10.3-keytab-etype-corners.patch
 Patch112: krb5-1.10.3-timeout_over.patch
 Patch113: krb5-kldap-lastadminunlock.patch
+Patch114: krb5-1.10-pkinit-null.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -288,6 +289,7 @@ ln -s NOTICE LICENSE
 %patch111 -p1 -b .keytab-etype-corners
 %patch112 -p1 -b .timeout_over
 %patch113 -p0 -b .kldap-lastadminunlock
+%patch114 -p1 -b .pkinit-null
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -854,6 +856,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Feb 25 2013 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-12
+- incorporate upstream patch to fix a NULL pointer dereference when the client
+  supplies an otherwise-normal-looking PKINIT request (CVE-2013-1415, #914756)
+
 * Mon Jan  7 2013 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-11
 - make -server conflict with older versions of SELinux policy that didn't
   allow us to use eventfds, which libverto's backend may depend on in order
