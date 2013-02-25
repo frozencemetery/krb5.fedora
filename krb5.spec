@@ -2676,13 +2676,13 @@ exit 0
 - update for krb5-1.1
 - add KDC rotation to rc.boot, based on ideas from Michael's C version
 
-* Mon Sep 26 1999 Nalin Dahyabhai <nsdahya1@eos.ncsu.edu>
+* Mon Sep 27 1999 Nalin Dahyabhai <nsdahya1@eos.ncsu.edu>
 - added -lncurses to telnet and telnetd makefiles
 
 * Mon Jul  5 1999 Nalin Dahyabhai <nsdahya1@eos.ncsu.edu>
 - added krb5.csh and krb5.sh to /etc/profile.d
 
-* Mon Jun 22 1999 Nalin Dahyabhai <nsdahya1@eos.ncsu.edu>
+* Tue Jun 22 1999 Nalin Dahyabhai <nsdahya1@eos.ncsu.edu>
 - broke out configuration files
 
 * Mon Jun 14 1999 Nalin Dahyabhai <nsdahya1@eos.ncsu.edu>
