@@ -36,7 +36,7 @@ Release: 2%{?dist}
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 # Use a dummy krb5-%{version}-pdf.tar.xz the first time through, then
-#  tar cvJf $RPM_SOURCE_DIR/krb5-%{version}-pdf.tar.xz build-pdf/*.pdf
+#  tar cvJf $RPM_SOURCE_DIR/krb5-%%{version}-pdf.tar.xz build-pdf/*.pdf
 # after the build phase finishes.
 Source3: krb5-%{version}-pdf.tar.xz
 Source2: kprop.service
@@ -465,7 +465,7 @@ make -C src DESTDIR=$RPM_BUILD_ROOT EXAMPLEDIR=%{_docdir}/krb5-libs-%{version}/e
 sed -r -i -e 's|^libdir=/usr/lib(64)?$|libdir=/usr/lib|g' $RPM_BUILD_ROOT%{_bindir}/krb5-config
 
 %if %{separate_usr}
-# Move specific libraries from %{_libdir} to /%{_lib}, and fixup the symlinks.
+# Move specific libraries from %%{_libdir} to /%%{_lib}, and fixup the symlinks.
 touch $RPM_BUILD_ROOT/rootfile
 rellibdir=..
 while ! test -r $RPM_BUILD_ROOT/%{_libdir}/${rellibdir}/rootfile ; do
@@ -796,6 +796,7 @@ exit 0
 * Wed Feb 27 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-2
 - prebuild PDF docs to reduce multilib differences (internal tooling, #884065)
 - drop the kerberos-iv portreserve file, and drop the rest on systemd systems
+- escape uses of macros in comments (more of #884065)
 
 * Mon Feb 25 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-1
 - update to 1.11.1
