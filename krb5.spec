@@ -30,11 +30,15 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.1-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
+# Use a dummy krb5-%{version}-pdf.tar.xz the first time through, then
+#  tar cvJf $RPM_SOURCE_DIR/krb5-%{version}-pdf.tar.xz build-pdf/*.pdf
+# after the build phase finishes.
+Source3: krb5-%{version}-pdf.tar.xz
 Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
@@ -257,7 +261,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -n %{name}-%{version}
+%setup -q -n %{name}-%{version} -a 3
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -361,7 +365,10 @@ sphinx-build -a -b man   -t pathsubs doc build-man
 sphinx-build -a -b html  -t pathsubs doc build-html
 rm -fr build-html/_sources
 sphinx-build -a -b latex -t pathsubs doc build-pdf
-make -C build-pdf
+# Build the PDFs if we didn't have pre-built ones.
+for pdf in admin appdev basic build plugindev user ; do
+	test -s build-pdf/$pdf.pdf || make -C build-pdf
+done
 
 %check
 # Run the test suite. We can't actually run the whole thing in the build system.
@@ -789,6 +796,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Feb 27 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-2
+- prebuild PDF docs to reduce multilib differences (internal tooling, #884065)
+
 * Mon Feb 25 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-1
 - update to 1.11.1
   - drop patch for noticing negative timeouts being passed to the poll()
