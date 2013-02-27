@@ -48,7 +48,6 @@ Source11: kadm5.acl
 Source19: krb5kdc.sysconfig
 Source20: kadmin.sysconfig
 Source29: ksu.pamd
-Source30: kerberos-iv.portreserve
 Source31: kerberos-adm.portreserve
 Source32: krb5_prop.portreserve
 Source33: krb5kdc.logrotate
@@ -182,6 +181,8 @@ Requires(preun): systemd-units
 Requires(postun): systemd-units
 %else
 Requires(preun): chkconfig
+# portreserve is used by init scripts for kadmind, kpropd, and krb5kdc
+Requires: portreserve
 %endif
 Requires(post): initscripts
 Requires(postun): initscripts
@@ -196,8 +197,6 @@ Requires(preun): initscripts
 Requires: coreutils
 # we specify /usr/share/dict/words as the default dict_file in kdc.conf
 Requires: /usr/share/dict/words
-# portreserve is used by init scripts for kadmind, kpropd, and krb5kdc
-Requires: portreserve
 %if %{WITH_SYSVERTO}
 # for run-time, and for parts of the test suite
 BuildRequires: libverto-module-base
@@ -417,23 +416,22 @@ for init in \
 	install -pm 755 ${init} \
 	$RPM_BUILD_ROOT/etc/rc.d/init.d/${service%d}
 done
+# portreserve configuration files.
+mkdir -p $RPM_BUILD_ROOT/etc/portreserve
+for portreserve in \
+	%{SOURCE31} \
+	%{SOURCE32} ; do
+	install -pm 644 ${portreserve} \
+	$RPM_BUILD_ROOT/etc/portreserve/`basename ${portreserve} .portreserve`
+done
 %endif
+
 mkdir -p $RPM_BUILD_ROOT/etc/sysconfig
 for sysconfig in \
 	%{SOURCE19}\
 	%{SOURCE20} ; do
 	install -pm 644 ${sysconfig} \
 	$RPM_BUILD_ROOT/etc/sysconfig/`basename ${sysconfig} .sysconfig`
-done
-
-# portreserve configuration files.
-mkdir -p $RPM_BUILD_ROOT/etc/portreserve
-for portreserve in \
-	%{SOURCE30} \
-	%{SOURCE31} \
-	%{SOURCE32} ; do
-	install -pm 644 ${portreserve} \
-	$RPM_BUILD_ROOT/etc/portreserve/`basename ${portreserve} .portreserve`
 done
 
 # logrotate configuration files
@@ -636,12 +634,11 @@ exit 0
 /etc/rc.d/init.d/krb5kdc
 /etc/rc.d/init.d/kadmin
 /etc/rc.d/init.d/kprop
+%config(noreplace) /etc/portreserve/kerberos-adm
+%config(noreplace) /etc/portreserve/krb5_prop
 %endif
 %config(noreplace) /etc/sysconfig/krb5kdc
 %config(noreplace) /etc/sysconfig/kadmin
-%config(noreplace) /etc/portreserve/kerberos-iv
-%config(noreplace) /etc/portreserve/kerberos-adm
-%config(noreplace) /etc/portreserve/krb5_prop
 %config(noreplace) /etc/logrotate.d/krb5kdc
 %config(noreplace) /etc/logrotate.d/kadmind
 
@@ -798,6 +795,7 @@ exit 0
 %changelog
 * Wed Feb 27 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-2
 - prebuild PDF docs to reduce multilib differences (internal tooling, #884065)
+- drop the kerberos-iv portreserve file, and drop the rest on systemd systems
 
 * Mon Feb 25 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-1
 - update to 1.11.1
