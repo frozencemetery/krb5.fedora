@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -73,6 +73,7 @@ Patch75: krb5-pkinit-debug.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
 Patch113: krb5-1.11-alpha1-init.patch
+Patch114: krb5-lookup_etypes-leak.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -282,6 +283,7 @@ ln -s NOTICE LICENSE
 %patch86 -p0 -b .debuginfo
 %patch105 -p1 -b .kvno
 %patch113 -p1 -b .init
+%patch114 -p1 -b .lookup_etypes-leak
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
@@ -793,6 +795,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Feb 28 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-3
+- fix a memory leak when acquiring credentials using a keytab (RT#7586, #911110)
+
 * Wed Feb 27 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-2
 - prebuild PDF docs to reduce multilib differences (internal tooling, #884065)
 - drop the kerberos-iv portreserve file, and drop the rest on systemd systems
