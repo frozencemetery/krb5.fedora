@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.2
-Release: 8%{?dist}
+Release: 9%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -72,6 +72,7 @@ Patch107: krb5-trunk-pkinit-anchorsign.patch
 Patch108: http://web.mit.edu/kerberos/advisories/2012-001-patch.txt
 Patch109: krb5-1.10-pkinit-null.patch
 Patch110: krb5-lookup_etypes-leak.patch
+Patch111: krb5-1.10-pkinit-agility.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -253,6 +254,7 @@ ln -s NOTICE LICENSE
 %patch108 -p1 -b .2012-001
 %patch109 -p1 -b .pkinit-null
 %patch110 -p1 -b .lookup_etypes-leak
+%patch111 -p1 -b .pkinit-agility
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -772,6 +774,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Mar  5 2013 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-9
+- add patch to avoid dereferencing a NULL pointer in the KDC when handling a
+  draft9 PKINIT request (#917841, CVE-2012-1016)
+
 * Thu Feb 28 2013 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-8
 - fix a memory leak when acquiring credentials using a keytab (RT#7586, #911110)
 
