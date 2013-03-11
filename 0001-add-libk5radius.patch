@@ -1,0 +1,3797 @@
+From 9fe951d804d05901646fe5db31fc89efacd5bc6a Mon Sep 17 00:00:00 2001
+From: Nathaniel McCallum <npmccallum@redhat.com>
+Date: Thu, 7 Mar 2013 18:12:25 -0500
+Subject: [PATCH 1/3] add libk5radius
+
+---
+ src/configure.in                   |   2 +-
+ src/lib/Makefile.in                |   2 +-
+ src/lib/radius/Makefile.in         |  74 +++++
+ src/lib/radius/attr.c              | 313 ++++++++++++++++++++
+ src/lib/radius/attrset.c           | 278 ++++++++++++++++++
+ src/lib/radius/client.c            | 325 +++++++++++++++++++++
+ src/lib/radius/code.c              | 109 +++++++
+ src/lib/radius/deps                |  21 ++
+ src/lib/radius/internal.h          | 159 ++++++++++
+ src/lib/radius/k5radius.h          | 200 +++++++++++++
+ src/lib/radius/libk5radius.exports |  23 ++
+ src/lib/radius/packet.c            | 453 ++++++++++++++++++++++++++++
+ src/lib/radius/remote.c            | 583 +++++++++++++++++++++++++++++++++++++
+ src/lib/radius/test/attr.c         |  88 ++++++
+ src/lib/radius/test/attrset.c      |  98 +++++++
+ src/lib/radius/test/client.c       | 141 +++++++++
+ src/lib/radius/test/code.c         |  52 ++++
+ src/lib/radius/test/daemon.h       |  85 ++++++
+ src/lib/radius/test/daemon.py      |  76 +++++
+ src/lib/radius/test/packet.c       | 203 +++++++++++++
+ src/lib/radius/test/remote.c       | 186 ++++++++++++
+ src/lib/radius/test/test.c         |  63 ++++
+ src/lib/radius/test/test.h         |  62 ++++
+ 23 files changed, 3594 insertions(+), 2 deletions(-)
+ create mode 100644 src/lib/radius/Makefile.in
+ create mode 100644 src/lib/radius/attr.c
+ create mode 100644 src/lib/radius/attrset.c
+ create mode 100644 src/lib/radius/client.c
+ create mode 100644 src/lib/radius/code.c
+ create mode 100644 src/lib/radius/deps
+ create mode 100644 src/lib/radius/internal.h
+ create mode 100644 src/lib/radius/k5radius.h
+ create mode 100644 src/lib/radius/libk5radius.exports
+ create mode 100644 src/lib/radius/packet.c
+ create mode 100644 src/lib/radius/remote.c
+ create mode 100644 src/lib/radius/test/attr.c
+ create mode 100644 src/lib/radius/test/attrset.c
+ create mode 100644 src/lib/radius/test/client.c
+ create mode 100644 src/lib/radius/test/code.c
+ create mode 100644 src/lib/radius/test/daemon.h
+ create mode 100644 src/lib/radius/test/daemon.py
+ create mode 100644 src/lib/radius/test/packet.c
+ create mode 100644 src/lib/radius/test/remote.c
+ create mode 100644 src/lib/radius/test/test.c
+ create mode 100644 src/lib/radius/test/test.h
+
+diff --git a/src/configure.in b/src/configure.in
+index faf93a1..6a9757f 100644
+--- a/src/configure.in
++++ b/src/configure.in
+@@ -1318,7 +1318,7 @@ dnl	lib/krb5/ccache/ccapi
+ 	lib/rpc lib/rpc/unit-test
+ 
+ 	lib/kadm5 lib/kadm5/clnt lib/kadm5/srv lib/kadm5/unit-test
+-
++	lib/radius
+ 	lib/apputils
+ 
+ dnl	ccapi ccapi/lib ccapi/lib/unix ccapi/server ccapi/server/unix ccapi/test
+diff --git a/src/lib/Makefile.in b/src/lib/Makefile.in
+index 485db40..0c9a2fb 100644
+--- a/src/lib/Makefile.in
++++ b/src/lib/Makefile.in
+@@ -1,5 +1,5 @@
+ mydir=lib
+-SUBDIRS=crypto krb5 gssapi rpc kdb kadm5 apputils
++SUBDIRS=crypto krb5 gssapi rpc kdb kadm5 apputils radius
+ WINSUBDIRS=crypto krb5 gssapi
+ BUILDTOP=$(REL)..
+ 
+diff --git a/src/lib/radius/Makefile.in b/src/lib/radius/Makefile.in
+new file mode 100644
+index 0000000..0916c6c
+--- /dev/null
++++ b/src/lib/radius/Makefile.in
+@@ -0,0 +1,74 @@
++mydir=lib$(S)radius
++BUILDTOP=$(REL)..$(S)..
++RELDIR=../lib/radius
++
++LIBBASE=k5radius
++LIBMAJOR=0
++LIBMINOR=0
++
++LOCALINCLUDES=-I$(srcdir) -I.
++
++SHLIB_EXPLIBS= -lkrb5 -lcom_err -lk5crypto -lverto $(SUPPORT_LIB) $(LIBS)
++
++STLIBOBJS=attr.o attrset.o client.o code.o packet.o remote.o
++LIBOBJS=$(OUTPRE)attr.$(OBJEXT) \
++	$(OUTPRE)attrset.$(OBJEXT) \
++	$(OUTPRE)client.$(OBJEXT) \
++	$(OUTPRE)code.$(OBJEXT) \
++	$(OUTPRE)packet.$(OBJEXT) \
++	$(OUTPRE)remote.$(OBJEXT)
++SRCS=attr.c attrset.c client.c code.c packet.c remote.c
++
++STOBJLISTS=OBJS.ST
++
++RADIUS_HDR=$(BUILDTOP)$(S)include$(S)k5radius.h
++
++includes:: $(RADIUS_HDR)
++depend:: $(RADIUS_HDR)
++all-unix:: all-liblinks includes
++install-unix:: install-libs
++
++clean-unix:: clean-liblinks clean-libs clean-libobjs
++	$(RM) $(RADIUS_HDR)
++
++
++$(RADIUS_HDR): $(srcdir)/k5radius.h
++	$(RM) $@
++	$(CP) $(srcdir)/k5radius.h $@
++
++install::
++	$(INSTALL_DATA) $(srcdir)/k5radius.h $(DESTDIR)$(KRB5_INCDIR)/k5radius.h
++
++check-unix:: t_attr t_attrset t_code t_packet t_remote t_client
++	$(RUN_SETUP) $(VALGRIND) ./t_attr
++	$(RUN_SETUP) $(VALGRIND) ./t_attrset
++	$(RUN_SETUP) $(VALGRIND) ./t_code
++	$(RUN_SETUP) $(VALGRIND) ./t_packet $(srcdir)/test/daemon.py
++	$(RUN_SETUP) $(VALGRIND) ./t_remote $(srcdir)/test/daemon.py
++	$(RUN_SETUP) $(VALGRIND) ./t_client $(srcdir)/test/daemon.py
++
++TESTARGS=$(srcdir)/test/test.c $(SHLIB_EXPLIBS)
++
++t_attr: attr.o
++	$(CC_LINK) -o $@ $^ $(srcdir)/test/attr.c $(TESTARGS)
++	
++t_attrset: attr.o attrset.o
++	$(CC_LINK) -o $@ $^ $(srcdir)/test/attrset.c $(TESTARGS)
++
++t_code: code.o
++	$(CC_LINK) -o $@ $^ $(srcdir)/test/code.c $(TESTARGS)
++
++t_packet: attr.o attrset.o code.o packet.o
++	$(CC_LINK) -o $@ $^ $(srcdir)/test/packet.c $(TESTARGS)
++	
++t_remote: attr.o attrset.o code.o packet.o remote.o
++	$(CC_LINK) -o $@ $^ $(srcdir)/test/remote.c $(TESTARGS)
++	
++t_client: attr.o attrset.o code.o packet.o remote.o client.o
++	$(CC_LINK) -o $@ $^ $(srcdir)/test/client.c $(TESTARGS)
++
++clean-unix:: clean-libobjs
++	$(RM) t_attr t_attrset t_code t_packet t_remote t_client
++
++@lib_frag@
++@libobj_frag@
+diff --git a/src/lib/radius/attr.c b/src/lib/radius/attr.c
+new file mode 100644
+index 0000000..cabcf5d
+--- /dev/null
++++ b/src/lib/radius/attr.c
+@@ -0,0 +1,313 @@
++/*
++ * Copyright 2012 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "internal.h"
++
++#include <string.h>
++
++#define BLOCK_SIZE RADIUS_PACKET_SIZE_AUTH
++
++typedef krb5_error_code
++(*attribute_transform)(krb5_context ctx, const char *secret,
++                       const uint8_t *auth, krb5_data *attr);
++
++typedef struct {
++    const char *name;
++    uint8_t min;
++    uint8_t max;
++    attribute_transform encode;
++    attribute_transform decode;
++} attribute_record;
++
++static krb5_error_code
++user_password_encode(krb5_context ctx, const char *secret,
++                     const uint8_t *auth, krb5_data *attr);
++
++static krb5_error_code
++user_password_decode(krb5_context ctx, const char *secret,
++                     const uint8_t *auth, krb5_data *attr);
++
++static const attribute_record attributes[UINT8_MAX] = {
++    {"User-Name", 1, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++    {"User-Password", 1, 128, user_password_encode, user_password_decode},
++    {"CHAP-Password", 17, 17, NULL, NULL},
++    {"NAS-IP-Address", 4, 4, NULL, NULL},
++    {"NAS-Port", 4, 4, NULL, NULL},
++    {"Service-Type", 4, 4, NULL, NULL},
++    {"Framed-Protocol", 4, 4, NULL, NULL},
++    {"Framed-IP-Address", 4, 4, NULL, NULL},
++    {"Framed-IP-Netmask", 4, 4, NULL, NULL},
++    {"Framed-Routing", 4, 4, NULL, NULL},
++    {"Filter-Id", 1, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++    {"Framed-MTU", 4, 4, NULL, NULL},
++    {"Framed-Compression", 4, 4, NULL, NULL},
++    {"Login-IP-Host", 4, 4, NULL, NULL},
++    {"Login-Service", 4, 4, NULL, NULL},
++    {"Login-TCP-Port", 4, 4, NULL, NULL},
++    {NULL, 0, 0, NULL, NULL}, /* Unassigned */
++    {"Reply-Message", 1, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++    {"Callback-Number", 1, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++    {"Callback-Id", 1, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++    {NULL, 0, 0, NULL, NULL}, /* Unassigned */
++    {"Framed-Route", 1, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++    {"Framed-IPX-Network", 4, 4, NULL, NULL},
++    {"State", 1, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++    {"Class", 1, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++    {"Vendor-Specific", 5, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++    {"Session-Timeout", 4, 4, NULL, NULL},
++    {"Idle-Timeout", 4, 4, NULL, NULL},
++    {"Termination-Action", 4, 4, NULL, NULL},
++    {"Called-Station-Id", 1, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++    {"Calling-Station-Id", 1, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++    {"NAS-Identifier", 1, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++    {"Proxy-State", 1, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++    {"Login-LAT-Service", 1, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++    {"Login-LAT-Node", 1, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++    {"Login-LAT-Group", 32, 32, NULL, NULL},
++    {"Framed-AppleTalk-Link", 4, 4, NULL, NULL},
++    {"Framed-AppleTalk-Network", 4, 4, NULL, NULL},
++    {"Framed-AppleTalk-Zone", 1, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {NULL, 0, 0, NULL, NULL}, /* Reserved for accounting */
++    {"CHAP-Challenge", 5, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++    {"NAS-Port-Type", 4, 4, NULL, NULL},
++    {"Port-Limit", 4, 4, NULL, NULL},
++    {"Login-LAT-Port", 1, RADIUS_ATTR_SIZE_MAX, NULL, NULL},
++};
++
++static krb5_error_code
++user_password_encode(krb5_context ctx, const char *secret,
++                     const uint8_t *auth, krb5_data *attr)
++{
++    krb5_error_code retval;
++    unsigned int seclen;
++    krb5_checksum sum;
++    size_t blck, i;
++    krb5_data tmp;
++
++    seclen = strlen(secret);
++    tmp.length = seclen + BLOCK_SIZE;
++    tmp.data = malloc(tmp.length);
++    if (tmp.data == NULL)
++        return ENOMEM;
++
++    /* Pad with zeros to the block size. */
++    if (attr->length % BLOCK_SIZE != 0) {
++        i = BLOCK_SIZE - attr->length % BLOCK_SIZE;
++        memset(attr->data + attr->length, 0, i);
++        attr->length += i;
++    }
++
++    for (blck = 0; blck * BLOCK_SIZE < attr->length; blck++) {
++        memcpy(tmp.data, secret, seclen);
++        if (blck == 0)
++            memcpy(tmp.data + seclen, auth, BLOCK_SIZE);
++        else
++            memcpy(tmp.data + seclen,
++                   &attr->data[(blck - 1) * BLOCK_SIZE],
++                   BLOCK_SIZE);
++
++        retval = krb5_c_make_checksum(ctx, CKSUMTYPE_RSA_MD5, NULL, 0,
++                                      &tmp, &sum);
++        if (retval != 0) {
++            krb5_free_data_contents(ctx, &tmp);
++            return retval;
++        }
++
++        for (i = 0; i < BLOCK_SIZE; i++)
++            attr->data[blck * BLOCK_SIZE + i] ^= sum.contents[i];
++        krb5_free_checksum_contents(ctx, &sum);
++    }
++
++    krb5_free_data_contents(ctx, &tmp);
++    return 0;
++}
++
++static krb5_error_code
++user_password_decode(krb5_context ctx, const char *secret,
++                     const uint8_t *auth, krb5_data *attr)
++{
++    krb5_error_code retval;
++    unsigned int seclen;
++    krb5_checksum sum;
++    ssize_t blck, i;
++    krb5_data tmp;
++
++    if (attr->length % BLOCK_SIZE != 0)
++        return EINVAL;
++
++    seclen = strlen(secret);
++    tmp.length = seclen + BLOCK_SIZE;
++    tmp.data = malloc(tmp.length);
++    if (tmp.data == NULL)
++        return ENOMEM;
++
++    for (blck = attr->length / BLOCK_SIZE - 1; blck >= 0; blck --) {
++        memcpy(tmp.data, secret, seclen);
++        if (blck == 0)
++            memcpy(tmp.data + seclen, auth, BLOCK_SIZE);
++        else
++            memcpy(tmp.data + seclen,
++                   &attr->data[(blck - 1) * BLOCK_SIZE],
++                   BLOCK_SIZE);
++
++        retval = krb5_c_make_checksum(ctx, CKSUMTYPE_RSA_MD5, NULL, 0,
++                                      &tmp, &sum);
++        if (retval != 0) {
++            krb5_free_data_contents(ctx, &tmp);
++            return retval;
++        }
++
++        for (i = 0; i < BLOCK_SIZE; i++)
++            attr->data[blck * BLOCK_SIZE + i] ^= sum.contents[i];
++        krb5_free_checksum_contents(ctx, &sum);
++    }
++
++    /* Strip off trailing NULL bytes. */
++    while (attr->length > 0 && attr->data[attr->length - 1] == '\0')
++        attr->length--;
++
++    krb5_free_data_contents(ctx, &tmp);
++    return 0;
++}
++
++krb5_error_code
++k5_radius_attr_valid(k5_radius_attr type, const krb5_data *data)
++{
++    const attribute_record *ar;
++
++    if (type == 0)
++        return EINVAL;
++
++    ar = &attributes[type - 1];
++    return (data->length >= ar->min && data->length <= ar->max) ? 0 : EMSGSIZE;
++}
++
++krb5_error_code
++k5_radius_attr_encode(krb5_context ctx, const char *secret,
++                      const uint8_t *auth, k5_radius_attr type,
++                      const krb5_data *in, krb5_data *out)
++{
++  char buffer[RADIUS_ATTR_SIZE_MAX];
++  krb5_error_code retval;
++  krb5_data tmp;
++
++  retval = k5_radius_attr_valid(type, in);
++  if (retval != 0)
++      return retval;
++
++  tmp = *in;
++  if (attributes[type - 1].encode == NULL)
++      goto egress;
++
++  tmp.data = buffer;
++  memcpy(tmp.data, in->data, in->length);
++  retval = (*attributes[type - 1].encode)(ctx, secret, auth, &tmp);
++  if (retval != 0)
++      return 0;
++
++egress:
++  if (tmp.length > out->length)
++      return EMSGSIZE;
++
++  out->length = tmp.length;
++  memcpy(out->data, tmp.data, tmp.length);
++  return 0;
++}
++
++krb5_error_code
++k5_radius_attr_decode(krb5_context ctx, const char *secret,
++                      const uint8_t *auth, k5_radius_attr type,
++                      const krb5_data *in, krb5_data *out)
++{
++    char buffer[RADIUS_ATTR_SIZE_MAX];
++    krb5_error_code retval;
++    krb5_data tmp;
++
++    retval = k5_radius_attr_valid(type, in);
++    if (retval != 0)
++        return retval;
++
++    tmp = *in;
++    if (attributes[type - 1].decode != NULL) {
++        tmp.data = buffer;
++        memcpy(tmp.data, in->data, in->length);
++        retval = (*attributes[type - 1].decode)(ctx, secret, auth, &tmp);
++        if (retval != 0)
++            return 0;
++    }
++
++    if (tmp.length > out->length)
++        return EMSGSIZE;
++
++    out->length = tmp.length;
++    memcpy(out->data, tmp.data, tmp.length);
++    return 0;
++}
++
++k5_radius_attr
++k5_radius_attr_name2num(const char *name)
++{
++    uint8_t i;
++
++    for (i = 0; i < UINT8_MAX; i++) {
++        if (attributes[i].name == NULL)
++            continue;
++
++        if (strcmp(attributes[i].name, name) == 0)
++            return ++i;
++    }
++
++    return 0;
++}
++
++const char *
++k5_radius_attr_num2name(k5_radius_attr type)
++{
++    if (type == 0)
++        return NULL;
++
++    return attributes[type - 1].name;
++}
+diff --git a/src/lib/radius/attrset.c b/src/lib/radius/attrset.c
+new file mode 100644
+index 0000000..694ea38
+--- /dev/null
++++ b/src/lib/radius/attrset.c
+@@ -0,0 +1,278 @@
++#include "internal.h"
++
++#include <string.h>
++
++typedef struct attr_ attr;
++struct attr_ {
++    attr *next;
++    k5_radius_attr type;
++    krb5_data attr;
++    char buffer[RADIUS_ATTR_SIZE_MAX];
++};
++
++struct k5_radius_attrset_ {
++    krb5_context ctx;
++    attr *attrs;
++};
++
++static void
++attrs_free(attr *a)
++{
++    if (a == NULL)
++        return;
++
++    attrs_free(a->next);
++    free(a);
++}
++
++static krb5_boolean
++attrs_find(attr ***prev, k5_radius_attr type, size_t *indx)
++{
++    attr **tmp;
++
++    if (prev == NULL || *prev == NULL)
++        return FALSE;
++
++    tmp = &(**prev)->next;
++    if (attrs_find(&tmp, type, indx)) {
++    	*prev = tmp;
++    	return TRUE;
++    }
++
++    if (**prev != NULL && (**prev)->type == type) {
++        if (*indx == 0)
++            return TRUE;
++        *indx -= 1;
++    }
++
++    return FALSE;
++}
++
++static krb5_error_code
++attrs_copy(attr *a, k5_radius_attrset *copy)
++{
++    krb5_error_code retval;
++
++    if (a == NULL)
++        return 0;
++
++    retval = attrs_copy(a->next, copy);
++    if (retval != 0)
++        return retval;
++
++    return k5_radius_attrset_add(copy, a->type, &a->attr);
++}
++
++static krb5_error_code
++attrset_encode(const attr *a, krb5_context ctx, const char *secret,
++               const uint8_t *auth, krb5_data *out)
++{
++    krb5_error_code retval;
++    krb5_data tmp;
++
++    if (a == NULL) {
++        out->length = 0;
++        return 0;
++    }
++
++    tmp = *out;
++    retval = attrset_encode(a->next, ctx, secret, auth, out);
++    if (retval != 0)
++        return retval;
++
++    tmp.data = out->data + out->length + 2;
++    tmp.length = RADIUS_PACKET_SIZE_ATTR_MAX - out->length;
++    if (tmp.length < 3)
++        return EMSGSIZE;
++    tmp.length -= 2;
++
++    retval = k5_radius_attr_encode(ctx, secret, auth, a->type, &a->attr, &tmp);
++    if (retval != 0)
++        return retval;
++
++    *(tmp.data - 2) = a->type;
++    *(tmp.data - 1) = tmp.length + 2;
++
++    out->length += tmp.length + 2;
++    return retval;
++}
++
++krb5_error_code
++k5_radius_attrset_new(krb5_context ctx, k5_radius_attrset **set)
++{
++    k5_radius_attrset *tmp;
++
++    tmp = calloc(1, sizeof(k5_radius_attrset));
++    if (tmp == NULL)
++        return ENOMEM;
++    tmp->ctx = ctx;
++
++    *set = tmp;
++    return 0;
++}
++
++void
++k5_radius_attrset_free(k5_radius_attrset *set)
++{
++    if (set == NULL)
++        return;
++
++    attrs_free(set->attrs);
++    free(set);
++}
++
++krb5_error_code
++k5_radius_attrset_add(k5_radius_attrset *set, k5_radius_attr type,
++                   const krb5_data *data)
++{
++    krb5_error_code retval;
++    attr *tmp;
++
++    retval = k5_radius_attr_valid(type, data);
++    if (retval != 0)
++        return retval;
++
++    tmp = calloc(1, sizeof(attr));
++    if (tmp == NULL)
++        return ENOMEM;
++
++    tmp->type = type;
++    tmp->attr.data = tmp->buffer;
++    tmp->attr.length = data->length;
++    memcpy(tmp->attr.data, data->data, data->length);
++
++    tmp->next = set->attrs;
++    set->attrs = tmp;
++    return 0;
++}
++
++krb5_error_code
++k5_radius_attrset_add_number(k5_radius_attrset *set, k5_radius_attr type,
++                          uint32_t num)
++{
++    krb5_data data;
++
++    num = htonl(num);
++    data.data = (char *)&num;
++    data.length = sizeof(num);
++    return k5_radius_attrset_add(set, type, &data);
++}
++
++void
++k5_radius_attrset_del(k5_radius_attrset *set, k5_radius_attr type, size_t indx)
++{
++    attr **prev = &set->attrs;
++    attr *tmp;
++
++    if (attrs_find(&prev, type, &indx)) {
++        tmp = *prev;
++        *prev = tmp->next;
++        free(tmp);
++    }
++}
++
++const krb5_data *
++k5_radius_attrset_get(const k5_radius_attrset *set, k5_radius_attr type,
++                   size_t indx)
++{
++    attr **prev = &((k5_radius_attrset*) set)->attrs;
++
++    if (attrs_find(&prev, type, &indx))
++        return &(*prev)->attr;
++
++    return NULL ;
++}
++
++krb5_error_code
++k5_radius_attrset_copy(const k5_radius_attrset *set, k5_radius_attrset **copy)
++{
++    krb5_error_code retval;
++    k5_radius_attrset *tmp;
++
++    retval = k5_radius_attrset_new(set->ctx, &tmp);
++    if (retval != 0)
++        return retval;
++
++    retval = attrs_copy(set->attrs, tmp);
++    if (retval != 0) {
++        k5_radius_attrset_free(tmp);
++        return retval;
++    }
++
++    *copy = tmp;
++    return 0;
++}
++
++krb5_error_code
++k5_radius_attrset_encode(const k5_radius_attrset *set, const char *secret,
++                      const uint8_t *auth, krb5_data *out)
++{
++    char buffer[RADIUS_ATTR_SIZE_MAX];
++    krb5_error_code retval;
++    krb5_data data;
++
++    if (set == NULL) {
++        out->length = 0;
++        return 0;
++    }
++
++    data.data = buffer;
++    data.length = sizeof(buffer);
++
++    retval = attrset_encode(set->attrs, set->ctx, secret, auth, &data);
++    if (retval != 0)
++        return retval;
++
++    if (out->length < data.length)
++        return EMSGSIZE;
++
++    memcpy(out->data, data.data, data.length);
++    out->length = data.length;
++    return 0;
++}
++
++krb5_error_code
++k5_radius_attrset_decode(krb5_context ctx, const krb5_data *in,
++                      const char *secret, const uint8_t *auth,
++                      k5_radius_attrset **set)
++{
++    char buffer[RADIUS_ATTR_SIZE_MAX];
++    krb5_data intmp, outtmp;
++    krb5_error_code retval;
++    k5_radius_attr type;
++    k5_radius_attrset *tmp;
++    size_t i;
++
++    retval = k5_radius_attrset_new(ctx, &tmp);
++    if (retval != 0)
++        return retval;
++
++    outtmp.data = buffer;
++    for (i = 0; i + 2 < in->length; ) {
++        type = in->data[i++];
++        intmp.length = in->data[i++] - 2;
++        intmp.data = &in->data[i];
++        i += intmp.length;
++
++        retval = (in->length < i) ? EBADMSG : 0;
++        if (retval != 0)
++            goto error;
++
++        outtmp.length = sizeof(buffer);
++        retval = k5_radius_attr_decode(ctx, secret, auth, type,
++                                       &intmp, &outtmp);
++        if (retval != 0)
++            goto error;
++
++        retval = k5_radius_attrset_add(tmp, type, &outtmp);
++        if (retval != 0)
++            goto error;
++    }
++
++    *set = tmp;
++    return 0;
++
++error:
++    k5_radius_attrset_free(tmp);
++    return retval;
++}
+diff --git a/src/lib/radius/client.c b/src/lib/radius/client.c
+new file mode 100644
+index 0000000..0267750
+--- /dev/null
++++ b/src/lib/radius/client.c
+@@ -0,0 +1,325 @@
++/*
++ * Copyright 2012 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "internal.h"
++
++#include <string.h>
++#include <sys/un.h>
++#include <unistd.h>
++#include <stdio.h>
++#include <limits.h>
++
++#ifndef HOST_NAME_MAX
++/* SUSv2 */
++#define HOST_NAME_MAX 255
++#endif
++
++typedef struct remote_state_ remote_state;
++typedef struct request_ request;
++typedef struct server_ server;
++
++struct remote_state_ {
++    const k5_radius_packet *packet;
++    k5_radius_remote *remote;
++};
++
++struct request_ {
++    k5_radius_client *rc;
++
++    k5_radius_code code;
++    k5_radius_attrset *attrs;
++    time_t timeout;
++    size_t retries;
++    k5_radius_cb *cb;
++    void *data;
++
++    remote_state *remotes;
++    ssize_t current;
++    ssize_t count;
++};
++
++struct server_ {
++    k5_radius_remote *serv;
++    time_t last;
++    server *next;
++};
++
++struct k5_radius_client_ {
++    krb5_context kctx;
++    verto_ctx *vctx;
++    server *servers;
++};
++
++/* Return either a pre-existing server that matches the
++ * address info and the secret or create a new one. */
++static krb5_error_code
++get_server(k5_radius_client *rc, const struct addrinfo *ai,
++           const char *secret, k5_radius_remote **out)
++{
++    krb5_error_code retval;
++    time_t currtime;
++    server *srv;
++
++    if (time(&currtime) == (time_t) -1)
++        return errno;
++
++    for (srv = rc->servers; srv != NULL; srv = srv->next) {
++        if (k5_radius_remote_equals(srv->serv, ai, secret)) {
++            srv->last = currtime;
++            *out = srv->serv;
++            return 0;
++        }
++    }
++
++    srv = calloc(1, sizeof(server));
++    if (srv == NULL)
++        return ENOMEM;
++    srv->last = currtime;
++
++    retval = k5_radius_remote_new(rc->kctx, rc->vctx, ai, secret, &srv->serv);
++    if (retval != 0) {
++        free(srv);
++        return retval;
++    }
++
++    srv->next = rc->servers;
++    rc->servers = srv;
++
++    *out = srv->serv;
++    return 0;
++}
++
++static void
++request_free(request *req)
++{
++    k5_radius_attrset_free(req->attrs);
++    free(req->remotes);
++    free(req);
++}
++
++static krb5_error_code
++request_new(k5_radius_client *rc, k5_radius_code code,
++            const k5_radius_attrset *attrs, const struct addrinfo *ai,
++            const char *secret, time_t timeout, size_t retries,
++            k5_radius_cb cb, void *data, request **req)
++{
++    const struct addrinfo *tmp;
++    krb5_error_code retval;
++    request *rqst;
++    size_t i;
++
++    if (ai == NULL)
++        return EINVAL;
++
++    rqst = calloc(1, sizeof(request));
++    if (rqst == NULL)
++        return ENOMEM;
++
++    for (tmp = ai; tmp != NULL; tmp = tmp->ai_next)
++        rqst->count++;
++
++    rqst->rc = rc;
++    rqst->code = code;
++    rqst->cb = cb;
++    rqst->data = data;
++    rqst->timeout = timeout / rqst->count;
++    rqst->retries = retries;
++
++    retval = k5_radius_attrset_copy(attrs, &rqst->attrs);
++    if (retval != 0) {
++        request_free(rqst);
++        return retval;
++    }
++
++    rqst->remotes = calloc(rqst->count + 1, sizeof(remote_state));
++    if (rqst->remotes == NULL) {
++        request_free(rqst);
++        return ENOMEM;
++    }
++
++    i = 0;
++    for (tmp = ai; tmp != NULL; tmp = tmp->ai_next) {
++        retval = get_server(rc, tmp, secret, &rqst->remotes[i++].remote);
++        if (retval != 0) {
++            request_free(rqst);
++            return retval;
++        }
++    }
++
++    *req = rqst;
++    return 0;
++}
++
++static void
++recursive_age(server *srv, server **prev, time_t currtime)
++{
++    if (srv == NULL)
++        return;
++
++    recursive_age(srv->next, &srv->next, currtime);
++    if (currtime == (time_t)-1 || currtime - srv->last > 60 * 60) {
++        *prev = srv->next;
++        k5_radius_remote_free(srv->serv);
++        free(srv);
++    }
++}
++
++static void
++on_response(krb5_error_code retval, const k5_radius_packet *reqp,
++            const k5_radius_packet *rspp, void *data)
++{
++    request *req = (request *)data;
++    time_t currtime;
++    size_t i;
++
++    /* Do nothing if we are already completed. */
++    if (req->count < 0)
++        return;
++
++    /* If we have timed out and have more remotes to try, do so. */
++    if (retval == ETIMEDOUT && req->remotes[++req->current].remote != NULL) {
++        retval = k5_radius_remote_send(req->remotes[req->current].remote,
++                                    req->code, req->attrs, on_response,
++                                    req, req->timeout, req->retries,
++                                    &req->remotes[req->current].packet);
++        if (retval == 0)
++            return;
++    }
++
++    /* Mark the request as complete. */
++    req->count = -1;
++
++    /* Inform the callback. */
++    (*req->cb)(retval, reqp, rspp, req->data);
++
++    /* Cancel the outstanding packets. */
++    for (i = 0; req->remotes[i].remote != NULL; i++)
++        k5_radius_remote_cancel(req->remotes[i].remote,
++                                req->remotes[i].packet);
++
++    /* Age out servers that haven't been used in a while. */
++    if (time(&currtime) != (time_t)-1)
++        recursive_age(req->rc->servers, &req->rc->servers, currtime);
++
++    request_free(req);
++}
++
++krb5_error_code
++k5_radius_client_new(krb5_context kctx, verto_ctx *vctx,
++                     k5_radius_client **out)
++{
++    k5_radius_client *tmp;
++
++    tmp = calloc(1, sizeof(k5_radius_client));
++    if (tmp == NULL)
++        return ENOMEM;
++
++    tmp->kctx = kctx;
++    tmp->vctx = vctx;
++
++    *out = tmp;
++    return 0;
++}
++
++void
++k5_radius_client_free(k5_radius_client *rc)
++{
++    if (rc == NULL)
++        return;
++
++    recursive_age(rc->servers, &rc->servers, -1);
++    free(rc);
++}
++
++krb5_error_code
++k5_radius_client_send(k5_radius_client *rc, k5_radius_code code,
++                      const k5_radius_attrset *attrs, const char *remote,
++                      const char *secret, time_t timeout, size_t retries,
++                      k5_radius_cb cb, void *data)
++{
++    char *sep, srv[HOST_NAME_MAX + 1], *svc = "radius";
++    struct addrinfo hints, *ai = NULL;
++    krb5_error_code retval;
++    struct sockaddr_un ua;
++    request *req;
++
++    memset(&hints, 0, sizeof(hints));
++
++    if (remote[0] == '/') {
++        ua.sun_family = AF_UNIX;
++        snprintf(ua.sun_path, sizeof(ua.sun_path), "%s", remote);
++        hints.ai_family = AF_UNIX;
++        hints.ai_socktype = SOCK_STREAM;
++        hints.ai_addr = (struct sockaddr *)&ua;
++        hints.ai_addrlen = sizeof(ua);
++        ai = &hints;
++    } else {
++        /* Isolate the port number if it exists. */
++        snprintf(srv, sizeof(srv), "%s", remote);
++
++        /* IPv6 */
++        if (srv[0] == '[') {
++            sep = strrchr(srv, ']');
++            if (sep != NULL && sep[1] == ':') {
++                sep[1] = '\0';
++                svc = &sep[2];
++            }
++
++        /* IPv4 or DNS */
++        } else {
++            sep = strrchr(srv, ':');
++            if (sep != NULL && sep[1] != '\0') {
++                sep[0] = '\0';
++                svc = &sep[1];
++            }
++        }
++
++        /* Perform the lookup. */
++        hints.ai_socktype = SOCK_DGRAM;
++        retval = gai_error_(getaddrinfo(srv, svc, &hints, &ai));
++        if (retval != 0)
++            return retval;
++    }
++
++    retval = request_new(rc, code, attrs, ai, secret, timeout, retries, cb,
++                         data, &req);
++    if (ai != &hints)
++        freeaddrinfo(ai);
++    if (retval != 0)
++        return retval;
++
++    retval = k5_radius_remote_send(req->remotes[req->current].remote,
++                                   req->code, req->attrs, on_response, req,
++                                   req->timeout, req->retries,
++                                   &req->remotes[req->current].packet);
++    if (retval != 0) {
++        request_free(req);
++        return retval;
++    }
++
++    return 0;
++}
+diff --git a/src/lib/radius/code.c b/src/lib/radius/code.c
+new file mode 100644
+index 0000000..9ecbe93
+--- /dev/null
++++ b/src/lib/radius/code.c
+@@ -0,0 +1,109 @@
++/*
++ * Copyright 2012 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "internal.h"
++
++#include <string.h>
++
++static const char *codes[UINT8_MAX] = {
++    "Access-Request",
++    "Access-Accept",
++    "Access-Reject",
++    "Accounting-Request",
++    "Accounting-Response",
++    "Accounting-Status",
++    "Password-Request",
++    "Password-Ack",
++    "Password-Reject",
++    "Accounting-Message",
++    "Access-Challenge",
++    "Status-Server",
++    "Status-Client",
++    NULL,
++    NULL,
++    NULL,
++    NULL,
++    NULL,
++    NULL,
++    NULL,
++    "Resource-Free-Request",
++    "Resource-Free-Response",
++    "Resource-Query-Request",
++    "Resource-Query-Response",
++    "Alternate-Resource-Reclaim-Request",
++    "NAS-Reboot-Request",
++    "NAS-Reboot-Response",
++    NULL,
++    "Next-Passcode",
++    "New-Pin",
++    "Terminate-Session",
++    "Password-Expired",
++    "Event-Request",
++    "Event-Response",
++    NULL,
++    NULL,
++    NULL,
++    NULL,
++    NULL,
++    "Disconnect-Request",
++    "Disconnect-Ack",
++    "Disconnect-Nak",
++    "Change-Filters-Request",
++    "Change-Filters-Ack",
++    "Change-Filters-Nak",
++    NULL,
++    NULL,
++    NULL,
++    NULL,
++    "IP-Address-Allocate",
++    "IP-Address-Release",
++};
++
++k5_radius_code
++k5_radius_code_name2num(const char *name)
++{
++    uint8_t i;
++
++    for (i = 0; i < UINT8_MAX; i++) {
++        if (codes[i] == NULL)
++            continue;
++
++        if (strcmp(codes[i], name) == 0)
++            return ++i;
++    }
++
++    return 0;
++}
++
++const char *
++k5_radius_code_num2name(k5_radius_code code)
++{
++    if (code == 0)
++        return NULL;
++
++    return codes[code - 1];
++}
+diff --git a/src/lib/radius/deps b/src/lib/radius/deps
+new file mode 100644
+index 0000000..73ac906
+--- /dev/null
++++ b/src/lib/radius/deps
+@@ -0,0 +1,21 @@
++# 
++# Generated makefile dependencies follow.
++#
++attr.so attr.po $(OUTPRE)attr.$(OBJEXT): $(BUILDTOP)/include/krb5/krb5.h \
++  $(COM_ERR_DEPS) $(top_srcdir)/include/krb5.h attr.c \
++  internal.h k5radius.h
++attrset.so attrset.po $(OUTPRE)attrset.$(OBJEXT): $(BUILDTOP)/include/krb5/krb5.h \
++  $(COM_ERR_DEPS) $(top_srcdir)/include/krb5.h attrset.c \
++  internal.h k5radius.h
++client.so client.po $(OUTPRE)client.$(OBJEXT): $(BUILDTOP)/include/krb5/krb5.h \
++  $(COM_ERR_DEPS) $(top_srcdir)/include/krb5.h client.c \
++  internal.h k5radius.h
++code.so code.po $(OUTPRE)code.$(OBJEXT): $(BUILDTOP)/include/krb5/krb5.h \
++  $(COM_ERR_DEPS) $(top_srcdir)/include/krb5.h code.c \
++  internal.h k5radius.h
++packet.so packet.po $(OUTPRE)packet.$(OBJEXT): $(BUILDTOP)/include/krb5/krb5.h \
++  $(COM_ERR_DEPS) $(top_srcdir)/include/krb5.h internal.h \
++  k5radius.h packet.c
++remote.so remote.po $(OUTPRE)remote.$(OBJEXT): $(BUILDTOP)/include/krb5/krb5.h \
++  $(COM_ERR_DEPS) $(top_srcdir)/include/krb5.h internal.h \
++  k5radius.h remote.c
+diff --git a/src/lib/radius/internal.h b/src/lib/radius/internal.h
+new file mode 100644
+index 0000000..c8bc32c
+--- /dev/null
++++ b/src/lib/radius/internal.h
+@@ -0,0 +1,159 @@
++/*
++ * Copyright 2012 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef RADIUS_INTERNAL_H_
++#define RADIUS_INTERNAL_H_
++
++#include "k5radius.h"
++
++#include <errno.h>
++
++#include <sys/types.h>
++#include <sys/socket.h>
++#include <netdb.h>
++
++/* RFC 2865 */
++#define RADIUS_PACKET_OFFSET_CODE 0
++#define RADIUS_PACKET_OFFSET_ID 1
++#define RADIUS_PACKET_OFFSET_LENGTH 2
++#define RADIUS_PACKET_OFFSET_AUTH 4
++#define RADIUS_PACKET_OFFSET_ATTR 20
++#define RADIUS_ATTR_SIZE_MAX (UINT8_MAX-2)
++#define RADIUS_PACKET_SIZE_HEAD 4
++#define RADIUS_PACKET_SIZE_AUTH 16
++#define RADIUS_PACKET_SIZE_EMPTY \
++  (RADIUS_PACKET_SIZE_HEAD + RADIUS_PACKET_SIZE_AUTH)
++#define RADIUS_PACKET_SIZE_ATTR_MAX \
++  (K5_RADIUS_PACKET_SIZE_MAX - RADIUS_PACKET_SIZE_EMPTY)
++
++typedef struct k5_radius_remote_ k5_radius_remote;
++
++/* Validates constraints of an attribute. */
++krb5_error_code
++k5_radius_attr_valid(k5_radius_attr type, const krb5_data *data);
++
++/* Encodes an attribute. */
++krb5_error_code
++k5_radius_attr_encode(krb5_context ctx, const char *secret,
++                      const uint8_t *auth, k5_radius_attr type,
++                      const krb5_data *in, krb5_data *out);
++
++/* Decodes an attribute. */
++krb5_error_code
++k5_radius_attr_decode(krb5_context ctx, const char *secret,
++                      const uint8_t *auth, k5_radius_attr type,
++                      const krb5_data *in, krb5_data *out);
++
++/* Encode the attributes into the buffer. */
++krb5_error_code
++k5_radius_attrset_encode(const k5_radius_attrset *set, const char *secret,
++                         const uint8_t *auth, krb5_data *out);
++
++/* Decodes attributes from a buffer. */
++krb5_error_code
++k5_radius_attrset_decode(krb5_context ctx, const krb5_data *in,
++                         const char *secret, const uint8_t *auth,
++                         k5_radius_attrset **set);
++
++/* Creates a new remote object which manages a
++ * socket and the state of outstanding requests. */
++krb5_error_code
++k5_radius_remote_new(krb5_context kctx, verto_ctx *vctx,
++                     const struct addrinfo *info, const char *secret,
++                     k5_radius_remote **rr);
++
++/* Frees the remote object. */
++void
++k5_radius_remote_free(k5_radius_remote *rr);
++
++/*
++ * Sends the packet to the remote. The cb will be called when a response is
++ * received, the request times out, the request is canceled or an error occurs.
++ *
++ * The timeout parameter is the total timeout across all retries.
++ *
++ * If the cb is called with a retval of ETIMEDOUT it indicates that the alloted
++ * time has elapsed. However, in the case of a timeout, we continue to listen
++ * for the packet until k5_radius_remote_cancel() is called or a response is
++ * received. This means that cb will always be called twice in the event of a
++ * timeout. This permits you to pursue other remotes while still listening for
++ * a response from the first one.
++ */
++krb5_error_code
++k5_radius_remote_send(k5_radius_remote *rr, k5_radius_code code,
++                      k5_radius_attrset *attrs, k5_radius_cb *cb, void *data,
++                      time_t timeout, size_t retries,
++                      const k5_radius_packet **pkt);
++
++/* Removes packet from the queue of requests awaiting responses. */
++void
++k5_radius_remote_cancel(k5_radius_remote *rr, const k5_radius_packet *pkt);
++
++/* Determines if this remote object refers to the remote resource identified
++ * by the addrinfo struct and the secret. */
++krb5_boolean
++k5_radius_remote_equals(const k5_radius_remote *rr,
++                        const struct addrinfo *info, const char *secret);
++
++/* Adapted from lib/krb5/os/sendto_kdc.c. */
++static inline int
++gai_error_(int err)
++{
++    switch (err) {
++    case 0:
++        return 0;
++    case EAI_BADFLAGS:
++    case EAI_FAMILY:
++    case EAI_SOCKTYPE:
++    case EAI_SERVICE:
++#ifdef EAI_ADDRFAMILY
++    case EAI_ADDRFAMILY:
++#endif
++        return EINVAL;
++    case EAI_AGAIN:
++        return EAGAIN;
++    case EAI_MEMORY:
++        return ENOMEM;
++#if defined(EAI_NODATA) && EAI_NODATA != EAI_NONAME
++    case EAI_NODATA:
++#endif
++    case EAI_NONAME:
++        return EADDRNOTAVAIL;
++#ifdef EAI_OVERFLOW
++    case EAI_OVERFLOW:
++        return EOVERFLOW;
++#endif
++#ifdef EAI_SYSTEM
++    case EAI_SYSTEM:
++        return errno;
++#endif
++    default:
++        return EINVAL;
++    }
++}
++
++#endif /* RADIUS_INTERNAL_H_ */
+diff --git a/src/lib/radius/k5radius.h b/src/lib/radius/k5radius.h
+new file mode 100644
+index 0000000..857af19
+--- /dev/null
++++ b/src/lib/radius/k5radius.h
+@@ -0,0 +1,200 @@
++/*
++ * Copyright 2012 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef K5_RADIUS_H_
++#define K5_RADIUS_H_
++
++#include <krb5.h>
++#include <verto.h>
++#include <stddef.h>
++#include <stdint.h>
++#include <stdio.h>
++
++#define K5_RADIUS_PACKET_SIZE_MAX 4096
++
++#define K5_RADIUS_SERVICE_TYPE_LOGIN 1
++#define K5_RADIUS_SERVICE_TYPE_FRAMED 2
++#define K5_RADIUS_SERVICE_TYPE_CALLBACK_LOGIN 3
++#define K5_RADIUS_SERVICE_TYPE_CALLBACK_FRAMED 4
++#define K5_RADIUS_SERVICE_TYPE_OUTBOUND 5
++#define K5_RADIUS_SERVICE_TYPE_ADMINISTRATIVE 6
++#define K5_RADIUS_SERVICE_TYPE_NAS_PROMPT 7
++#define K5_RADIUS_SERVICE_TYPE_AUTHENTICATE_ONLY 8
++#define K5_RADIUS_SERVICE_TYPE_CALLBACK_NAS_PROMPT 9
++#define K5_RADIUS_SERVICE_TYPE_CALL_CHECK 10
++#define K5_RADIUS_SERVICE_TYPE_CALLBACK_ADMINISTRATIVE 11
++
++typedef struct k5_radius_attrset_ k5_radius_attrset;
++typedef struct k5_radius_packet_ k5_radius_packet;
++typedef struct k5_radius_client_ k5_radius_client;
++typedef uint8_t k5_radius_code;
++typedef uint8_t k5_radius_attr;
++
++/* Called when a response is received or the request times out. The response
++ * is free'd automatically when the function is returned. */
++typedef void
++(k5_radius_cb)(krb5_error_code retval,
++            const k5_radius_packet *request,
++            const k5_radius_packet *response,
++            void *data);
++
++/*
++ * Called to iterate over the collection of outstanding requests.
++ * Either the callback will be called until it returns NULL or it will
++ * call with cancel = TRUE to terminate in the middle of an iteration.
++ */
++typedef k5_radius_packet *
++(k5_radius_packet_iter_cb)(void *data, krb5_boolean cancel);
++
++/* Converts a code name to its number. Only works for codes defined
++ * by RFC 2875 or 2882. Returns 0 if the name was not found. */
++k5_radius_code
++k5_radius_code_name2num(const char *name);
++
++/* Converts a code number to its name. Only works for attributes defined
++ * by RFC 2865 or 2882. Returns NULL if the name was not found. */
++const char *
++k5_radius_code_num2name(k5_radius_code code);
++
++/* Converts an attribute name to its number. Only works for attributes defined
++ * by RFC 2865. Returns 0 if the name was not found. */
++k5_radius_attr
++k5_radius_attr_name2num(const char *name);
++
++/* Converts an attribute number to its name. Only works for attributes defined
++ * by RFC 2865. Returns NULL if the name was not found. */
++const char *
++k5_radius_attr_num2name(k5_radius_attr type);
++
++/* Create a new attrset. */
++krb5_error_code
++k5_radius_attrset_new(krb5_context ctx, k5_radius_attrset **set);
++
++/* Creates a deep copy of an attrset. */
++krb5_error_code
++k5_radius_attrset_copy(const k5_radius_attrset *set, k5_radius_attrset **copy);
++
++/* Free an attrset. */
++void
++k5_radius_attrset_free(k5_radius_attrset *set);
++
++/* Add an attribute to the given set. */
++krb5_error_code
++k5_radius_attrset_add(k5_radius_attrset *set, k5_radius_attr type,
++                      const krb5_data *data);
++
++/* Add a four-octet unsigned number attribute to the given set. */
++krb5_error_code
++k5_radius_attrset_add_number(k5_radius_attrset *set, k5_radius_attr type,
++                             uint32_t num);
++
++/* Delete the specified attribute. */
++void
++k5_radius_attrset_del(k5_radius_attrset *set, k5_radius_attr type,
++                      size_t indx);
++
++/* Get the specified attribute. */
++const krb5_data *
++k5_radius_attrset_get(const k5_radius_attrset *set, k5_radius_attr type,
++                      size_t indx);
++
++/* Determines the bytes needed from the socket to get the whole packet.
++ * Don't cache the return value as it can change! Returns -1 on EBADMSG. */
++ssize_t
++k5_radius_packet_bytes_needed(const krb5_data *buffer);
++
++/* Free a packet. */
++void
++k5_radius_packet_free(k5_radius_packet *pkt);
++
++/* Create a new request packet. */
++krb5_error_code
++k5_radius_packet_new_request(krb5_context ctx, const char *secret,
++                             k5_radius_code code, const k5_radius_attrset *set,
++                             k5_radius_packet_iter_cb *cb, void *data,
++                             k5_radius_packet **request);
++
++/* Create a new response packet. */
++krb5_error_code
++k5_radius_packet_new_response(krb5_context ctx, const char *secret,
++                              k5_radius_code code,
++                              const k5_radius_attrset *set,
++                              const k5_radius_packet *request,
++                              k5_radius_packet **response);
++
++/*
++ * Decode a radius packet from krb5_data.
++ *
++ * If request == TRUE, the resulting packet will be a request packet. In this
++ * case, if cb is not NULL, the iterator will be used to determine if this
++ * packet has already been received. If this packet has already been received,
++ * the return value will be EAGAIN and *reqpkt will contain a reference to the
++ * previously received packet. In all cases where request == TRUE, the rsppkt
++ * parameter is ignored.
++ *
++ * If request == FALSE, the resulting packet will be a response packet. In this
++ * case, if cb is not NULL, the iterator will be used to find a corresponding
++ * request packet. The decoded response packet will be stored in rsppkt. If
++ * a corresponding request packet is found, it will be set in reqpkt.
++ */
++krb5_error_code
++k5_radius_packet_decode(krb5_context ctx, const char *secret,
++                        const krb5_data *buffer, krb5_boolean request,
++                        k5_radius_packet_iter_cb *cb, void *data,
++                        k5_radius_packet **reqpkt, k5_radius_packet **rsppkt);
++
++/* Encode packet. */
++const krb5_data *
++k5_radius_packet_encode(const k5_radius_packet *pkt);
++
++/* Get the code for the given packet. */
++k5_radius_code
++k5_radius_packet_get_code(const k5_radius_packet *pkt);
++
++/* Get the specified attribute. */
++const krb5_data *
++k5_radius_packet_get_attr(const k5_radius_packet *pkt, k5_radius_attr type,
++                          size_t indx);
++
++/* Prints a user readable description of the packet to the stream. */
++int
++k5_radius_packet_print(FILE *stream, const krb5_data *pkt);
++
++krb5_error_code
++k5_radius_client_new(krb5_context kctx, verto_ctx *vctx,
++                     k5_radius_client **out);
++
++void
++k5_radius_client_free(k5_radius_client *rc);
++
++krb5_error_code
++k5_radius_client_send(k5_radius_client *rc, k5_radius_code code,
++                      const k5_radius_attrset *attrs, const char *remote,
++                      const char *secret, time_t timeout, size_t retries,
++                      k5_radius_cb cb, void *data);
++
++#endif /* K5_RADIUS_H_ */
+diff --git a/src/lib/radius/libk5radius.exports b/src/lib/radius/libk5radius.exports
+new file mode 100644
+index 0000000..2945dcb
+--- /dev/null
++++ b/src/lib/radius/libk5radius.exports
+@@ -0,0 +1,23 @@
++k5_radius_code_name2num
++k5_radius_code_num2name
++k5_radius_attr_name2num
++k5_radius_attr_num2name
++k5_radius_attrset_new
++k5_radius_attrset_copy
++k5_radius_attrset_free
++k5_radius_attrset_add
++k5_radius_attrset_add_number
++k5_radius_attrset_del
++k5_radius_attrset_get
++k5_radius_packet_bytes_needed
++k5_radius_packet_free
++k5_radius_packet_new_request
++k5_radius_packet_new_response
++k5_radius_packet_decode
++k5_radius_packet_encode
++k5_radius_packet_get_code
++k5_radius_packet_get_attr
++k5_radius_packet_print
++k5_radius_client_new
++k5_radius_client_free
++k5_radius_client_send
+diff --git a/src/lib/radius/packet.c b/src/lib/radius/packet.c
+new file mode 100644
+index 0000000..0466342
+--- /dev/null
++++ b/src/lib/radius/packet.c
+@@ -0,0 +1,453 @@
++/*
++ * Copyright 2012 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "internal.h"
++
++#include <string.h>
++
++#include <arpa/inet.h>
++
++#define offset(d, o, t) ((t *)&(d)->data[o])
++#define pkt_code(p) offset(&p->pkt, RADIUS_PACKET_OFFSET_CODE, k5_radius_code)
++#define pkt_id(p)   offset(&p->pkt, RADIUS_PACKET_OFFSET_ID, uint8_t)
++#define pkt_len(p)  offset(&p->pkt, RADIUS_PACKET_OFFSET_LENGTH, uint16_t)
++#define pkt_auth(p) offset(&p->pkt, RADIUS_PACKET_OFFSET_AUTH, uint8_t)
++#define pkt_attr(p) offset(&p->pkt, RADIUS_PACKET_OFFSET_ATTR, char)
++
++struct k5_radius_packet_ {
++    char buffer[K5_RADIUS_PACKET_SIZE_MAX];
++    k5_radius_attrset *attrset;
++    krb5_data pkt;
++};
++
++typedef struct {
++    uint8_t x[(UINT8_MAX + 1) / 8];
++} idmap;
++
++/* Ensure the map is empty. */
++static inline void
++idmap_init(idmap *map)
++{
++    memset(map, 0, sizeof(*map));
++}
++
++/* Set an id as already allocated. */
++static inline void
++idmap_set(idmap *map, uint8_t id)
++{
++    map->x[id / 8] = 1 << (id % 8);
++}
++
++/* Returns TRUE if the id is unused. */
++static inline krb5_boolean
++idmap_get(const idmap *map, uint8_t id)
++{
++    return (map->x[id / 8] & (1 << (id % 8))) == 0;
++}
++
++/* Finds an unused id starting the search at the value specified in id.
++ * NOTE: For optimal security, the initial value of id should be random. */
++static inline krb5_error_code
++idmap_find(const idmap *map, uint8_t *id)
++{
++    int16_t i;
++
++    for (i = *id; i >= 0 && i <= UINT8_MAX; *id % 2 == 0 ? i++ : i--) {
++        if (idmap_get(map, i))
++            goto success;
++    }
++
++    for (i = *id; i >= 0 && i <= UINT8_MAX; *id % 2 == 1 ? i++ : i--) {
++        if (idmap_get(map, i))
++            goto success;
++    }
++
++    return ERANGE;
++
++success:
++    *id = i;
++    return 0;
++}
++
++static inline krb5_error_code
++randomize(krb5_context ctx, unsigned int size, void *buffer)
++{
++    krb5_data random;
++
++    random.data = buffer;
++    random.length = size;
++    return krb5_c_random_make_octets(ctx, &random);
++}
++
++static krb5_error_code
++id_generate(krb5_context ctx, k5_radius_packet_iter_cb *cb, void *data,
++            uint8_t *id)
++{
++    krb5_error_code retval;
++    k5_radius_packet *tmp;
++    idmap used;
++    uint8_t i;
++
++    retval = randomize(ctx, sizeof(i), &i);
++    if (retval != 0) {
++        if (cb != NULL)
++            (*cb)(data, TRUE);
++        return retval;
++    }
++
++    if (cb != NULL) {
++        idmap_init(&used);
++        for (tmp = (*cb)(data, FALSE); tmp != NULL; tmp = (*cb)(data, FALSE))
++            idmap_set(&used, tmp->pkt.data[1]);
++
++        retval = idmap_find(&used, &i);
++        if (retval != 0)
++            return retval;
++    }
++
++    *id = i;
++    return 0;
++}
++
++static krb5_error_code
++auth_generate_random(krb5_context ctx, uint8_t *rauth)
++{
++    uint32_t trunctime;
++    time_t currtime;
++
++    /* Get the least-significant four bytes of the current time. */
++    currtime = time(NULL);
++    if (currtime == ((time_t) -1))
++        return errno;
++    trunctime = (uint32_t)currtime;
++    memcpy(rauth, &trunctime, sizeof(trunctime));
++
++    /* Randomize the rest of the buffer. */
++    return randomize(ctx, RADIUS_PACKET_SIZE_AUTH - sizeof(trunctime),
++                     rauth + sizeof(trunctime));
++}
++
++static krb5_error_code
++auth_generate_response(krb5_context ctx, const char *secret,
++                       const k5_radius_packet *response, const uint8_t *auth,
++                       uint8_t *rauth)
++{
++    krb5_error_code retval;
++    krb5_checksum hash;
++    krb5_data data;
++
++    /* Allocate the temporary buffer. */
++    data.length = response->pkt.length + strlen(secret);
++    data.data = calloc(data.length, sizeof(char));
++    if (data.data == NULL)
++        return ENOMEM;
++
++    /* Encoded RADIUS packet with the request's
++     * authenticator and the secret at the end. */
++    memcpy(data.data, response->pkt.data, response->pkt.length);
++    memcpy(data.data + RADIUS_PACKET_OFFSET_AUTH, auth,
++           RADIUS_PACKET_SIZE_AUTH);
++    memcpy(data.data + response->pkt.length, secret, strlen(secret));
++
++    /* Hash it. */
++    retval = krb5_c_make_checksum(ctx, CKSUMTYPE_RSA_MD5, NULL, 0,
++                                  &data, &hash);
++    free(data.data);
++    if (retval != 0)
++        return retval;
++
++    memcpy(rauth, hash.contents, RADIUS_PACKET_SIZE_AUTH);
++    krb5_free_checksum_contents(ctx, &hash);
++    return 0;
++}
++
++static k5_radius_packet *
++packet_new()
++{
++    k5_radius_packet *pkt;
++
++    pkt = calloc(1, sizeof(k5_radius_packet));
++    if (pkt == NULL)
++        return NULL;
++    pkt->pkt.data = pkt->buffer;
++    pkt->pkt.length = sizeof(pkt->buffer);
++
++    return pkt;
++}
++
++static krb5_error_code
++packet_set_attrset(krb5_context ctx, const char *secret, k5_radius_packet *pkt)
++{
++    krb5_data tmp;
++
++    tmp.data = pkt_attr(pkt);
++    tmp.length = pkt->pkt.length - RADIUS_PACKET_OFFSET_ATTR;
++    return k5_radius_attrset_decode(ctx, &tmp, secret, pkt_auth(pkt),
++                                 &pkt->attrset);
++}
++
++#include <stdio.h>
++
++ssize_t
++k5_radius_packet_bytes_needed(const krb5_data *buffer)
++{
++    size_t len;
++
++    if (buffer->length < RADIUS_PACKET_OFFSET_AUTH)
++        return RADIUS_PACKET_OFFSET_AUTH - buffer->length;
++
++    len = ntohs(*offset(buffer, RADIUS_PACKET_OFFSET_LENGTH, uint16_t));
++    if (len > K5_RADIUS_PACKET_SIZE_MAX)
++        return -1;
++
++    return buffer->length > len ? 0 : len - buffer->length;
++}
++
++void
++k5_radius_packet_free(k5_radius_packet *pkt)
++{
++    if (pkt)
++        k5_radius_attrset_free(pkt->attrset);
++    free(pkt);
++}
++
++/* Create a new request packet. */
++krb5_error_code
++k5_radius_packet_new_request(krb5_context ctx, const char *secret,
++                             k5_radius_code code, const k5_radius_attrset *set,
++                             k5_radius_packet_iter_cb *cb, void *data,
++                             k5_radius_packet **request)
++{
++    krb5_error_code retval;
++    k5_radius_packet *pkt;
++    krb5_data tmp;
++
++    pkt = packet_new();
++    if (pkt == NULL) {
++        if (cb != NULL)
++            (*cb)(data, TRUE);
++        return ENOMEM;
++    }
++
++    /* Generate the ID. */
++    retval = id_generate(ctx, cb, data, pkt_id(pkt));
++    if (retval != 0)
++        goto error;
++
++    /* Generate the authenticator. */
++    retval = auth_generate_random(ctx, pkt_auth(pkt));
++    if (retval != 0)
++        goto error;
++
++    /* Encode the attributes. */
++    tmp.data = pkt_attr(pkt);
++    tmp.length = pkt->pkt.length - RADIUS_PACKET_OFFSET_ATTR;
++    retval = k5_radius_attrset_encode(set, secret, pkt_auth(pkt), &tmp);
++    if (retval != 0)
++        goto error;
++
++    /* Set the code, ID and length. */
++    pkt->pkt.length = tmp.length + RADIUS_PACKET_OFFSET_ATTR;
++    *pkt_code(pkt) = code;
++    *pkt_len(pkt) = htons(pkt->pkt.length);
++
++    /* Copy the attrset for future use. */
++    retval = packet_set_attrset(ctx, secret, pkt);
++    if (retval != 0)
++        goto error;
++
++    *request = pkt;
++    return 0;
++
++error:
++    free(pkt);
++    return retval;
++}
++
++/* Create a new request packet. */
++krb5_error_code
++k5_radius_packet_new_response(krb5_context ctx, const char *secret,
++                              k5_radius_code code,
++                              const k5_radius_attrset *set,
++                              const k5_radius_packet *request,
++                              k5_radius_packet **response)
++{
++    krb5_error_code retval;
++    k5_radius_packet *pkt;
++    krb5_data tmp;
++
++    pkt = packet_new();
++    if (pkt == NULL)
++        return ENOMEM;
++
++    /* Encode the attributes. */
++    tmp.data = pkt_attr(pkt);
++    tmp.length = pkt->pkt.length - RADIUS_PACKET_OFFSET_ATTR;
++    retval = k5_radius_attrset_encode(set, secret, pkt_auth(request), &tmp);
++    if (retval != 0)
++        goto error;
++
++    /* Set the code, ID and length. */
++    pkt->pkt.length = tmp.length + RADIUS_PACKET_OFFSET_ATTR;
++    *pkt_code(pkt) = code;
++    *pkt_id(pkt) = *pkt_id(request);
++    *pkt_len(pkt) = htons(pkt->pkt.length);
++
++    /* Generate the authenticator. */
++    retval = auth_generate_response(ctx, secret, pkt, pkt_auth(request),
++                                    pkt_auth(pkt));
++    if (retval != 0)
++        goto error;
++
++    /* Copy the attrset for future use. */
++    retval = packet_set_attrset(ctx, secret, pkt);
++    if (retval != 0)
++        goto error;
++
++    *response = pkt;
++    return 0;
++
++error:
++    free(pkt);
++    return retval;
++}
++
++krb5_error_code
++k5_radius_packet_decode(krb5_context ctx, const char *secret,
++                        const krb5_data *buffer, krb5_boolean request,
++                        k5_radius_packet_iter_cb *cb, void *data,
++                        k5_radius_packet **reqpkt, k5_radius_packet **rsppkt)
++{
++    uint8_t auth[RADIUS_PACKET_SIZE_AUTH];
++    k5_radius_packet *pkt, *tmp;
++    krb5_error_code retval;
++    uint16_t len;
++
++    pkt = packet_new();
++    if (pkt == NULL) {
++        retval = ENOMEM;
++        goto error;
++    }
++
++    /* Ensure a proper message length. */
++    retval = buffer->length < RADIUS_PACKET_OFFSET_ATTR ? EMSGSIZE : 0;
++    if (retval != 0)
++        goto error;
++    len = ntohs(*offset(buffer, RADIUS_PACKET_OFFSET_LENGTH, uint16_t));
++    retval = len < RADIUS_PACKET_OFFSET_ATTR ? EBADMSG : 0;
++    if (retval != 0)
++        goto error;
++    retval = (len > buffer->length || len > pkt->pkt.length) ? EBADMSG : 0;
++    if (retval != 0)
++        goto error;
++
++    /* Copy over the buffer. */
++    pkt->pkt.length = len;
++    memcpy(pkt->pkt.data, buffer->data, len);
++
++    /* Parse the packet to ensure it is well-formed. */
++    retval = packet_set_attrset(ctx, secret, pkt);
++    if (retval != 0)
++        goto error;
++
++    if (cb != NULL) {
++        for (tmp = (*cb)(data, FALSE);
++             tmp != NULL;
++             tmp = (*cb)(data, FALSE)) {
++            if (*pkt_id(pkt) != *pkt_id(tmp))
++                continue;
++
++            /* Request */
++            if (request) {
++                *reqpkt = tmp;
++                retval = EAGAIN;
++                goto error;
++            }
++
++            /* Response */
++            retval = auth_generate_response(ctx, secret, pkt, pkt_auth(tmp),
++                                            auth);
++            if (retval != 0)
++                goto error;
++
++            /* If the authenticator doesn't match,
++             * then the response is invalid. */
++            if (memcmp(pkt_auth(pkt), auth, sizeof(auth)) != 0)
++                continue;
++
++            *reqpkt = tmp;
++            (*cb)(data, TRUE);
++            break;
++        }
++    }
++
++    if (request)
++        *reqpkt = pkt;
++    else
++        *rsppkt = pkt;
++    return 0;
++
++error:
++    if (cb != NULL)
++        (*cb)(data, TRUE);
++    k5_radius_packet_free(pkt);
++    return retval;
++}
++
++const krb5_data *
++k5_radius_packet_encode(const k5_radius_packet *pkt)
++{
++    return &pkt->pkt;
++}
++
++k5_radius_code
++k5_radius_packet_get_code(const k5_radius_packet *pkt)
++{
++    if (pkt == NULL)
++        return 0;
++
++    return *pkt_code(pkt);
++}
++
++const krb5_data *
++k5_radius_packet_get_attr(const k5_radius_packet *pkt, k5_radius_attr type,
++                          size_t indx)
++{
++    return k5_radius_attrset_get(pkt->attrset, type, indx);
++}
++
++int
++k5_radius_packet_print(FILE *stream, const krb5_data *pkt)
++{
++    if (pkt->length < RADIUS_PACKET_OFFSET_ATTR)
++        return fprintf(stream, "PACKET = INVALID!\n");
++
++    return fprintf(stream, "PACKET = code: %hhu; id: %hhu; length: %hu\n",
++                   *offset(pkt, RADIUS_PACKET_OFFSET_CODE, k5_radius_code),
++                   *offset(pkt, RADIUS_PACKET_OFFSET_ID, uint8_t),
++                   ntohs(*offset(pkt, RADIUS_PACKET_OFFSET_LENGTH, uint16_t)));
++}
+diff --git a/src/lib/radius/remote.c b/src/lib/radius/remote.c
+new file mode 100644
+index 0000000..4839767
+--- /dev/null
++++ b/src/lib/radius/remote.c
+@@ -0,0 +1,583 @@
++/*
++ * Copyright 2012 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "internal.h"
++
++#include <string.h>
++#include <unistd.h>
++
++#include <sys/un.h>
++
++#define FLAGS_READ ( VERTO_EV_FLAG_PERSIST \
++                   | VERTO_EV_FLAG_IO_CLOSE_FD \
++                   | VERTO_EV_FLAG_IO_ERROR \
++                   | VERTO_EV_FLAG_IO_READ )
++#define FLAGS_WRITE (FLAGS_READ | VERTO_EV_FLAG_IO_WRITE)
++
++typedef struct request_ request;
++struct request_ {
++    request *prev, *next;
++    k5_radius_remote *rr;
++    k5_radius_packet *request;
++    k5_radius_cb *cb;
++    void *data;
++    verto_ev *timer;
++    time_t timeout;
++    size_t retries;
++    size_t sent;
++};
++
++struct k5_radius_remote_ {
++    krb5_context kctx;
++    verto_ctx *vctx;
++    verto_ev *io;
++    char *secret;
++    struct addrinfo *info;
++    request *head, *tail;
++    char buffer_[K5_RADIUS_PACKET_SIZE_MAX];
++    krb5_data buffer;
++};
++
++static void
++on_io(verto_ctx *ctx, verto_ev *ev);
++
++static inline void *
++memdup(const void *src, size_t size)
++{
++    void *tmp;
++
++    tmp = malloc(size);
++    if (tmp == NULL)
++        return NULL;
++
++    memcpy(tmp, src, size);
++    return tmp;
++}
++
++static const k5_radius_packet *
++iterator(request **out)
++{
++    request *tmp = *out;
++
++    if (tmp == NULL)
++        return NULL;
++
++    *out = tmp->prev;
++    return tmp->request;
++}
++
++static krb5_error_code
++request_new(k5_radius_remote *rr, k5_radius_packet *rqst, time_t timeout,
++            size_t retries, k5_radius_cb *cb, void *data, request **out)
++{
++    request *tmp;
++
++    tmp = calloc(1, sizeof(request));
++    if (tmp == NULL)
++        return ENOMEM;
++
++    tmp->rr = rr;
++    tmp->request = rqst;
++    tmp->cb = cb;
++    tmp->data = data;
++    tmp->timeout = timeout;
++    tmp->retries = retries;
++
++    *out = tmp;
++    return 0;
++}
++
++static void
++request_add(request *reqst)
++{
++    reqst->prev = reqst->rr->tail;
++    reqst->rr->tail = reqst;
++    if (reqst->prev != NULL)
++        reqst->prev->next = reqst;
++    if (reqst->rr->head == NULL)
++        reqst->rr->head = reqst;
++}
++
++static void
++request_del(request *reqst)
++{
++    if (reqst->rr->head == reqst)
++        reqst->rr->head = reqst->next;
++    else if (reqst->prev != NULL)
++        reqst->prev->next = reqst->next;
++    if (reqst->rr->tail == reqst)
++        reqst->rr->tail = reqst->prev;
++    else if (reqst->next != NULL)
++        reqst->next->prev = reqst->prev;
++}
++
++static inline void
++request_finish(request *reqst, krb5_error_code retval,
++               const k5_radius_packet *response)
++{
++    if (retval != ETIMEDOUT)
++        request_del(reqst);
++
++    (*reqst->cb)(retval, reqst->request, response, reqst->data);
++
++    if (retval != ETIMEDOUT) {
++        k5_radius_packet_free(reqst->request);
++        verto_del(reqst->timer);
++        free(reqst);
++    }
++}
++
++static void
++on_timeout(verto_ctx *ctx, verto_ev *ev)
++{
++    request *reqst = verto_get_private(ev);
++    (void)ctx;
++
++    reqst->timer = NULL; /* Void the timer event. */
++
++    /* If we have more retries to perform, resend the packet. */
++    if (reqst->retries-- > 1) {
++        reqst->sent = 0;
++        verto_set_flags(reqst->rr->io, FLAGS_WRITE);
++        return;
++    }
++
++    request_finish(reqst, ETIMEDOUT, NULL);
++}
++
++static krb5_error_code
++k5_radius_remote_connect(k5_radius_remote *rr)
++{
++    int i, sock = -1;
++    verto_ev *ev;
++
++    sock = socket(rr->info->ai_family,
++                  rr->info->ai_socktype,
++                  rr->info->ai_protocol);
++    if (sock < 0)
++        return errno;
++
++    i = connect(sock, rr->info->ai_addr, rr->info->ai_addrlen);
++    if (i < 0) {
++        i = errno;
++        close(sock);
++        return i;
++    }
++
++    ev = verto_add_io(rr->vctx, FLAGS_READ, on_io, sock);
++    if (ev == NULL) {
++        close(sock);
++        return ENOMEM;
++    }
++
++    rr->io = ev;
++    verto_set_private(rr->io, rr, NULL);
++    return 0;
++}
++
++static krb5_error_code
++k5_radius_remote_reconnect(k5_radius_remote *rr, int errnum)
++{
++    krb5_error_code retval;
++    const krb5_data *tmp;
++    request *r;
++
++    verto_del(rr->io);
++    rr->io = NULL;
++    retval = k5_radius_remote_connect(rr);
++    if (retval != 0)
++        return retval;
++
++    for (r = rr->head; r != NULL; r = r->next) {
++    	tmp = k5_radius_packet_encode(r->request);
++
++        /* Error out sent requests. */
++        if (r->sent == tmp->length)
++            request_finish(r, errnum, NULL);
++
++        /* Reset partially sent requests. */
++        else
++            r->sent = 0;
++    }
++
++    return 0;
++}
++
++static void
++k5_radius_remote_shutdown(k5_radius_remote *rr, int errnum)
++{
++    verto_del(rr->io);
++    rr->io = NULL;
++    while (rr->head != NULL)
++        request_finish(rr->head, errnum, NULL);
++}
++
++static void
++on_io_write(k5_radius_remote *rr)
++{
++    const krb5_data *tmp;
++    request *r;
++    int i;
++
++    for (r = rr->head; r != NULL; r = r->next) {
++        tmp = k5_radius_packet_encode(r->request);
++
++        /* If the packet has already been sent, do nothing. */
++        if (r->sent == tmp->length)
++            continue;
++
++        /* Send the packet. */
++        i = sendto(verto_get_fd(rr->io), tmp->data + r->sent,
++                   tmp->length - r->sent, 0, NULL, 0);
++        if (i < 0) {
++            i = errno;
++
++            switch (i) {
++#if defined(EWOULDBLOCK) && (!defined(EAGAIN) || EAGAIN - EWOULDBLOCK != 0)
++            case EWOULDBLOCK:
++#endif
++#if defined(EAGAIN)
++            case EAGAIN:
++#endif
++            case ENOBUFS:
++            case EINTR:
++                /* In this case, we just need to try again. */
++                return;
++
++            case ECONNRESET:
++            case ENOTCONN:
++            case ENOTSOCK:
++            case EBADF:
++            case EPIPE:
++                /* In this case, we need to re-connect. */
++                i = k5_radius_remote_reconnect(rr, i);
++                if (i == 0)
++                    return;
++                break;
++
++            default:
++                /* Unrecoverable. */
++                break;
++            }
++
++            /* Do a full reset. */
++            k5_radius_remote_shutdown(rr, i);
++            return;
++        }
++
++        /* SOCK_STREAM permits partial writes. */
++        if (rr->info->ai_socktype == SOCK_STREAM)
++            r->sent += i;
++        else if (i == (int)tmp->length)
++            r->sent = i;
++
++        /* If the packet was completely sent, set a timeout. */
++        if (r->sent == tmp->length) {
++            verto_del(r->timer);
++            r->timer = verto_add_timeout(rr->vctx, VERTO_EV_FLAG_NONE,
++                                         on_timeout, r->timeout);
++            if (r->timer == NULL)
++                request_finish(r, ENOMEM, NULL);
++            else
++                verto_set_private(r->timer, r, NULL);
++        }
++
++        return;
++    }
++
++    verto_set_flags(rr->io, FLAGS_READ);
++}
++
++static void
++on_io_read(k5_radius_remote *rr)
++{
++    k5_radius_packet *req = NULL, *rsp = NULL;
++    krb5_error_code retval;
++    ssize_t pktlen;
++    request *tmp;
++    request *r;
++    int i;
++
++    pktlen = sizeof(rr->buffer_);
++    if (rr->info->ai_socktype == SOCK_STREAM) {
++        pktlen = k5_radius_packet_bytes_needed(&rr->buffer);
++        if (pktlen < 0) {
++            retval = k5_radius_remote_reconnect(rr, EBADMSG);
++            if (retval != 0)
++                k5_radius_remote_shutdown(rr, retval);
++            return;
++        }
++    }
++
++    /* Read the packet. */
++    i = recv(verto_get_fd(rr->io), rr->buffer.data + rr->buffer.length,
++             pktlen - rr->buffer.length, 0);
++    if (i < 0) {
++        i = errno;
++
++        switch (i) {
++#if !defined(EWOULDBLOCK) || !defined(EAGAIN) || EAGAIN - EWOULDBLOCK != 0
++        case EWOULDBLOCK:
++#endif
++        case EAGAIN:
++        case EINTR:
++            /* In this case, we just need to try again. */
++            return;
++
++        case ECONNREFUSED:
++        case ECONNRESET:
++        case ENOTCONN:
++            /*
++             * When doing UDP against a local socket, the kernel will notify
++             * when the daemon closes. But not against remote sockets. We want
++             * to treat them both the same. Returning here will cause an
++             * eventual timeout.
++             */
++            if (rr->info->ai_socktype != SOCK_STREAM)
++                return;
++
++            /* Fall through. */
++        case ENOTSOCK:
++        case EBADF:
++        case EPIPE:
++            /* In this case, we need to re-connect. */
++            i = k5_radius_remote_reconnect(rr, i);
++            if (i == 0)
++               return;
++            break;
++
++        default:
++            /* Unrecoverable. */
++            break;
++        }
++
++        /* Do a full reset. */
++        k5_radius_remote_shutdown(rr, i);
++        return;
++    }
++
++    /* If we have a partial read or just the header, try again. */
++    rr->buffer.length += i;
++    pktlen = k5_radius_packet_bytes_needed(&rr->buffer);
++    if (rr->info->ai_socktype == SOCK_STREAM && pktlen > 0)
++        return;
++
++    /* Decode the packet. */
++    tmp = rr->tail;
++    retval = k5_radius_packet_decode(rr->kctx, rr->secret, &rr->buffer, FALSE,
++                                  (k5_radius_packet_iter_cb*)iterator, &tmp,
++                                  &req, &rsp);
++    rr->buffer.length = 0;
++    if (retval != 0)
++        return;
++
++    /* Match the response with an outstanding request. */
++    for (r = rr->tail; req != NULL && r != NULL; r = r->prev) {
++        if (r->request == req &&
++            r->sent == k5_radius_packet_encode(r->request)->length) {
++            request_finish(r, 0, rsp);
++            break;
++        }
++    }
++
++    k5_radius_packet_free(rsp);
++}
++
++static void
++on_io(verto_ctx *ctx, verto_ev *ev)
++{
++    k5_radius_remote *rr;
++    (void)ctx;
++
++    rr = verto_get_private(ev);
++
++    if (verto_get_fd_state(ev) & VERTO_EV_FLAG_IO_WRITE)
++        on_io_write(rr);
++
++    else
++        on_io_read(rr);
++}
++
++krb5_error_code
++k5_radius_remote_new(krb5_context kctx, verto_ctx *vctx,
++                     const struct addrinfo *info, const char *secret,
++                     k5_radius_remote **rr)
++{
++    krb5_error_code retval = ENOMEM;
++    k5_radius_remote *tmp = NULL;
++
++    tmp = calloc(1, sizeof(k5_radius_remote));
++    if (tmp == NULL)
++        goto error;
++    tmp->kctx = kctx;
++    tmp->vctx = vctx;
++    tmp->buffer.data = tmp->buffer_;
++
++    tmp->secret = strdup(secret);
++    if (tmp->secret == NULL)
++        goto error;
++
++    tmp->info = memdup(info, sizeof(*info));
++    if (tmp->info == NULL)
++        goto error;
++
++    tmp->info->ai_addr = memdup(info->ai_addr, info->ai_addrlen);
++    if (tmp->info == NULL)
++        goto error;
++    tmp->info->ai_next = NULL;
++    tmp->info->ai_canonname = NULL;
++
++    retval = k5_radius_remote_connect(tmp);
++    if (retval != 0)
++        goto error;
++
++    *rr = tmp;
++    return 0;
++
++error:
++    k5_radius_remote_free(tmp);
++    return retval;
++}
++
++void
++k5_radius_remote_free(k5_radius_remote *rr)
++{
++    if (rr == NULL)
++        return;
++
++    while (rr->head != NULL)
++        request_finish(rr->head, ECANCELED, NULL);
++
++    free(rr->secret);
++    if (rr->info != NULL)
++        free(rr->info->ai_addr);
++    free(rr->info);
++    verto_del(rr->io);
++    free(rr);
++}
++
++krb5_error_code
++k5_radius_remote_send(k5_radius_remote *rr, k5_radius_code code,
++                      k5_radius_attrset *attrs, k5_radius_cb *cb, void *data,
++                      time_t timeout, size_t retries,
++                      const k5_radius_packet **pkt)
++{
++    k5_radius_packet *tmp = NULL;
++    krb5_error_code retval;
++    request *r;
++
++    r = rr->tail;
++    retval = k5_radius_packet_new_request(rr->kctx, rr->secret, code, attrs,
++                                       (k5_radius_packet_iter_cb*)iterator, &r,
++                                       &tmp);
++    if (retval != 0)
++        goto error;
++
++    for (r = rr->head; r != NULL; r = r->next) {
++        if (r->request == tmp) {
++            retval = EALREADY;
++            goto error;
++        }
++    }
++
++    if (rr->io == NULL) {
++        retval = k5_radius_remote_connect(rr);
++        if (retval != 0)
++            goto error;
++    }
++
++    if (rr->info->ai_socktype == SOCK_STREAM)
++        retries = 0;
++    timeout = timeout / (retries + 1);
++    retval = request_new(rr, tmp, timeout, retries, cb, data, &r);
++    if (retval != 0)
++        goto error;
++
++    if ((verto_get_flags(rr->io) & VERTO_EV_FLAG_IO_WRITE) == 0)
++        verto_set_flags(rr->io, FLAGS_WRITE);
++
++    request_add(r);
++    if (pkt != NULL)
++        *pkt = tmp;
++    return 0;
++
++error:
++    k5_radius_packet_free(tmp);
++    return retval;
++}
++
++void
++k5_radius_remote_cancel(k5_radius_remote *rr, const k5_radius_packet *pkt)
++{
++    request *r;
++
++    for (r = rr->head; r != NULL; r = r->next) {
++        if (r->request == pkt) {
++            request_finish(r, ECANCELED, NULL);
++            return;
++        }
++    }
++}
++
++krb5_boolean
++k5_radius_remote_equals(const k5_radius_remote *rr,
++                        const struct addrinfo *info, const char *secret)
++{
++    struct sockaddr_un *a, *b;
++
++    if (strcmp(rr->secret, secret) != 0)
++        return FALSE;
++
++    if (info->ai_addrlen != rr->info->ai_addrlen)
++        return FALSE;
++
++    if (info->ai_family != rr->info->ai_family)
++        return FALSE;
++
++    if (info->ai_socktype != rr->info->ai_socktype)
++        return FALSE;
++
++    if (info->ai_protocol != rr->info->ai_protocol)
++        return FALSE;
++
++    if (info->ai_flags != rr->info->ai_flags)
++        return FALSE;
++
++    if (memcmp(rr->info->ai_addr, info->ai_addr, info->ai_addrlen) != 0) {
++        /* AF_UNIX fails the memcmp() test due to
++         * uninitialized bytes after the socket name. */
++        if (info->ai_family != AF_UNIX)
++            return FALSE;
++
++        a = (struct sockaddr_un*) info->ai_addr;
++        b = (struct sockaddr_un*) rr->info->ai_addr;
++        if (strncmp(a->sun_path, b->sun_path, sizeof(a->sun_path)) != 0)
++            return FALSE;
++    }
++
++    return TRUE;
++}
+diff --git a/src/lib/radius/test/attr.c b/src/lib/radius/test/attr.c
+new file mode 100644
+index 0000000..fdde4fe
+--- /dev/null
++++ b/src/lib/radius/test/attr.c
+@@ -0,0 +1,88 @@
++/*
++ * Copyright 2012 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "test.h"
++
++int
++main()
++{
++    const char encoded[] = { 0xba, 0xfc, 0xed, 0x50, 0xe1, 0xeb, 0xa6, 0xc3,
++                             0xc1, 0x75, 0x20, 0xe9, 0x10, 0xce, 0xc2, 0xcb };
++    const uint8_t auth[] = { 0xac, 0x9d, 0xc1, 0x62, 0x08, 0xc4, 0xc7, 0x8b,
++                             0xa1, 0x2f, 0x25, 0x0a, 0xc4, 0x1d, 0x36, 0x41 };
++    char outbuf[RADIUS_ATTR_SIZE_MAX];
++    const char *decoded = "accept";
++    const char *secret = "foo";
++    krb5_error_code retval;
++    krb5_context ctx;
++    const char *tmp;
++    krb5_data in, out;
++
++    noerror(krb5_init_context(&ctx));
++
++    /* Make sure User-Name is 1. */
++    insist(k5_radius_attr_name2num("User-Name") == 1);
++
++    /* Make sure 2 is User-Password. */
++    tmp = k5_radius_attr_num2name(2);
++    insist(tmp != NULL);
++    insist(strcmp(tmp, "User-Password") == 0);
++
++    /* Test decoding. */
++    in.data = (char *)encoded;
++    in.length = sizeof(encoded);
++    out.data = outbuf;
++    out.length = sizeof(outbuf);
++    noerror(k5_radius_attr_decode(ctx, secret, auth,
++                               k5_radius_attr_name2num("User-Password"),
++                               &in, &out));
++    insist(out.length == strlen(decoded));
++    insist(memcmp(out.data, decoded, out.length) == 0);
++
++    /* Test encoding. */
++    in.data = (char *)decoded;
++    in.length = strlen(decoded);
++    out.data = outbuf;
++    out.length = sizeof(outbuf);
++    retval = k5_radius_attr_encode(ctx, secret, auth,
++                                k5_radius_attr_name2num("User-Password"),
++                                &in, &out);
++    insist(retval == 0);
++    insist(out.length == sizeof(encoded));
++    insist(memcmp(out.data, encoded, out.length) == 0);
++
++    /* Test constraint. */
++    in.length = 100;
++    insist(k5_radius_attr_valid(k5_radius_attr_name2num("User-Password"),
++                                &in) == 0);
++    in.length = 200;
++    insist(k5_radius_attr_valid(k5_radius_attr_name2num("User-Password"),
++                                &in) != 0);
++
++    krb5_free_context(ctx);
++    return 0;
++}
+diff --git a/src/lib/radius/test/attrset.c b/src/lib/radius/test/attrset.c
+new file mode 100644
+index 0000000..ba41724
+--- /dev/null
++++ b/src/lib/radius/test/attrset.c
+@@ -0,0 +1,98 @@
++/*
++ * Copyright 2012 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "test.h"
++
++int
++main()
++{
++    const uint8_t auth[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
++    const char encpass[] = { 0x58, 0x8d, 0xff, 0xda, 0x37, 0xf9, 0xe4, 0xca,
++                             0x19, 0xae, 0x49, 0xb7, 0x16, 0x6d, 0x58, 0x27 };
++    char buffer[K5_RADIUS_PACKET_SIZE_MAX], encoded[RADIUS_ATTR_SIZE_MAX];
++    const char *username = "testUser";
++    const char *password = "accept";
++    const krb5_data *tmpp;
++    k5_radius_attrset *set;
++    krb5_context ctx;
++    size_t len = 0;
++    krb5_data tmp;
++
++    noerror(krb5_init_context(&ctx));
++    noerror(k5_radius_attrset_new(ctx, &set));
++
++    /* Add username. */
++    tmp.data = (char *)username;
++    tmp.length = strlen(username);
++    noerror(k5_radius_attrset_add(set, k5_radius_attr_name2num("User-Name"),
++                                  &tmp));
++
++    /* Add password. */
++    tmp.data = (char *)password;
++    tmp.length = strlen(password);
++    noerror(k5_radius_attrset_add(set,
++                                  k5_radius_attr_name2num("User-Password"),
++                                  &tmp));
++
++    /* Encode attrset. */
++    tmp.data = buffer;
++    tmp.length = sizeof(buffer);
++    noerror(k5_radius_attrset_encode(set, "foo", auth, &tmp));
++    k5_radius_attrset_free(set);
++
++    /* Manually encode User-Name. */
++    encoded[len + 0] = k5_radius_attr_name2num("User-Name");
++    encoded[len + 1] = strlen(username) + 2;
++    memcpy(encoded + len + 2, username, strlen(username));
++    len += encoded[len + 1];
++    
++    /* Manually encode User-Password. */
++    encoded[len + 0] = k5_radius_attr_name2num("User-Password");
++    encoded[len + 1] = sizeof(encpass) + 2;
++    memcpy(encoded + len + 2, encpass, sizeof(encpass));
++    len += encoded[len + 1];
++    
++    /* Compare output. */
++    insist(len == tmp.length);
++    insist(memcmp(encoded, tmp.data, tmp.length) == 0);
++
++    /* Decode output. */
++    noerror(k5_radius_attrset_decode(ctx, &tmp, "foo", auth, &set));
++
++    /* Test getting an attribute. */
++    tmp.data = (char *)username;
++    tmp.length = strlen(username);
++    tmpp = k5_radius_attrset_get(set, k5_radius_attr_name2num("User-Name"), 0);
++    insist(tmpp != NULL);
++    insist(tmpp->length == tmp.length);
++    insist(strncmp(tmpp->data, tmp.data, tmp.length) == 0);
++
++    k5_radius_attrset_free(set);
++    krb5_free_context(ctx);
++    return 0;
++}
+diff --git a/src/lib/radius/test/client.c b/src/lib/radius/test/client.c
+new file mode 100644
+index 0000000..9315b92
+--- /dev/null
++++ b/src/lib/radius/test/client.c
+@@ -0,0 +1,141 @@
++/*
++ * Copyright 2012 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "daemon.h"
++
++#define EVENT_COUNT 4
++
++static struct
++{
++    int count;
++    struct event events[EVENT_COUNT];
++} record;
++
++static verto_ctx *vctx;
++
++static void
++callback(krb5_error_code retval, const k5_radius_packet *request,
++         const k5_radius_packet *response, void *data)
++{
++    struct event *evt;
++
++    /* Silence unused parameter warnings. */
++    (void)data;
++    (void)request;
++
++    evt = &record.events[record.count++];
++    evt->error = retval != 0;
++    if (evt->error)
++        evt->result.retval = retval;
++    else
++        evt->result.code = k5_radius_packet_get_code(response);
++/*
++    if (evt->error)
++        printf("event: %d %s\n", record.count - 1,
++               strerror(evt->result.retval));
++    else
++        printf("event: %d %d\n", record.count - 1,
++               evt->result.code);
++*/
++    verto_break(vctx);
++}
++
++int
++main(int argc, const char **argv)
++{
++    k5_radius_attrset *attrs;
++    k5_radius_client *rc;
++    krb5_context kctx;
++    krb5_data tmp;
++
++    if (!daemon_start(argc, argv)) {
++        fprintf(stderr, "Unable to start pyrad daemon, skipping test...\n");
++        return 0;
++    }
++
++    noerror(krb5_init_context(&kctx));
++    insist((vctx = verto_new(NULL, VERTO_EV_TYPE_IO |
++                                   VERTO_EV_TYPE_TIMEOUT)) != NULL);
++    noerror(k5_radius_client_new(kctx, vctx, &rc));
++
++    tmp = make_data_string("testUser");
++    noerror(k5_radius_attrset_new(kctx, &attrs));
++    noerror(k5_radius_attrset_add(attrs, k5_radius_attr_name2num("User-Name"),
++                               &tmp));
++
++    /* Test accept. */
++    tmp = make_data_string("accept");
++    noerror(k5_radius_attrset_add(attrs, k5_radius_attr_name2num("User-Password"),
++                               &tmp));
++    noerror(k5_radius_client_send(rc, k5_radius_code_name2num("Access-Request"),
++                               attrs, "localhost", "foo", 1000, 3,
++                               callback, NULL));
++    verto_run(vctx);
++
++    /* Test reject. */
++    tmp = make_data_string("reject");
++    k5_radius_attrset_del(attrs, k5_radius_attr_name2num("User-Password"), 0);
++    noerror(k5_radius_attrset_add(attrs, k5_radius_attr_name2num("User-Password"),
++                               &tmp));
++    noerror(k5_radius_client_send(rc, k5_radius_code_name2num("Access-Request"),
++                               attrs, "localhost", "foo", 1000, 3,
++                               callback, NULL));
++    verto_run(vctx);
++
++    /* Test timeout. */
++    daemon_stop();
++    noerror(k5_radius_client_send(rc, k5_radius_code_name2num("Access-Request"),
++                                   attrs, "localhost", "foo", 1000, 3,
++                                   callback, NULL));
++    verto_run(vctx);
++
++    /* Test outstanding packet freeing. */
++    noerror(k5_radius_client_send(rc, k5_radius_code_name2num("Access-Request"),
++                                   attrs, "localhost", "foo", 1000, 3,
++                                   callback, NULL));
++    k5_radius_client_free(rc);
++    rc = NULL;
++
++    /* Verify the results. */
++    insist(record.count == EVENT_COUNT);
++    insist(record.events[0].error == FALSE);
++    insist(record.events[0].result.code ==
++           k5_radius_code_name2num("Access-Accept"));
++    insist(record.events[1].error == FALSE);
++    insist(record.events[1].result.code ==
++           k5_radius_code_name2num("Access-Reject"));
++    insist(record.events[2].error == TRUE);
++    insist(record.events[2].result.retval == ETIMEDOUT);
++    insist(record.events[3].error == TRUE);
++    insist(record.events[3].result.retval == ECANCELED);
++
++    k5_radius_attrset_free(attrs);
++    k5_radius_client_free(rc);
++    verto_free(vctx);
++    krb5_free_context(kctx);
++    return 0;
++}
+diff --git a/src/lib/radius/test/code.c b/src/lib/radius/test/code.c
+new file mode 100644
+index 0000000..c1b5af0
+--- /dev/null
++++ b/src/lib/radius/test/code.c
+@@ -0,0 +1,52 @@
++/*
++ * Copyright 2012 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "test.h"
++
++int
++main()
++{
++    const char *tmp;
++
++    insist(k5_radius_code_name2num("Access-Request") == 1);
++    insist(k5_radius_code_name2num("Access-Accept") == 2);
++    insist(k5_radius_code_name2num("Access-Reject") == 3);
++
++    tmp = k5_radius_code_num2name(1);
++    insist(tmp != NULL);
++    insist(strcmp(tmp, "Access-Request") == 0);
++
++    tmp = k5_radius_code_num2name(2);
++    insist(tmp != NULL);
++    insist(strcmp(tmp, "Access-Accept") == 0);
++
++    tmp = k5_radius_code_num2name(3);
++    insist(tmp != NULL);
++    insist(strcmp(tmp, "Access-Reject") == 0);
++
++    return 0;
++}
+diff --git a/src/lib/radius/test/daemon.h b/src/lib/radius/test/daemon.h
+new file mode 100644
+index 0000000..7501013
+--- /dev/null
++++ b/src/lib/radius/test/daemon.h
+@@ -0,0 +1,85 @@
++/*
++ * Copyright 2012 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "test.h"
++#include <libgen.h>
++
++#define DAEMON "/daemon.py"
++
++static pid_t __daemon_pid;
++
++static void
++daemon_stop(void)
++{
++    if (__daemon_pid == 0)
++        return;
++    kill(__daemon_pid, SIGTERM);
++    waitpid(__daemon_pid, NULL, 0);
++    __daemon_pid = 0;
++}
++
++static krb5_boolean
++daemon_start(int argc, const char **argv)
++{
++    sigset_t set;
++    size_t i;
++    int sig;
++
++    if (argc != 2 || argv == NULL)
++        return FALSE;
++
++    if (__daemon_pid != 0)
++        return TRUE;
++
++    if (sigemptyset(&set) != 0)
++        return FALSE;
++
++    if (sigaddset(&set, SIGUSR1) != 0)
++        return FALSE;
++
++    if (sigaddset(&set, SIGCHLD) != 0)
++        return FALSE;
++
++    if (sigprocmask(SIG_BLOCK, &set, NULL) != 0)
++        return FALSE;
++
++    __daemon_pid = fork();
++    if (__daemon_pid == 0)
++        exit(execlp("python", "python", argv[1], NULL));
++
++    if (sigwait(&set, &sig) != 0 || sig == SIGCHLD) {
++        daemon_stop();
++        __daemon_pid = 0;
++        return FALSE;
++    }
++
++    atexit(daemon_stop);
++    usleep(100000);
++    return TRUE;
++}
++
++#undef DAEMON
+diff --git a/src/lib/radius/test/daemon.py b/src/lib/radius/test/daemon.py
+new file mode 100644
+index 0000000..021607d
+--- /dev/null
++++ b/src/lib/radius/test/daemon.py
+@@ -0,0 +1,76 @@
++#!/usr/bin/python
++#
++# Copyright 2012 Red Hat, Inc.  All rights reserved.
++#
++# Redistribution and use in source and binary forms, with or without
++# modification, are permitted provided that the following conditions are met:
++#
++#    1. Redistributions of source code must retain the above copyright
++#       notice, this list of conditions and the following disclaimer.
++#
++#    2. Redistributions in binary form must reproduce the above copyright
++#       notice, this list of conditions and the following disclaimer in
++#       the documentation and/or other materials provided with the
++#       distribution.
++#
++# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++# IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++# OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
++import StringIO
++import os
++import sys
++import signal
++
++try:
++    from pyrad import dictionary, packet, server
++except ImportError:
++    sys.stdout.write("pyrad not found!\n")
++    sys.exit(0)
++
++# We could use a dictionary file, but since we need
++# such few attributes, we'll just include them here
++DICTIONARY = """
++ATTRIBUTE	User-Name	1	string
++ATTRIBUTE	User-Password	2	octets
++ATTRIBUTE	NAS-Identifier	32	string
++"""
++
++class TestServer(server.Server):
++    def _HandleAuthPacket(self, pkt):
++        server.Server._HandleAuthPacket(self, pkt)
++
++        passwd = []
++  
++        print "Request: "
++        for key in pkt.keys():
++            if key == "User-Password":
++                passwd = map(pkt.PwDecrypt, pkt[key])
++                print "\t%s\t%s" % (key, passwd)
++            else:
++                print "\t%s\t%s" % (key, pkt[key])
++  
++        reply = self.CreateReplyPacket(pkt)
++        if passwd == ['accept']:
++            reply.code = packet.AccessAccept
++            print "Response: %s" % "Access-Accept"
++        else:
++            reply.code = packet.AccessReject
++            print "Response: %s" % "Access-Reject"
++        print
++        self.SendReplyPacket(pkt.fd, reply)
++
++srv = TestServer(addresses=["localhost"],
++                 hosts={"127.0.0.1":
++                        server.RemoteHost("127.0.0.1", "foo", "localhost")},
++                 dict=dictionary.Dictionary(StringIO.StringIO(DICTIONARY)))
++os.kill(os.getppid(), signal.SIGUSR1)
++srv.Run()
+diff --git a/src/lib/radius/test/packet.c b/src/lib/radius/test/packet.c
+new file mode 100644
+index 0000000..85e0758
+--- /dev/null
++++ b/src/lib/radius/test/packet.c
+@@ -0,0 +1,203 @@
++/*
++ * Copyright 2012 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "test.h"
++#include "daemon.h"
++
++#define ACCEPT_PACKET 0
++#define REJECT_PACKET 1
++
++static k5_radius_packet *packets[3];
++
++static k5_radius_packet *
++iterator(void *data, krb5_boolean cancel)
++{
++    k5_radius_packet *tmp;
++    int *i = data;
++
++    if (cancel || packets[*i] == NULL)
++        return NULL;
++
++    tmp = packets[*i];
++    *i += 1;
++    return tmp;
++}
++
++static krb5_error_code
++make_packet(krb5_context ctx, const krb5_data *username,
++            const krb5_data *password, k5_radius_packet **pkt)
++{
++    k5_radius_attrset *set = NULL;
++    k5_radius_packet *tmp = NULL;
++    krb5_error_code retval;
++    const krb5_data *data;
++    int i = 0;
++
++    retval = k5_radius_attrset_new(ctx, &set);
++    if (retval != 0)
++        goto out;
++
++    retval = k5_radius_attrset_add(set,
++                                   k5_radius_attr_name2num("User-Name"),
++                                   username);
++    if (retval != 0)
++        goto out;
++
++    retval = k5_radius_attrset_add(set,
++                                   k5_radius_attr_name2num("User-Password"),
++                                   password);
++    if (retval != 0)
++        goto out;
++
++    retval = k5_radius_packet_new_request(ctx, "foo",
++            k5_radius_code_name2num("Access-Request"), set,
++            iterator, &i, &tmp);
++    if (retval != 0)
++        goto out;
++
++    data = k5_radius_packet_get_attr(tmp,
++                                     k5_radius_attr_name2num("User-Name"),
++                                     0);
++    if (data == NULL) {
++        retval = ENOENT;
++        goto out;
++    }
++
++    if (data->length != username->length ||
++        memcmp(data->data, username->data, data->length) != 0) {
++        retval = EINVAL;
++        goto out;
++    }
++
++    *pkt = tmp;
++    tmp = NULL;
++
++out:
++    k5_radius_attrset_free(set);
++    k5_radius_packet_free(tmp);
++    return retval;
++}
++
++static krb5_error_code
++do_auth(krb5_context ctx, struct addrinfo *ai, const char *secret,
++        const k5_radius_packet *rqst, krb5_boolean *auth)
++{
++    k5_radius_packet *req = NULL, *rsp = NULL;
++    char tmp[K5_RADIUS_PACKET_SIZE_MAX];
++    const krb5_data *request;
++    krb5_error_code retval;
++    krb5_data response;
++    int sock = -1, i;
++
++    response.data = tmp;
++    response.length = sizeof(tmp);
++
++    sock = socket(ai->ai_family, ai->ai_socktype, 0);
++    if (sock < 0) {
++        retval = errno;
++        goto out;
++    }
++
++    request = k5_radius_packet_encode(rqst);
++    k5_radius_packet_print(stderr, request);
++    if (sendto(sock, request->data, request->length, 0,
++               ai->ai_addr, ai->ai_addrlen) < 0) {
++        retval = errno;
++        goto out;
++    }
++
++    i = recv(sock, response.data, sizeof(tmp), 0);
++    if (i < 0) {
++        retval = errno;
++        goto out;
++    }
++    response.length = i;
++
++    i = 0;
++    retval = k5_radius_packet_decode(ctx, secret, &response, FALSE,
++                                  iterator, &i, &req, &rsp);
++    if (retval != 0)
++        goto out;
++
++    if (req != rqst) {
++        retval = EBADMSG;
++        goto out;
++    }
++
++    *auth = k5_radius_packet_get_code(rsp) ==
++              k5_radius_code_name2num("Access-Accept");
++
++out:
++    k5_radius_packet_free(rsp);
++    if (sock >= 0)
++        close(sock);
++    return retval;
++}
++
++int
++main(int argc, const char **argv)
++{
++    struct addrinfo *ai = NULL, hints;
++    krb5_data username, password;
++    krb5_boolean auth = FALSE;
++    krb5_context ctx;
++
++    username.data = "testUser";
++    username.length = strlen(username.data);
++
++    if (!daemon_start(argc, argv)) {
++        fprintf(stderr, "Unable to start pyrad daemon, skipping test...\n");
++        return 0;
++    }
++
++    noerror(krb5_init_context(&ctx));
++
++    password.data = "accept";
++    password.length = strlen(password.data);
++    noerror(make_packet(ctx, &username, &password, &packets[ACCEPT_PACKET]));
++
++    password.data = "reject";
++    password.length = strlen(password.data);
++    noerror(make_packet(ctx, &username, &password, &packets[REJECT_PACKET]));
++
++    memset(&hints, 0, sizeof(hints));
++    hints.ai_family = AF_INET;
++    hints.ai_socktype = SOCK_DGRAM;
++    noerror(gai_error_(getaddrinfo("127.0.0.1", "radius", &hints, &ai)));
++
++    noerror(do_auth(ctx, ai, "foo", packets[ACCEPT_PACKET], &auth));
++    insist(auth == TRUE);
++
++    noerror(do_auth(ctx, ai, "foo", packets[REJECT_PACKET], &auth));
++    insist(auth == FALSE);
++
++    k5_radius_packet_free(packets[ACCEPT_PACKET]);
++    k5_radius_packet_free(packets[REJECT_PACKET]);
++    krb5_free_context(ctx);
++    freeaddrinfo(ai);
++    return 0;
++}
+diff --git a/src/lib/radius/test/remote.c b/src/lib/radius/test/remote.c
+new file mode 100644
+index 0000000..9132d0e
+--- /dev/null
++++ b/src/lib/radius/test/remote.c
+@@ -0,0 +1,186 @@
++/*
++ * Copyright 2012 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "test.h"
++#include "daemon.h"
++
++#define EVENT_COUNT 6
++
++static struct
++{
++    int count;
++    struct event events[EVENT_COUNT];
++} record;
++
++static k5_radius_attrset *set;
++static k5_radius_remote *rr;
++static verto_ctx *vctx;
++
++static void
++callback(krb5_error_code retval, const k5_radius_packet *request,
++         const k5_radius_packet *response, void *data)
++{
++    struct event *evt;
++
++    /* Silence unused parameter warnings. */
++    (void)data;
++    (void)request;
++
++    evt = &record.events[record.count++];
++    evt->error = retval != 0;
++    if (evt->error)
++        evt->result.retval = retval;
++    else
++        evt->result.code = k5_radius_packet_get_code(response);
++/*
++    if (evt->error)
++        fprintf(stderr, "event: %d %s\n", record.count - 1,
++                strerror(evt->result.retval));
++    else
++        fprintf(stderr, "event: %d %d\n", record.count - 1,
++                evt->result.code);
++*/
++    verto_break(vctx);
++}
++
++static void
++remote_new(krb5_context kctx, verto_ctx *vctx, k5_radius_remote **remote)
++{
++    struct addrinfo *ai = NULL, hints;
++
++    memset(&hints, 0, sizeof(hints));
++    hints.ai_family = AF_INET;
++    hints.ai_socktype = SOCK_DGRAM;
++    noerror(gai_error_(getaddrinfo("127.0.0.1", "radius", &hints, &ai)));
++
++    noerror(k5_radius_remote_new(kctx, vctx, ai, "foo", remote));
++    insist(k5_radius_remote_equals(*remote, ai, "foo"));
++    freeaddrinfo(ai);
++}
++
++static krb5_error_code
++do_auth(k5_radius_remote *rr, k5_radius_attrset *set, char *password,
++        const k5_radius_packet **pkt)
++{
++    const k5_radius_packet *tmppkt;
++    krb5_error_code retval;
++    krb5_data tmp;
++
++    k5_radius_attrset_del(set, k5_radius_attr_name2num("User-Password"), 0);
++
++    tmp = make_data_string(password);
++    retval = k5_radius_attrset_add(set, k5_radius_attr_name2num("User-Password"),
++                                &tmp);
++    if (retval != 0)
++        return retval;
++
++    retval = k5_radius_remote_send(rr, k5_radius_code_name2num("Access-Request"),
++                                set, callback, NULL, 1000, 3, &tmppkt);
++    if (retval != 0)
++        return retval;
++
++    if (pkt != NULL)
++        *pkt = tmppkt;
++    return 0;
++}
++
++static void
++test_timeout(verto_ctx *ctx, verto_ev *ev)
++{
++    static const k5_radius_packet *pkt;
++    (void)ctx;
++    (void)ev;
++    noerror(do_auth(rr, set, "accept", &pkt));
++    k5_radius_remote_cancel(rr, pkt);
++}
++
++int
++main(int argc, const char **argv)
++{
++    krb5_context kctx = NULL;
++    krb5_data tmp;
++
++    if (!daemon_start(argc, argv)) {
++        fprintf(stderr, "Unable to start pyrad daemon, skipping test...\n");
++        return 0;
++    }
++
++    /* Initialize. */
++    noerror(krb5_init_context(&kctx));
++    insist((vctx = verto_new(NULL, VERTO_EV_TYPE_IO |
++                                   VERTO_EV_TYPE_TIMEOUT)) != NULL);
++    remote_new(kctx, vctx, &rr);
++
++    /* Create attribute set. */
++    noerror(k5_radius_attrset_new(kctx, &set));
++    tmp = make_data_string("testUser");
++    noerror(k5_radius_attrset_add(set, k5_radius_attr_name2num("User-Name"), &tmp));
++
++    /* Send accept packet. */
++    noerror(do_auth(rr, set, "accept", NULL));
++    verto_run(vctx);
++
++    /* Send reject packet. */
++    noerror(do_auth(rr, set, "reject", NULL));
++    verto_run(vctx);
++
++    /* Send canceled packet. */
++    insist(verto_add_timeout(vctx, VERTO_EV_FLAG_NONE,
++                             test_timeout, 0) != NULL);
++    verto_run(vctx);
++
++    /* Test timeout. */
++    daemon_stop();
++    noerror(do_auth(rr, set, "accept", NULL));
++    verto_run(vctx);
++
++    /* Test outstanding packet freeing. */
++    noerror(do_auth(rr, set, "accept", NULL));
++    k5_radius_remote_free(rr);
++    k5_radius_attrset_free(set);
++
++    /* Verify the results. */
++    insist(record.count == EVENT_COUNT);
++    insist(record.events[0].error == FALSE);
++    insist(record.events[0].result.code ==
++           k5_radius_code_name2num("Access-Accept"));
++    insist(record.events[1].error == FALSE);
++    insist(record.events[1].result.code ==
++           k5_radius_code_name2num("Access-Reject"));
++    insist(record.events[2].error == TRUE);
++    insist(record.events[2].result.retval == ECANCELED);
++    insist(record.events[3].error == TRUE);
++    insist(record.events[3].result.retval == ETIMEDOUT);
++    insist(record.events[4].error == TRUE);
++    insist(record.events[4].result.retval == ECANCELED);
++    insist(record.events[5].error == TRUE);
++    insist(record.events[5].result.retval == ECANCELED);
++
++    verto_free(vctx);
++    krb5_free_context(kctx);
++    return 0;
++}
+diff --git a/src/lib/radius/test/test.c b/src/lib/radius/test/test.c
+new file mode 100644
+index 0000000..8469c17
+--- /dev/null
++++ b/src/lib/radius/test/test.c
+@@ -0,0 +1,63 @@
++/*
++ * Copyright 2012 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <krb5.h>
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++
++void
++noerror_(const char *file, int line, const char *cmd, int retval)
++{
++    if (retval == 0)
++        return;
++
++    fprintf(stderr, "%s:%d: %s:\n\t%s\n", file, line, strerror(retval), cmd);
++    exit(1);
++}
++
++void
++insist_(const char *file, int line, const char *cmd, krb5_boolean result)
++{
++    if (result)
++        return;
++
++    fprintf(stderr, "%s:%d: insist failed:\n\t%s\n", file, line, cmd);
++    exit(1);
++}
++
++krb5_data
++make_data_string(char *str)
++{
++    krb5_data d;
++
++    d.data = str;
++    d.length = strlen(str);
++
++    return d;
++}
+diff --git a/src/lib/radius/test/test.h b/src/lib/radius/test/test.h
+new file mode 100644
+index 0000000..4c3f62f
+--- /dev/null
++++ b/src/lib/radius/test/test.h
+@@ -0,0 +1,62 @@
++/*
++ * Copyright 2012 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef TEST_H_
++#define TEST_H_
++
++#include "../internal.h"
++
++#include <sys/wait.h>
++#include <signal.h>
++#include <unistd.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++
++#define insist(x) insist_(__FILE__, __LINE__, #x, x)
++#define noerror(x) noerror_(__FILE__, __LINE__, #x, x)
++
++struct event
++{
++    krb5_boolean error;
++    union
++    {
++        krb5_error_code retval;
++        k5_radius_code code;
++    } result;
++};
++
++void
++noerror_(const char *file, int line, const char *cmd, int retval);
++
++void
++insist_(const char *file, int line, const char *cmd, krb5_boolean result);
++
++krb5_data
++make_data_string(char *str);
++
++#endif /* TEST_H_ */
+-- 
+1.8.1.4
+

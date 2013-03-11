@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.1
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -74,6 +74,10 @@ Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
 Patch113: krb5-1.11-alpha1-init.patch
 Patch114: krb5-lookup_etypes-leak.patch
+
+Patch201: 0001-add-libk5radius.patch
+Patch202: 0002-Add-internal-KDC_DIR-macro.patch
+Patch203: 0003-add-otp-plugin.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -149,6 +153,7 @@ Requires: %{name}-libs = %{version}-%{release}
 Requires: libcom_err-devel
 %endif
 Requires: keyutils-libs-devel, libselinux-devel
+Requires: libverto-devel
 
 %description devel
 Kerberos is a network authentication system. The krb5-devel package
@@ -284,6 +289,11 @@ ln -s NOTICE LICENSE
 %patch105 -p1 -b .kvno
 %patch113 -p1 -b .init
 %patch114 -p1 -b .lookup_etypes-leak
+
+%patch201 -p1
+%patch202 -p1
+%patch203 -p1
+
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
@@ -654,6 +664,8 @@ exit 0
 %dir %{_libdir}/krb5/plugins/kdb
 %dir %{_libdir}/krb5/plugins/preauth
 %dir %{_libdir}/krb5/plugins/authdata
+%{_libdir}/krb5/plugins/preauth/otp.so
+
 
 # Problem-reporting tool.
 %{_sbindir}/krb5-send-pr
@@ -725,6 +737,7 @@ exit 0
 %{_libdir}/libkadm5clnt_mit.so.*
 %{_libdir}/libkadm5srv_mit.so.*
 %{_libdir}/libkdb5.so.*
+%{_libdir}/libk5radius.so.*
 %if %{separate_usr}
 /%{_lib}/libkrb5.so.*
 /%{_lib}/libkrb5support.so.*
@@ -775,6 +788,7 @@ exit 0
 %{_libdir}/libkadm5srv.so
 %{_libdir}/libkadm5srv_mit.so
 %{_libdir}/libkdb5.so
+%{_libdir}/libk5radius.so
 %{_libdir}/libkrb5.so
 %{_libdir}/libkrb5support.so
 
@@ -795,6 +809,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Mar 11 2013 Nathaniel McCallum <npmccallum@redhat.com> 1.11.1-4
+- Add libverto-devel requires for krb5-devel
+- Add otp support
+
 * Thu Feb 28 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-3
 - fix a memory leak when acquiring credentials using a keytab (RT#7586, #911110)
 
