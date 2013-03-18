@@ -90,7 +90,7 @@ BuildRequires: libcom_err-devel, libss-devel
 BuildRequires: gzip, ncurses-devel, tar
 BuildRequires: python-sphinx
 # The texlive package got a lot more complicated here.
-%if 0%{?fedora} > 17 || 0%{?rhel} > 7
+%if 0%{?fedora} > 17 || 0%{?rhel} > 6
 # Taken from \usepackage directives produced by sphinx:
 BuildRequires: tex(babel.sty)
 BuildRequires: tex(bookmark.sty)
@@ -809,6 +809,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Mar 18 2013 Nalin Dahyabhai <nalin@redhat.com>
+- fix a version comparison to expect newer texlive build requirements when
+  %%{_rhel} > 6 rather than when it's > 7
+
 * Mon Mar 11 2013 Nathaniel McCallum <npmccallum@redhat.com> 1.11.1-4
 - Add libverto-devel requires for krb5-devel
 - Add otp support
