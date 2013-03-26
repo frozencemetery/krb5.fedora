@@ -292,10 +292,9 @@ ln -s NOTICE LICENSE
 %patch114 -p1 -b .lookup_etypes-leak
 %patch115 -p1 -b .interposers
 
-%patch201 -p1
-%patch202 -p1
-%patch203 -p1
-
+%patch201 -p1 -b .add-libk5radius
+%patch202 -p1 -b .add-internal-kdc_dir
+%patch203 -p1 -b .add-otp-plugin
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
