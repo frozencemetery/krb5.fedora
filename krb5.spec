@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.1
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -74,6 +74,7 @@ Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
 Patch113: krb5-1.11-alpha1-init.patch
 Patch114: krb5-lookup_etypes-leak.patch
+Patch115: krb5-1.11.1-interposers.patch
 
 Patch201: 0001-add-libk5radius.patch
 Patch202: 0002-Add-internal-KDC_DIR-macro.patch
@@ -289,6 +290,7 @@ ln -s NOTICE LICENSE
 %patch105 -p1 -b .kvno
 %patch113 -p1 -b .init
 %patch114 -p1 -b .lookup_etypes-leak
+%patch115 -p1 -b .interposers
 
 %patch201 -p1
 %patch202 -p1
@@ -809,6 +811,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Mar 26 2013 Nalin Dahyabhai <nalin@redhat.com>
+- pull up Simo's patch to mark the correct mechanism on imported GSSAPI
+  contexts (RT#7592)
+
 * Mon Mar 18 2013 Nalin Dahyabhai <nalin@redhat.com>
 - fix a version comparison to expect newer texlive build requirements when
   %%{_rhel} > 6 rather than when it's > 7
