@@ -76,6 +76,7 @@ Patch113: krb5-1.11-alpha1-init.patch
 Patch114: krb5-lookup_etypes-leak.patch
 Patch115: krb5-1.11.1-interposers.patch
 Patch116: http://ausil.fedorapeople.org/aarch64/krb5/krb5-aarch64.patch
+Patch117: krb5-1.11-gss-client-keytab.patch
 
 Patch201: 0001-add-libk5radius.patch
 Patch202: 0002-Add-internal-KDC_DIR-macro.patch
@@ -294,6 +295,7 @@ ln -s NOTICE LICENSE
 %patch114 -p1 -b .lookup_etypes-leak
 %patch115 -p1 -b .interposers
 %patch116 -p1 -b .aarch64
+%patch117 -p1 -b .gss-client-keytab
 
 %patch201 -p1 -b .add-libk5radius
 %patch202 -p1 -b .add-internal-kdc_dir
@@ -819,6 +821,8 @@ exit 0
   since that's what the libraries actually look for
 - add buildrequires on nss-myhostname, in an attempt to get more of the tests
   to run properly during builds
+- pull in Simo's patch to recognize "client_keytab" as a key type which can
+  be passed in to gss_acquire_cred_from()
 
 * Tue Mar 26 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-5
 - pull up Simo's patch to mark the correct mechanism on imported GSSAPI
