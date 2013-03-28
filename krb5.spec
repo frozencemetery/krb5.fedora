@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.1
-Release: 5%{?dist}
+Release: 6%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -127,6 +127,7 @@ BuildRequires: perl, dejagnu, tcl-devel
 BuildRequires: net-tools
 %if 0%{?fedora} >= 13 || 0%{?rhel} > 6
 BuildRequires: hostname
+BuildRequires: nss-myhostname
 %endif
 
 %if %{WITH_LDAP}
@@ -401,7 +402,7 @@ install -pm 600 %{SOURCE10} $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc/
 install -pm 600 %{SOURCE11} $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc/
 
 # Where per-user keytabs live by default.
-mkdir -p $RPM_BUILD_ROOT%{_var}/kerberos/kdc/user
+mkdir -p $RPM_BUILD_ROOT%{_var}/kerberos/krb5/user
 
 # Default configuration file for everything.
 mkdir -p $RPM_BUILD_ROOT/etc
@@ -754,8 +755,8 @@ exit 0
 %dir %{_libdir}/krb5/plugins/*
 %{_libdir}/krb5/plugins/kdb/db2.so
 %dir %{_var}/kerberos
-%dir %{_var}/kerberos/kdc
-%dir %{_var}/kerberos/kdc/user
+%dir %{_var}/kerberos/krb5
+%dir %{_var}/kerberos/krb5/user
 %if ! %{WITH_SYSVERTO}
 %{_libdir}/libverto-k5ev.so
 %{_libdir}/libverto-k5ev.so.*
@@ -813,6 +814,12 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Mar 28 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-6
+- create and own /var/kerberos/krb5/user instead of /var/kerberos/kdc/user,
+  since that's what the libraries actually look for
+- add buildrequires on nss-myhostname, in an attempt to get more of the tests
+  to run properly during builds
+
 * Tue Mar 26 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-5
 - pull up Simo's patch to mark the correct mechanism on imported GSSAPI
   contexts (RT#7592)
