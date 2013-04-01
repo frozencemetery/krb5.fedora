@@ -822,7 +822,7 @@ exit 0
 - add buildrequires on nss-myhostname, in an attempt to get more of the tests
   to run properly during builds
 - pull in Simo's patch to recognize "client_keytab" as a key type which can
-  be passed in to gss_acquire_cred_from()
+  be passed in to gss_acquire_cred_from() (RT#7592)
 
 * Tue Mar 26 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-5
 - pull up Simo's patch to mark the correct mechanism on imported GSSAPI
