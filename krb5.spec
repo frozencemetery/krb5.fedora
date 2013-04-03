@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.1
-Release: 6%{?dist}
+Release: 7%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -77,6 +77,7 @@ Patch114: krb5-lookup_etypes-leak.patch
 Patch115: krb5-1.11.1-interposers.patch
 Patch116: http://ausil.fedorapeople.org/aarch64/krb5/krb5-aarch64.patch
 Patch117: krb5-1.11-gss-client-keytab.patch
+Patch118: krb5-1.11.1-rpcbind.patch
 
 Patch201: 0001-add-libk5radius.patch
 Patch202: 0002-Add-internal-KDC_DIR-macro.patch
@@ -125,7 +126,7 @@ BuildRequires: systemd-units
 %endif
 # For the test framework.
 BuildRequires: perl, dejagnu, tcl-devel
-BuildRequires: net-tools
+BuildRequires: net-tools, rpcbind
 %if 0%{?fedora} >= 13 || 0%{?rhel} > 6
 BuildRequires: hostname
 BuildRequires: nss-myhostname
@@ -296,6 +297,7 @@ ln -s NOTICE LICENSE
 %patch115 -p1 -b .interposers
 %patch116 -p1 -b .aarch64
 %patch117 -p1 -b .gss-client-keytab
+%patch118 -p1 -b .rpcbind
 
 %patch201 -p1 -b .add-libk5radius
 %patch202 -p1 -b .add-internal-kdc_dir
@@ -394,6 +396,7 @@ make -C src runenv.py
 : make -C src check TMPDIR=%{_tmppath}
 make -C src/lib check TMPDIR=%{_tmppath}
 make -C src/kdc check TMPDIR=%{_tmppath}
+make -C src/util check TMPDIR=%{_tmppath}
 
 %install
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
@@ -816,6 +819,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Apr  3 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-7
+- when testing the RPC library, treat denials from the local portmapper the
+  same as a portmapper-not-running situation, to allow other library tests
+  to be run while building the package
+
 * Thu Mar 28 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-6
 - create and own /var/kerberos/krb5/user instead of /var/kerberos/kdc/user,
   since that's what the libraries actually look for
