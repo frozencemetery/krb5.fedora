@@ -29,7 +29,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.3
-Release: 14%{?dist}
+Release: 15%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -90,6 +90,7 @@ Patch113: krb5-kldap-lastadminunlock.patch
 Patch114: krb5-1.10-pkinit-null.patch
 Patch115: krb5-lookup_etypes-leak.patch
 Patch116: krb5-1.10-pkinit-agility.patch
+Patch117: krb5-1.10-CVE-2013-1416.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -294,6 +295,7 @@ ln -s NOTICE LICENSE
 %patch114 -p1 -b .pkinit-null
 %patch115 -p1 -b .lookup_etypes-leak
 %patch116 -p1 -b .pkinit-agility
+%patch117 -p1 -b .CVE-2013-1416
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -860,6 +862,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Apr  9 2013 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-15
+- incorporate upstream patch to fix a NULL pointer dereference while processing
+  certain TGS requests (CVE-2013-1416, #949984/#949987)
+
 * Tue Mar  5 2013 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-14
 - add patch to avoid dereferencing a NULL pointer in the KDC when handling a
   draft9 PKINIT request (#917841, CVE-2012-1016)
