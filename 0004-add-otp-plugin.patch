@@ -1,7 +1,7 @@
-From 9c67d6fd21692d8bbfbe880511cbcbc5d9e6a2e5 Mon Sep 17 00:00:00 2001
+From 10e4dcdbb8856c66f9000d0c737e4eb9312aa021 Mon Sep 17 00:00:00 2001
 From: Nathaniel McCallum <npmccallum@redhat.com>
-Date: Fri, 8 Mar 2013 10:22:03 -0500
-Subject: [PATCH 3/3] add otp plugin
+Date: Tue, 9 Apr 2013 12:24:47 -0400
+Subject: [PATCH 4/4] add otp plugin
 
 ---
  src/Makefile.in                     |   1 +
@@ -9,11 +9,11 @@ Subject: [PATCH 3/3] add otp plugin
  src/kdc/kdc_preauth.c               |   2 +
  src/plugins/preauth/otp/Makefile.in |  45 +++
  src/plugins/preauth/otp/deps        |  26 ++
- src/plugins/preauth/otp/main.c      | 374 +++++++++++++++++++++++
+ src/plugins/preauth/otp/main.c      | 374 ++++++++++++++++++++++++
  src/plugins/preauth/otp/otp.exports |   1 +
- src/plugins/preauth/otp/otp_state.c | 571 ++++++++++++++++++++++++++++++++++++
+ src/plugins/preauth/otp/otp_state.c | 568 ++++++++++++++++++++++++++++++++++++
  src/plugins/preauth/otp/otp_state.h |  58 ++++
- 9 files changed, 1079 insertions(+)
+ 9 files changed, 1076 insertions(+)
  create mode 100644 src/plugins/preauth/otp/Makefile.in
  create mode 100644 src/plugins/preauth/otp/deps
  create mode 100644 src/plugins/preauth/otp/main.c
@@ -34,7 +34,7 @@ index 2c65831..0b9d355 100644
  	kdc kadmin slave clients appl tests \
  	config-files man doc @po@
 diff --git a/src/configure.in b/src/configure.in
-index 6a9757f..053e7b4 100644
+index d8676e5..520e0c8 100644
 --- a/src/configure.in
 +++ b/src/configure.in
 @@ -1337,6 +1337,7 @@ dnl	ccapi ccapi/lib ccapi/lib/unix ccapi/server ccapi/server/unix ccapi/test
@@ -60,7 +60,7 @@ index 42a37a8..afbf1f6 100644
                         kdcpreauth_encrypted_challenge_initvt);
 diff --git a/src/plugins/preauth/otp/Makefile.in b/src/plugins/preauth/otp/Makefile.in
 new file mode 100644
-index 0000000..c610be9
+index 0000000..62fa432
 --- /dev/null
 +++ b/src/plugins/preauth/otp/Makefile.in
 @@ -0,0 +1,45 @@
@@ -84,9 +84,9 @@ index 0000000..c610be9
 +SHLIB_EXPDEPS = \
 +	$(TOPLIBD)/libk5crypto$(SHLIBEXT) \
 +	$(TOPLIBD)/libkrb5$(SHLIBEXT) \
-+	$(TOPLIBD)/radius/libk5radius$(SHLIBEXT)
++	$(TOPLIBD)/krad/libkrad$(SHLIBEXT)
 +
-+SHLIB_EXPLIBS= -lverto -lk5radius $(KRB5_LIB) $(K5CRYPTO_LIB) $(COM_ERR_LIB) $(SUPPORT_LIB) $(LIBS)
++SHLIB_EXPLIBS= -lverto -lkrad $(KRB5_LIB) $(K5CRYPTO_LIB) $(COM_ERR_LIB) $(SUPPORT_LIB) $(LIBS)
 +
 +SHLIB_DIRS=-L$(TOPLIBD)
 +SHLIB_RDIRS=$(KRB5_LIBDIR)
@@ -111,7 +111,7 @@ index 0000000..c610be9
 +
 diff --git a/src/plugins/preauth/otp/deps b/src/plugins/preauth/otp/deps
 new file mode 100644
-index 0000000..cf5f19f
+index 0000000..3352126
 --- /dev/null
 +++ b/src/plugins/preauth/otp/deps
 @@ -0,0 +1,26 @@
@@ -119,17 +119,17 @@ index 0000000..cf5f19f
 +# Generated makefile dependencies follow.
 +#
 +otp_state.so otp_state.po $(OUTPRE)otp_state.$(OBJEXT): \
-+  $(BUILDTOP)/include/autoconf.h $(BUILDTOP)/include/k5radius.h \
-+  $(BUILDTOP)/include/krb5/krb5.h $(BUILDTOP)/include/osconf.h \
-+  $(BUILDTOP)/include/profile.h $(COM_ERR_DEPS) $(top_srcdir)/include/k5-buf.h \
-+  $(top_srcdir)/include/k5-err.h $(top_srcdir)/include/k5-gmt_mktime.h \
-+  $(top_srcdir)/include/k5-int-pkinit.h $(top_srcdir)/include/k5-int.h \
-+  $(top_srcdir)/include/k5-json.h $(top_srcdir)/include/k5-platform.h \
-+  $(top_srcdir)/include/k5-plugin.h $(top_srcdir)/include/k5-thread.h \
-+  $(top_srcdir)/include/k5-trace.h $(top_srcdir)/include/krb5.h \
-+  $(top_srcdir)/include/krb5/authdata_plugin.h $(top_srcdir)/include/krb5/plugin.h \
-+  $(top_srcdir)/include/krb5/preauth_plugin.h $(top_srcdir)/include/port-sockets.h \
-+  $(top_srcdir)/include/socket-utils.h otp_state.c otp_state.h
++  $(BUILDTOP)/include/autoconf.h $(BUILDTOP)/include/krb5/krb5.h \
++  $(BUILDTOP)/include/osconf.h $(BUILDTOP)/include/profile.h \
++  $(COM_ERR_DEPS) $(top_srcdir)/include/k5-buf.h $(top_srcdir)/include/k5-err.h \
++  $(top_srcdir)/include/k5-gmt_mktime.h $(top_srcdir)/include/k5-int-pkinit.h \
++  $(top_srcdir)/include/k5-int.h $(top_srcdir)/include/k5-json.h \
++  $(top_srcdir)/include/k5-platform.h $(top_srcdir)/include/k5-plugin.h \
++  $(top_srcdir)/include/k5-thread.h $(top_srcdir)/include/k5-trace.h \
++  $(top_srcdir)/include/krb5.h $(top_srcdir)/include/krb5/authdata_plugin.h \
++  $(top_srcdir)/include/krb5/plugin.h $(top_srcdir)/include/krb5/preauth_plugin.h \
++  $(top_srcdir)/include/port-sockets.h $(top_srcdir)/include/socket-utils.h \
++  otp_state.c otp_state.h
 +main.so main.po $(OUTPRE)main.$(OBJEXT): $(BUILDTOP)/include/autoconf.h \
 +  $(BUILDTOP)/include/krb5/krb5.h $(BUILDTOP)/include/osconf.h \
 +  $(BUILDTOP)/include/profile.h $(COM_ERR_DEPS) $(top_srcdir)/include/k5-buf.h \
@@ -143,7 +143,7 @@ index 0000000..cf5f19f
 +  $(top_srcdir)/include/socket-utils.h main.c otp_state.h
 diff --git a/src/plugins/preauth/otp/main.c b/src/plugins/preauth/otp/main.c
 new file mode 100644
-index 0000000..e980666
+index 0000000..8b48e1b
 --- /dev/null
 +++ b/src/plugins/preauth/otp/main.c
 @@ -0,0 +1,374 @@
@@ -325,7 +325,7 @@ index 0000000..e980666
 +static int
 +otp_flags(krb5_context context, krb5_preauthtype pa_type)
 +{
-+  return PA_REPLACES_KEY;
++    return PA_REPLACES_KEY;
 +}
 +
 +static void
@@ -481,45 +481,45 @@ index 0000000..e980666
 +                  krb5_kdcpreauth_rock rock, krb5_kdcpreauth_moddata moddata,
 +                  krb5_kdcpreauth_modreq modreq)
 +{
-+  krb5_keyblock *armor_key = NULL;
++    krb5_keyblock *armor_key = NULL;
 +
-+  if (!padata || padata->length == 0)
-+    return 0;
++    if (!padata || padata->length == 0)
++        return 0;
 +
-+  /* Get the armor key. */
-+  armor_key = cb->fast_armor(context, rock);
-+  if (!armor_key) {
-+    DEBUGMSG(ENOENT, "No armor key found when returning padata.");
-+    return ENOENT;
-+  }
++    /* Get the armor key. */
++    armor_key = cb->fast_armor(context, rock);
++    if (!armor_key) {
++      DEBUGMSG(ENOENT, "No armor key found when returning padata.");
++      return ENOENT;
++    }
 +
-+  /* Replace the reply key with the FAST armor key. */
-+  krb5_free_keyblock_contents(context, encrypting_key);
-+  return krb5_copy_keyblock_contents(context, armor_key, encrypting_key);
++    /* Replace the reply key with the FAST armor key. */
++    krb5_free_keyblock_contents(context, encrypting_key);
++    return krb5_copy_keyblock_contents(context, armor_key, encrypting_key);
 +}
 +
 +krb5_error_code
 +kdcpreauth_otp_initvt(krb5_context context, int maj_ver, int min_ver,
 +                      krb5_plugin_vtable vtable)
 +{
-+  krb5_kdcpreauth_vtable vt;
++    krb5_kdcpreauth_vtable vt;
 +
-+  if (maj_ver != 1)
-+    return KRB5_PLUGIN_VER_NOTSUPP;
++    if (maj_ver != 1)
++        return KRB5_PLUGIN_VER_NOTSUPP;
 +
-+  vt = (krb5_kdcpreauth_vtable)vtable;
-+  vt->name = "otp";
-+  vt->pa_type_list = otp_pa_type_list;
-+  vt->init = otp_init;
-+  vt->fini = otp_fini;
-+  vt->flags = otp_flags;
-+  vt->edata = otp_edata;
-+  vt->verify = otp_verify;
-+  vt->return_padata = otp_return_padata;
++    vt = (krb5_kdcpreauth_vtable)vtable;
++    vt->name = "otp";
++    vt->pa_type_list = otp_pa_type_list;
++    vt->init = otp_init;
++    vt->fini = otp_fini;
++    vt->flags = otp_flags;
++    vt->edata = otp_edata;
++    vt->verify = otp_verify;
++    vt->return_padata = otp_return_padata;
 +
-+  com_err("otp", 0, "Loaded.");
++    com_err("otp", 0, "Loaded.");
 +
-+  return 0;
++    return 0;
 +}
 diff --git a/src/plugins/preauth/otp/otp.exports b/src/plugins/preauth/otp/otp.exports
 new file mode 100644
@@ -530,10 +530,10 @@ index 0000000..26aa19d
 +kdcpreauth_otp_initvt
 diff --git a/src/plugins/preauth/otp/otp_state.c b/src/plugins/preauth/otp/otp_state.c
 new file mode 100644
-index 0000000..a42141c
+index 0000000..caa0752
 --- /dev/null
 +++ b/src/plugins/preauth/otp/otp_state.c
-@@ -0,0 +1,571 @@
+@@ -0,0 +1,568 @@
 +/*
 + * Copyright 2012 Red Hat, Inc.  All rights reserved.
 + *
@@ -563,7 +563,7 @@ index 0000000..a42141c
 +
 +#include "otp_state.h"
 +
-+#include <k5radius.h>
++#include <krad.h>
 +#include <k5-json.h>
 +
 +#include <ctype.h>
@@ -593,14 +593,14 @@ index 0000000..a42141c
 +    ssize_t index;
 +    otp_cb *cb;
 +    void *data;
-+    k5_radius_attrset *attrs;
++    krad_attrset *attrs;
 +} request;
 +
 +struct otp_state_ {
 +    krb5_context ctx;
 +    token_type *types;
-+    k5_radius_client *radius;
-+    k5_radius_attrset *attrs;
++    krad_client *radius;
++    krad_attrset *attrs;
 +};
 +
 +static inline krb5_data
@@ -928,7 +928,7 @@ index 0000000..a42141c
 +    if (req == NULL)
 +        return;
 +
-+    k5_radius_attrset_free(req->attrs);
++    krad_attrset_free(req->attrs);
 +    tokens_free(req->tokens);
 +    free(req);
 +}
@@ -959,20 +959,19 @@ index 0000000..a42141c
 +    if (retval != 0)
 +        goto error;
 +
-+    retval = k5_radius_attrset_new(ctx, &self->attrs);
++    retval = krad_attrset_new(ctx, &self->attrs);
 +    if (retval != 0)
 +        goto error;
 +
 +    hndata = make_data(hostname, strlen(hostname));
-+    retval = k5_radius_attrset_add(self->attrs,
-+                                   k5_radius_attr_name2num("NAS-Identifier"),
-+                                   &hndata);
++    retval = krad_attrset_add(self->attrs,
++                              krad_attr_name2num("NAS-Identifier"), &hndata);
 +    if (retval != 0)
 +        goto error;
 +
-+    retval = k5_radius_attrset_add_number(
-+            self->attrs, k5_radius_attr_name2num("Service-Type"),
-+            K5_RADIUS_SERVICE_TYPE_AUTHENTICATE_ONLY);
++    retval = krad_attrset_add_number(self->attrs,
++                                     krad_attr_name2num("Service-Type"),
++                                     KRAD_SERVICE_TYPE_AUTHENTICATE_ONLY);
 +    if (retval != 0)
 +        goto error;
 +
@@ -991,7 +990,7 @@ index 0000000..a42141c
 +    if (self == NULL)
 +        return;
 +
-+    k5_radius_attrset_free(self->attrs);
++    krad_attrset_free(self->attrs);
 +    token_types_free(self->types);
 +    free(self);
 +}
@@ -1000,8 +999,8 @@ index 0000000..a42141c
 +request_send(request *req);
 +
 +static void
-+callback(krb5_error_code retval, const k5_radius_packet *rqst,
-+         const k5_radius_packet *resp, void *data)
++callback(krb5_error_code retval, const krad_packet *rqst,
++         const krad_packet *resp, void *data)
 +{
 +    request *req = data;
 +
@@ -1011,8 +1010,8 @@ index 0000000..a42141c
 +        goto error;
 +
 +    /* If we received an accept packet, success! */
-+    if (k5_radius_packet_get_code(resp) ==
-+        k5_radius_code_name2num("Access-Accept")) {
++    if (krad_packet_get_code(resp) ==
++        krad_code_name2num("Access-Accept")) {
 +        (*req->cb)(retval, otp_response_success, req->data);
 +        request_free(req);
 +        return;
@@ -1035,21 +1034,20 @@ index 0000000..a42141c
 +{
 +    krb5_error_code retval;
 +
-+    retval = k5_radius_attrset_add(req->attrs,
-+                                   k5_radius_attr_name2num("User-Name"),
++    retval = krad_attrset_add(req->attrs,
++                                   krad_attr_name2num("User-Name"),
 +                                   &req->tokens[req->index].username);
 +    if (retval != 0)
 +        goto error;
 +
-+    retval = k5_radius_client_send(req->state->radius,
-+                                   k5_radius_code_name2num("Access-Request"),
-+                                   req->attrs,
-+                                   req->tokens[req->index].type->server,
-+                                   req->tokens[req->index].type->secret,
-+                                   req->tokens[req->index].type->timeout,
-+                                   req->tokens[req->index].type->retries,
-+                                   callback, req);
-+    k5_radius_attrset_del(req->attrs, k5_radius_attr_name2num("User-Name"), 0);
++    retval = krad_client_send(req->state->radius,
++                              krad_code_name2num("Access-Request"), req->attrs,
++                              req->tokens[req->index].type->server,
++                              req->tokens[req->index].type->secret,
++                              req->tokens[req->index].type->timeout,
++                              req->tokens[req->index].type->retries,
++                              callback, req);
++    krad_attrset_del(req->attrs, krad_attr_name2num("User-Name"), 0);
 +    if (retval != 0)
 +        goto error;
 +
@@ -1069,7 +1067,7 @@ index 0000000..a42141c
 +    request *rqst = NULL;
 +
 +    if (state->radius == NULL) {
-+        retval = k5_radius_client_new(state->ctx, ctx, &state->radius);
++        retval = krad_client_new(state->ctx, ctx, &state->radius);
 +        if (retval != 0)
 +            goto error;
 +    }
@@ -1083,13 +1081,12 @@ index 0000000..a42141c
 +    rqst->data = data;
 +    rqst->cb = cb;
 +
-+    retval = k5_radius_attrset_copy(state->attrs, &rqst->attrs);
++    retval = krad_attrset_copy(state->attrs, &rqst->attrs);
 +    if (retval != 0)
 +        goto error;
 +
-+    retval = k5_radius_attrset_add(rqst->attrs,
-+                                   k5_radius_attr_name2num("User-Password"),
-+                                   &req->otp_value);
++    retval = krad_attrset_add(rqst->attrs, krad_attr_name2num("User-Password"),
++                              &req->otp_value);
 +    if (retval != 0)
 +        goto error;
 +
@@ -1170,5 +1167,5 @@ index 0000000..89a164a
 +
 +#endif /* OTP_H_ */
 -- 
-1.8.1.4
+1.8.2
 

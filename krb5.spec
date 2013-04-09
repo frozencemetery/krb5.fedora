@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.1
-Release: 7%{?dist}
+Release: 8%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -79,9 +79,11 @@ Patch116: http://ausil.fedorapeople.org/aarch64/krb5/krb5-aarch64.patch
 Patch117: krb5-1.11-gss-client-keytab.patch
 Patch118: krb5-1.11.1-rpcbind.patch
 
-Patch201: 0001-add-libk5radius.patch
-Patch202: 0002-Add-internal-KDC_DIR-macro.patch
-Patch203: 0003-add-otp-plugin.patch
+# Patch for otp plugin backport
+Patch201: 0001-add-k5memdup.patch
+Patch202: 0002-add-libkrad.patch
+Patch203: 0003-Add-internal-KDC_DIR-macro.patch
+Patch204: 0004-add-otp-plugin.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -299,9 +301,10 @@ ln -s NOTICE LICENSE
 %patch117 -p1 -b .gss-client-keytab
 %patch118 -p1 -b .rpcbind
 
-%patch201 -p1 -b .add-libk5radius
-%patch202 -p1 -b .add-internal-kdc_dir
-%patch203 -p1 -b .add-otp-plugin
+%patch201 -p1 -b .add-k5memdup
+%patch202 -p1 -b .add-libkrad
+%patch203 -p1 -b .add-internal-kdc_dir
+%patch204 -p1 -b .add-otp-plugin
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
@@ -747,7 +750,7 @@ exit 0
 %{_libdir}/libkadm5clnt_mit.so.*
 %{_libdir}/libkadm5srv_mit.so.*
 %{_libdir}/libkdb5.so.*
-%{_libdir}/libk5radius.so.*
+%{_libdir}/libkrad.so.*
 %if %{separate_usr}
 /%{_lib}/libkrb5.so.*
 /%{_lib}/libkrb5support.so.*
@@ -798,7 +801,7 @@ exit 0
 %{_libdir}/libkadm5srv.so
 %{_libdir}/libkadm5srv_mit.so
 %{_libdir}/libkdb5.so
-%{_libdir}/libk5radius.so
+%{_libdir}/libkrad.so
 %{_libdir}/libkrb5.so
 %{_libdir}/libkrb5support.so
 
@@ -819,6 +822,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Apr 09 2013 Nathaniel McCallum <npmccallum@redhat.com> - 1.11.1-8
+- Update otp backport patches (libk5radius => libkrad)
+
 * Wed Apr  3 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-7
 - when testing the RPC library, treat denials from the local portmapper the
   same as a portmapper-not-running situation, to allow other library tests

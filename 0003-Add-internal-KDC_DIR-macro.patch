@@ -1,7 +1,7 @@
-From 5caeecbc6753f526ccd620e29daed49973f8e21d Mon Sep 17 00:00:00 2001
+From a4a7a4aeb2fb96e36494faff46243fbcb3c0d78b Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Tue, 15 Jan 2013 11:11:27 -0500
-Subject: [PATCH 2/3] Add internal KDC_DIR macro
+Subject: [PATCH 3/4] Add internal KDC_DIR macro
 
 Define KDC_DIR in osconf.hin and use it for paths within the KDC
 directory.
@@ -62,5 +62,5 @@ index c3a33c2..1bca991 100644
  /*
   * GSS mechglue
 -- 
-1.8.1.4
+1.8.2
 
