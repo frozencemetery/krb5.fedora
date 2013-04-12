@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.1
-Release: 8%{?dist}
+Release: 9%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -331,6 +331,10 @@ popd
 # Go ahead and supply tcl info, because configure doesn't know how to find it.
 . %{_libdir}/tclConfig.sh
 pushd src
+# Depending on scheduling, this might get pulled in for Fedora 19.
+%if 0%{?fedora} > 19 || 0%{?rhel} > 6
+DEFCCNAME=DIR:/run/user/%%{uid}/krb5cc; export DEFCCNAME
+%endif
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
 INCLUDES=-I%{_includedir}/et
 CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC -fno-strict-aliasing -fstack-protector-all`"
@@ -822,6 +826,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Apr 12 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-9
+- move the compiled-in default ccache location from the previous default of
+  FILE:/tmp/krb5cc_%%{uid} to DIR:/run/user/%%{uid}/krb5cc (part of #949588)
+
 * Tue Apr 09 2013 Nathaniel McCallum <npmccallum@redhat.com> - 1.11.1-8
 - Update otp backport patches (libk5radius => libkrad)
 
