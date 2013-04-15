@@ -29,10 +29,10 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.11.1
-Release: 9%{?dist}
+Version: 1.11.2
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.1-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.2-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 # Use a dummy krb5-%{version}-pdf.tar.xz the first time through, then
@@ -73,8 +73,6 @@ Patch75: krb5-pkinit-debug.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
 Patch113: krb5-1.11-alpha1-init.patch
-Patch114: krb5-lookup_etypes-leak.patch
-Patch115: krb5-1.11.1-interposers.patch
 Patch116: http://ausil.fedorapeople.org/aarch64/krb5/krb5-aarch64.patch
 Patch117: krb5-1.11-gss-client-keytab.patch
 Patch118: krb5-1.11.1-rpcbind.patch
@@ -295,8 +293,6 @@ ln -s NOTICE LICENSE
 %patch86 -p0 -b .debuginfo
 %patch105 -p1 -b .kvno
 %patch113 -p1 -b .init
-%patch114 -p1 -b .lookup_etypes-leak
-%patch115 -p1 -b .interposers
 %patch116 -p1 -b .aarch64
 %patch117 -p1 -b .gss-client-keytab
 %patch118 -p1 -b .rpcbind
@@ -811,6 +807,7 @@ exit 0
 
 %{_bindir}/krb5-config
 %{_bindir}/sclient
+%{_mandir}/man1/krb5-config.1*
 %{_mandir}/man1/sclient.1*
 %{_mandir}/man8/sserver.8*
 %{_sbindir}/sserver
@@ -826,6 +823,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Apr 15 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.2-1
+- update to 1.11.2
+  - drop pulled in patch for RT#7586, included in this release
+  - drop pulled in patch for RT#7592, included in this release
+
 * Fri Apr 12 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-9
 - move the compiled-in default ccache location from the previous default of
   FILE:/tmp/krb5cc_%%{uid} to DIR:/run/user/%%{uid}/krb5cc (part of #949588)
@@ -844,7 +846,7 @@ exit 0
 - add buildrequires on nss-myhostname, in an attempt to get more of the tests
   to run properly during builds
 - pull in Simo's patch to recognize "client_keytab" as a key type which can
-  be passed in to gss_acquire_cred_from() (RT#7592)
+  be passed in to gss_acquire_cred_from() (RT#7598)
 
 * Tue Mar 26 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-5
 - pull up Simo's patch to mark the correct mechanism on imported GSSAPI
