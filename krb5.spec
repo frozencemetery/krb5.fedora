@@ -76,6 +76,7 @@ Patch113: krb5-1.11-alpha1-init.patch
 Patch116: http://ausil.fedorapeople.org/aarch64/krb5/krb5-aarch64.patch
 Patch117: krb5-1.11-gss-client-keytab.patch
 Patch118: krb5-1.11.1-rpcbind.patch
+Patch119: krb5-fast-msg_type.patch
 
 # Patch for otp plugin backport
 Patch201: 0001-add-k5memdup.patch
@@ -296,6 +297,7 @@ ln -s NOTICE LICENSE
 %patch116 -p1 -b .aarch64
 %patch117 -p1 -b .gss-client-keytab
 %patch118 -p1 -b .rpcbind
+%patch119 -p1 -b .fast-msg_type
 
 %patch201 -p1 -b .add-k5memdup
 %patch202 -p1 -b .add-libkrad
@@ -827,6 +829,8 @@ exit 0
 - update to 1.11.2
   - drop pulled in patch for RT#7586, included in this release
   - drop pulled in patch for RT#7592, included in this release
+- pull in fix for keeping track of the message type when parsing FAST requests
+  in the KDC (RT#7605, #951843)
 
 * Fri Apr 12 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-9
 - move the compiled-in default ccache location from the previous default of
