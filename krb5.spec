@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.2
-Release: 10%{?dist}
+Release: 11%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -74,6 +74,7 @@ Patch109: krb5-1.10-pkinit-null.patch
 Patch110: krb5-lookup_etypes-leak.patch
 Patch111: krb5-1.10-pkinit-agility.patch
 Patch112: krb5-1.10-CVE-2013-1416.patch
+Patch113: krb5-fast-msg_type.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -257,6 +258,7 @@ ln -s NOTICE LICENSE
 %patch110 -p1 -b .lookup_etypes-leak
 %patch111 -p1 -b .pkinit-agility
 %patch112 -p1 -b .CVE-2013-1416
+%patch113 -p1 -b .fast-msg_type
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -776,6 +778,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Apr 15 2013 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-11
+- pull fix for keeping track of the message type when parsing FAST requests in
+  the KDC (RT#7605, #951964)
+
 * Tue Apr  9 2013 Nalin Dahyabhai <nalin@redhat.com> 1.10.2-10
 - incorporate upstream patch to fix a NULL pointer dereference while processing
   certain TGS requests (CVE-2013-1416, #949984/#949987)
