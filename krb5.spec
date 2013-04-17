@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -83,6 +83,7 @@ Patch201: 0001-add-k5memdup.patch
 Patch202: 0002-add-libkrad.patch
 Patch203: 0003-Add-internal-KDC_DIR-macro.patch
 Patch204: 0004-add-otp-plugin.patch
+Patch205: krb5-kdcdir2.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -303,6 +304,7 @@ ln -s NOTICE LICENSE
 %patch202 -p1 -b .add-libkrad
 %patch203 -p1 -b .add-internal-kdc_dir
 %patch204 -p1 -b .add-otp-plugin
+%patch205 -p1 -b .kdcdir2
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
@@ -825,6 +827,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Apr 17 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.2-2
+- correct some configuration file paths which the KDC_DIR patch missed
+
 * Mon Apr 15 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.2-1
 - update to 1.11.2
   - drop pulled in patch for RT#7586, included in this release
