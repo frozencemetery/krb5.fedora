@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.2
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -78,12 +78,9 @@ Patch117: krb5-1.11-gss-client-keytab.patch
 Patch118: krb5-1.11.1-rpcbind.patch
 Patch119: krb5-fast-msg_type.patch
 
-# Patch for otp plugin backport
-Patch201: 0001-add-k5memdup.patch
-Patch202: 0002-add-libkrad.patch
-Patch203: 0003-Add-internal-KDC_DIR-macro.patch
-Patch204: 0004-add-otp-plugin.patch
-Patch205: krb5-kdcdir2.patch
+# Patches for otp plugin backport
+Patch201: krb5-1.11.2-keycheck.patch
+Patch202: krb5-1.11.2-otp.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -300,11 +297,8 @@ ln -s NOTICE LICENSE
 %patch118 -p1 -b .rpcbind
 %patch119 -p1 -b .fast-msg_type
 
-%patch201 -p1 -b .add-k5memdup
-%patch202 -p1 -b .add-libkrad
-%patch203 -p1 -b .add-internal-kdc_dir
-%patch204 -p1 -b .add-otp-plugin
-%patch205 -p1 -b .kdcdir2
+%patch201 -p1 -b .keycheck
+%patch202 -p1 -b .otp
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
@@ -827,6 +821,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Apr 29 2013 Nathaniel McCallum <npmccallum@redhat.com> 1.11.2-4
+- Update otp patches
+- Merge otp patches into a single patch
+- Add keycheck patch
+
 * Tue Apr 23 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.2-3
 - pull the changing of the compiled-in default ccache location to
   DIR:/run/user/%%{uid}/krb5cc back into F19, in line with SSSD and
