@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.2
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -77,6 +77,7 @@ Patch116: http://ausil.fedorapeople.org/aarch64/krb5/krb5-aarch64.patch
 Patch117: krb5-1.11-gss-client-keytab.patch
 Patch118: krb5-1.11.1-rpcbind.patch
 Patch119: krb5-fast-msg_type.patch
+Patch120: krb5-1.11.2-kpasswd_pingpong.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -296,6 +297,7 @@ ln -s NOTICE LICENSE
 %patch117 -p1 -b .gss-client-keytab
 %patch118 -p1 -b .rpcbind
 %patch119 -p1 -b .fast-msg_type
+%patch120 -p1 -b .kpasswd_pingpong
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -821,6 +823,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon May 13 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.2-5
+- pull up fix for UDP ping-pong flaw in kpasswd service (CVE-2002-2443,
+  #962531,#962534)
+
 * Mon Apr 29 2013 Nathaniel McCallum <npmccallum@redhat.com> 1.11.2-4
 - Update otp patches
 - Merge otp patches into a single patch
