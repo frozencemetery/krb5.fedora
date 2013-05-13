@@ -29,7 +29,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.10.3
-Release: 16%{?dist}
+Release: 17%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.10/krb5-1.10.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -92,6 +92,7 @@ Patch115: krb5-lookup_etypes-leak.patch
 Patch116: krb5-1.10-pkinit-agility.patch
 Patch117: krb5-1.10-CVE-2013-1416.patch
 Patch118: krb5-fast-msg_type.patch
+Patch119: krb5-1.11.2-kpasswd_pingpong.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -298,6 +299,7 @@ ln -s NOTICE LICENSE
 %patch116 -p1 -b .pkinit-agility
 %patch117 -p1 -b .CVE-2013-1416
 %patch118 -p1 -b .fast-msg_type
+%patch119 -p1 -b .kpasswd_pingpong
 rm src/lib/krb5/krb/deltat.c
 
 gzip doc/*.ps
@@ -864,6 +866,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon May 13 2013 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-17
+- pull up fix for UDP ping-pong flaw in kpasswd service (CVE-2002-2443,
+  #962531,#962534)
+
 * Mon Apr 15 2013 Nalin Dahyabhai <nalin@redhat.com> 1.10.3-16
 - pull fix for keeping track of the message type when parsing FAST requests in
   the KDC (RT#7605, #951964)
