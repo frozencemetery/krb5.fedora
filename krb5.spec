@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.2
-Release: 5%{?dist}
+Release: 6%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -78,6 +78,7 @@ Patch117: krb5-1.11-gss-client-keytab.patch
 Patch118: krb5-1.11.1-rpcbind.patch
 Patch119: krb5-fast-msg_type.patch
 Patch120: krb5-1.11.2-kpasswd_pingpong.patch
+Patch121: krb5-cccol-primary.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -298,6 +299,7 @@ ln -s NOTICE LICENSE
 %patch118 -p1 -b .rpcbind
 %patch119 -p1 -b .fast-msg_type
 %patch120 -p1 -b .kpasswd_pingpong
+%patch121 -p1 -b .cccol-primary
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -823,6 +825,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue May 21 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.2-6
+- pull in upstream fix to start treating a KRB5CCNAME value that begins
+  with DIR:: the same as it would a DIR: value with just one ccache file
+  in it (RT#7172, #965574)
+
 * Mon May 13 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.2-5
 - pull up fix for UDP ping-pong flaw in kpasswd service (CVE-2002-2443,
   #962531,#962534)
