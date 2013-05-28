@@ -1,7 +1,6 @@
-Should fix #959685.  Adjusted to apply to 1.11.2, which wrapped some of the
-context differently.
+Should fix #959685.
 
-commit 57acee11b5c6682a7f4f036e35d8b2fc9292875e
+commit b4d2d74082d239e3024254ab8ffb55c9dd087ff7
 Author: Greg Hudson <ghudson@mit.edu>
 Date:   Mon May 20 11:03:04 2013 -0400
 
@@ -19,12 +18,14 @@ Date:   Mon May 20 11:03:04 2013 -0400
     
     Based on a bug report and patch from nalin@redhat.com.
     
+    (cherry picked from commit 57acee11b5c6682a7f4f036e35d8b2fc9292875e)
+    
     ticket: 7639
-    target_version: 1.11.3
-    tags: pullup
+    version_fixed: 1.11.3
+    status: resolved
 
 diff --git a/src/lib/krb5/krb/rd_req_dec.c b/src/lib/krb5/krb/rd_req_dec.c
-index bd447f3..4b952f5 100644
+index 6495bae..6dacb35 100644
 --- a/src/lib/krb5/krb/rd_req_dec.c
 +++ b/src/lib/krb5/krb/rd_req_dec.c
 @@ -277,11 +277,16 @@ rd_req_decoded_opt(krb5_context context, krb5_auth_context *auth_context,
@@ -55,10 +56,10 @@ index bd447f3..4b952f5 100644
      if (((*auth_context)->rcache == NULL)
          && ((*auth_context)->auth_context_flags & KRB5_AUTH_CONTEXT_DO_TIME)
 diff --git a/src/tests/gssapi/t_gssapi.py b/src/tests/gssapi/t_gssapi.py
-index de778cc..5583b02 100755
+index e453b71..cafbea1 100755
 --- a/src/tests/gssapi/t_gssapi.py
 +++ b/src/tests/gssapi/t_gssapi.py
-@@ -110,6 +110,19 @@ if 'host/-nomatch-' not in output:
+@@ -117,6 +117,19 @@ if 'host/-nomatch-' not in output:
  
  realm.stop()
  
