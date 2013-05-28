@@ -82,6 +82,8 @@ Patch121: krb5-cccol-primary.patch
 Patch122: krb5-1.11.2-gss_transited.patch
 Patch123: krb5-1.11.2-empty_passwords.patch
 Patch124: krb5-1.11.2-arcfour_short.patch
+Patch125: krb5-1.11.2-skew1.patch
+Patch126: krb5-1.11.2-skew2.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -306,6 +308,8 @@ ln -s NOTICE LICENSE
 %patch122 -p1 -b .gss_transited
 %patch123 -p1 -b .empty_passwords
 %patch124 -p1 -b .arcfour_short
+%patch125 -p1 -b .skew1
+%patch126 -p1 -b .skew2
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -836,6 +840,10 @@ exit 0
   in GSS acceptors (RT#7639, #959685)
 - backport fix for not being able to pass an empty password to the
   get-init-creds APIs and have them actually use it (RT#7642, #960001)
+- add backported proposed fix to use the unauthenticated server time
+  as the basis for computing the requested credential expiration times,
+  rather than the client's idea of the current time, which could be
+  significantly incorrect (#961221)
 
 * Tue May 21 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.2-6
 - pull in upstream fix to start treating a KRB5CCNAME value that begins
