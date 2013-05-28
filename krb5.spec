@@ -852,7 +852,7 @@ exit 0
   - drop pulled in patch for RT#7586, included in this release
   - drop pulled in patch for RT#7592, included in this release
 - pull in fix for keeping track of the message type when parsing FAST requests
-  in the KDC (RT#7605, #951843)
+  in the KDC (RT#7605, #951843) (also #951965)
 
 * Fri Apr 12 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.1-9
 - move the compiled-in default ccache location from the previous default of
