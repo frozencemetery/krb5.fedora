@@ -79,6 +79,7 @@ Patch118: krb5-1.11.1-rpcbind.patch
 Patch119: krb5-fast-msg_type.patch
 Patch120: krb5-1.11.2-kpasswd_pingpong.patch
 Patch121: krb5-cccol-primary.patch
+Patch122: krb5-1.11.2-gss_transited.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -300,6 +301,7 @@ ln -s NOTICE LICENSE
 %patch119 -p1 -b .fast-msg_type
 %patch120 -p1 -b .kpasswd_pingpong
 %patch121 -p1 -b .cccol-primary
+%patch122 -p1 -b .gss_transited
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -825,6 +827,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue May 28 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.2-7
+- backport fix for not being able to verify the list of transited realms
+  in GSS acceptors (RT#7639, #959685)
+
 * Tue May 21 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.2-6
 - pull in upstream fix to start treating a KRB5CCNAME value that begins
   with DIR:: the same as it would a DIR: value with just one ccache file
