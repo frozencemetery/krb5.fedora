@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.2
-Release: 7%{?dist}
+Release: 8%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -75,7 +75,6 @@ Patch105: krb5-kvno-230379.patch
 Patch113: krb5-1.11-alpha1-init.patch
 Patch116: http://ausil.fedorapeople.org/aarch64/krb5/krb5-aarch64.patch
 Patch117: krb5-1.11-gss-client-keytab.patch
-Patch118: krb5-1.11.1-rpcbind.patch
 Patch119: krb5-fast-msg_type.patch
 Patch120: krb5-1.11.2-kpasswd_pingpong.patch
 Patch121: krb5-cccol-primary.patch
@@ -84,6 +83,8 @@ Patch123: krb5-1.11.2-empty_passwords.patch
 Patch124: krb5-1.11.2-arcfour_short.patch
 Patch125: krb5-1.11.2-skew1.patch
 Patch126: krb5-1.11.2-skew2.patch
+Patch127: krb5-master-test_gss_no_udp.patch
+Patch128: krb5-master-test_no_pmap.patch 
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -301,7 +302,6 @@ ln -s NOTICE LICENSE
 %patch113 -p1 -b .init
 %patch116 -p1 -b .aarch64
 %patch117 -p1 -b .gss-client-keytab
-%patch118 -p1 -b .rpcbind
 %patch119 -p1 -b .fast-msg_type
 %patch120 -p1 -b .kpasswd_pingpong
 %patch121 -p1 -b .cccol-primary
@@ -310,6 +310,8 @@ ln -s NOTICE LICENSE
 %patch124 -p1 -b .arcfour_short
 %patch125 -p1 -b .skew1
 %patch126 -p1 -b .skew2
+%patch127 -p1 -b .test_gss_no_udp
+%patch128 -p1 -b .test_no_pmap
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -835,6 +837,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu May 30 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.2-8
+- pull in patches from master to not test GSSRPC-over-UDP and to not
+  depend on the portmapper, which are areas where our build systems
+  often give us trouble, too
+
 * Tue May 28 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.2-7
 - backport fix for not being able to verify the list of transited realms
   in GSS acceptors (RT#7639, #959685)
