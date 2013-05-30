@@ -85,6 +85,7 @@ Patch125: krb5-1.11.2-skew1.patch
 Patch126: krb5-1.11.2-skew2.patch
 Patch127: krb5-master-test_gss_no_udp.patch
 Patch128: krb5-master-test_no_pmap.patch 
+Patch129: krb5-1.11-run_user_0.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -312,6 +313,7 @@ ln -s NOTICE LICENSE
 %patch126 -p1 -b .skew2
 %patch127 -p1 -b .test_gss_no_udp
 %patch128 -p1 -b .test_no_pmap
+%patch129 -p1 -b .run_user_0
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -840,6 +842,10 @@ exit 0
 * Thu May 30 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.2-9
 - don't forget to set the SELinux label when creating the directory for
   a DIR: ccache
+- special-case /run/user/0, attempting to create it when resolving a
+  directory cache below it fails due to ENOENT and we find that it doesn't
+  already exist, either, before attempting to create the directory cache
+  (maybe helping, maybe just making things more confusing for #961235)
 
 * Thu May 30 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.2-8
 - pull in patches from master to not test GSSRPC-over-UDP and to not
