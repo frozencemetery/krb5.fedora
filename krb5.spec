@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.2
-Release: 8%{?dist}
+Release: 9%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -837,6 +837,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu May 30 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.2-9
+- don't forget to set the SELinux label when creating the directory for
+  a DIR: ccache
+
 * Thu May 30 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.2-8
 - pull in patches from master to not test GSSRPC-over-UDP and to not
   depend on the portmapper, which are areas where our build systems
