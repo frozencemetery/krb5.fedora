@@ -29,10 +29,10 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.11.2
-Release: 10%{?dist}
+Version: 1.11.3
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.2-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 # Use a dummy krb5-%{version}-pdf.tar.xz the first time through, then
@@ -75,10 +75,7 @@ Patch105: krb5-kvno-230379.patch
 Patch113: krb5-1.11-alpha1-init.patch
 Patch116: http://ausil.fedorapeople.org/aarch64/krb5/krb5-aarch64.patch
 Patch117: krb5-1.11-gss-client-keytab.patch
-Patch119: krb5-fast-msg_type.patch
-Patch120: krb5-1.11.2-kpasswd_pingpong.patch
 Patch121: krb5-cccol-primary.patch
-Patch122: krb5-1.11.2-gss_transited.patch
 Patch123: krb5-1.11.2-empty_passwords.patch
 Patch124: krb5-1.11.2-arcfour_short.patch
 Patch125: krb5-1.11.2-skew1.patch
@@ -86,6 +83,7 @@ Patch126: krb5-1.11.2-skew2.patch
 Patch127: krb5-master-test_gss_no_udp.patch
 Patch128: krb5-master-test_no_pmap.patch 
 Patch130: krb5-master-init_referral.patch
+Patch131: krb5-1.11.3-skew3.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -303,10 +301,7 @@ ln -s NOTICE LICENSE
 %patch113 -p1 -b .init
 %patch116 -p1 -b .aarch64
 %patch117 -p1 -b .gss-client-keytab
-%patch119 -p1 -b .fast-msg_type
-%patch120 -p1 -b .kpasswd_pingpong
 %patch121 -p1 -b .cccol-primary
-%patch122 -p1 -b .gss_transited
 %patch123 -p1 -b .empty_passwords
 %patch124 -p1 -b .arcfour_short
 %patch125 -p1 -b .skew1
@@ -314,6 +309,7 @@ ln -s NOTICE LICENSE
 %patch127 -p1 -b .test_gss_no_udp
 %patch128 -p1 -b .test_no_pmap
 %patch130 -p1 -b .init_referral
+%patch131 -p1 -b .skew3
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -839,6 +835,13 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Jun  4 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-1
+- update to 1.11.3
+  - drop patch for RT#7605, fixed in this release
+  - drop patch for CVE-2002-2443, fixed in this release
+  - drop patch for RT#7369, fixed in this release
+- pull upstream fix for breaking t_skew.py by adding the patch for #961221
+
 * Fri May 31 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.2-10
 - respin with updated version of patch for RT#7650 (#969331)
 
