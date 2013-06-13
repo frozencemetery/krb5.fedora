@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -82,6 +82,7 @@ Patch125: krb5-1.11.2-skew1.patch
 Patch126: krb5-1.11.2-skew2.patch
 Patch127: krb5-master-test_gss_no_udp.patch
 Patch128: krb5-master-test_no_pmap.patch 
+Patch129: krb5-1.11-run_user_0.patch
 Patch130: krb5-master-init_referral.patch
 Patch131: krb5-1.11.3-skew3.patch
 
@@ -308,6 +309,7 @@ ln -s NOTICE LICENSE
 %patch126 -p1 -b .skew2
 %patch127 -p1 -b .test_gss_no_udp
 %patch128 -p1 -b .test_no_pmap
+%patch129 -p1 -b .run_user_0
 %patch130 -p1 -b .init_referral
 %patch131 -p1 -b .skew3
 
@@ -835,6 +837,12 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Jun 13 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-2
+- special-case /run/user/0, attempting to create it when resolving a
+  directory cache below it fails due to ENOENT and we find that it doesn't
+  already exist, either, before attempting to create the directory cache
+  (maybe helping, maybe just making things more confusing for #961235)
+
 * Tue Jun  4 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-1
 - update to 1.11.3
   - drop patch for RT#7605, fixed in this release
