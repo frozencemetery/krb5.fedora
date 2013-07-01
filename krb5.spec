@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -160,7 +160,7 @@ practice of sending passwords over the network in unencrypted form.
 %package devel
 Summary: Development files needed to compile Kerberos 5 programs
 Group: Development/Libraries
-Requires: %{name}-libs = %{version}-%{release}
+Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 %if 0%{?fedora} >= 12 || 0%{?rhel} >= 6
 Requires: libcom_err-devel
 %endif
@@ -190,7 +190,7 @@ Kerberos, you need to install this package.
 %package server
 Group: System Environment/Daemons
 Summary: The KDC and related programs for Kerberos 5
-Requires: %{name}-libs = %{version}-%{release}
+Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 Requires(post): chkconfig
 %if %{WITH_SYSTEMD}
 Requires(post): systemd-sysv
@@ -231,8 +231,8 @@ NOT install this package).
 %package server-ldap
 Group: System Environment/Daemons
 Summary: The LDAP storage plugin for the Kerberos 5 KDC
-Requires: %{name}-server = %{version}-%{release}
-Requires: %{name}-libs = %{version}-%{release}
+Requires: %{name}-server%{?_isa} = %{version}-%{release}
+Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description server-ldap
 Kerberos is a network authentication system. The krb5-server package
@@ -244,7 +244,7 @@ realm, you need to install this package.
 %package workstation
 Summary: Kerberos 5 programs for use on workstations
 Group: System Environment/Base
-Requires: %{name}-libs = %{version}-%{release}
+Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 # mktemp is used by krb5-send-pr
 Requires: coreutils
 
@@ -261,7 +261,7 @@ installed on every workstation.
 %endif
 Summary: The PKINIT module for Kerberos 5
 Group: System Environment/Libraries
-Requires: %{name}-libs = %{version}-%{release}
+Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 %if 0%{?fedora} >= 17 || 0%{?rhel} >= 6
 Obsoletes: krb5-pkinit-openssl < %{version}-%{release}
 Provides: krb5-pkinit-openssl = %{version}-%{release}
@@ -837,6 +837,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Jul  1 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-3
+- specify dependencies on the same arch of krb5-libs by using the %%{?_isa}
+  suffix, to avoid dragging 32-bit libraries onto 64-bit systems (#980155)
+
 * Thu Jun 13 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-2
 - special-case /run/user/0, attempting to create it when resolving a
   directory cache below it fails due to ENOENT and we find that it doesn't
