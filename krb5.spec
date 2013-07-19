@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -55,6 +55,11 @@ Source34: kadmind.logrotate
 Source36: kpropd.init
 Source37: kadmind.init
 Source38: krb5kdc.init
+
+BuildRequires: cmake, strace
+# Carry this locally until it's available in a packaged form.
+Source100: nss_wrapper.tar.bz2
+Source101: noport53.c
 
 Patch5: krb5-1.10-ksu-access.patch
 Patch6: krb5-1.10-ksu-path.patch
@@ -136,7 +141,7 @@ BuildRequires: perl, dejagnu, tcl-devel
 BuildRequires: net-tools, rpcbind
 %if 0%{?fedora} >= 13 || 0%{?rhel} > 6
 BuildRequires: hostname
-BuildRequires: nss-myhostname
+BuildRequires: iproute
 %endif
 
 %if %{WITH_LDAP}
@@ -278,7 +283,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -n %{name}-%{version} -a 3
+%setup -q -n %{name}-%{version} -a 3 -a 100
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -336,6 +341,9 @@ pushd src
 #autoconf
 ./util/reconf --verbose
 popd
+
+# Create build space for the test wrapper.
+mkdir -p nss_wrapper/build
 
 %build
 # Go ahead and supply tcl info, because configure doesn't know how to find it.
@@ -407,12 +415,31 @@ for pdf in admin appdev basic build plugindev user ; do
 	test -s build-pdf/$pdf.pdf || make -C build-pdf
 done
 
+# Build the test wrapper.
+pushd nss_wrapper/build
+cmake ..
+make
+popd
+
+# We need to cut off any access to locally-running nameservers, too.
+%{__cc} -fPIC -shared -o noport53.so -Wall -Wextra $RPM_SOURCE_DIR/noport53.c
+
 %check
-# Run the test suite. We can't actually run the whole thing in the build system.
+# Set things up to use the test wrappers.
+NSS_WRAPPER_HOSTNAME=test.example.com ; export NSS_WRAPPER_HOSTNAME
+NSS_WRAPPER_HOSTS="`pwd`/nss_wrapper/fakehosts" ; export NSS_WRAPPER_HOSTS
+echo 127.0.0.1 $NSS_WRAPPER_HOSTNAME $NSS_WRAPPER_HOSTNAME >"$NSS_WRAPPER_HOSTS"
+NOPORT53=1; export NOPORT53
+LD_PRELOAD=`pwd`/noport53.so:`pwd`/nss_wrapper/build/src/libnss_wrapper.so ; export LD_PRELOAD
+
+# Run the test suite. We can't actually run the whole thing in the build
+# system, but we can at least run more than we used to.
 make -C src runenv.py
 : make -C src check TMPDIR=%{_tmppath}
-make -C src/lib check TMPDIR=%{_tmppath}
+make -C src/lib check TMPDIR=%{_tmppath} OFFLINE=yes
 make -C src/kdc check TMPDIR=%{_tmppath}
+make -C src/appl check TMPDIR=%{_tmppath}
+make -C src/clients check TMPDIR=%{_tmppath}
 make -C src/util check TMPDIR=%{_tmppath}
 
 %install
@@ -837,6 +864,14 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Jul 19 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-4
+- use (a bundled, for now, copy of) nss_wrapper to let us run some of the
+  self-tests at build-time in more places than we could previously (#978756)
+- cover inconsistencies in whether or not there's a local caching nameserver
+  that's willing to answer when the build environment doesn't have a
+  resolver configuration, so that nss_wrapper's faking of the local
+  hostname can be complete
+
 * Mon Jul  1 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-3
 - specify dependencies on the same arch of krb5-libs by using the %%{?_isa}
   suffix, to avoid dragging 32-bit libraries onto 64-bit systems (#980155)
@@ -956,7 +991,7 @@ exit 0
     wrapper in the client transmit functions
 
 * Fri Feb  8 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11-2
-- set "rdns = false" in the default krb5.conf (#908323)
+- set "rdns = false" in the default krb5.conf (#908323,#908324)
 
 * Tue Dec 18 2012 Nalin Dahyabhai <nalin@redhat.com> 1.11-1
 - update to 1.11 release
