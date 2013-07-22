@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -90,6 +90,8 @@ Patch128: krb5-master-test_no_pmap.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch130: krb5-master-init_referral.patch
 Patch131: krb5-1.11.3-skew3.patch
+Patch132: krb5-1.11-gss-methods1.patch
+Patch133: krb5-1.11-gss-methods2.patch 
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -317,6 +319,8 @@ ln -s NOTICE LICENSE
 %patch129 -p1 -b .run_user_0
 %patch130 -p1 -b .init_referral
 %patch131 -p1 -b .skew3
+%patch132 -p1 -b .gss-methods1
+%patch133 -p1 -b .gss-methods2
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -864,6 +868,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Jul 22 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-5
+- pull up changes to allow GSSAPI modules to provide more functions
+  (RT#7682, #986564/#986565)
+
 * Fri Jul 19 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-4
 - use (a bundled, for now, copy of) nss_wrapper to let us run some of the
   self-tests at build-time in more places than we could previously (#978756)
