@@ -30,7 +30,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 5%{?dist}
+Release: 6%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -56,10 +56,10 @@ Source36: kpropd.init
 Source37: kadmind.init
 Source38: krb5kdc.init
 
-BuildRequires: cmake, strace
+BuildRequires: cmake
 # Carry this locally until it's available in a packaged form.
 Source100: nss_wrapper.tar.bz2
-Source101: noport53.c
+Source101: noport.c
 
 Patch5: krb5-1.10-ksu-access.patch
 Patch6: krb5-1.10-ksu-path.patch
@@ -92,6 +92,7 @@ Patch130: krb5-master-init_referral.patch
 Patch131: krb5-1.11.3-skew3.patch
 Patch132: krb5-1.11-gss-methods1.patch
 Patch133: krb5-1.11-gss-methods2.patch 
+Patch134: krb5-1.11-kpasswdtest.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -321,6 +322,7 @@ ln -s NOTICE LICENSE
 %patch131 -p1 -b .skew3
 %patch132 -p1 -b .gss-methods1
 %patch133 -p1 -b .gss-methods2
+%patch134 -p1 -b .kpasswdtest
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -348,6 +350,30 @@ popd
 
 # Create build space for the test wrapper.
 mkdir -p nss_wrapper/build
+
+# Mess with some of the default ports that we use for testing, so that multiple
+# builds going on the same host don't step on each other.
+cfg="src/kadmin/testing/proto/kdc.conf.proto \
+     src/kadmin/testing/proto/krb5.conf.proto \
+     src/lib/kadm5/unit-test/api.current/init-v2.exp \
+     src/util/k5test.py \
+     src/tests/kdc_realm/input_conf/*.conf \
+     src/tests/mk_migr/ldap_backend/input_conf/*.conf \
+     src/tests/mk_migr/db2_backend/input_conf/*.conf"
+LONG_BIT=`getconf LONG_BIT`
+PORT=`expr 61000 + $LONG_BIT - 48`
+sed -i -e s,61000,`expr "$PORT" + 0`,g $cfg
+PORT=`expr 1750 + $LONG_BIT - 48`
+sed -i -e s,1750,`expr "$PORT" + 0`,g $cfg
+sed -i -e s,1751,`expr "$PORT" + 1`,g $cfg
+sed -i -e s,1752,`expr "$PORT" + 2`,g $cfg
+PORT=`expr 8888 + $LONG_BIT - 48`
+sed -i -e s,8888,`expr "$PORT" - 0`,g $cfg
+sed -i -e s,8887,`expr "$PORT" - 1`,g $cfg
+sed -i -e s,8886,`expr "$PORT" - 2`,g $cfg
+PORT=`expr 7777 + $LONG_BIT - 48`
+sed -i -e s,7777,`expr "$PORT" + 0`,g $cfg
+sed -i -e s,7778,`expr "$PORT" + 1`,g $cfg
 
 %build
 # Go ahead and supply tcl info, because configure doesn't know how to find it.
@@ -426,20 +452,24 @@ make
 popd
 
 # We need to cut off any access to locally-running nameservers, too.
-%{__cc} -fPIC -shared -o noport53.so -Wall -Wextra $RPM_SOURCE_DIR/noport53.c
+%{__cc} -fPIC -shared -o noport.so -Wall -Wextra $RPM_SOURCE_DIR/noport.c
 
 %check
 # Set things up to use the test wrappers.
 NSS_WRAPPER_HOSTNAME=test.example.com ; export NSS_WRAPPER_HOSTNAME
 NSS_WRAPPER_HOSTS="`pwd`/nss_wrapper/fakehosts" ; export NSS_WRAPPER_HOSTS
 echo 127.0.0.1 $NSS_WRAPPER_HOSTNAME $NSS_WRAPPER_HOSTNAME >"$NSS_WRAPPER_HOSTS"
-NOPORT53=1; export NOPORT53
-LD_PRELOAD=`pwd`/noport53.so:`pwd`/nss_wrapper/build/src/libnss_wrapper.so ; export LD_PRELOAD
+NOPORT=53,111; export NOPORT
+LD_PRELOAD=`pwd`/noport.so:`pwd`/nss_wrapper/build/src/libnss_wrapper.so ; export LD_PRELOAD
 
 # Run the test suite. We can't actually run the whole thing in the build
 # system, but we can at least run more than we used to.
 make -C src runenv.py
 : make -C src check TMPDIR=%{_tmppath}
+# Alright, this much is still a work in progress.
+%if %{__isa_bits} == 64
+sleep 600
+%endif
 make -C src/lib check TMPDIR=%{_tmppath} OFFLINE=yes
 make -C src/kdc check TMPDIR=%{_tmppath}
 make -C src/appl check TMPDIR=%{_tmppath}
@@ -868,6 +898,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Jul 26 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-6
+- tweak configuration files used during tests to try to reduce the number
+  of conflicts encountered when builds for multiple arches land on the same
+  builder
+
 * Mon Jul 22 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-5
 - pull up changes to allow GSSAPI modules to provide more functions
   (RT#7682, #986564/#986565)

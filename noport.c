@@ -3,7 +3,32 @@
 #include <dlfcn.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 #include <netinet/in.h>
+
+static int
+port_is_okay(unsigned short port)
+{
+	char *p, *q;
+	long l;
+
+	p = getenv("NOPORT");
+	while ((p != NULL) && (*p != '\0')) {
+		l = strtol(p, &q, 10);
+		if ((q == NULL) || (q == p)) {
+			break;
+		}
+		if ((*q == '\0') || (*q == ',')) {
+			if (port == l) {
+				errno = ECONNREFUSED;
+				return -1;
+			}
+		}
+		p = q;
+		p += strspn(p, ",");
+	}
+	return 0;
+}
 
 int
 connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
@@ -19,22 +44,20 @@ connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 		}
 	}
 
-	if (getenv("NOPORT53") == NULL) {
+	if (getenv("NOPORT") == NULL) {
 		return next_connect(sockfd, addr, addrlen);
 	}
 
 	switch (addr->sa_family) {
 	case AF_INET:
 		port = ntohs(((struct sockaddr_in *)addr)->sin_port);
-		if (port == 53) {
-			errno = ECONNREFUSED;
+		if (port_is_okay(port) != 0) {
 			return -1;
 		}
 		break;
 	case AF_INET6:
 		port = ntohs(((struct sockaddr_in6 *)addr)->sin6_port);
-		if (port == 53) {
-			errno = ECONNREFUSED;
+		if (port_is_okay(port) != 0) {
 			return -1;
 		}
 		break;
@@ -60,22 +83,20 @@ sendto(int sockfd, const void *buf, size_t len, int flags,
 		}
 	}
 
-	if (getenv("NOPORT53") == NULL) {
+	if (getenv("NOPORT") == NULL) {
 		return next_sendto(sockfd, buf, len, flags, dest_addr, addrlen);
 	}
 
 	switch (dest_addr->sa_family) {
 	case AF_INET:
 		port = ntohs(((struct sockaddr_in *)dest_addr)->sin_port);
-		if (port == 53) {
-			errno = ECONNREFUSED;
+		if (port_is_okay(port) != 0) {
 			return -1;
 		}
 		break;
 	case AF_INET6:
 		port = ntohs(((struct sockaddr_in6 *)dest_addr)->sin6_port);
-		if (port == 53) {
-			errno = ECONNREFUSED;
+		if (port_is_okay(port) != 0) {
 			return -1;
 		}
 		break;
