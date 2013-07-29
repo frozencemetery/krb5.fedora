@@ -26,11 +26,13 @@
 %endif
 # Set this so that find-lang.sh will recognize the .po files.
 %global gettext_domain mit-krb5
+# If we're not being told where *our* docs go, make a guess.
+%global pkgdocdir %{?_pkgdocdir:%{_pkgdocdir}-libs}%{!?_pkgdocdir:%{_docdir}/%{name}-libs-%{version}}
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 6%{?dist}
+Release: 7%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -468,7 +470,9 @@ make -C src runenv.py
 : make -C src check TMPDIR=%{_tmppath}
 # Alright, this much is still a work in progress.
 %if %{__isa_bits} == 64
-sleep 600
+if hostname | grep -q build ; then
+	sleep 600
+fi
 %endif
 make -C src/lib check TMPDIR=%{_tmppath} OFFLINE=yes
 make -C src/kdc check TMPDIR=%{_tmppath}
@@ -557,7 +561,7 @@ install -pdm 755 $RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/kdb
 install -pdm 755 $RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/authdata
 
 # The rest of the binaries, headers, libraries, and docs.
-make -C src DESTDIR=$RPM_BUILD_ROOT EXAMPLEDIR=%{_docdir}/krb5-libs-%{version}/examples install
+make -C src DESTDIR=$RPM_BUILD_ROOT EXAMPLEDIR=%{pkgdocdir}/examples install
 
 # Munge krb5-config yet again.  This is totally wrong for 64-bit, but chunks
 # of the buildconf patch already conspire to strip out /usr/<anything> from the
@@ -898,6 +902,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Jul 29 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-7
+- attempt to account for UnversionedDocdirs for the -libs subpackage
+
 * Fri Jul 26 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-6
 - tweak configuration files used during tests to try to reduce the number
   of conflicts encountered when builds for multiple arches land on the same
