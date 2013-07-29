@@ -469,7 +469,7 @@ LD_PRELOAD=`pwd`/noport.so:`pwd`/nss_wrapper/build/src/libnss_wrapper.so ; expor
 make -C src runenv.py
 : make -C src check TMPDIR=%{_tmppath}
 # Alright, this much is still a work in progress.
-%if %{__isa_bits} == 64
+%if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
 if hostname | grep -q build ; then
 	sleep 600
 fi
