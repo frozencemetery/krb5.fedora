@@ -32,7 +32,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 7%{?dist}
+Release: 8%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -45,6 +45,8 @@ Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
 Source6: krb5.conf
+Source7: _kpropd
+Source8: _kadmind
 Source10: kdc.conf
 Source11: kadm5.acl
 Source19: krb5kdc.sysconfig
@@ -76,7 +78,6 @@ Patch59: krb5-1.10-kpasswd_tcp.patch
 Patch60: krb5-1.11-pam.patch
 Patch63: krb5-1.11-selinux-label.patch
 Patch71: krb5-1.11-dirsrv-accountlock.patch
-Patch75: krb5-pkinit-debug.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
 Patch113: krb5-1.11-alpha1-init.patch
@@ -306,7 +307,6 @@ ln -s NOTICE LICENSE
 %patch56 -p1 -b .doublelog
 %patch59 -p1 -b .kpasswd_tcp
 %patch71 -p1 -b .dirsrv-accountlock %{?_rawbuild}
-#%patch75 -p1 -b .pkinit-debug
 %patch86 -p0 -b .debuginfo
 %patch105 -p1 -b .kvno
 %patch113 -p1 -b .init
@@ -506,6 +506,12 @@ for unit in \
 	# service that the started daemon provided.  Changing their names
 	# is an upgrade-time problem I'm in no hurry to deal with.
 	install -pm 644 ${unit} $RPM_BUILD_ROOT%{_unitdir}
+done
+mkdir -p $RPM_BUILD_ROOT%{_sbindir}
+for wrapper in \
+	%{SOURCE7} \
+	%{SOURCE8} ; do
+	install -pm 755 ${wrapper} $RPM_BUILD_ROOT%{_sbindir}/
 done
 %else
 mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
@@ -771,12 +777,14 @@ exit 0
 %{_sbindir}/kadmin.local
 %{_mandir}/man8/kadmin.local.8*
 %{_sbindir}/kadmind
+%{_sbindir}/_kadmind
 %{_mandir}/man8/kadmind.8*
 %{_sbindir}/kdb5_util
 %{_mandir}/man8/kdb5_util.8*
 %{_sbindir}/kprop
 %{_mandir}/man8/kprop.8*
 %{_sbindir}/kpropd
+%{_sbindir}/_kpropd
 %{_mandir}/man8/kpropd.8*
 %{_sbindir}/kproplog
 %{_mandir}/man8/kproplog.8*
@@ -902,6 +910,14 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Aug 15 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-8
+- drop a patch we weren't not applying (build tooling)
+- wrap kadmind and kpropd in scripts which check for the presence/absence
+  of files which dictate particular exit codes before exec'ing the actual
+  binaries, instead of trying to use ConditionPathExists in the unit files
+  to accomplish that, so that we exit with failure properly when what we
+  expect isn't actually in effect on the system (#800343)
+
 * Mon Jul 29 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-7
 - attempt to account for UnversionedDocdirs for the -libs subpackage
 
