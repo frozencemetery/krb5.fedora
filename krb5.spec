@@ -457,6 +457,13 @@ popd
 %{__cc} -fPIC -shared -o noport.so -Wall -Wextra $RPM_SOURCE_DIR/noport.c
 
 %check
+# Alright, this much is still a work in progress.
+%if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
+if hostname | grep -q build ; then
+	sleep 600
+fi
+%endif
+
 # Set things up to use the test wrappers.
 NSS_WRAPPER_HOSTNAME=test.example.com ; export NSS_WRAPPER_HOSTNAME
 NSS_WRAPPER_HOSTS="`pwd`/nss_wrapper/fakehosts" ; export NSS_WRAPPER_HOSTS
@@ -468,12 +475,6 @@ LD_PRELOAD=`pwd`/noport.so:`pwd`/nss_wrapper/build/src/libnss_wrapper.so ; expor
 # system, but we can at least run more than we used to.
 make -C src runenv.py
 : make -C src check TMPDIR=%{_tmppath}
-# Alright, this much is still a work in progress.
-%if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
-if hostname | grep -q build ; then
-	sleep 600
-fi
-%endif
 make -C src/lib check TMPDIR=%{_tmppath} OFFLINE=yes
 make -C src/kdc check TMPDIR=%{_tmppath}
 make -C src/appl check TMPDIR=%{_tmppath}
