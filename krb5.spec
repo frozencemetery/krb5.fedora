@@ -62,7 +62,7 @@ Source38: krb5kdc.init
 
 BuildRequires: cmake
 # Carry this locally until it's available in a packaged form.
-Source100: nss_wrapper.tar.bz2
+Source100: nss_wrapper-0.0-20130719153839Z.git6cb59864.bz2
 Source101: noport.c
 
 Patch5: krb5-1.10-ksu-access.patch
@@ -914,6 +914,9 @@ exit 0
 * Fri Aug 23 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-9
 - take another stab at accounting for UnversionedDocdirs for the -libs
   subpackage (spotted by ssorce)
+- switch to just the snapshot of nss_wrapper we were using, since we
+  no longer need to carry anything that isn't in the cwrap.org repository
+  (ssorce)
 
 * Thu Aug 15 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-8
 - drop a patch we weren't not applying (build tooling)
