@@ -26,13 +26,13 @@
 %endif
 # Set this so that find-lang.sh will recognize the .po files.
 %global gettext_domain mit-krb5
-# If we're not being told where *our* docs go, make a guess.
-%global pkgdocdir %{?_pkgdocdir:%{_pkgdocdir}-libs}%{!?_pkgdocdir:%{_docdir}/%{name}-libs-%{version}}
+# Guess where the -libs subpackage's docs are going to go.
+%define libsdocdir %{?_pkgdocdir:%(echo %{_pkgdocdir} | sed -e s,krb5,krb5-libs,g)}%{!?_pkgdocdir:%{_docdir}/%{name}-libs-%{version}}
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 8%{?dist}
+Release: 9%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -105,7 +105,7 @@ License: MIT
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: autoconf, bison, flex, gawk, gettext
+BuildRequires: autoconf, bison, flex, gawk, gettext, sed
 %if 0%{?fedora} >= 12 || 0%{?rhel} >= 6
 BuildRequires: libcom_err-devel, libss-devel
 %endif
@@ -568,7 +568,7 @@ install -pdm 755 $RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/kdb
 install -pdm 755 $RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/authdata
 
 # The rest of the binaries, headers, libraries, and docs.
-make -C src DESTDIR=$RPM_BUILD_ROOT EXAMPLEDIR=%{pkgdocdir}/examples install
+make -C src DESTDIR=$RPM_BUILD_ROOT EXAMPLEDIR=%{libsdocdir}/examples install
 
 # Munge krb5-config yet again.  This is totally wrong for 64-bit, but chunks
 # of the buildconf patch already conspire to strip out /usr/<anything> from the
@@ -911,6 +911,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Aug 23 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-9
+- take another stab at accounting for UnversionedDocdirs for the -libs
+  subpackage (spotted by ssorce)
+
 * Thu Aug 15 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-8
 - drop a patch we weren't not applying (build tooling)
 - wrap kadmind and kpropd in scripts which check for the presence/absence
