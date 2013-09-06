@@ -28,6 +28,15 @@
 %global gettext_domain mit-krb5
 # Guess where the -libs subpackage's docs are going to go.
 %define libsdocdir %{?_pkgdocdir:%(echo %{_pkgdocdir} | sed -e s,krb5,krb5-libs,g)}%{!?_pkgdocdir:%{_docdir}/%{name}-libs-%{version}}
+# Figure out where the default ccache lives and how we set it.
+%if 0%{?fedora} > 18 && 0%{?fedora} < 21
+%global compile_default_ccache_name 1
+%global compiled_default_ccache_name DIR:/run/user/%%{uid}/krb5cc
+%endif
+%if 0%{?fedora} >= 21 || 0%{?rhel} > 6
+%global configure_default_ccache_name 1
+%global configured_default_ccache_name KEYRING:persistent:%%{uid}
+%endif
 
 Summary: The Kerberos network authentication system
 Name: krb5
@@ -387,8 +396,8 @@ sed -i -e s,7778,`expr "$PORT" + 1`,g $cfg
 . %{_libdir}/tclConfig.sh
 pushd src
 # Keep the old default if the package is built against older releases.
-%if 0%{?fedora} > 18 && 0%{?fedora} < 21
-DEFCCNAME=DIR:/run/user/%%{uid}/krb5cc; export DEFCCNAME
+%if 0%{?compile_default_ccache_name}
+DEFCCNAME=%{compiled_default_ccache_name}; export DEFCCNAME
 %endif
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
 INCLUDES=-I%{_includedir}/et
@@ -500,6 +509,17 @@ mkdir -p $RPM_BUILD_ROOT%{_var}/kerberos/krb5/user
 # Default configuration file for everything.
 mkdir -p $RPM_BUILD_ROOT/etc
 install -pm 644 %{SOURCE6} $RPM_BUILD_ROOT/etc/krb5.conf
+
+# If the default configuration needs to start specifying a default cache
+# location, add it now, then fixup the timestamp so that it looks the same.
+%if 0%{?configure_default_ccache_name}
+DEFCCNAME="%{configured_default_ccache_name}"; export DEFCCNAME
+awk '{print}
+     /^# default_realm/{print " default_ccache_name =", ENVIRON["DEFCCNAME"]}' \
+     %{SOURCE6} > $RPM_BUILD_ROOT/etc/krb5.conf
+touch -r %{SOURCE6} $RPM_BUILD_ROOT/etc/krb5.conf
+grep default_ccache_name $RPM_BUILD_ROOT/etc/krb5.conf
+%endif
 
 # Server init scripts (krb5kdc,kadmind,kpropd) and their sysconfig files.
 %if %{WITH_SYSTEMD}
@@ -918,7 +938,9 @@ exit 0
 %changelog
 * Fri Sep  6 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-10
 - incorporate Simo's backport of his persistent-keyring changes (#991148)
-- restore build-time default DEFCCNAME on Fedora 21 and later and EL (#991148)
+- restore build-time default DEFCCNAME on Fedora 21 and later and EL, and
+  instead set default_ccache_name in the default krb5.conf's [libdefaults]
+  section (#991148)
 
 * Fri Aug 23 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-9
 - take another stab at accounting for UnversionedDocdirs for the -libs
