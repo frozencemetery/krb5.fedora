@@ -387,7 +387,7 @@ sed -i -e s,7778,`expr "$PORT" + 1`,g $cfg
 . %{_libdir}/tclConfig.sh
 pushd src
 # Keep the old default if the package is built against older releases.
-%if 0%{?fedora} > 18 || 0%{?rhel} > 6
+%if 0%{?fedora} > 18 && 0%{?fedora} < 21
 DEFCCNAME=DIR:/run/user/%%{uid}/krb5cc; export DEFCCNAME
 %endif
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
@@ -918,6 +918,7 @@ exit 0
 %changelog
 * Fri Sep  6 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-10
 - incorporate Simo's backport of his persistent-keyring changes (#991148)
+- restore build-time default DEFCCNAME on Fedora 21 and later and EL (#991148)
 
 * Fri Aug 23 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-9
 - take another stab at accounting for UnversionedDocdirs for the -libs
