@@ -32,7 +32,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 9%{?dist}
+Release: 10%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -100,6 +100,9 @@ Patch134: krb5-1.11-kpasswdtest.patch
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
 Patch202: krb5-1.11.2-otp.patch
+
+# Patches for kernel-persistent-keyring support (backport)
+Patch301: persistent_keyring.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -328,6 +331,8 @@ ln -s NOTICE LICENSE
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
+
+%patch301 -p1 -b .persistent-keyring
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
@@ -911,6 +916,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Sep  6 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-10
+- incorporate Simo's backport of his persistent-keyring changes (#991148)
+
 * Fri Aug 23 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-9
 - take another stab at accounting for UnversionedDocdirs for the -libs
   subpackage (spotted by ssorce)
