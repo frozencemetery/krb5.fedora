@@ -203,6 +203,7 @@ Group: System Environment/Libraries
 # Some of the older libsmbclient builds here incorrectly called
 # krb5_locate_kdc(), which was mistakenly exported in 1.9.
 Conflicts: libsmbclient < 3.5.10-124
+Requires(triggerun): awk, coreutils, grep
 %endif
 
 %description libs
@@ -630,6 +631,37 @@ done
 
 %post libs -p /sbin/ldconfig
 
+%if 0%{?configure_default_ccache_name}
+# Roughly the version where this logic was introduced.
+%triggerun libs -- krb5-libs < 1.11.3-10
+# Try to add a default_ccache_name to /etc/krb5.conf.  
+if ! grep -q default_ccache_name /etc/krb5.conf ; then
+	DEFCCNAME="%{configured_default_ccache_name}"; export DEFCCNAME
+	tmpfile=`mktemp /etc/krb5.conf.XXXXXX`
+	if test -z "$tmpfile" ; then
+		# Give up.
+		exit 0
+	fi
+	awk '
+	/^\[.*\]$/ {
+		if (libdefaults) {
+			print " default_ccache_name =", ENVIRON["DEFCCNAME"]
+			print ""
+		}
+		libdefaults=0;
+	}
+	/^\[libdefaults\]$/ { libdefaults=1; }
+	{ print }' /etc/krb5.conf > "$tmpfile"
+	if test -s "$tmpfile" ; then
+		if touch -r /etc/krb5.conf "$tmpfile" ; then
+			cat "$tmpfile" > /etc/krb5.conf
+			touch -r "$tmpfile" /etc/krb5.conf
+		fi
+	fi
+	rm -f "$tmpfile"
+fi
+%endif
+
 %postun libs -p /sbin/ldconfig
 
 %post server-ldap -p /sbin/ldconfig
@@ -941,6 +973,10 @@ exit 0
 - restore build-time default DEFCCNAME on Fedora 21 and later and EL, and
   instead set default_ccache_name in the default krb5.conf's [libdefaults]
   section (#991148)
+- on releases where we expect krb5.conf to be configured with a
+  default_ccache_name, add it whenever we upgrade from an older version of
+  the package that wouldn't have included it in its default configuration
+  file (#991148)
 
 * Fri Aug 23 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-9
 - take another stab at accounting for UnversionedDocdirs for the -libs
