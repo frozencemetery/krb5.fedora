@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 10%{?dist}
+Release: 11%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -632,8 +632,8 @@ done
 %post libs -p /sbin/ldconfig
 
 %if 0%{?configure_default_ccache_name}
-# Roughly the version where this logic was introduced.
-%triggerun libs -- krb5-libs < 1.11.3-10
+%triggerun libs -- krb5-libs < 1.11.3-11
+# Triggered roughly on the version where this logic was introduced.
 # Try to add a default_ccache_name to /etc/krb5.conf.  
 if ! grep -q default_ccache_name /etc/krb5.conf ; then
 	DEFCCNAME="%{configured_default_ccache_name}"; export DEFCCNAME
@@ -968,6 +968,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Sep  9 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-11
+- don't let comments intended for one scriptlet become part of the "script"
+  that gets passed to ldconfig as part of another one (Mattias Ellert, #1005675)
+
 * Fri Sep  6 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-10
 - incorporate Simo's backport of his persistent-keyring changes (#991148)
 - restore build-time default DEFCCNAME on Fedora 21 and later and EL, and
