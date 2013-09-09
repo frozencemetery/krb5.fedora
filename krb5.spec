@@ -332,7 +332,10 @@ ln -s NOTICE LICENSE
 %patch126 -p1 -b .skew2
 %patch127 -p1 -b .test_gss_no_udp
 %patch128 -p1 -b .test_no_pmap
+%if 0%{?fedora} > 18 && 0%{?fedora} < 21
+# Applied when the hard-wired default location is DIR:/run/user/%%{uid}/krb5cc.
 %patch129 -p1 -b .run_user_0
+%endif
 %patch130 -p1 -b .init_referral
 %patch131 -p1 -b .skew3
 %patch132 -p1 -b .gss-methods1
@@ -968,6 +971,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Sep  9 2013 Nalin Dahyabhai <nalin@redhat.com>
+- only apply the patch to autocreate /run/user/0 when we're hard-wiring the
+  default ccache location to be under it; otherwise it's unnecessary
+
 * Mon Sep  9 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-11
 - don't let comments intended for one scriptlet become part of the "script"
   that gets passed to ldconfig as part of another one (Mattias Ellert, #1005675)
