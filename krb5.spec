@@ -29,11 +29,11 @@
 # Guess where the -libs subpackage's docs are going to go.
 %define libsdocdir %{?_pkgdocdir:%(echo %{_pkgdocdir} | sed -e s,krb5,krb5-libs,g)}%{!?_pkgdocdir:%{_docdir}/%{name}-libs-%{version}}
 # Figure out where the default ccache lives and how we set it.
-%if 0%{?fedora} > 18 && 0%{?fedora} < 21
+%if 0%{?fedora} > 18 && 0%{?fedora} < 20
 %global compile_default_ccache_name 1
 %global compiled_default_ccache_name DIR:/run/user/%%{uid}/krb5cc
 %endif
-%if 0%{?fedora} >= 21 || 0%{?rhel} > 6
+%if 0%{?fedora} >= 20 || 0%{?rhel} > 6
 %global configure_default_ccache_name 1
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 %endif
@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 11%{?dist}
+Release: 12%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -332,7 +332,7 @@ ln -s NOTICE LICENSE
 %patch126 -p1 -b .skew2
 %patch127 -p1 -b .test_gss_no_udp
 %patch128 -p1 -b .test_no_pmap
-%if 0%{?fedora} > 18 && 0%{?fedora} < 21
+%if 0%{?fedora} > 18 && 0%{?fedora} < 20
 # Applied when the hard-wired default location is DIR:/run/user/%%{uid}/krb5cc.
 %patch129 -p1 -b .run_user_0
 %endif
@@ -971,6 +971,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Sep 13 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-12
+- pull the newer F21 defaults back to F20 (sgallagh)
+
 * Mon Sep  9 2013 Nalin Dahyabhai <nalin@redhat.com>
 - only apply the patch to autocreate /run/user/0 when we're hard-wiring the
   default ccache location to be under it; otherwise it's unnecessary
