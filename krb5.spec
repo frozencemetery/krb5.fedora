@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 12%{?dist}
+Release: 13%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -148,7 +148,7 @@ BuildRequires: texlive-texmf, texlive-texmf-latex
 # Typical fonts, and the commands which we need to have present.
 BuildRequires: texlive, texlive-latex, texlive-texmf-fonts
 BuildRequires: /usr/bin/pdflatex /usr/bin/makeindex
-BuildRequires: keyutils-libs-devel
+BuildRequires: keyutils, keyutils-libs-devel
 BuildRequires: libselinux-devel
 BuildRequires: pam-devel
 %if %{WITH_SYSTEMD}
@@ -490,14 +490,15 @@ NOPORT=53,111; export NOPORT
 LD_PRELOAD=`pwd`/noport.so:`pwd`/nss_wrapper/build/src/libnss_wrapper.so ; export LD_PRELOAD
 
 # Run the test suite. We can't actually run the whole thing in the build
-# system, but we can at least run more than we used to.
+# system, but we can at least run more than we used to.  The build system may
+# give us a revoked session keyring, so run affected tests with a new one.
 make -C src runenv.py
 : make -C src check TMPDIR=%{_tmppath}
-make -C src/lib check TMPDIR=%{_tmppath} OFFLINE=yes
+keyctl session - make -C src/lib check TMPDIR=%{_tmppath} OFFLINE=yes
 make -C src/kdc check TMPDIR=%{_tmppath}
-make -C src/appl check TMPDIR=%{_tmppath}
+keyctl session - make -C src/appl check TMPDIR=%{_tmppath}
 make -C src/clients check TMPDIR=%{_tmppath}
-make -C src/util check TMPDIR=%{_tmppath}
+keyctl session - make -C src/util check TMPDIR=%{_tmppath}
 
 %install
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
@@ -971,6 +972,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Sep 13 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-13
+- don't break during %%check when the session keyring is revoked
+
 * Fri Sep 13 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-12
 - pull the newer F21 defaults back to F20 (sgallagh)
 
