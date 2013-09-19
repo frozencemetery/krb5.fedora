@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 13%{?dist}
+Release: 14%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -972,6 +972,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Sep 19 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-14
+- incorporate Simo's updated backport of his updated persistent-keyring changes
+  (more of #991148)
+
 * Fri Sep 13 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-13
 - don't break during %%check when the session keyring is revoked
 
