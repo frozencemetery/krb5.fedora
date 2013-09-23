@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 14%{?dist}
+Release: 15%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -148,7 +148,7 @@ BuildRequires: texlive-texmf, texlive-texmf-latex
 # Typical fonts, and the commands which we need to have present.
 BuildRequires: texlive, texlive-latex, texlive-texmf-fonts
 BuildRequires: /usr/bin/pdflatex /usr/bin/makeindex
-BuildRequires: keyutils, keyutils-libs-devel
+BuildRequires: keyutils, keyutils-libs-devel >= 1.5.6-2
 BuildRequires: libselinux-devel
 BuildRequires: pam-devel
 %if %{WITH_SYSTEMD}
@@ -972,6 +972,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Sep 23 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-15
+- add explicit build-time dependency on a version of keyutils that's new
+  enough to include keyctl_get_persistent() (more of #991148)
+
 * Thu Sep 19 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-14
 - incorporate Simo's updated backport of his updated persistent-keyring changes
   (more of #991148)
