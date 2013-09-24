@@ -35,13 +35,13 @@
 %endif
 %if 0%{?fedora} >= 20 || 0%{?rhel} > 6
 %global configure_default_ccache_name 1
-%global configured_default_ccache_name KEYRING:persistent:%%{uid}
+%global configured_default_ccache_name DIR:/run/user/%%{uid}/krb5cc
 %endif
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 15%{?dist}
+Release: 16%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -203,7 +203,7 @@ Group: System Environment/Libraries
 # Some of the older libsmbclient builds here incorrectly called
 # krb5_locate_kdc(), which was mistakenly exported in 1.9.
 Conflicts: libsmbclient < 3.5.10-124
-Requires(triggerun): awk, coreutils, grep
+Requires(triggerun): awk, coreutils, grep, sed
 %endif
 
 %description libs
@@ -332,10 +332,11 @@ ln -s NOTICE LICENSE
 %patch126 -p1 -b .skew2
 %patch127 -p1 -b .test_gss_no_udp
 %patch128 -p1 -b .test_no_pmap
-%if 0%{?fedora} > 18 && 0%{?fedora} < 20
-# Applied when the hard-wired default location is DIR:/run/user/%%{uid}/krb5cc.
+
+# Apply when the hard-wired or configured default location is
+# DIR:/run/user/%%{uid}/krb5cc.
 %patch129 -p1 -b .run_user_0
-%endif
+
 %patch130 -p1 -b .init_referral
 %patch131 -p1 -b .skew3
 %patch132 -p1 -b .gss-methods1
@@ -636,16 +637,29 @@ done
 %post libs -p /sbin/ldconfig
 
 %if 0%{?configure_default_ccache_name}
-%triggerun libs -- krb5-libs < 1.11.3-11
+%triggerun libs -- krb5-libs < 1.11.3-16
 # Triggered roughly on the version where this logic was introduced.
-# Try to add a default_ccache_name to /etc/krb5.conf.  
-if ! grep -q default_ccache_name /etc/krb5.conf ; then
-	DEFCCNAME="%{configured_default_ccache_name}"; export DEFCCNAME
-	tmpfile=`mktemp /etc/krb5.conf.XXXXXX`
-	if test -z "$tmpfile" ; then
-		# Give up.
-		exit 0
+# Try to add a default_ccache_name to /etc/krb5.conf, removing the previous
+# default which we configured, if we find it.
+DEFCCNAME="%{configured_default_ccache_name}"; export DEFCCNAME
+tmpfile=`mktemp /etc/krb5.conf.XXXXXX`
+if test -z "$tmpfile" ; then
+	# Give up.
+	exit 0
+fi
+# Remove the default value we previously set.  Be very exact about it.
+if grep -q default_ccache_name /etc/krb5.conf ; then
+	sed -r '/^ default_ccache_name = KEYRING:persistent:%%\{uid\}$/d' /etc/krb5.conf > "$tmpfile"
+	if test -s "$tmpfile" ; then
+		if touch -r /etc/krb5.conf "$tmpfile" ; then
+			cat "$tmpfile" > /etc/krb5.conf
+			touch -r "$tmpfile" /etc/krb5.conf
+		fi
 	fi
+fi
+# Add the new default value, unless there's one set.  Don't be too particular
+# about it.
+if ! grep -q default_ccache_name /etc/krb5.conf ; then
 	awk '
 	/^\[.*\]$/ {
 		if (libdefaults) {
@@ -662,6 +676,8 @@ if ! grep -q default_ccache_name /etc/krb5.conf ; then
 			touch -r "$tmpfile" /etc/krb5.conf
 		fi
 	fi
+fi
+if test -n "$tmpfile" ; then
 	rm -f "$tmpfile"
 fi
 %endif
@@ -972,6 +988,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Sep 24 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-16
+- back out setting default_ccache_name to the new default for now, resetting
+  it to the old default while the kernel/keyutils bits get sorted (sgallagh)
+
 * Mon Sep 23 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-15
 - add explicit build-time dependency on a version of keyutils that's new
   enough to include keyctl_get_persistent() (more of #991148)
