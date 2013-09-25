@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 16%{?dist}
+Release: 17%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -203,8 +203,9 @@ Group: System Environment/Libraries
 # Some of the older libsmbclient builds here incorrectly called
 # krb5_locate_kdc(), which was mistakenly exported in 1.9.
 Conflicts: libsmbclient < 3.5.10-124
-Requires(triggerun): awk, coreutils, grep, sed
 %endif
+Requires: awk, coreutils, grep, sed
+Requires: keyutils-libs >= 1.5.6-2
 
 %description libs
 Kerberos is a network authentication system. The krb5-libs package
@@ -988,6 +989,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Sep 25 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-17
+- add missing dependency on newer keyutils-libs (#1012034)
+
 * Tue Sep 24 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-16
 - back out setting default_ccache_name to the new default for now, resetting
   it to the old default while the kernel/keyutils bits get sorted (sgallagh)
