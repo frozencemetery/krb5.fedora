@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 17%{?dist}
+Release: 18%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -204,7 +204,7 @@ Group: System Environment/Libraries
 # krb5_locate_kdc(), which was mistakenly exported in 1.9.
 Conflicts: libsmbclient < 3.5.10-124
 %endif
-Requires: awk, coreutils, grep, sed
+Requires: coreutils, gawk, grep, sed
 Requires: keyutils-libs >= 1.5.6-2
 
 %description libs
@@ -989,6 +989,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Sep 25 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-18
+- fix broken dependency on awk (should be gawk, rdieter)
+
 * Wed Sep 25 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-17
 - add missing dependency on newer keyutils-libs (#1012034)
 
