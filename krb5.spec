@@ -32,7 +32,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 9%{?dist}
+Release: 10%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -401,6 +401,7 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--enable-shared \
 	--localstatedir=%{_var}/kerberos \
 	--disable-rpath \
+	--without-krb5-config \
 	--with-system-et \
 	--with-system-ss \
 	--with-netlib=-lresolv \
@@ -911,6 +912,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Oct 24 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-10
+- configure --without-krb5-config so that we don't pull in the old default
+  ccache name when we want to stop setting a default ccache name at configure-
+  time
+
 * Fri Aug 23 2013 Nalin Dahyabhai <nalin@redhat.com> 1.11.3-9
 - take another stab at accounting for UnversionedDocdirs for the -libs
   subpackage (spotted by ssorce)
