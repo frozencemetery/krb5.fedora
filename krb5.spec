@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 19%{?dist}
+Release: 20%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -105,6 +105,7 @@ Patch131: krb5-1.11.3-skew3.patch
 Patch132: krb5-1.11-gss-methods1.patch
 Patch133: krb5-1.11-gss-methods2.patch 
 Patch134: krb5-1.11-kpasswdtest.patch
+Patch135: krb5-1.11-check_transited.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -343,6 +344,7 @@ ln -s NOTICE LICENSE
 %patch132 -p1 -b .gss-methods1
 %patch133 -p1 -b .gss-methods2
 %patch134 -p1 -b .kpasswdtest
+%patch135 -p1 -b .check_transited
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -990,6 +992,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Sep 30 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-20
+- pull up fix for not calling a kdb plugin's check-transited-path
+  method before calling the library's default version, which only knows
+  how to read what's in the configuration file (RT#7709, #1013664)
+
 * Thu Sep 26 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-19
 - configure --without-krb5-config so that we don't pull in the old default
   ccache name when we want to stop setting a default ccache name at configure-
