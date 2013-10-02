@@ -35,13 +35,13 @@
 %endif
 %if 0%{?fedora} >= 20 || 0%{?rhel} > 6
 %global configure_default_ccache_name 1
-%global configured_default_ccache_name DIR:/run/user/%%{uid}/krb5cc
+%global configured_default_ccache_name KEYRING:persistent:%%{uid}
 %endif
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 20%{?dist}
+Release: 21%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -113,6 +113,7 @@ Patch202: krb5-1.11.2-otp.patch
 
 # Patches for kernel-persistent-keyring support (backport)
 Patch301: persistent_keyring.patch
+Patch302: krb5-master-kinit-cccol.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -307,6 +308,9 @@ certificate.
 %setup -q -n %{name}-%{version} -a 3 -a 100
 ln -s NOTICE LICENSE
 
+%patch301 -p1 -b .persistent-keyring
+%patch302 -p1 -b .kinit-cccol
+
 %patch60 -p1 -b .pam
 
 %patch63 -p1 -b .selinux-label
@@ -348,8 +352,6 @@ ln -s NOTICE LICENSE
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
-
-%patch301 -p1 -b .persistent-keyring
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
@@ -653,7 +655,7 @@ if test -z "$tmpfile" ; then
 fi
 # Remove the default value we previously set.  Be very exact about it.
 if grep -q default_ccache_name /etc/krb5.conf ; then
-	sed -r '/^ default_ccache_name = KEYRING:persistent:%%\{uid\}$/d' /etc/krb5.conf > "$tmpfile"
+	sed -r '|^ default_ccache_name = DIR:/run/user/%%\{uid\}/krb5cc$|d' /etc/krb5.conf > "$tmpfile"
 	if test -s "$tmpfile" ; then
 		if touch -r /etc/krb5.conf "$tmpfile" ; then
 			cat "$tmpfile" > /etc/krb5.conf
@@ -992,6 +994,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Oct  2 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-21
+- switch to the version of persistent-keyring that was just merged to
+  master (RT#7711), along with related changes to kinit (RT#7689)
+- go back to setting default_ccache_name to a KEYRING type
+
 * Mon Sep 30 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-20
 - pull up fix for not calling a kdb plugin's check-transited-path
   method before calling the library's default version, which only knows
