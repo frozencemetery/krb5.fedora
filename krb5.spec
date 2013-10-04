@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 21%{?dist}
+Release: 22%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -150,7 +150,7 @@ BuildRequires: texlive-texmf, texlive-texmf-latex
 # Typical fonts, and the commands which we need to have present.
 BuildRequires: texlive, texlive-latex, texlive-texmf-fonts
 BuildRequires: /usr/bin/pdflatex /usr/bin/makeindex
-BuildRequires: keyutils, keyutils-libs-devel >= 1.5.6-2
+BuildRequires: keyutils, keyutils-libs-devel >= 1.5.8
 BuildRequires: libselinux-devel
 BuildRequires: pam-devel
 %if %{WITH_SYSTEMD}
@@ -207,7 +207,7 @@ Group: System Environment/Libraries
 Conflicts: libsmbclient < 3.5.10-124
 %endif
 Requires: coreutils, gawk, grep, sed
-Requires: keyutils-libs >= 1.5.6-2
+Requires: keyutils-libs >= 1.5.8
 
 %description libs
 Kerberos is a network authentication system. The krb5-libs package
@@ -994,6 +994,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Oct  4 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-22
+- rebuild with keyutils 1.5.8 (part of #1012043)
+
 * Wed Oct  2 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-21
 - switch to the version of persistent-keyring that was just merged to
   master (RT#7711), along with related changes to kinit (RT#7689)
