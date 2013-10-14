@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 23%{?dist}
+Release: 24%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -106,6 +106,7 @@ Patch132: krb5-1.11-gss-methods1.patch
 Patch133: krb5-1.11-gss-methods2.patch 
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch135: krb5-1.11-check_transited.patch
+Patch136: krb5-1.11.3-prompter1.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -349,6 +350,7 @@ ln -s NOTICE LICENSE
 %patch133 -p1 -b .gss-methods2
 %patch134 -p1 -b .kpasswdtest
 %patch135 -p1 -b .check_transited
+%patch136 -p1 -b .prompter1
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -994,6 +996,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Oct 14 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-24
+- backport the callback to use the libkrb5 prompter when we can't load PEM
+  files for PKINIT (RT#7590, includes part of #965721/#1016690)
+
 * Mon Oct 14 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-23
 - fix trigger scriptlet's invocation of sed (#1016945)
 
