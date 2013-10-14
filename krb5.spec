@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 22%{?dist}
+Release: 23%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -655,7 +655,7 @@ if test -z "$tmpfile" ; then
 fi
 # Remove the default value we previously set.  Be very exact about it.
 if grep -q default_ccache_name /etc/krb5.conf ; then
-	sed -r '|^ default_ccache_name = DIR:/run/user/%%\{uid\}/krb5cc$|d' /etc/krb5.conf > "$tmpfile"
+	sed -r '/^ default_ccache_name = DIR:\/run\/user\/%%\{uid\}\/krb5cc$/d' /etc/krb5.conf > "$tmpfile"
 	if test -s "$tmpfile" ; then
 		if touch -r /etc/krb5.conf "$tmpfile" ; then
 			cat "$tmpfile" > /etc/krb5.conf
@@ -994,6 +994,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Oct 14 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-23
+- fix trigger scriptlet's invocation of sed (#1016945)
+
 * Fri Oct  4 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-22
 - rebuild with keyutils 1.5.8 (part of #1012043)
 
