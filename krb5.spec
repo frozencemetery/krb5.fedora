@@ -97,6 +97,7 @@ Patch132: krb5-1.11-gss-methods1.patch
 Patch133: krb5-1.11-gss-methods2.patch 
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch135: krb5-1.11-check_transited.patch
+Patch136: krb5-1.11.3-prompter1.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -327,6 +328,7 @@ ln -s NOTICE LICENSE
 %patch133 -p1 -b .gss-methods2
 %patch134 -p1 -b .kpasswdtest
 %patch135 -p1 -b .check_transited
+%patch136 -p1 -b .prompter1
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -915,6 +917,8 @@ exit 0
 
 %changelog
 * Thu Oct 24 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-10
+- backport the callback to use the libkrb5 prompter when we can't load PEM
+  files for PKINIT (RT#7590, includes part of #965721/#1016690)
 - pull up fix for not calling a kdb plugin's check-transited-path
   method before calling the library's default version, which only knows
   how to read what's in the configuration file (RT#7709, #1013664)
