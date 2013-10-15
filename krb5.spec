@@ -88,10 +88,7 @@ Patch63: krb5-1.12-selinux-label.patch
 Patch71: krb5-1.11-dirsrv-accountlock.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
-Patch125: krb5-1.11.2-skew1.patch
-Patch126: krb5-1.11.2-skew2.patch
 Patch129: krb5-1.11-run_user_0.patch
-Patch131: krb5-1.11.3-skew3.patch
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch138: krb5-master-keyring-offsets.patch
 Patch139: krb5-master-keyring-expiration.patch
@@ -306,14 +303,11 @@ ln -s NOTICE LICENSE
 %patch71 -p1 -b .dirsrv-accountlock %{?_rawbuild}
 %patch86 -p0 -b .debuginfo
 %patch105 -p1 -b .kvno
-%patch125 -p1 -b .skew1
-%patch126 -p1 -b .skew2
 
 # Apply when the hard-wired or configured default location is
 # DIR:/run/user/%%{uid}/krb5cc.
 %patch129 -p1 -b .run_user_0
 
-%patch131 -p1 -b .skew3
 %patch134 -p1 -b .kpasswdtest
 %patch138 -p1 -b .keyring-offsets
 %patch139 -p1 -b .keyring-expiration
@@ -1016,6 +1010,7 @@ exit 0
   - drop backport for RT#7709
   - drop backport for RT#7590 and partial backport for RT#7680
   - drop OTP backport
+  - drop backports for RT#7656 and RT#7657
 
 * Wed Oct 16 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-26
 - create and own /etc/gss (#1019937)
