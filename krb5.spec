@@ -90,8 +90,6 @@ Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
 Patch125: krb5-1.11.2-skew1.patch
 Patch126: krb5-1.11.2-skew2.patch
-Patch127: krb5-master-test_gss_no_udp.patch
-Patch128: krb5-master-test_no_pmap.patch 
 Patch129: krb5-1.11-run_user_0.patch
 Patch131: krb5-1.11.3-skew3.patch
 Patch132: krb5-1.11-gss-methods1.patch
@@ -318,8 +316,6 @@ ln -s NOTICE LICENSE
 %patch105 -p1 -b .kvno
 %patch125 -p1 -b .skew1
 %patch126 -p1 -b .skew2
-%patch127 -p1 -b .test_gss_no_udp
-%patch128 -p1 -b .test_no_pmap
 
 # Apply when the hard-wired or configured default location is
 # DIR:/run/user/%%{uid}/krb5cc.
@@ -1028,6 +1024,9 @@ exit 0
   - drop backport for RT#7172
   - drop backport for RT#7642
   - drop backport for RT#7643
+  - drop patches from master to not test GSSRPC-over-UDP and to not
+    depend on the portmapper, which are areas where our build systems
+    often give us trouble, too; obsolete
 
 * Wed Oct 16 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-26
 - create and own /etc/gss (#1019937)
