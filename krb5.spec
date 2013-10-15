@@ -76,7 +76,7 @@ Source101: noport.c
 
 Patch6: krb5-1.12-ksu-path.patch
 Patch12: krb5-1.7-ktany.patch
-Patch16: krb5-1.10-buildconf.patch
+Patch16: krb5-1.12-buildconf.patch
 Patch23: krb5-1.3.1-dns.patch
 Patch29: krb5-1.10-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
