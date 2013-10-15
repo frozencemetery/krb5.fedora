@@ -113,10 +113,6 @@ Patch139: krb5-master-keyring-expiration.patch
 Patch201: krb5-1.11.2-keycheck.patch
 Patch202: krb5-1.11.2-otp.patch
 
-# Patches for kernel-persistent-keyring support (backport)
-Patch302: krb5-master-kinit-cccol.patch
-Patch303: krb5-keyring-strtol.patch
-
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -309,9 +305,6 @@ certificate.
 %prep
 %setup -q -n %{name}-%{version}-alpha1 -a 3 -a 100
 ln -s NOTICE LICENSE
-
-%patch302 -p1 -b .kinit-cccol
-%patch303 -p1 -b .keyring-strtol
 
 %patch60 -p1 -b .pam
 
@@ -1040,6 +1033,7 @@ exit 0
 * Thu Oct 17 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.12-alpha1.0
 - initial update to alpha1
   - drop backport of persistent keyring support
+  - drop backport for RT#7689
 
 * Wed Oct 16 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-26
 - create and own /etc/gss (#1019937)
