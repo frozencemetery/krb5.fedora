@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 24%{?dist}
+Release: 25%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -108,6 +108,7 @@ Patch134: krb5-1.11-kpasswdtest.patch
 Patch135: krb5-1.11-check_transited.patch
 Patch136: krb5-1.11.3-prompter1.patch
 Patch137: krb5-1.11.3-prompter2.patch
+Patch138: krb5-1.11.3-gss-ccache-import.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -353,6 +354,7 @@ ln -s NOTICE LICENSE
 %patch135 -p1 -b .check_transited
 %patch136 -p1 -b .prompter1
 %patch137 -p1 -b .prompter2
+%patch138 -p1 -b .gss-ccache-import
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -998,6 +1000,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Oct 15 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-25
+- pull up fix for importing previously-exported credential caches in the
+  gssapi library (RT# 7706, #1019420)
+
 * Mon Oct 14 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-24
 - backport the callback to use the libkrb5 prompter when we can't load PEM
   files for PKINIT (RT#7590, includes part of #965721/#1016690)
