@@ -83,7 +83,7 @@ Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch39: krb5-1.8-api.patch
 Patch56: krb5-1.10-doublelog.patch
 Patch59: krb5-1.10-kpasswd_tcp.patch
-Patch60: krb5-1.11-pam.patch
+Patch60: krb5-1.12-pam.patch
 Patch63: krb5-1.11-selinux-label.patch
 Patch71: krb5-1.11-dirsrv-accountlock.patch
 Patch86: krb5-1.9-debuginfo.patch
