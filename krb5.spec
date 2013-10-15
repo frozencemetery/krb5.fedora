@@ -114,7 +114,6 @@ Patch201: krb5-1.11.2-keycheck.patch
 Patch202: krb5-1.11.2-otp.patch
 
 # Patches for kernel-persistent-keyring support (backport)
-Patch301: persistent_keyring.patch
 Patch302: krb5-master-kinit-cccol.patch
 Patch303: krb5-keyring-strtol.patch
 
@@ -311,7 +310,6 @@ certificate.
 %setup -q -n %{name}-%{version}-alpha1 -a 3 -a 100
 ln -s NOTICE LICENSE
 
-%patch301 -p1 -b .persistent-keyring
 %patch302 -p1 -b .kinit-cccol
 %patch303 -p1 -b .keyring-strtol
 
@@ -1041,6 +1039,7 @@ exit 0
 
 * Thu Oct 17 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.12-alpha1.0
 - initial update to alpha1
+  - drop backport of persistent keyring support
 
 * Wed Oct 16 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-26
 - create and own /etc/gss (#1019937)
