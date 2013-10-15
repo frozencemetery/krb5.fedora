@@ -40,16 +40,16 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.11.4
-Release: 2%{?dist}
+Version: 1.12
+Release: 0%{?dist}.alpha1.0
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.4-signed.tar
-Source0: krb5-%{version}.tar.gz
-Source1: krb5-%{version}.tar.gz.asc
+# http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12-alpha1-signed.tar
+Source0: krb5-%{version}-alpha1.tar.gz
+Source1: krb5-%{version}-alpha1.tar.gz.asc
 # Use a dummy krb5-%{version}-pdf.tar.xz the first time through, then
 #  tar cvJf $RPM_SOURCE_DIR/krb5-%%{version}-pdf.tar.xz build-pdf/*.pdf
 # after the build phase finishes.
-Source3: krb5-%{version}-pdf.tar.xz
+Source3: krb5-%{version}-alpha1-pdf.tar.xz
 Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
@@ -308,7 +308,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -n %{name}-%{version} -a 3 -a 100
+%setup -q -n %{name}-%{version}-alpha1 -a 3 -a 100
 ln -s NOTICE LICENSE
 
 %patch301 -p1 -b .persistent-keyring
@@ -389,7 +389,6 @@ cfg="src/kadmin/testing/proto/kdc.conf.proto \
      src/kadmin/testing/proto/krb5.conf.proto \
      src/lib/kadm5/unit-test/api.current/init-v2.exp \
      src/util/k5test.py \
-     src/tests/kdc_realm/input_conf/*.conf \
      src/tests/mk_migr/ldap_backend/input_conf/*.conf \
      src/tests/mk_migr/db2_backend/input_conf/*.conf"
 LONG_BIT=`getconf LONG_BIT`
@@ -1039,6 +1038,9 @@ exit 0
 * Tue Oct 22 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-27
 - add some minimal description to the top of the wrapper scripts we use
   when starting krb5kdc and kadmind to describe why they exist (tooling)
+
+* Thu Oct 17 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.12-alpha1.0
+- initial update to alpha1
 
 * Wed Oct 16 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-26
 - create and own /etc/gss (#1019937)
