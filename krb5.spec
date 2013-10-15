@@ -84,7 +84,7 @@ Patch39: krb5-1.8-api.patch
 Patch56: krb5-1.10-doublelog.patch
 Patch59: krb5-1.10-kpasswd_tcp.patch
 Patch60: krb5-1.12-pam.patch
-Patch63: krb5-1.11-selinux-label.patch
+Patch63: krb5-1.12-selinux-label.patch
 Patch71: krb5-1.11-dirsrv-accountlock.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
