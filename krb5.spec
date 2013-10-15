@@ -93,7 +93,6 @@ Patch126: krb5-1.11.2-skew2.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch131: krb5-1.11.3-skew3.patch
 Patch134: krb5-1.11-kpasswdtest.patch
-Patch135: krb5-1.11-check_transited.patch
 Patch136: krb5-1.11.3-prompter1.patch
 Patch137: krb5-1.11.3-prompter2.patch
 Patch138: krb5-master-keyring-offsets.patch
@@ -321,7 +320,6 @@ ln -s NOTICE LICENSE
 
 %patch131 -p1 -b .skew3
 %patch134 -p1 -b .kpasswdtest
-%patch135 -p1 -b .check_transited
 %patch136 -p1 -b .prompter1
 %patch137 -p1 -b .prompter2
 %patch138 -p1 -b .keyring-offsets
@@ -1024,6 +1022,7 @@ exit 0
     depend on the portmapper, which are areas where our build systems
     often give us trouble, too; obsolete
   - drop backports for RT#7682
+  - drop backport for RT#7709
 
 * Wed Oct 16 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-26
 - create and own /etc/gss (#1019937)
