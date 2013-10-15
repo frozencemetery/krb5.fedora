@@ -92,8 +92,6 @@ Patch125: krb5-1.11.2-skew1.patch
 Patch126: krb5-1.11.2-skew2.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch131: krb5-1.11.3-skew3.patch
-Patch132: krb5-1.11-gss-methods1.patch
-Patch133: krb5-1.11-gss-methods2.patch 
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch135: krb5-1.11-check_transited.patch
 Patch136: krb5-1.11.3-prompter1.patch
@@ -322,8 +320,6 @@ ln -s NOTICE LICENSE
 %patch129 -p1 -b .run_user_0
 
 %patch131 -p1 -b .skew3
-%patch132 -p1 -b .gss-methods1
-%patch133 -p1 -b .gss-methods2
 %patch134 -p1 -b .kpasswdtest
 %patch135 -p1 -b .check_transited
 %patch136 -p1 -b .prompter1
@@ -1027,6 +1023,7 @@ exit 0
   - drop patches from master to not test GSSRPC-over-UDP and to not
     depend on the portmapper, which are areas where our build systems
     often give us trouble, too; obsolete
+  - drop backports for RT#7682
 
 * Wed Oct 16 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-26
 - create and own /etc/gss (#1019937)
