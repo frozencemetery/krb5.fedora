@@ -74,7 +74,7 @@ BuildRequires: cmake
 Source100: nss_wrapper-0.0-20130719153839Z.git6cb59864.bz2
 Source101: noport.c
 
-Patch6: krb5-1.10-ksu-path.patch
+Patch6: krb5-1.12-ksu-path.patch
 Patch12: krb5-1.7-ktany.patch
 Patch16: krb5-1.10-buildconf.patch
 Patch23: krb5-1.3.1-dns.patch
