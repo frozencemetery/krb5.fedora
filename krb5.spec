@@ -88,7 +88,6 @@ Patch63: krb5-1.12-selinux-label.patch
 Patch71: krb5-1.11-dirsrv-accountlock.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
-Patch116: http://ausil.fedorapeople.org/aarch64/krb5/krb5-aarch64.patch
 Patch117: krb5-1.11-gss-client-keytab.patch
 Patch121: krb5-cccol-primary.patch
 Patch123: krb5-1.11.2-empty_passwords.patch
@@ -321,7 +320,6 @@ ln -s NOTICE LICENSE
 %patch71 -p1 -b .dirsrv-accountlock %{?_rawbuild}
 %patch86 -p0 -b .debuginfo
 %patch105 -p1 -b .kvno
-%patch116 -p1 -b .aarch64
 %patch117 -p1 -b .gss-client-keytab
 %patch121 -p1 -b .cccol-primary
 %patch123 -p1 -b .empty_passwords
@@ -1033,6 +1031,7 @@ exit 0
   - drop backport of persistent keyring support
   - drop backport for RT#7689
   - drop obsolete patch for fixing a use-before-init in a test program
+  - drop obsolete patch teaching config.guess/config.sub about aarch64-linux
 
 * Wed Oct 16 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-26
 - create and own /etc/gss (#1019937)
