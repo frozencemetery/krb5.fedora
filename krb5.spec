@@ -80,7 +80,7 @@ Patch16: krb5-1.12-buildconf.patch
 Patch23: krb5-1.3.1-dns.patch
 Patch29: krb5-1.10-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
-Patch39: krb5-1.8-api.patch
+Patch39: krb5-1.12-api.patch
 Patch56: krb5-1.10-doublelog.patch
 Patch59: krb5-1.10-kpasswd_tcp.patch
 Patch60: krb5-1.12-pam.patch
