@@ -97,10 +97,6 @@ Patch138: krb5-master-keyring-offsets.patch
 Patch139: krb5-master-keyring-expiration.patch
 Patch140: krb5-1.12-alpha-gss-ccache-import.patch
 
-# Patches for otp plugin backport
-Patch201: krb5-1.11.2-keycheck.patch
-Patch202: krb5-1.11.2-otp.patch
-
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
@@ -322,9 +318,6 @@ ln -s NOTICE LICENSE
 %patch138 -p1 -b .keyring-offsets
 %patch139 -p1 -b .keyring-expiration
 %patch140 -p1 -b .gss-ccache-import
-
-%patch201 -p1 -b .keycheck
-%patch202 -p1 -b .otp
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
@@ -1022,6 +1015,7 @@ exit 0
   - drop backports for RT#7682
   - drop backport for RT#7709
   - drop backport for RT#7590 and partial backport for RT#7680
+  - drop OTP backport
 
 * Wed Oct 16 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-26
 - create and own /etc/gss (#1019937)
