@@ -95,6 +95,7 @@ Patch131: krb5-1.11.3-skew3.patch
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch138: krb5-master-keyring-offsets.patch
 Patch139: krb5-master-keyring-expiration.patch
+Patch140: krb5-1.12-alpha-gss-ccache-import.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -320,6 +321,7 @@ ln -s NOTICE LICENSE
 %patch134 -p1 -b .kpasswdtest
 %patch138 -p1 -b .keyring-offsets
 %patch139 -p1 -b .keyring-expiration
+%patch140 -p1 -b .gss-ccache-import
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
