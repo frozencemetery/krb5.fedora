@@ -88,7 +88,6 @@ Patch63: krb5-1.12-selinux-label.patch
 Patch71: krb5-1.11-dirsrv-accountlock.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
-Patch124: krb5-1.11.2-arcfour_short.patch
 Patch125: krb5-1.11.2-skew1.patch
 Patch126: krb5-1.11.2-skew2.patch
 Patch127: krb5-master-test_gss_no_udp.patch
@@ -317,7 +316,6 @@ ln -s NOTICE LICENSE
 %patch71 -p1 -b .dirsrv-accountlock %{?_rawbuild}
 %patch86 -p0 -b .debuginfo
 %patch105 -p1 -b .kvno
-%patch124 -p1 -b .arcfour_short
 %patch125 -p1 -b .skew1
 %patch126 -p1 -b .skew2
 %patch127 -p1 -b .test_gss_no_udp
@@ -1029,6 +1027,7 @@ exit 0
   - drop backport for RT#7598
   - drop backport for RT#7172
   - drop backport for RT#7642
+  - drop backport for RT#7643
 
 * Wed Oct 16 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-26
 - create and own /etc/gss (#1019937)
