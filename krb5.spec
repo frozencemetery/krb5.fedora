@@ -98,9 +98,9 @@ License: MIT
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: autoconf, bison, flex, gawk, gettext, sed
+BuildRequires: autoconf, bison, flex, gawk, gettext, pkgconfig, sed
 %if 0%{?fedora} >= 12 || 0%{?rhel} >= 6
-BuildRequires: libcom_err-devel, libss-devel
+BuildRequires: libcom_err-devel, libedit-devel, libss-devel
 %endif
 BuildRequires: gzip, ncurses-devel, tar
 BuildRequires: python-sphinx
@@ -940,6 +940,7 @@ exit 0
 %{_libdir}/libkrad.so
 %{_libdir}/libkrb5.so
 %{_libdir}/libkrb5support.so
+%{_libdir}/pkgconfig/*
 
 %{_bindir}/krb5-config
 %{_bindir}/sclient
@@ -1011,6 +1012,8 @@ exit 0
   - drop backport for RT#7590 and partial backport for RT#7680
   - drop OTP backport
   - drop backports for RT#7656 and RT#7657
+- BuildRequires: libedit-devel to prefer it
+- BuildRequires: pkgconfig, since configure uses it
 
 * Wed Oct 16 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-26
 - create and own /etc/gss (#1019937)
