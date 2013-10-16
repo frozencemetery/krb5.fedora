@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 25%{?dist}
+Release: 26%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -528,6 +528,10 @@ mkdir -p $RPM_BUILD_ROOT%{_var}/kerberos/krb5/user
 mkdir -p $RPM_BUILD_ROOT/etc
 install -pm 644 %{SOURCE6} $RPM_BUILD_ROOT/etc/krb5.conf
 
+# Parent of configuration file for list of loadable GSS mechs ("mechs").  This
+# location is not relative to sysconfdir, but is hard-coded in g_initialize.c.
+mkdir -m 755 -p $RPM_BUILD_ROOT/etc/gss
+
 # If the default configuration needs to start specifying a default cache
 # location, add it now, then fixup the timestamp so that it looks the same.
 %if 0%{?configure_default_ccache_name}
@@ -909,6 +913,8 @@ exit 0
 %defattr(-,root,root,-)
 %doc README NOTICE LICENSE
 %docdir %{_mandir}
+# This is a hard-coded, not-dependent-on-the-configure-script path.
+%dir /etc/gss
 %verify(not md5 size mtime) %config(noreplace) /etc/krb5.conf
 /%{_mandir}/man5/.k5identity.5*
 /%{_mandir}/man5/.k5login.5*
@@ -1000,6 +1006,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Oct 16 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-26
+- create and own /etc/gss (#1019937)
+
 * Tue Oct 15 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-25
 - pull up fix for importing previously-exported credential caches in the
   gssapi library (RT# 7706, #1019420)
