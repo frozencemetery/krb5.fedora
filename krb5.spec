@@ -505,6 +505,10 @@ mkdir -p $RPM_BUILD_ROOT%{_var}/kerberos/krb5/user
 mkdir -p $RPM_BUILD_ROOT/etc
 install -pm 644 %{SOURCE6} $RPM_BUILD_ROOT/etc/krb5.conf
 
+# Parent of configuration file for list of loadable GSS mechs ("mechs").  This
+# location is not relative to sysconfdir, but is hard-coded in g_initialize.c.
+mkdir -m 755 -p $RPM_BUILD_ROOT/etc/gss
+
 # Server init scripts (krb5kdc,kadmind,kpropd) and their sysconfig files.
 %if %{WITH_SYSTEMD}
 mkdir -p $RPM_BUILD_ROOT%{_unitdir}
@@ -829,6 +833,8 @@ exit 0
 %defattr(-,root,root,-)
 %doc README NOTICE LICENSE
 %docdir %{_mandir}
+# This is a hard-coded, not-dependent-on-the-configure-script path.
+%dir /etc/gss
 %verify(not md5 size mtime) %config(noreplace) /etc/krb5.conf
 /%{_mandir}/man5/.k5identity.5*
 /%{_mandir}/man5/.k5login.5*
@@ -921,6 +927,7 @@ exit 0
 
 %changelog
 * Thu Oct 24 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-10
+- create and own /etc/gss (#1019937)
 - pull up fix for importing previously-exported credential caches in the
   gssapi library (RT# 7706, #1019420)
 - backport the callback to use the libkrb5 prompter when we can't load PEM
