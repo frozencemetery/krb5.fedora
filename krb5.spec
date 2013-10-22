@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 26%{?dist}
+Release: 27%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -1006,6 +1006,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Oct 22 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-27
+- add some minimal description to the top of the wrapper scripts we use
+  when starting krb5kdc and kadmind to describe why they exist (tooling)
+
 * Wed Oct 16 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-26
 - create and own /etc/gss (#1019937)
 
