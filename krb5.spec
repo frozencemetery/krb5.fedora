@@ -927,6 +927,8 @@ exit 0
 
 %changelog
 * Thu Oct 24 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-10
+- add some minimal description to the top of the wrapper scripts we use
+  when starting krb5kdc and kadmind to describe why they exist (tooling)
 - create and own /etc/gss (#1019937)
 - pull up fix for importing previously-exported credential caches in the
   gssapi library (RT# 7706, #1019420)
