@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 27%{?dist}
+Release: 28%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -74,7 +74,6 @@ BuildRequires: cmake
 Source100: nss_wrapper-0.0-20130719153839Z.git6cb59864.bz2
 Source101: noport.c
 
-Patch5: krb5-1.10-ksu-access.patch
 Patch6: krb5-1.10-ksu-path.patch
 Patch12: krb5-1.7-ktany.patch
 Patch16: krb5-1.10-buildconf.patch
@@ -318,7 +317,6 @@ ln -s NOTICE LICENSE
 
 %patch63 -p1 -b .selinux-label
 
-%patch5  -p1 -b .ksu-access
 %patch6  -p1 -b .ksu-path
 %patch12 -p1 -b .ktany
 %patch16 -p1 -b .buildconf %{?_rawbuild}
@@ -1006,6 +1004,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Nov  4 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-28
+- drop patch to add additional access() checks to ksu - they add to breakage
+  when non-FILE: caches are in use (#1026099), shouldn't be resulting in any
+  benefit, and clash with proposed changes to fix its cache handling
+
 * Tue Oct 22 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-27
 - add some minimal description to the top of the wrapper scripts we use
   when starting krb5kdc and kadmind to describe why they exist (tooling)
