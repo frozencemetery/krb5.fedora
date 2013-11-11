@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 29%{?dist}
+Release: 30%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -117,6 +117,7 @@ Patch202: krb5-1.11.2-otp.patch
 # Patches for kernel-persistent-keyring support (backport)
 Patch301: persistent_keyring.patch
 Patch302: krb5-master-kinit-cccol.patch
+Patch303: krb5-keyring-strtol.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -313,6 +314,7 @@ ln -s NOTICE LICENSE
 
 %patch301 -p1 -b .persistent-keyring
 %patch302 -p1 -b .kinit-cccol
+%patch303 -p1 -b .keyring-strtol
 
 %patch60 -p1 -b .pam
 
@@ -1006,6 +1008,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Nov 11 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-30
+- check more thorougly for errors when resolving KEYRING ccache names of type
+  "persistent", which should only have a numeric UID as the next part of the
+  name (#1029110)
+
 * Tue Nov  5 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-29
 - incorporate upstream patch for remote crash of KDCs which serve multiple
   realms simultaneously (RT#7756, CVE-2013-1418)
