@@ -1009,7 +1009,7 @@ exit 0
 
 %changelog
 * Mon Nov 11 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-30
-- check more thorougly for errors when resolving KEYRING ccache names of type
+- check more thoroughly for errors when resolving KEYRING ccache names of type
   "persistent", which should only have a numeric UID as the next part of the
   name (#1029110)
 
