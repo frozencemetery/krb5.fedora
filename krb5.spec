@@ -1002,7 +1002,7 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Tue Nov 12 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.4-0
+* Tue Nov 12 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.4-1
 - update to 1.11.4
   - drop patch for RT#7650, obsoleted
   - drop patch for RT#7706, obsoleted as RT#7723
