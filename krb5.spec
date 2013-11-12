@@ -99,7 +99,6 @@ Patch126: krb5-1.11.2-skew2.patch
 Patch127: krb5-master-test_gss_no_udp.patch
 Patch128: krb5-master-test_no_pmap.patch 
 Patch129: krb5-1.11-run_user_0.patch
-Patch130: krb5-master-init_referral.patch
 Patch131: krb5-1.11.3-skew3.patch
 Patch132: krb5-1.11-gss-methods1.patch
 Patch133: krb5-1.11-gss-methods2.patch 
@@ -347,7 +346,6 @@ ln -s NOTICE LICENSE
 # DIR:/run/user/%%{uid}/krb5cc.
 %patch129 -p1 -b .run_user_0
 
-%patch130 -p1 -b .init_referral
 %patch131 -p1 -b .skew3
 %patch132 -p1 -b .gss-methods1
 %patch133 -p1 -b .gss-methods2
@@ -1010,6 +1008,7 @@ exit 0
 %changelog
 * Tue Nov 12 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.4-0
 - update to 1.11.4
+  - drop patch for RT#7650, obsoleted
 
 * Tue Nov 12 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-31
 - switch to the simplified version of the patch for #1029110 (RT#7764)
