@@ -106,7 +106,6 @@ Patch134: krb5-1.11-kpasswdtest.patch
 Patch135: krb5-1.11-check_transited.patch
 Patch136: krb5-1.11.3-prompter1.patch
 Patch137: krb5-1.11.3-prompter2.patch
-Patch138: krb5-1.11.3-gss-ccache-import.patch
 Patch139: krb5-CVE-2013-1418.patch
 
 # Patches for otp plugin backport
@@ -353,7 +352,6 @@ ln -s NOTICE LICENSE
 %patch135 -p1 -b .check_transited
 %patch136 -p1 -b .prompter1
 %patch137 -p1 -b .prompter2
-%patch138 -p1 -b .gss-ccache-import
 %patch139 -p1 -b .CVE-2013-1418
 
 %patch201 -p1 -b .keycheck
@@ -1009,6 +1007,7 @@ exit 0
 * Tue Nov 12 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.4-0
 - update to 1.11.4
   - drop patch for RT#7650, obsoleted
+  - drop patch for RT#7706, obsoleted as RT#7723
 
 * Tue Nov 12 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-31
 - switch to the simplified version of the patch for #1029110 (RT#7764)
