@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 30%{?dist}
+Release: 31%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -1008,6 +1008,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Nov 12 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-31
+- switch to the simplified version of the patch for #1029110 (RT#7764)
+
 * Mon Nov 11 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-30
 - check more thoroughly for errors when resolving KEYRING ccache names of type
   "persistent", which should only have a numeric UID as the next part of the
