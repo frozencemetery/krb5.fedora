@@ -40,10 +40,10 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.11.3
-Release: 31%{?dist}
+Version: 1.11.4
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.4-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 # Use a dummy krb5-%{version}-pdf.tar.xz the first time through, then
@@ -1008,6 +1008,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Nov 12 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.4-0
+- update to 1.11.4
+
 * Tue Nov 12 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-31
 - switch to the simplified version of the patch for #1029110 (RT#7764)
 
