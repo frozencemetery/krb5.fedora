@@ -936,7 +936,8 @@ exit 0
 
 * Tue Nov  5 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-11
 - incorporate upstream patch for remote crash of KDCs which serve multiple
-  realms simultaneously (RT#7756, CVE-2013-1418)
+  realms simultaneously (RT#7756, CVE-2013-1418/CVE-2013-6800,
+  #1026997/#1031501)
 
 * Thu Oct 24 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-10
 - add some minimal description to the top of the wrapper scripts we use
