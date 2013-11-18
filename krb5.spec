@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 32%{?dist}
+Release: 33%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -110,6 +110,7 @@ Patch137: krb5-1.11.3-prompter2.patch
 Patch138: krb5-1.11.3-gss-ccache-import.patch
 Patch139: krb5-CVE-2013-1418.patch
 Patch140: krb5-CVE-2013-1417.patch
+Patch141: krb5-1.11.3-client-loop.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -359,6 +360,7 @@ ln -s NOTICE LICENSE
 %patch138 -p1 -b .gss-ccache-import
 %patch139 -p1 -b .CVE-2013-1418
 %patch140 -p1 -b .CVE-2013-1417
+%patch141 -p1 -b .client-loop
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -1010,6 +1012,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Nov 18 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-33
+- backport fix to not spin on a short read when reading the length of a
+  response over TCP (RT#7508, #1029674)
+
 * Fri Nov 15 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-32
 - incorporate fix for a KDC NULL pointer dereference while handling referrals
   (CVE-2013-1417, #1030744)
