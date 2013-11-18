@@ -112,6 +112,7 @@ Patch139: krb5-CVE-2013-1418.patch
 Patch140: krb5-CVE-2013-1417.patch
 Patch141: krb5-1.11.3-client-loop.patch
 Patch142: krb5-master-keyring-offsets.patch
+Patch143: krb5-master-keyring-expiration.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -363,6 +364,7 @@ ln -s NOTICE LICENSE
 %patch140 -p1 -b .CVE-2013-1417
 %patch141 -p1 -b .client-loop
 %patch142 -p1 -b .keyring-offsets
+%patch143 -p1 -b .keyring-expiration
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -1019,6 +1021,8 @@ exit 0
   response over TCP (RT#7508, #1029674)
 - pull in fix to store KDC time offsets in keyring credential caches (RT#7768,
   #1030607)
+- pull in fix to set expiration times on credentials stored in keyring
+  credential caches (RT#7769, #1031724)
 
 * Fri Nov 15 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-32
 - incorporate fix for a KDC NULL pointer dereference while handling referrals
