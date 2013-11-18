@@ -1024,7 +1024,8 @@ exit 0
 
 * Tue Nov  5 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-29
 - incorporate upstream patch for remote crash of KDCs which serve multiple
-  realms simultaneously (RT#7756, CVE-2013-1418)
+  realms simultaneously (RT#7756, CVE-2013-1418/CVE-2013-6800,
+  #1026997/#1031501)
 
 * Mon Nov  4 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-28
 - drop patch to add additional access() checks to ksu - they add to breakage
