@@ -107,6 +107,7 @@ Patch135: krb5-1.11-check_transited.patch
 Patch136: krb5-1.11.3-prompter1.patch
 Patch137: krb5-1.11.3-prompter2.patch
 Patch138: krb5-master-keyring-offsets.patch
+Patch139: krb5-master-keyring-expiration.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -353,6 +354,7 @@ ln -s NOTICE LICENSE
 %patch136 -p1 -b .prompter1
 %patch137 -p1 -b .prompter2
 %patch138 -p1 -b .keyring-offsets
+%patch139 -p1 -b .keyring-expiration
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -1007,6 +1009,8 @@ exit 0
 * Mon Nov 18 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.4-2
 - pull in fix to store KDC time offsets in keyring credential caches (RT#7768,
   #1030607)
+- pull in fix to set expiration times on credentials stored in keyring
+  credential caches (RT#7769, #1031724)
 
 * Tue Nov 12 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.4-1
 - update to 1.11.4
