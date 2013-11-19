@@ -41,15 +41,15 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12
-Release: 0%{?dist}.alpha1.0
+Release: 0%{?dist}.beta1.0
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12-alpha1-signed.tar
-Source0: krb5-%{version}-alpha1.tar.gz
-Source1: krb5-%{version}-alpha1.tar.gz.asc
+# http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12-beta1-signed.tar
+Source0: krb5-%{version}-beta1.tar.gz
+Source1: krb5-%{version}-beta1.tar.gz.asc
 # Use a dummy krb5-%{version}-pdf.tar.xz the first time through, then
 #  tar cvJf $RPM_SOURCE_DIR/krb5-%%{version}-pdf.tar.xz build-pdf/*.pdf
 # after the build phase finishes.
-Source3: krb5-%{version}-alpha1-pdf.tar.xz
+Source3: krb5-%{version}-beta1-pdf.tar.xz
 Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
@@ -92,7 +92,6 @@ Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch138: krb5-master-keyring-offsets.patch
 Patch139: krb5-master-keyring-expiration.patch
-Patch140: krb5-1.12-alpha-gss-ccache-import.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -284,7 +283,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -n %{name}-%{version}-alpha1 -a 3 -a 100
+%setup -q -n %{name}-%{version}-beta1 -a 3 -a 100
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -311,7 +310,6 @@ ln -s NOTICE LICENSE
 %patch134 -p1 -b .kpasswdtest
 %patch138 -p1 -b .keyring-offsets
 %patch139 -p1 -b .keyring-expiration
-%patch140 -p1 -b .gss-ccache-import
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
@@ -960,6 +958,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Nov 19 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.12-beta1.0
+- rebase to master
+- update to beta1
+  - drop obsolete backport of fix for RT#7706
+
 * Mon Nov 18 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.4-2
 - pull in fix to store KDC time offsets in keyring credential caches (RT#7768,
   #1030607)
