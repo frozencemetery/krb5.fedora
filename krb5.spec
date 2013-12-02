@@ -49,7 +49,7 @@ Source1: krb5-%{version}-beta2.tar.gz.asc
 # Use a dummy krb5-%{version}-pdf.tar.xz the first time through, then
 #  tar cvJf $RPM_SOURCE_DIR/krb5-%%{version}-pdf.tar.xz build-pdf/*.pdf
 # after the build phase finishes.
-Source3: krb5-%{version}-beta1-pdf.tar.xz
+Source3: krb5-%{version}-beta2-pdf.tar.xz
 Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
