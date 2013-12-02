@@ -41,11 +41,11 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12
-Release: 0%{?dist}.beta1.0
+Release: 0%{?dist}.beta2.0
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12-beta1-signed.tar
-Source0: krb5-%{version}-beta1.tar.gz
-Source1: krb5-%{version}-beta1.tar.gz.asc
+# http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12-beta2-signed.tar
+Source0: krb5-%{version}-beta2.tar.gz
+Source1: krb5-%{version}-beta2.tar.gz.asc
 # Use a dummy krb5-%{version}-pdf.tar.xz the first time through, then
 #  tar cvJf $RPM_SOURCE_DIR/krb5-%%{version}-pdf.tar.xz build-pdf/*.pdf
 # after the build phase finishes.
@@ -90,8 +90,6 @@ Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
-Patch138: krb5-master-keyring-offsets.patch
-Patch139: krb5-master-keyring-expiration.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -283,7 +281,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -n %{name}-%{version}-beta1 -a 3 -a 100
+%setup -q -n %{name}-%{version}-beta2 -a 3 -a 100
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -308,8 +306,6 @@ ln -s NOTICE LICENSE
 %patch129 -p1 -b .run_user_0
 
 %patch134 -p1 -b .kpasswdtest
-%patch138 -p1 -b .keyring-offsets
-%patch139 -p1 -b .keyring-expiration
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
@@ -958,6 +954,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Dec  2 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.12-beta2.0
+- update to beta2
+  - drop obsolete backports for storing KDC time offsets and expiration times
+    in keyring credential caches
+
 * Tue Nov 19 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.12-beta1.0
 - rebase to master
 - update to beta1
