@@ -41,15 +41,15 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12
-Release: 0%{?dist}.beta2.0
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12-beta2-signed.tar
-Source0: krb5-%{version}-beta2.tar.gz
-Source1: krb5-%{version}-beta2.tar.gz.asc
+# http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12-signed.tar
+Source0: krb5-%{version}.tar.gz
+Source1: krb5-%{version}.tar.gz.asc
 # Use a dummy krb5-%{version}-pdf.tar.xz the first time through, then
 #  tar cvJf $RPM_SOURCE_DIR/krb5-%%{version}-pdf.tar.xz build-pdf/*.pdf
 # after the build phase finishes.
-Source3: krb5-%{version}-beta2-pdf.tar.xz
+Source3: krb5-%{version}-pdf.tar.xz
 Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
@@ -281,7 +281,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -n %{name}-%{version}-beta2 -a 3 -a 100
+%setup -q -a 3 -a 100
 ln -s NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -954,6 +954,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Dec 11 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.12-1
+- update to 1.12 final
+
 * Mon Dec  2 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.12-beta2.0
 - update to beta2
   - drop obsolete backports for storing KDC time offsets and expiration times
