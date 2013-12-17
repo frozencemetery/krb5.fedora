@@ -1,0 +1,699 @@
+A couple of other changes that were made for OTP support when it was merged,
+extracted and applied after the OTP backport:
+* Read the secret that we share with the RADIUS server from the file named by
+  the "secret" configuration setting.
+* Log an error if we can't parse the OTP configuration string for a given
+  principal entry.
+* Pass back the error code if attempting to read the OTP configuration string
+  for an entry produces one.
+* When setting the remote address on the socket we're using to talk to the
+  RADIUS server, wait for the non-blocking connect() to complete by waiting
+  for it to become writable instead of readable.
+--- krb5-1.11.3/src/include/k5-int.h
++++ krb5-1.11.3/src/include/k5-int.h
+@@ -2612,6 +2612,17 @@ k5memdup(const void *in, size_t len, krb
+     return ptr;
+ }
+ 
++/* Like k5memdup, but add a final null byte. */
++static inline void *
++k5memdup0(const void *in, size_t len, krb5_error_code *code)
++{
++    void *ptr = k5alloc(len + 1, code);
++
++    if (ptr != NULL)
++        memcpy(ptr, in, len);
++    return ptr;
++}
++
+ krb5_error_code KRB5_CALLCONV
+ krb5_get_credentials_for_user(krb5_context context, krb5_flags options,
+                               krb5_ccache ccache,
+--- krb5-1.11.3/src/plugins/preauth/otp/otp_state.c
++++ krb5-1.11.3/src/plugins/preauth/otp/otp_state.c
+@@ -43,6 +43,7 @@
+ #define DEFAULT_SOCKET_FMT KDC_DIR "/%s.socket"
+ #define DEFAULT_TIMEOUT 5
+ #define DEFAULT_RETRIES 3
++#define MAX_SECRET_LEN 1024
+ 
+ typedef struct token_type_st {
+     char *name;
+@@ -76,6 +77,52 @@ struct otp_state_st {
+ 
+ static void request_send(request *req);
+ 
++static krb5_error_code
++read_secret_file(const char *secret_file, char **secret)
++{
++    char buf[MAX_SECRET_LEN];
++    krb5_error_code retval;
++    char *filename;
++    FILE *file;
++    int i, j;
++
++    *secret = NULL;
++
++    retval = k5_path_join(KDC_DIR, secret_file, &filename);
++    if (retval != 0) {
++        com_err("otp", retval, "Unable to resolve secret file '%s'", filename);
++        return retval;
++    }
++
++    file = fopen(filename, "r");
++    if (file == NULL) {
++        retval = errno;
++        com_err("otp", retval, "Unable to open secret file '%s'", filename);
++        return retval;
++    }
++
++    if (fgets(buf, sizeof(buf), file) == NULL)
++        retval = EIO;
++    fclose(file);
++    if (retval != 0) {
++        com_err("otp", retval, "Unable to read secret file '%s'", filename);
++        return retval;
++    }
++
++    /* Strip whitespace. */
++    for (i = 0; buf[i] != '\0'; i++) {
++        if (!isspace(buf[i]))
++            break;
++    }
++    for (j = strlen(buf) - i; j > 0; j--) {
++        if (!isspace(buf[j - 1]))
++            break;
++    }
++
++    *secret = k5memdup0(&buf[i], j - i, &retval);
++    return retval;
++}
++
+ /* Free the contents of a single token type. */
+ static void
+ token_type_free(token_type *type)
+@@ -125,8 +172,7 @@ static krb5_error_code
+ token_type_decode(profile_t profile, const char *name, token_type *out)
+ {
+     krb5_error_code retval;
+-    char *server = NULL, *name_copy = NULL, *secret = NULL;
+-    const char *default_secret;
++    char *server = NULL, *name_copy = NULL, *secret = NULL, *pstr = NULL;
+     int strip_realm, timeout, retries;
+ 
+     memset(out, 0, sizeof(*out));
+@@ -152,16 +198,27 @@ token_type_decode(profile_t profile, con
+     }
+ 
+     /* Get the secret (optional for Unix-domain sockets). */
+-    default_secret = (*server == '/') ? "" : NULL;
+-    retval = profile_get_string(profile, "otp", name, "secret", default_secret,
+-                                &secret);
++    retval = profile_get_string(profile, "otp", name, "secret", NULL, &pstr);
+     if (retval != 0)
+         goto cleanup;
+-    if (secret == NULL) {
+-        com_err("otp", EINVAL, "Secret not specified in token type '%s'",
+-		name);
+-        retval = EINVAL;
+-        goto cleanup;
++    if (pstr != NULL) {
++        retval = read_secret_file(pstr, &secret);
++        profile_release_string(pstr);
++        if (retval != 0)
++            goto cleanup;
++    } else {
++        if (server[0] != '/') {
++            com_err("otp", EINVAL, "Secret missing (token type '%s')", name);
++            retval = EINVAL;
++            goto cleanup;
++        }
++
++        /* Use the default empty secret for UNIX domain stream sockets. */
++        secret = strdup("");
++        if (secret == NULL) {
++            retval = ENOMEM;
++            goto cleanup;
++        }
+     }
+ 
+     /* Get the timeout (profile value in seconds, result in milliseconds). */
+@@ -521,6 +578,7 @@ otp_state_verify(otp_state *state, verto
+ {
+     krb5_error_code retval;
+     request *rqst = NULL;
++    char *name;
+ 
+     if (state->radius == NULL) {
+         retval = krad_client_new(state->ctx, ctx, &state->radius);
+@@ -548,8 +606,14 @@ otp_state_verify(otp_state *state, verto
+ 
+     retval = tokens_decode(state->ctx, princ, state->types, config,
+                            &rqst->tokens);
+-    if (retval != 0)
++    if (retval != 0) {
++        if (krb5_unparse_name(state->ctx, princ, &name) == 0) {
++            com_err("otp", retval,
++                    "Can't decode otp config string for principal '%s'", name);
++            krb5_free_unparsed_name(state->ctx, name);
++        }
+         goto error;
++    }
+ 
+     request_send(rqst);
+     return;
+--- krb5-1.11.3/src/plugins/preauth/otp/main.c
++++ krb5-1.11.3/src/plugins/preauth/otp/main.c
+@@ -204,7 +204,9 @@ otp_edata(krb5_context context, krb5_kdc
+ 
+     /* Determine if otp is enabled for the user. */
+     retval = cb->get_string(context, rock, "otp", &config);
+-    if (retval != 0 || config == NULL)
++    if (retval == 0 && config == NULL)
++        retval = ENOENT;
++    if (retval != 0)
+         goto out;
+     cb->free_string(context, rock, config);
+ 
+@@ -305,7 +307,7 @@ otp_verify(krb5_context context, krb5_da
+ 
+     /* Get the principal's OTP configuration string. */
+     retval = cb->get_string(context, rock, "otp", &config);
+-    if (config == NULL)
++    if (retval == 0 && config == NULL)
+         retval = KRB5_PREAUTH_FAILED;
+     if (retval != 0) {
+         free(rs);
+--- krb5-1.11.3/src/lib/krad/remote.c
++++ krb5-1.11.3/src/lib/krad/remote.c
+@@ -36,9 +36,10 @@
+ 
+ #include <sys/un.h>
+ 
+-#define FLAGS_READ (VERTO_EV_FLAG_PERSIST | VERTO_EV_FLAG_IO_CLOSE_FD | \
+-                    VERTO_EV_FLAG_IO_ERROR | VERTO_EV_FLAG_IO_READ)
+-#define FLAGS_WRITE (FLAGS_READ | VERTO_EV_FLAG_IO_WRITE)
++#define FLAGS_NONE  VERTO_EV_FLAG_NONE
++#define FLAGS_READ  VERTO_EV_FLAG_IO_READ
++#define FLAGS_WRITE VERTO_EV_FLAG_IO_WRITE
++#define FLAGS_BASE  VERTO_EV_FLAG_PERSIST | VERTO_EV_FLAG_IO_ERROR
+ 
+ TAILQ_HEAD(request_head, request_st);
+ 
+@@ -58,6 +59,7 @@
+ struct krad_remote_st {
+     krb5_context kctx;
+     verto_ctx *vctx;
++    int fd;
+     verto_ev *io;
+     char *secret;
+     struct addrinfo *info;
+@@ -69,6 +71,9 @@
+ static void
+ on_io(verto_ctx *ctx, verto_ev *ev);
+ 
++static void
++on_timeout(verto_ctx *ctx, verto_ev *ev);
++
+ /* Iterate over the set of outstanding packets. */
+ static const krad_packet *
+ iterator(request **out)
+@@ -121,91 +126,131 @@
+     }
+ }
+ 
+-/* Handle when packets receive no response within their alloted time. */
+-static void
+-on_timeout(verto_ctx *ctx, verto_ev *ev)
++/* Start the timeout timer for the request. */
++static krb5_error_code
++request_start_timer(request *r, verto_ctx *vctx)
+ {
+-    request *req = verto_get_private(ev);
++    verto_del(r->timer);
+ 
+-    req->timer = NULL;          /* Void the timer event. */
++    r->timer = verto_add_timeout(vctx, VERTO_EV_FLAG_NONE, on_timeout,
++                                 r->timeout);
++    if (r->timer != NULL)
++        verto_set_private(r->timer, r, NULL);
+ 
+-    /* If we have more retries to perform, resend the packet. */
+-    if (req->retries-- > 1) {
+-        req->sent = 0;
+-        verto_set_flags(req->rr->io, FLAGS_WRITE);
+-        return;
+-    }
++    return (r->timer == NULL) ? ENOMEM : 0;
++}
+ 
+-    request_finish(req, ETIMEDOUT, NULL);
++/* Disconnect from the remote host. */
++static void
++remote_disconnect(krad_remote *rr)
++{
++    close(rr->fd);
++    verto_del(rr->io);
++    rr->fd = -1;
++    rr->io = NULL;
+ }
+ 
+-/* Connect to the remote host. */
++/* Add the specified flags to the remote. This automatically manages the
++ * lifecyle of the underlying event. Also connects if disconnected. */
+ static krb5_error_code
+-remote_connect(krad_remote *rr)
++remote_add_flags(krad_remote *remote, verto_ev_flag flags)
+ {
+-    int i, sock = -1;
+-    verto_ev *ev;
++    verto_ev_flag curflags = VERTO_EV_FLAG_NONE;
++    int i;
+ 
+-    sock = socket(rr->info->ai_family, rr->info->ai_socktype,
+-                  rr->info->ai_protocol);
+-    if (sock < 0)
+-        return errno;
++    flags &= (FLAGS_READ | FLAGS_WRITE);
++    if (remote == NULL || flags == FLAGS_NONE)
++        return EINVAL;
++
++    /* If there is no connection, connect. */
++    if (remote->fd < 0) {
++        verto_del(remote->io);
++        remote->io = NULL;
++
++        remote->fd = socket(remote->info->ai_family, remote->info->ai_socktype,
++                            remote->info->ai_protocol);
++        if (remote->fd < 0)
++            return errno;
+ 
+-    i = connect(sock, rr->info->ai_addr, rr->info->ai_addrlen);
+-    if (i < 0) {
+-        i = errno;
+-        close(sock);
+-        return i;
++        i = connect(remote->fd, remote->info->ai_addr,
++                    remote->info->ai_addrlen);
++        if (i < 0) {
++            i = errno;
++            remote_disconnect(remote);
++            return i;
++        }
+     }
+ 
+-    ev = verto_add_io(rr->vctx, FLAGS_READ, on_io, sock);
+-    if (ev == NULL) {
+-        close(sock);
+-        return ENOMEM;
++    if (remote->io == NULL) {
++        remote->io = verto_add_io(remote->vctx, FLAGS_BASE | flags,
++                                  on_io, remote->fd);
++        if (remote->io == NULL)
++            return ENOMEM;
++        verto_set_private(remote->io, remote, NULL);
+     }
+ 
+-    rr->io = ev;
+-    verto_set_private(rr->io, rr, NULL);
++    curflags = verto_get_flags(remote->io);
++    if ((curflags & flags) != flags)
++        verto_set_flags(remote->io, FLAGS_BASE | curflags | flags);
++
+     return 0;
+ }
+ 
+-/* Disconnect and reconnect to the remote host. */
+-static krb5_error_code
+-remote_reconnect(krad_remote *rr, int errnum)
++/* Remove the specified flags to the remote. This automatically manages the
++ * lifecyle of the underlying event. */
++static void
++remote_del_flags(krad_remote *remote, verto_ev_flag flags)
++{
++    if (remote == NULL || remote->io == NULL)
++        return;
++
++    flags = verto_get_flags(remote->io) & (FLAGS_READ | FLAGS_WRITE) & ~flags;
++    if (flags == FLAGS_NONE) {
++        verto_del(remote->io);
++        remote->io = NULL;
++        return;
++    }
++
++    verto_set_flags(remote->io, FLAGS_BASE | flags);
++}
++
++/* Close the connection and start the timers of all outstanding requests. */
++static void
++remote_shutdown(krad_remote *rr)
+ {
+     krb5_error_code retval;
+-    const krb5_data *tmp;
+     request *r;
+ 
+-    verto_del(rr->io);
+-    rr->io = NULL;
+-    retval = remote_connect(rr);
+-    if (retval != 0)
+-        return retval;
++    remote_disconnect(rr);
+ 
++    /* Start timers for all unsent packets. */
+     TAILQ_FOREACH(r, &rr->list, list) {
+-        tmp = krad_packet_encode(r->request);
+-
+-        if (r->sent == tmp->length) {
+-            /* Error out sent requests. */
+-            request_finish(r, errnum, NULL);
+-        } else {
+-            /* Reset partially sent requests. */
+-            r->sent = 0;
++        if (r->timer == NULL) {
++            retval = request_start_timer(r, rr->vctx);
++            if (retval != 0)
++                request_finish(r, retval, NULL);
+         }
+     }
+-
+-    return 0;
+ }
+ 
+-/* Close the connection and call the callbacks of all oustanding requests. */
++/* Handle when packets receive no response within their alloted time. */
+ static void
+-remote_shutdown(krad_remote *rr, int errnum)
++on_timeout(verto_ctx *ctx, verto_ev *ev)
+ {
+-    verto_del(rr->io);
+-    rr->io = NULL;
+-    while (!TAILQ_EMPTY(&rr->list))
+-        request_finish(TAILQ_FIRST(&rr->list), errnum, NULL);
++    request *req = verto_get_private(ev);
++    krb5_error_code retval = ETIMEDOUT;
++
++    req->timer = NULL;          /* Void the timer event. */
++
++    /* If we have more retries to perform, resend the packet. */
++    if (req->retries-- > 1) {
++        req->sent = 0;
++        retval = remote_add_flags(req->rr, FLAGS_WRITE);
++        if (retval == 0)
++            return;
++    }
++
++    request_finish(req, retval, NULL);
+ }
+ 
+ /* Write data to the socket. */
+@@ -213,8 +258,8 @@
+ on_io_write(krad_remote *rr)
+ {
+     const krb5_data *tmp;
++    ssize_t written;
+     request *r;
+-    int i;
+ 
+     TAILQ_FOREACH(r, &rr->list, list) {
+         tmp = krad_packet_encode(r->request);
+@@ -224,45 +269,38 @@
+             continue;
+ 
+         /* Send the packet. */
+-        i = sendto(verto_get_fd(rr->io), tmp->data + r->sent,
+-                   tmp->length - r->sent, 0, NULL, 0);
+-        if (i < 0) {
++        written = sendto(verto_get_fd(rr->io), tmp->data + r->sent,
++                         tmp->length - r->sent, 0, NULL, 0);
++        if (written < 0) {
+             /* Should we try again? */
+             if (errno == EWOULDBLOCK || errno == EAGAIN || errno == ENOBUFS ||
+                 errno == EINTR)
+                 return;
+ 
+-            /* In this case, we need to re-connect. */
+-            i = remote_reconnect(rr, errno);
+-            if (i == 0)
+-                return;
+-
+-            /* Do a full reset. */
+-            remote_shutdown(rr, i);
++            /* This error can't be worked around. */
++            remote_shutdown(rr);
+             return;
+         }
+ 
+-        /* SOCK_STREAM permits partial writes. */
+-        if (rr->info->ai_socktype == SOCK_STREAM)
+-            r->sent += i;
+-        else if (i == (int)tmp->length)
+-            r->sent = i;
+-
+         /* If the packet was completely sent, set a timeout. */
++        r->sent += written;
+         if (r->sent == tmp->length) {
+-            verto_del(r->timer);
+-            r->timer = verto_add_timeout(rr->vctx, VERTO_EV_FLAG_NONE,
+-                                         on_timeout, r->timeout);
+-            if (r->timer == NULL)
++            if (request_start_timer(r, rr->vctx) != 0) {
+                 request_finish(r, ENOMEM, NULL);
+-            else
+-                verto_set_private(r->timer, r, NULL);
++                return;
++            }
++
++            if (remote_add_flags(rr, FLAGS_READ) != 0) {
++                remote_shutdown(rr);
++                return;
++            }
+         }
+ 
+         return;
+     }
+ 
+-    verto_set_flags(rr->io, FLAGS_READ);
++    remote_del_flags(rr, FLAGS_WRITE);
++    return;
+ }
+ 
+ /* Read data from the socket. */
+@@ -280,9 +318,9 @@
+     if (rr->info->ai_socktype == SOCK_STREAM) {
+         pktlen = krad_packet_bytes_needed(&rr->buffer);
+         if (pktlen < 0) {
+-            retval = remote_reconnect(rr, EBADMSG);
+-            if (retval != 0)
+-                remote_shutdown(rr, retval);
++            /* If we received a malformed packet on a stream socket,
++             * assume the socket to be unrecoverable. */
++            remote_shutdown(rr);
+             return;
+         }
+     }
+@@ -295,26 +333,11 @@
+         if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)
+             return;
+ 
+-        if (errno == ECONNREFUSED || errno == ECONNRESET ||
+-            errno == ENOTCONN) {
+-            /*
+-             * When doing UDP against a local socket, the kernel will notify
+-             * when the daemon closes. But not against remote sockets. We want
+-             * to treat them both the same. Returning here will cause an
+-             * eventual timeout.
+-             */
+-            if (rr->info->ai_socktype != SOCK_STREAM)
+-                return;
+-        }
+-
+-        /* In this case, we need to re-connect. */
+-        i = remote_reconnect(rr, errno);
+-        if (i == 0)
+-           return;
+-
+-        /* Do a full reset. */
+-        remote_shutdown(rr, i);
++        /* The socket is unrecoverable. */
++        remote_shutdown(rr);
+         return;
++    } else if (i == 0) {
++        remote_del_flags(rr, FLAGS_READ);
+     }
+ 
+     /* If we have a partial read or just the header, try again. */
+@@ -374,6 +397,7 @@
+     tmp->vctx = vctx;
+     tmp->buffer = make_data(tmp->buffer_, 0);
+     TAILQ_INIT(&tmp->list);
++    tmp->fd = -1;
+ 
+     tmp->secret = strdup(secret);
+     if (tmp->secret == NULL)
+@@ -389,10 +413,6 @@
+     tmp->info->ai_next = NULL;
+     tmp->info->ai_canonname = NULL;
+ 
+-    retval = remote_connect(tmp);
+-    if (retval != 0)
+-        goto error;
+-
+     *rr = tmp;
+     return 0;
+ 
+@@ -414,7 +434,7 @@
+     if (rr->info != NULL)
+         free(rr->info->ai_addr);
+     free(rr->info);
+-    verto_del(rr->io);
++    remote_disconnect(rr);
+     free(rr);
+ }
+ 
+@@ -440,21 +460,14 @@
+         }
+     }
+ 
+-    if (rr->io == NULL) {
+-        retval = remote_connect(rr);
+-        if (retval != 0)
+-            goto error;
+-    }
+-
+-    if (rr->info->ai_socktype == SOCK_STREAM)
+-        retries = 0;
+     timeout = timeout / (retries + 1);
+     retval = request_new(rr, tmp, timeout, retries, cb, data, &r);
+     if (retval != 0)
+         goto error;
+ 
+-    if ((verto_get_flags(rr->io) & VERTO_EV_FLAG_IO_WRITE) == 0)
+-        verto_set_flags(rr->io, FLAGS_WRITE);
++    retval = remote_add_flags(rr, FLAGS_WRITE);
++    if (retval != 0)
++        goto error;
+ 
+     TAILQ_INSERT_TAIL(&rr->list, r, list);
+     if (pkt != NULL)
+--- krb5-1.11.3/src/lib/krad/t_attr.c
++++ krb5-1.11.3/src/lib/krad/t_attr.c
+@@ -29,7 +29,7 @@
+ 
+ #include "t_test.h"
+ 
+-const static char encoded[] = {
++const static unsigned char encoded[] = {
+     0xba, 0xfc, 0xed, 0x50, 0xe1, 0xeb, 0xa6, 0xc3,
+     0xc1, 0x75, 0x20, 0xe9, 0x10, 0xce, 0xc2, 0xcb
+ };
+--- krb5-1.11.3/src/lib/krad/t_attrset.c
++++ krb5-1.11.3/src/lib/krad/t_attrset.c
+@@ -34,7 +34,7 @@
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+ };
+ 
+-const static char encpass[] = {
++const static unsigned char encpass[] = {
+     0x58, 0x8d, 0xff, 0xda, 0x37, 0xf9, 0xe4, 0xca,
+     0x19, 0xae, 0x49, 0xb7, 0x16, 0x6d, 0x58, 0x27
+ };
+--- krb5-1.11.3/src/lib/krad/t_daemon.h
++++ krb5-1.11.3/src/lib/krad/t_daemon.h
+@@ -51,8 +51,8 @@
+ static krb5_boolean
+ daemon_start(int argc, const char **argv)
+ {
+-    sigset_t set;
+-    int sig;
++    int fds[2];
++    char buf[1];
+ 
+     if (argc != 3 || argv == NULL)
+         return FALSE;
+@@ -60,30 +60,23 @@
+     if (daemon_pid != 0)
+         return TRUE;
+ 
+-    if (sigemptyset(&set) != 0)
+-        return FALSE;
+-
+-    if (sigaddset(&set, SIGUSR1) != 0)
+-        return FALSE;
+-
+-    if (sigaddset(&set, SIGCHLD) != 0)
+-        return FALSE;
+-
+-    if (sigprocmask(SIG_BLOCK, &set, NULL) != 0)
++    if (pipe(fds) != 0)
+         return FALSE;
+ 
++    /* Start the child process with the write end of the pipe as stdout. */
+     daemon_pid = fork();
+     if (daemon_pid == 0) {
+-        close(STDOUT_FILENO);
+-        open("/dev/null", O_WRONLY);
++        dup2(fds[1], STDOUT_FILENO);
++        close(fds[0]);
++        close(fds[1]);
+         exit(execlp(argv[1], argv[1], argv[2], NULL));
+     }
++    close(fds[1]);
+ 
+-    if (sigwait(&set, &sig) != 0 || sig == SIGCHLD) {
+-        daemon_stop();
+-        daemon_pid = 0;
++    /* The child will write a sentinel character when it is listening. */
++    if (read(fds[0], buf, 1) != 1 || *buf != '~')
+         return FALSE;
+-    }
++    close(fds[0]);
+ 
+     atexit(daemon_stop);
+     return TRUE;
+--- krb5-1.11.3/src/lib/krad/t_daemon.py
++++ krb5-1.11.3/src/lib/krad/t_daemon.py
+@@ -33,7 +33,7 @@
+ try:
+     from pyrad import dictionary, packet, server
+ except ImportError:
+-    sys.stdout.write("pyrad not found!\n")
++    sys.stderr.write("pyrad not found!\n")
+     sys.exit(0)
+ 
+ # We could use a dictionary file, but since we need
+@@ -49,28 +49,25 @@
+         server.Server._HandleAuthPacket(self, pkt)
+ 
+         passwd = []
+-  
+-        print "Request: "
++
+         for key in pkt.keys():
+             if key == "User-Password":
+                 passwd = map(pkt.PwDecrypt, pkt[key])
+-                print "\t%s\t%s" % (key, passwd)
+-            else:
+-                print "\t%s\t%s" % (key, pkt[key])
+-  
++
+         reply = self.CreateReplyPacket(pkt)
+         if passwd == ['accept']:
+             reply.code = packet.AccessAccept
+-            print "Response: %s" % "Access-Accept"
+         else:
+             reply.code = packet.AccessReject
+-            print "Response: %s" % "Access-Reject"
+-        print
+         self.SendReplyPacket(pkt.fd, reply)
+ 
+ srv = TestServer(addresses=["localhost"],
+                  hosts={"127.0.0.1":
+                         server.RemoteHost("127.0.0.1", "foo", "localhost")},
+                  dict=dictionary.Dictionary(StringIO.StringIO(DICTIONARY)))
+-os.kill(os.getppid(), signal.SIGUSR1)
++
++# Write a sentinel character to let the parent process know we're listening.
++sys.stdout.write("~")
++sys.stdout.flush()
++
+ srv.Run()
