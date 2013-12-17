@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 33%{?dist}
+Release: 34%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -117,6 +117,7 @@ Patch143: krb5-master-keyring-expiration.patch
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
 Patch202: krb5-1.11.2-otp.patch
+Patch203: krb5-1.11.3-otp2.patch
 
 # Patches for kernel-persistent-keyring support (backport)
 Patch301: persistent_keyring.patch
@@ -368,6 +369,7 @@ ln -s NOTICE LICENSE
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
+%patch203 -p1 -b .otp2
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
@@ -1016,6 +1018,12 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Dec 17 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-34
+- backport additional changes to libkrad to make it function more like
+  the version in upstream 1.12, and a few things in the OTP plugin as well
+  (most visibly, that the secret that's shared with the RADIUS server is read
+  from a file rather than used directly) (#1040056)
+
 * Mon Nov 18 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-33
 - backport fix to not spin on a short read when reading the length of a
   response over TCP (RT#7508, #1029674)

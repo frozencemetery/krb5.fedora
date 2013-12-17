@@ -1,5 +1,4 @@
-Pared down from the git commits, with a local copy of k5memdup0() added in
-to cc_keyring, and a wrapper 'run' in to k5test.py.
+Pared down from the git commits, with a wrapper 'run' added to k5test.py.
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
 index 2c17e46..7be77c2 100644
@@ -238,7 +237,7 @@ index fd1bcec..795ccd6 100644
  } krb5_krcc_bc;
  
  /* Global mutex */
-@@ -258,6 +311,29 @@ static krb5_error_code KRB5_CALLCONV krb5_krcc_lock
+@@ -258,6 +311,18 @@ static krb5_error_code KRB5_CALLCONV krb5_krcc_lock
  static krb5_error_code KRB5_CALLCONV krb5_krcc_unlock
  (krb5_context context, krb5_ccache id);
  
@@ -253,17 +252,6 @@ index fd1bcec..795ccd6 100644
 +
 +static krb5_error_code KRB5_CALLCONV krb5_krcc_switch_to
 +(krb5_context context, krb5_ccache cache);
-+
-+/* Like k5memdup, but add a final null byte. */
-+static inline void *
-+k5memdup0(const void *in, size_t len, krb5_error_code *code)
-+{
-+    void *ptr = k5alloc(len + 1, code);
-+
-+    if (ptr != NULL && len > 0)
-+        memcpy(ptr, in, len);
-+    return ptr;
-+}
 +
  /*
   * Internal utility functions
