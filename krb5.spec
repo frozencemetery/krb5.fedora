@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 35%{?dist}
+Release: 36%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -117,6 +117,7 @@ Patch144: krb5-master-no-malloc0.patch
 Patch145: krb5-master-ignore-empty-unnecessary-final-token.patch
 Patch146: krb5-master-gss_oid_leak.patch
 Patch147: krb5-master-keytab_close.patch
+Patch148: krb5-1.11-preauthcore.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -374,6 +375,7 @@ ln -s NOTICE LICENSE
 %patch145 -p1 -b .ignore-empty-unnecessary-final-token
 %patch146 -p1 -b .gss_oid_leak
 %patch147 -p1 -b .keytab_close
+%patch148 -p0 -b .preauthcore
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -1026,6 +1028,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Dec 18 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-36
+- backport fix to avoid double-freeing in the client when we're configured
+  to use a clpreauth module that isn't actually a clpreauth module (#1035203)
+
 * Wed Dec 18 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-35
 - pull in fix from master to return a NULL pointer rather than allocating
   zero bytes of memory if we read a zero-length input token (RT#7794, part of

@@ -1,0 +1,12 @@
+Backport a small fix from 1.12 (#1035203).
+
+--- src/lib/krb5/krb/preauth2.c
++++ src/lib/krb5/krb/preauth2.c
+@@ -1002,6 +1002,7 @@ krb5_do_preauth(krb5_context context, kr
+     krb5_init_preauth_context(context);
+     if (context->preauth_context == NULL) {
+         *out_padata = out_pa_list;
++        out_pa_list = NULL;
+         goto error;
+     }
+ 
