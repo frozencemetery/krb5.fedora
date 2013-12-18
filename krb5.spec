@@ -32,7 +32,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 14%{?dist}
+Release: 15%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -103,6 +103,10 @@ Patch138: krb5-1.11.3-gss-ccache-import.patch
 Patch139: krb5-CVE-2013-1418.patch
 Patch140: krb5-CVE-2013-1417.patch
 Patch141: krb5-1.11.3-client-loop.patch
+Patch142: krb5-master-no-malloc0.patch
+Patch143: krb5-master-ignore-empty-unnecessary-final-token.patch
+Patch144: krb5-master-gss_oid_leak.patch
+Patch145: krb5-master-keytab_close.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -340,6 +344,10 @@ ln -s NOTICE LICENSE
 %patch139 -p1 -b .CVE-2013-1418
 %patch140 -p1 -b .CVE-2013-1417
 %patch141 -p1 -b .client-loop
+%patch142 -p1 -b .no-malloc0
+%patch143 -p1 -b .ignore-empty-unnecessary-final-token
+%patch144 -p1 -b .gss_oid_leak
+%patch145 -p1 -b .keytab_close
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -934,6 +942,18 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Dec 18 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-15
+- pull in fix from master to return a NULL pointer rather than allocating
+  zero bytes of memory if we read a zero-length input token (RT#7794, part
+  of #1043962)
+- pull in fix from master to ignore an empty token from an acceptor if
+  we've already finished authenticating (RT#7797, part of #1043962)
+- pull in fix from master to avoid a memory leak when a mechanism's
+  init_sec_context function fails (RT#7803, part of #1043962)
+- pull in fix from master to avoid a memory leak in a couple of error
+  cases which could occur while obtaining acceptor credentials (RT#7805,
+  part of #1043962)
+
 * Tue Dec 17 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-14
 - backport additional changes to libkrad to make it function more like
   the version in upstream 1.12, and a few things in the OTP plugin as well
