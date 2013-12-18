@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 34%{?dist}
+Release: 35%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -113,6 +113,10 @@ Patch140: krb5-CVE-2013-1417.patch
 Patch141: krb5-1.11.3-client-loop.patch
 Patch142: krb5-master-keyring-offsets.patch
 Patch143: krb5-master-keyring-expiration.patch
+Patch144: krb5-master-no-malloc0.patch
+Patch145: krb5-master-ignore-empty-unnecessary-final-token.patch
+Patch146: krb5-master-gss_oid_leak.patch
+Patch147: krb5-master-keytab_close.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -366,6 +370,10 @@ ln -s NOTICE LICENSE
 %patch141 -p1 -b .client-loop
 %patch142 -p1 -b .keyring-offsets
 %patch143 -p1 -b .keyring-expiration
+%patch144 -p1 -b .no-malloc0
+%patch145 -p1 -b .ignore-empty-unnecessary-final-token
+%patch146 -p1 -b .gss_oid_leak
+%patch147 -p1 -b .keytab_close
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -1018,6 +1026,18 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Dec 18 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-35
+- pull in fix from master to return a NULL pointer rather than allocating
+  zero bytes of memory if we read a zero-length input token (RT#7794, part of
+  #1043962)
+- pull in fix from master to ignore an empty token from an acceptor if
+  we've already finished authenticating (RT#7797, part of #1043962)
+- pull in fix from master to avoid a memory leak when a mechanism's
+  init_sec_context function fails (RT#7803, part of #1043962)
+- pull in fix from master to avoid a memory leak in a couple of error
+  cases which could occur while obtaining acceptor credentials (RT#7805, part
+  of #1043962)
+
 * Tue Dec 17 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-34
 - backport additional changes to libkrad to make it function more like
   the version in upstream 1.12, and a few things in the OTP plugin as well
