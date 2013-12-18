@@ -92,6 +92,7 @@ Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch135: krb5-master-no-malloc0.patch
 Patch136: krb5-master-ignore-empty-unnecessary-final-token.patch
+Patch137: krb5-master-gss_oid_leak.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -304,6 +305,7 @@ ln -s NOTICE LICENSE
 %patch105 -p1 -b .kvno
 %patch135 -p1 -b .no-malloc0
 %patch136 -p1 -b .ignore-empty-unnecessary-final-token
+%patch137 -p1 -b .gss_oid_leak
 
 # Apply when the hard-wired or configured default location is
 # DIR:/run/user/%%{uid}/krb5cc.
@@ -964,6 +966,8 @@ exit 0
   #1043962)
 - pull in fix from master to ignore an empty token from an acceptor if
   we've already finished authenticating (RT#7797, part of #1043962)
+- pull in fix from master to avoid a memory leak when a mechanism's
+  init_sec_context function fails (RT#7803, part of #1043962)
 
 * Wed Dec 11 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.12-1
 - update to 1.12 final
