@@ -1,5 +1,5 @@
-Adjusted for 1.12, which still have vtbl and locate_fptrs fields, and drop the
-hunk that touched .gitignore.
+Adjusted for 1.12, which still had vtbl, locate_fptrs, and (vestigial)
+profile_in_memory fields, and drop the hunk that touched .gitignore.
 
 commit c452644d91d57d8b05ef396a029e34d0c7a48920
 Author: Greg Hudson <ghudson@mit.edu>
@@ -22,7 +22,7 @@ diff --git a/src/lib/krb5/krb/copy_ctx.c b/src/lib/krb5/krb/copy_ctx.c
 index 0bc92f8..4237023 100644
 --- a/src/lib/krb5/krb/copy_ctx.c
 +++ b/src/lib/krb5/krb/copy_ctx.c
-@@ -77,13 +77,22 @@ krb5_copy_context(krb5_context ctx, krb5_context *nctx_out)
+@@ -77,13 +77,26 @@ krb5_copy_context(krb5_context ctx, krb5_context *nctx_out)
      nctx->ser_ctx_count = 0;
      nctx->ser_ctx = NULL;
      nctx->prompt_types = NULL;
@@ -36,6 +36,10 @@ index 0bc92f8..4237023 100644
 +    nctx->plugin_base_dir = NULL;
      nctx->os_context.default_ccname = NULL;
  
++#ifdef KRB5_DNS_LOOKUP
++    nctx->profile_in_memory = 0;
++#endif /* KRB5_DNS_LOOKUP */
++
      memset(&nctx->libkrb5_plugins, 0, sizeof(nctx->libkrb5_plugins));
      nctx->vtbl = NULL;
      nctx->locate_fptrs = NULL;

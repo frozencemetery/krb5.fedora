@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -964,6 +964,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Dec 18 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.12-4
+- revise previous patch to initialize one more element
+
 * Wed Dec 18 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.12-3
 - backport fixes to krb5_copy_context (RT#7807, #1044735/#1044739)
 
