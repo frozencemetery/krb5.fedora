@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -94,6 +94,7 @@ Patch135: krb5-master-no-malloc0.patch
 Patch136: krb5-master-ignore-empty-unnecessary-final-token.patch
 Patch137: krb5-master-gss_oid_leak.patch
 Patch138: krb5-master-keytab_close.patch
+Patch139: krb5-1.12-copy_context.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -308,6 +309,7 @@ ln -s NOTICE LICENSE
 %patch136 -p1 -b .ignore-empty-unnecessary-final-token
 %patch137 -p1 -b .gss_oid_leak
 %patch138 -p1 -b .keytab_close
+%patch139 -p1 -b .copy_context
 
 # Apply when the hard-wired or configured default location is
 # DIR:/run/user/%%{uid}/krb5cc.
@@ -962,6 +964,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Dec 18 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.12-3
+- backport fixes to krb5_copy_context (RT#7807, #1044735/#1044739)
+
 * Wed Dec 18 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.12-2
 - pull in fix from master to return a NULL pointer rather than allocating
   zero bytes of memory if we read a zero-length input token (RT#7794, part of
