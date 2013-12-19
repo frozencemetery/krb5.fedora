@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 36%{?dist}
+Release: 37%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -118,6 +118,7 @@ Patch145: krb5-master-ignore-empty-unnecessary-final-token.patch
 Patch146: krb5-master-gss_oid_leak.patch
 Patch147: krb5-master-keytab_close.patch
 Patch148: krb5-1.11-preauthcore.patch
+Patch149: krb5-1.11.3-copy_context.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -376,6 +377,7 @@ ln -s NOTICE LICENSE
 %patch146 -p1 -b .gss_oid_leak
 %patch147 -p1 -b .keytab_close
 %patch148 -p0 -b .preauthcore
+%patch149 -p1 -b .copy_context
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -1028,6 +1030,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Dec 18 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-37
+- backport fixes to krb5_copy_context (RT#7807, #1044735/#1044739)
+
 * Wed Dec 18 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-36
 - backport fix to avoid double-freeing in the client when we're configured
   to use a clpreauth module that isn't actually a clpreauth module (#1035203)
