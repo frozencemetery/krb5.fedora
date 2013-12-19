@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 37%{?dist}
+Release: 38%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -119,6 +119,7 @@ Patch146: krb5-master-gss_oid_leak.patch
 Patch147: krb5-master-keytab_close.patch
 Patch148: krb5-1.11-preauthcore.patch
 Patch149: krb5-1.11.3-copy_context.patch
+Patch150: krb5-1.11.3-spnego_error_messages.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -381,6 +382,7 @@ ln -s NOTICE LICENSE
 %patch147 -p1 -b .keytab_close
 %patch148 -p0 -b .preauthcore
 %patch149 -p1 -b .copy_context
+%patch150 -p1 -b .spnego_error_messages
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -1033,6 +1035,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Dec 19 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-38
+- pull in fix from master to make reporting of errors encountered by the SPNEGO
+  mechanism work better (RT#7045, part of #1043962)
+
 * Thu Dec 19 2013 Nalin Dahyabhai <nalin@redhat.com>
 - update a test wrapper to properly handle things that the new libkrad does,
   and add python-pyrad as a build requirement so that we can run its tests
