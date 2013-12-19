@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12
-Release: 5%{?dist}
+Release: 6%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -147,6 +147,11 @@ BuildRequires: iproute
 %endif
 %if 0%{?fedora} >= 9
 BuildRequires: python-pyrad
+%endif
+%if 0%{?fedora} >= 8
+%ifarch %{ix86} x86_64
+BuildRequires: yasm
+%endif
 %endif
 
 %if %{WITH_LDAP}
@@ -969,6 +974,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Dec 19 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.12-6
+- add yasm as a build requirement for AES-NI support, on arches that have
+  yasm and AES-NI
+
 * Thu Dec 19 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.12-5
 - pull in fix from master to make reporting of errors encountered by
   the SPNEGO mechanism work better (RT#7045, part of #1043962)
