@@ -163,6 +163,9 @@ BuildRequires: net-tools, rpcbind
 BuildRequires: hostname
 BuildRequires: iproute
 %endif
+%if 0%{?fedora} >= 9
+BuildRequires: python-pyrad
+%endif
 
 %if %{WITH_LDAP}
 BuildRequires: openldap-devel
@@ -946,6 +949,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Dec 19 2013 Nalin Dahyabhai <nalin@redhat.com>
+- update a test wrapper to properly handle things that the new libkrad does,
+  and add python-pyrad as a build requirement so that we can run its tests
+
 * Wed Dec 18 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-17
 - backport fixes to krb5_copy_context (RT#7807, #1044735/#1044739)
 

@@ -87,21 +87,25 @@ sendto(int sockfd, const void *buf, size_t len, int flags,
 		return next_sendto(sockfd, buf, len, flags, dest_addr, addrlen);
 	}
 
-	switch (dest_addr->sa_family) {
-	case AF_INET:
-		port = ntohs(((struct sockaddr_in *)dest_addr)->sin_port);
-		if (port_is_okay(port) != 0) {
-			return -1;
+	if (dest_addr != NULL) {
+		switch (dest_addr->sa_family) {
+		case AF_INET:
+			port = ((struct sockaddr_in *)dest_addr)->sin_port;
+			port = ntohs(port);
+			if (port_is_okay(port) != 0) {
+				return -1;
+			}
+			break;
+		case AF_INET6:
+			port = ((struct sockaddr_in6 *)dest_addr)->sin6_port;
+			port = ntohs(port);
+			if (port_is_okay(port) != 0) {
+				return -1;
+			}
+			break;
+		default:
+			break;
 		}
-		break;
-	case AF_INET6:
-		port = ntohs(((struct sockaddr_in6 *)dest_addr)->sin6_port);
-		if (port_is_okay(port) != 0) {
-			return -1;
-		}
-		break;
-	default:
-		break;
 	}
 	return next_sendto(sockfd, buf, len, flags, dest_addr, addrlen);
 }
