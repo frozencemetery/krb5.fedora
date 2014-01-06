@@ -1,0 +1,38 @@
+--- krb5-1.12/src/lib/crypto/builtin/aes/iaesx86.s
++++ krb5-1.12/src/lib/crypto/builtin/aes/iaesx86.s
+@@ -256,6 +256,7 @@ DD 0
+ section .text
+ 
+ 
++extern _GLOBAL_OFFSET_TABLE_
+ 
+ align 16
+ key_expansion256:
+@@ -318,7 +319,12 @@ _iEncExpandKey128:
+ 
+         movdqu [edx], xmm1
+ 
+-        movdqa xmm5, [shuffle_mask]
++        call .get_GOT
++.get_GOT:
++        pop ebx
++        add ebx,_GLOBAL_OFFSET_TABLE_+$$-.get_GOT wrt ..gotpc
++
++        movdqa xmm5, [ebx+shuffle_mask wrt ..gotoff]
+ 
+         add edx,16
+ 
+@@ -421,7 +430,12 @@ _iEncExpandKey256:
+ 
+     add edx,32
+ 
+-    movdqa xmm5, [shuffle_mask]  ; this mask is used by key_expansion
++    call .get_GOT
++.get_GOT:
++    pop ebx
++    add ebx,_GLOBAL_OFFSET_TABLE_+$$-.get_GOT wrt ..gotpc
++
++    movdqa xmm5, [ebx+shuffle_mask wrt ..gotoff] ; this mask is used by key_expansion
+ 
+     aeskeygenassist xmm2, xmm3, 0x1     ;
+     call key_expansion256

@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12
-Release: 8%{?dist}
+Release: 9%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -97,6 +97,7 @@ Patch138: krb5-master-keytab_close.patch
 Patch139: krb5-1.12-copy_context.patch
 Patch140: krb5-master-spnego_error_messages.patch
 Patch141: krb5-1.12-enable-NX.patch
+Patch142: krb5-1.12-pic-aes-ni.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -322,6 +323,7 @@ ln -s NOTICE LICENSE
 %patch139 -p1 -b .copy_context
 %patch140 -p1 -b .spnego_error_messages
 %patch141 -p1 -b .enable-NX
+%patch142 -p1 -b .pic-aes-ni
 
 # Apply when the hard-wired or configured default location is
 # DIR:/run/user/%%{uid}/krb5cc.
@@ -976,9 +978,12 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Mon Jan  6 2014 Nalin Dahyabhai <nalin@redhat.com>
+* Mon Jan  6 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12-9
 - grab a more-commented version of the most recent patch from upstream
   master
+- make a guess at making the 32-bit AES-NI implementation sufficiently
+  position-independent to not require execmod permissions for libk5crypto
+  (more of #1045699)
 
 * Thu Jan  2 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12-8
 - add patch from Dhiru Kholia for the AES-NI implementations to allow
