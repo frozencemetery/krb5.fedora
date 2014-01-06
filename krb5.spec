@@ -976,6 +976,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Jan  6 2014 Nalin Dahyabhai <nalin@redhat.com>
+- grab a more-commented version of the most recent patch from upstream
+  master
+
 * Thu Jan  2 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12-8
 - add patch from Dhiru Kholia for the AES-NI implementations to allow
   libk5crypto to be properly marked as not needing an executable stack
