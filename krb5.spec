@@ -978,6 +978,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Jan  9 2014 Nalin Dahyabhai <nalin@redhat.com>
+- amend the PIC patch for iaesx86.s to also save/restore ebx in the
+  functions where we modify it
+
 * Mon Jan  6 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12-9
 - grab a more-commented version of the most recent patch from upstream
   master
