@@ -978,6 +978,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Jan  9 2014 Nalin Dahyabhai <nalin@redhat.com>
+- pass -Wl,--warn-shared-textrel to the compiler when we're creating shared
+  libraries
+
 * Thu Jan  9 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12-10
 - amend the PIC patch for iaesx86.s to also save/restore ebx in the
   functions where we modify it
