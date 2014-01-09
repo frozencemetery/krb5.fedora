@@ -984,7 +984,7 @@ exit 0
 
 * Thu Jan  9 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12-10
 - amend the PIC patch for iaesx86.s to also save/restore ebx in the
-  functions where we modify it
+  functions where we modify it, because the ELF spec says we need to
 
 * Mon Jan  6 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12-9
 - grab a more-commented version of the most recent patch from upstream
