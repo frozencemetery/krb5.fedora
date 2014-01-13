@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12
-Release: 10%{?dist}
+Release: 11%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -978,6 +978,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Jan 13 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12-11
+- update the PIC patch for iaesx86.s to not use ELF relocations to the version
+  that landed upstream (RT#7815, #1045699)
+
 * Thu Jan  9 2014 Nalin Dahyabhai <nalin@redhat.com>
 - pass -Wl,--warn-shared-textrel to the compiler when we're creating shared
   libraries
