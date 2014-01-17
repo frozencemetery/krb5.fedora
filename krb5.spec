@@ -90,7 +90,6 @@ Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
-Patch136: krb5-master-ignore-empty-unnecessary-final-token.patch
 Patch137: krb5-master-gss_oid_leak.patch
 Patch138: krb5-master-keytab_close.patch
 Patch139: krb5-1.12-copy_context.patch
@@ -315,7 +314,6 @@ ln -s NOTICE LICENSE
 %patch71 -p1 -b .dirsrv-accountlock %{?_rawbuild}
 %patch86 -p0 -b .debuginfo
 %patch105 -p1 -b .kvno
-%patch136 -p1 -b .ignore-empty-unnecessary-final-token
 %patch137 -p1 -b .gss_oid_leak
 %patch138 -p1 -b .keytab_close
 %patch139 -p1 -b .copy_context
@@ -979,6 +977,7 @@ exit 0
 * Fri Jan 17 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-1
 - update to 1.12.1
   - drop patch for RT#7794, included now
+  - drop patch for RT#7797, included now
 
 * Mon Jan 13 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12-11
 - update the PIC patch for iaesx86.s to not use ELF relocations to the version
