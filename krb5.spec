@@ -90,6 +90,7 @@ Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
+Patch135: krb5-master-keyring-kdcsync.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -314,6 +315,8 @@ ln -s NOTICE LICENSE
 %patch129 -p1 -b .run_user_0
 
 %patch134 -p1 -b .kpasswdtest
+
+%patch135 -p1 -b .keyring-kdcsync
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
@@ -971,6 +974,9 @@ exit 0
   - drop patch for RT#7807, included now
   - drop patch for RT#7045, included now
   - drop patches for RT#7813 and RT#7815, included now
+  - add patch to always retrieve the KDC time offsets from keyring caches,
+    so that we don't mistakenly interpret creds as expired before their
+    time when our clock is ahead of the KDC's (RT#7820, #1030607)
 
 * Mon Jan 13 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12-11
 - update the PIC patch for iaesx86.s to not use ELF relocations to the version
