@@ -90,8 +90,6 @@ Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
-Patch141: krb5-1.12-enable-NX.patch
-Patch142: krb5-1.12-pic-aes-ni.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -310,8 +308,6 @@ ln -s NOTICE LICENSE
 %patch71 -p1 -b .dirsrv-accountlock %{?_rawbuild}
 %patch86 -p0 -b .debuginfo
 %patch105 -p1 -b .kvno
-%patch141 -p1 -b .enable-NX
-%patch142 -p1 -b .pic-aes-ni
 
 # Apply when the hard-wired or configured default location is
 # DIR:/run/user/%%{uid}/krb5cc.
@@ -974,6 +970,7 @@ exit 0
   - drop patch for RT#7805, included now
   - drop patch for RT#7807, included now
   - drop patch for RT#7045, included now
+  - drop patches for RT#7813 and RT#7815, included now
 
 * Mon Jan 13 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12-11
 - update the PIC patch for iaesx86.s to not use ELF relocations to the version
