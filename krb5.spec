@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -91,6 +91,12 @@ Patch105: krb5-kvno-230379.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch135: krb5-master-keyring-kdcsync.patch
+Patch136: krb5-master-rcache-internal-const.patch
+Patch137: krb5-master-rcache-acquirecred-cleanup.patch
+Patch138: krb5-master-rcache-acquirecred-leak.patch
+Patch139: krb5-master-rcache-acquirecred-source.patch
+Patch140: krb5-master-empty-credstore.patch
+Patch141: krb5-master-rcache-acquirecred-test.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -317,6 +323,13 @@ ln -s NOTICE LICENSE
 %patch134 -p1 -b .kpasswdtest
 
 %patch135 -p1 -b .keyring-kdcsync
+
+%patch136 -p1 -b .rcache-internal-const
+%patch137 -p1 -b .rcache-acquirecred-cleanup
+%patch138 -p1 -b .rcache-acquirecred-leak
+%patch139 -p1 -b .rcache-acquirecred-source
+%patch140 -p1 -b .empty-credstore
+%patch141 -p1 -b .rcache-acquirecred-test
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
@@ -965,6 +978,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Jan 21 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-2
+- pull in multiple changes to allow replay caches to be added to a GSS
+  credential store as "rcache"-type credentials (RT#7818/#7819/#7836,
+  #1056078/#1056080)
+
 * Fri Jan 17 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-1
 - update to 1.12.1
   - drop patch for RT#7794, included now
