@@ -129,6 +129,8 @@ Patch155: krb5-master-empty-credstore.patch
 Patch156: krb5-1.11.3-1.12.1-credstoretest.patch
 Patch157: krb5-1.11-rcache-acquirecred-test.patch
 
+Patch158: krb5-master-keyring-kdcsync.patch
+
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
 Patch202: krb5-1.11.2-otp.patch
@@ -399,6 +401,8 @@ ln -s NOTICE LICENSE
 %patch155 -p1 -b .empty-credstore
 %patch156 -p1 -b .credstoretest
 %patch157 -p1 -b .rcache-acquirecred-test
+
+%patch158 -p1 -b .keyring-kdcsync
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -1051,6 +1055,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Jan 21 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-39
+- pull in upstream patch to fix the GSSAPI library's checks for expired
+  client creds in gss_init_sec_context() so that they work with keyring
+  caches (RT#7820, #1030607)
+
 * Tue Jan 21 2014 Nalin Dahyabhai <nalin@redhat.com>
 - pull in and backport multiple changes to allow replay caches to be added to
   a GSS credential store as "rcache"-type credentials (RT#7818/#7819/#7836,
