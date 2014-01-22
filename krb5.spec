@@ -32,7 +32,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 18%{?dist}
+Release: 19%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -110,6 +110,14 @@ Patch145: krb5-master-keytab_close.patch
 Patch146: krb5-1.11-preauthcore.patch
 Patch147: krb5-1.11.3-copy_context.patch
 Patch148: krb5-1.11.3-spnego_error_messages.patch
+
+Patch151: krb5-master-rcache-internal-const.patch
+Patch152: krb5-master-rcache-acquirecred-cleanup.patch
+Patch153: krb5-master-rcache-acquirecred-leak.patch
+Patch154: krb5-1.11-rcache-acquirecred-source.patch
+Patch155: krb5-master-empty-credstore.patch
+Patch156: krb5-1.11.3-1.12.1-credstoretest.patch
+Patch157: krb5-1.11-rcache-acquirecred-test.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -357,6 +365,14 @@ ln -s NOTICE LICENSE
 %patch146 -p0 -b .preauthcore
 %patch147 -p1 -b .copy_context
 %patch148 -p1 -b .spnego_error_messages
+
+%patch151 -p1 -b .rcache-internal-const
+%patch152 -p1 -b .rcache-acquirecred-cleanup
+%patch153 -p1 -b .rcache-acquirecred-leak
+%patch154 -p1 -b .rcache-acquirecred-source
+%patch155 -p1 -b .empty-credstore
+%patch156 -p1 -b .credstoretest
+%patch157 -p1 -b .rcache-acquirecred-test
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -951,6 +967,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Jan 21 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-19
+- pull in and backport multiple changes to allow replay caches to be added to
+  a GSS credential store as "rcache"-type credentials (RT#7818/#7819/#7836,
+  #1056078/#1056080)
+
 * Thu Dec 19 2013 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-18
 - pull in fix from master to make reporting of errors encountered by
   the SPNEGO mechanism work better (RT#7045, part of #1043962)
