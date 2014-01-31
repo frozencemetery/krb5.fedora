@@ -9,7 +9,8 @@ section of /etc/krb5.conf.
 When enabled, ksu gains a dependency on libpam.
 
 Originally RT#5939, though it's changed since then to perform the account
-and session management before dropping privileges.
+and session management before dropping privileges, and to apply on top of
+changes we're proposing for how it handles cache collections.
 
 diff -up krb5/src/aclocal.m4.pam krb5/src/aclocal.m4
 --- krb5/src/aclocal.m4.pam	2009-11-22 12:00:45.000000000 -0500
@@ -95,7 +96,7 @@ diff -up krb5/src/clients/ksu/main.c.pam krb5/src/clients/ksu/main.c
 +#include "autoconf.h"
  #include "ksu.h"
  #include "adm_proto.h"
- #include <sys/types.h>
+ #include "../../lib/krb5/os/os-proto.h"
 @@ -33,6 +34,10 @@
  #include <signal.h>
  #include <grp.h>
@@ -125,13 +126,13 @@ diff -up krb5/src/clients/ksu/main.c.pam krb5/src/clients/ksu/main.c
 +                                   NULL, source_user,
 +                                   ttyname(STDERR_FILENO)) != 0) {
 +                fprintf(stderr, "Access denied for %s.\n", target_user);
-+                sweep_up(ksu_context, cc_target);
++                sweep_up(ksu_context, cc_tmp);
 +                exit(1);
 +            }
 +            if (appl_pam_requires_chauthtok()) {
 +                fprintf(stderr, "Password change required for %s.\n",
 +                        target_user);
-+                sweep_up(ksu_context, cc_target);
++                sweep_up(ksu_context, cc_tmp);
 +                exit(1);
 +            }
 +            force_fork++;
@@ -142,7 +143,7 @@ diff -up krb5/src/clients/ksu/main.c.pam krb5/src/clients/ksu/main.c
          if (krb5_seteuid(target_uid)) {
              com_err(prog_name, errno, _("while switching to target for "
 @@ -651,6 +676,26 @@
-             sweep_up(ksu_context, cc_target);
+             sweep_up(ksu_context, cc_tmp);
              exit(1);
          }
 +#ifdef USE_PAM
@@ -153,13 +154,13 @@ diff -up krb5/src/clients/ksu/main.c.pam krb5/src/clients/ksu/main.c
 +                                   NULL, source_user,
 +                                   ttyname(STDERR_FILENO)) != 0) {
 +                fprintf(stderr, "Access denied for %s.\n", target_user);
-+                sweep_up(ksu_context, cc_target);
++                sweep_up(ksu_context, cc_tmp);
 +                exit(1);
 +            }
 +            if (appl_pam_requires_chauthtok()) {
 +                fprintf(stderr, "Password change required for %s.\n",
 +                        target_user);
-+                sweep_up(ksu_context, cc_target);
++                sweep_up(ksu_context, cc_tmp);
 +                exit(1);
 +            }
 +            force_fork++;
@@ -176,7 +177,7 @@ diff -up krb5/src/clients/ksu/main.c.pam krb5/src/clients/ksu/main.c
 +    if (appl_pam_enabled(ksu_context, "ksu")) {
 +        if (appl_pam_session_open() != 0) {
 +            fprintf(stderr, "Error opening session for %s.\n", target_user);
-+            sweep_up(ksu_context, cc_target);
++            sweep_up(ksu_context, cc_tmp);
 +            exit(1);
 +        }
 +#ifdef DEBUG
@@ -187,7 +188,7 @@ diff -up krb5/src/clients/ksu/main.c.pam krb5/src/clients/ksu/main.c
 +        if (appl_pam_cred_init()) {
 +            fprintf(stderr, "Error initializing credentials for %s.\n",
 +                    target_user);
-+            sweep_up(ksu_context, cc_target);
++            sweep_up(ksu_context, cc_tmp);
 +            exit(1);
 +        }
 +#ifdef DEBUG

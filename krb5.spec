@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -83,7 +83,7 @@ Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch39: krb5-1.12-api.patch
 Patch56: krb5-1.10-doublelog.patch
 Patch59: krb5-1.10-kpasswd_tcp.patch
-Patch60: krb5-1.12-pam.patch
+Patch60: krb5-1.12.1-pam.patch
 Patch63: krb5-1.12-selinux-label.patch
 Patch71: krb5-1.11-dirsrv-accountlock.patch
 Patch86: krb5-1.9-debuginfo.patch
@@ -97,6 +97,12 @@ Patch138: krb5-master-rcache-acquirecred-leak.patch
 Patch139: krb5-master-rcache-acquirecred-source.patch
 Patch140: krb5-master-empty-credstore.patch
 Patch141: krb5-master-rcache-acquirecred-test.patch
+Patch201: 0001-Don-t-try-to-stat-not-on-disk-ccache-residuals.patch
+Patch202: 0002-Use-an-in-memory-cache-until-we-need-the-target-s.patch
+Patch203: 0003-Learn-to-destroy-the-ccache-we-re-copying-from.patch
+Patch204: 0004-Try-to-use-the-default_ccache_name-d-as-the-target.patch
+Patch205: 0005-Be-more-careful-of-target-ccache-collections.patch
+Patch206: 0006-Copy-config-entries-to-the-target-ccache.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -298,6 +304,13 @@ certificate.
 %prep
 %setup -q -a 3 -a 100
 ln -s NOTICE LICENSE
+
+%patch201 -p1 -b .Don-t-try-to-stat-not-on-disk-ccache-residuals
+%patch202 -p1 -b .Use-an-in-memory-cache-until-we-need-the-target-s
+%patch203 -p1 -b .Learn-to-destroy-the-ccache-we-re-copying-from
+%patch204 -p1 -b .Try-to-use-the-default_ccache_name-d-as-the-target
+%patch205 -p1 -b .Be-more-careful-of-target-ccache-collections
+%patch206 -p1 -b .Copy-config-entries-to-the-target-ccache
 
 %patch60 -p1 -b .pam
 
@@ -978,6 +991,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Jan 31 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-3
+- add currently-proposed changes to teach ksu about credential cache
+  collections and the default_ccache_name setting (#1015559,#1026099)
+
 * Tue Jan 21 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-2
 - pull in multiple changes to allow replay caches to be added to a GSS
   credential store as "rcache"-type credentials (RT#7818/#7819/#7836,
