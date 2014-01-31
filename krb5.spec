@@ -71,8 +71,9 @@ Source38: krb5kdc.init
 
 BuildRequires: cmake
 # Carry this locally until it's available in a packaged form.
-Source100: nss_wrapper-0.0-20130719153839Z.git6cb59864.bz2
+Source100: nss_wrapper-0.0-20140131205218.tar.xz
 Source101: noport.c
+Source102: socket_wrapper-0.0-20140131205228.tar.xz
 
 Patch6: krb5-1.12-ksu-path.patch
 Patch12: krb5-1.12-ktany.patch
@@ -302,7 +303,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -a 3 -a 100
+%setup -q -a 3 -a 100 -a 102
 ln -s NOTICE LICENSE
 
 %patch201 -p1 -b .Don-t-try-to-stat-not-on-disk-ccache-residuals
@@ -365,8 +366,9 @@ pushd src
 ./util/reconf --verbose
 popd
 
-# Create build space for the test wrapper.
+# Create build spaces for the test wrappers.
 mkdir -p nss_wrapper/build
+mkdir -p socket_wrapper/build
 
 # Mess with some of the default ports that we use for testing, so that multiple
 # builds going on the same host don't step on each other.
@@ -462,8 +464,12 @@ for pdf in admin appdev basic build plugindev user ; do
 	test -s build-pdf/$pdf.pdf || make -C build-pdf
 done
 
-# Build the test wrapper.
+# Build the test wrappers.
 pushd nss_wrapper/build
+cmake ..
+make
+popd
+pushd socket_wrapper/build
 cmake ..
 make
 popd
@@ -482,9 +488,10 @@ fi
 # Set things up to use the test wrappers.
 NSS_WRAPPER_HOSTNAME=test.example.com ; export NSS_WRAPPER_HOSTNAME
 NSS_WRAPPER_HOSTS="`pwd`/nss_wrapper/fakehosts" ; export NSS_WRAPPER_HOSTS
-echo 127.0.0.1 $NSS_WRAPPER_HOSTNAME $NSS_WRAPPER_HOSTNAME >"$NSS_WRAPPER_HOSTS"
+echo 127.0.0.1 $NSS_WRAPPER_HOSTNAME $NSS_WRAPPER_HOSTNAME localhost localhost >"$NSS_WRAPPER_HOSTS"
 NOPORT=53,111; export NOPORT
-LD_PRELOAD=`pwd`/noport.so:`pwd`/nss_wrapper/build/src/libnss_wrapper.so ; export LD_PRELOAD
+SOCKET_WRAPPER_DIR=`pwd`/sockets; mkdir -p $SOCKET_WRAPPER_DIR; export SOCKET_WRAPPER_DIR
+LD_PRELOAD=`pwd`/noport.so:`pwd`/nss_wrapper/build/src/libnss_wrapper.so:`pwd`/socket_wrapper/build/src/libsocket_wrapper.so ; export LD_PRELOAD
 
 # Run the test suite. We can't actually run the whole thing in the build
 # system, but we can at least run more than we used to.  The build system may
@@ -992,6 +999,9 @@ exit 0
 
 %changelog
 * Fri Jan 31 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-3
+- refresh nss_wrapper and add socket_wrapper to the %%check environment
+
+* Fri Jan 31 2014 Nalin Dahyabhai <nalin@redhat.com>
 - add currently-proposed changes to teach ksu about credential cache
   collections and the default_ccache_name setting (#1015559,#1026099)
 
