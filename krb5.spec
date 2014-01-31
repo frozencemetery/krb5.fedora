@@ -345,7 +345,7 @@ ln -s NOTICE LICENSE
 %patch141 -p1 -b .rcache-acquirecred-test
 
 # Take the execute bit off of documentation.
-chmod -x doc/krb5-protocol/*.txt
+chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
 
 # Generate an FDS-compatible LDIF file.
 inldif=src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
@@ -692,8 +692,8 @@ fi
 # Remove the init script for older servers.
 [ -x /etc/rc.d/init.d/krb5server ] && /sbin/chkconfig --del krb5server
 %if %{WITH_SYSTEMD}
-if [ $1 -eq 1 ] ; then 
-    # Initial installation 
+if [ $1 -eq 1 ] ; then
+    # Initial installation
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 fi
 %else
@@ -744,7 +744,7 @@ exit 0
 %if %{WITH_SYSTEMD}
 %triggerun server -- krb5-server < 1.9.1-13
 # Save the current service runlevel info
-# User must manually run 
+# User must manually run
 #  systemd-sysv-convert --apply krb5kdc
 #  systemd-sysv-convert --apply kadmin
 #  systemd-sysv-convert --apply kprop
@@ -869,7 +869,7 @@ exit 0
 %{_sbindir}/krb5kdc
 %{_mandir}/man8/krb5kdc.8*
 
-# This is here for people who want to test their server, and also 
+# This is here for people who want to test their server, and also
 # included in devel package for similar reasons.
 %{_bindir}/sclient
 %{_mandir}/man1/sclient.1*
@@ -2445,7 +2445,7 @@ exit 0
 * Wed Oct 18 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-10
 - rename krb5.sh and krb5.csh so that they don't overlap (#210623)
 - way-late application of added error info in kadmind.init (#65853)
- 
+
 * Wed Oct 18 2006 Nalin Dahyabhai <nalin@redhat.com> - 1.5-9.pal_18695
 - add backport of in-development preauth module interface (#208643)
 
