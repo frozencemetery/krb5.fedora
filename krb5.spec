@@ -40,10 +40,10 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.11.3
-Release: 40%{?dist}
+Version: 1.11.5
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.5-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 # Use a dummy krb5-%{version}-pdf.tar.xz the first time through, then
@@ -88,7 +88,6 @@ Patch63: krb5-1.11-selinux-label.patch
 Patch71: krb5-1.11-dirsrv-accountlock.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
-Patch113: krb5-1.11-alpha1-init.patch
 Patch116: http://ausil.fedorapeople.org/aarch64/krb5/krb5-aarch64.patch
 Patch117: krb5-1.11-gss-client-keytab.patch
 Patch121: krb5-cccol-primary.patch
@@ -99,7 +98,6 @@ Patch126: krb5-1.11.2-skew2.patch
 Patch127: krb5-master-test_gss_no_udp.patch
 Patch128: krb5-master-test_no_pmap.patch 
 Patch129: krb5-1.11-run_user_0.patch
-Patch130: krb5-master-init_referral.patch
 Patch131: krb5-1.11.3-skew3.patch
 Patch132: krb5-1.11-gss-methods1.patch
 Patch133: krb5-1.11-gss-methods2.patch 
@@ -107,19 +105,9 @@ Patch134: krb5-1.11-kpasswdtest.patch
 Patch135: krb5-1.11-check_transited.patch
 Patch136: krb5-1.11.3-prompter1.patch
 Patch137: krb5-1.11.3-prompter2.patch
-Patch138: krb5-1.11.3-gss-ccache-import.patch
-Patch139: krb5-CVE-2013-1418.patch
-Patch140: krb5-CVE-2013-1417.patch
-Patch141: krb5-1.11.3-client-loop.patch
 Patch142: krb5-master-keyring-offsets.patch
 Patch143: krb5-master-keyring-expiration.patch
-Patch144: krb5-master-no-malloc0.patch
-Patch145: krb5-master-ignore-empty-unnecessary-final-token.patch
-Patch146: krb5-master-gss_oid_leak.patch
-Patch147: krb5-master-keytab_close.patch
 Patch148: krb5-1.11-preauthcore.patch
-Patch149: krb5-1.11.3-copy_context.patch
-Patch150: krb5-1.11.3-spnego_error_messages.patch
 
 Patch151: krb5-master-rcache-internal-const.patch
 Patch152: krb5-master-rcache-acquirecred-cleanup.patch
@@ -374,7 +362,6 @@ ln -s NOTICE LICENSE
 %patch71 -p1 -b .dirsrv-accountlock %{?_rawbuild}
 %patch86 -p0 -b .debuginfo
 %patch105 -p1 -b .kvno
-%patch113 -p1 -b .init
 %patch116 -p1 -b .aarch64
 %patch117 -p1 -b .gss-client-keytab
 %patch121 -p1 -b .cccol-primary
@@ -389,7 +376,6 @@ ln -s NOTICE LICENSE
 # DIR:/run/user/%%{uid}/krb5cc.
 %patch129 -p1 -b .run_user_0
 
-%patch130 -p1 -b .init_referral
 %patch131 -p1 -b .skew3
 %patch132 -p1 -b .gss-methods1
 %patch133 -p1 -b .gss-methods2
@@ -397,19 +383,9 @@ ln -s NOTICE LICENSE
 %patch135 -p1 -b .check_transited
 %patch136 -p1 -b .prompter1
 %patch137 -p1 -b .prompter2
-%patch138 -p1 -b .gss-ccache-import
-%patch139 -p1 -b .CVE-2013-1418
-%patch140 -p1 -b .CVE-2013-1417
-%patch141 -p1 -b .client-loop
 %patch142 -p1 -b .keyring-offsets
 %patch143 -p1 -b .keyring-expiration
-%patch144 -p1 -b .no-malloc0
-%patch145 -p1 -b .ignore-empty-unnecessary-final-token
-%patch146 -p1 -b .gss_oid_leak
-%patch147 -p1 -b .keytab_close
 %patch148 -p0 -b .preauthcore
-%patch149 -p1 -b .copy_context
-%patch150 -p1 -b .spnego_error_messages
 
 %patch151 -p1 -b .rcache-internal-const
 %patch152 -p1 -b .rcache-acquirecred-cleanup
@@ -1072,6 +1048,20 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Jan 31 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-1
+- update to 1.11.5
+  - remove patch for RT#7650, obsoleted in 1.11.4
+  - remove patch for RT#7706, obsoleted in 1.11.4
+  - remove patch for RT#7756 (CVE-2013-1418), obsoleted in 1.11.4
+  - remove patch for RT#7668 (CVE-2013-1417), obsoleted in 1.11.4
+  - remove patch for RT#7508, obsoleted in 1.11.4
+  - remove patch for RT#7794, obsoleted in 1.11.4 as RT#7825
+  - remove patch for RT#7797, obsoleted in 1.11.4 as RT#7827
+  - remove patch for RT#7803, obsoleted in 1.11.4 as RT#7828
+  - remove patch for RT#7805, obsoleted in 1.11.4 as RT#7829
+  - remove patch for RT#7807, obsoleted in 1.11.4 as RT#7826
+  - remove patch for RT#7045, obsoleted in 1.11.4 as RT#7823
+
 * Fri Jan 31 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-40
 - add currently-proposed changes to teach ksu about credential cache
   collections and the default_ccache_name setting (#1015559,#1026099)
