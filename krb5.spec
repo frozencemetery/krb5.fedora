@@ -32,7 +32,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 19%{?dist}
+Release: 20%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -65,7 +65,6 @@ BuildRequires: cmake
 Source100: nss_wrapper-0.0-20130719153839Z.git6cb59864.bz2
 Source101: noport.c
 
-Patch5: krb5-1.10-ksu-access.patch
 Patch6: krb5-1.10-ksu-path.patch
 Patch12: krb5-1.7-ktany.patch
 Patch16: krb5-1.10-buildconf.patch
@@ -123,6 +122,15 @@ Patch157: krb5-1.11-rcache-acquirecred-test.patch
 Patch201: krb5-1.11.2-keycheck.patch
 Patch202: krb5-1.11.2-otp.patch
 Patch203: krb5-1.11.3-otp2.patch
+
+# Patches to teach ksu about cache collections
+Patch300: 0000-ksu-intermediates.patch
+Patch301: 0001-Don-t-try-to-stat-not-on-disk-ccache-residuals.patch
+Patch302: 0002-Use-an-in-memory-cache-until-we-need-the-target-s.patch
+Patch303: 0003-Learn-to-destroy-the-ccache-we-re-copying-from.patch
+Patch304: 0004-Try-to-use-the-default_ccache_name-d-as-the-target.patch
+Patch305: 0005-Be-more-careful-of-target-ccache-collections.patch
+Patch306: 0006-Copy-config-entries-to-the-target-ccache.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -318,11 +326,18 @@ certificate.
 %setup -q -n %{name}-%{version} -a 3 -a 100
 ln -s NOTICE LICENSE
 
+%patch300 -p1 -b .ksu-intermediates
+%patch301 -p1 -b .Don-t-try-to-stat-not-on-disk-ccache-residuals
+%patch302 -p1 -b .Use-an-in-memory-cache-until-we-need-the-target-s
+%patch303 -p1 -b .Learn-to-destroy-the-ccache-we-re-copying-from
+%patch304 -p1 -b .Try-to-use-the-default_ccache_name-d-as-the-target
+%patch305 -p1 -b .Be-more-careful-of-target-ccache-collections
+%patch306 -p1 -b .Copy-config-entries-to-the-target-ccache
+
 %patch60 -p1 -b .pam
 
 %patch63 -p1 -b .selinux-label
 
-%patch5  -p1 -b .ksu-access
 %patch6  -p1 -b .ksu-path
 %patch12 -p1 -b .ktany
 %patch16 -p1 -b .buildconf %{?_rawbuild}
@@ -967,6 +982,15 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Jan 31 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-20
+- add currently-proposed changes to teach ksu about credential cache
+  collections and the default_ccache_name setting (#1015559,#1026099)
+
+* Fri Jan 31 2014 Nalin Dahyabhai <nalin@redhat.com>
+- drop patch to add additional access() checks to ksu - they add to breakage
+  when non-FILE: caches are in use (#1026099), shouldn't be resulting in any
+  benefit, and clash with proposed changes to fix its cache handling
+
 * Tue Jan 21 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-19
 - pull in and backport multiple changes to allow replay caches to be added to
   a GSS credential store as "rcache"-type credentials (RT#7818/#7819/#7836,
