@@ -1,0 +1,13 @@
+Collect changes that prevent the ksu collections changes from being directly
+pullable from master (or, as of this writing, the proposed changes for master).
+--- krb5/src/clients/ksu/main.c
++++ krb5/src/clients/ksu/main.c
+@@ -706,7 +706,7 @@ main (argc, argv)
+     }
+ 
+     if(set_env_var( "HOME", target_pwd->pw_dir)){
+-        fprintf(stderr, _("ksu: couldn't set environment variable USER\n"));
++        fprintf(stderr, _("ksu: couldn't set environment variable HOME\n"));
+         sweep_up(ksu_context, cc_target);
+         exit(1);
+     }

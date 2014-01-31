@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 39%{?dist}
+Release: 40%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -140,6 +140,15 @@ Patch203: krb5-1.11.3-otp2.patch
 Patch301: persistent_keyring.patch
 Patch302: krb5-master-kinit-cccol.patch
 Patch303: krb5-keyring-strtol.patch
+
+# Patches to teach ksu about cache collections
+Patch400: 0000-ksu-intermediates.patch
+Patch401: 0001-Don-t-try-to-stat-not-on-disk-ccache-residuals.patch
+Patch402: 0002-Use-an-in-memory-cache-until-we-need-the-target-s.patch
+Patch403: 0003-Learn-to-destroy-the-ccache-we-re-copying-from.patch
+Patch404: 0004-Try-to-use-the-default_ccache_name-d-as-the-target.patch
+Patch405: 0005-Be-more-careful-of-target-ccache-collections.patch
+Patch406: 0006-Copy-config-entries-to-the-target-ccache.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -340,6 +349,14 @@ ln -s NOTICE LICENSE
 %patch301 -p1 -b .persistent-keyring
 %patch302 -p1 -b .kinit-cccol
 %patch303 -p1 -b .keyring-strtol
+
+%patch400 -p1 -b .ksu-intermediates
+%patch401 -p1 -b .Don-t-try-to-stat-not-on-disk-ccache-residuals
+%patch402 -p1 -b .Use-an-in-memory-cache-until-we-need-the-target-s
+%patch403 -p1 -b .Learn-to-destroy-the-ccache-we-re-copying-from
+%patch404 -p1 -b .Try-to-use-the-default_ccache_name-d-as-the-target
+%patch405 -p1 -b .Be-more-careful-of-target-ccache-collections
+%patch406 -p1 -b .Copy-config-entries-to-the-target-ccache
 
 %patch60 -p1 -b .pam
 
@@ -1055,6 +1072,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Jan 31 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-40
+- add currently-proposed changes to teach ksu about credential cache
+  collections and the default_ccache_name setting (#1015559,#1026099)
+
 * Tue Jan 21 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-39
 - pull in upstream patch to fix the GSSAPI library's checks for expired
   client creds in gss_init_sec_context() so that they work with keyring
