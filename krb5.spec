@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.5
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -1048,6 +1048,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Jan 31 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-2
+- rebuild because I tagged the previous package wrong
+
 * Fri Jan 31 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-1
 - update to 1.11.5
   - remove patch for RT#7650, obsoleted in 1.11.4
