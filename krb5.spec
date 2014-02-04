@@ -71,9 +71,9 @@ Source38: krb5kdc.init
 
 BuildRequires: cmake
 # Carry this locally until it's available in a packaged form.
-Source100: nss_wrapper-0.0-20140131205218.tar.xz
+Source100: nss_wrapper-0.0-20140204195100.git3d58327.tar.xz
 Source101: noport.c
-Source102: socket_wrapper-0.0-20140131205228.tar.xz
+Source102: socket_wrapper-0.0-20140204194748.gitf3b2ece.tar.xz
 
 Patch6: krb5-1.12-ksu-path.patch
 Patch12: krb5-1.12-ktany.patch
