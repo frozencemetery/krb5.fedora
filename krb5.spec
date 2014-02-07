@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.1
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -68,6 +68,7 @@ Source34: kadmind.logrotate
 Source36: kpropd.init
 Source37: kadmind.init
 Source38: krb5kdc.init
+Source39: krb5-krb5kdc.conf
 
 BuildRequires: cmake
 # Carry this locally until it's available in a packaged form.
@@ -98,6 +99,7 @@ Patch138: krb5-master-rcache-acquirecred-leak.patch
 Patch139: krb5-master-rcache-acquirecred-source.patch
 Patch140: krb5-master-empty-credstore.patch
 Patch141: krb5-master-rcache-acquirecred-test.patch
+Patch142: krb5-master-move-otp-sockets.patch
 Patch201: 0001-Don-t-try-to-stat-not-on-disk-ccache-residuals.patch
 Patch202: 0002-Use-an-in-memory-cache-until-we-need-the-target-s.patch
 Patch203: 0003-Learn-to-destroy-the-ccache-we-re-copying-from.patch
@@ -344,6 +346,7 @@ ln -s NOTICE LICENSE
 %patch139 -p1 -b .rcache-acquirecred-source
 %patch140 -p1 -b .empty-credstore
 %patch141 -p1 -b .rcache-acquirecred-test
+%patch142 -p1 -b .move-otp-sockets
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -401,6 +404,9 @@ pushd src
 %if 0%{?compile_default_ccache_name}
 DEFCCNAME=%{compiled_default_ccache_name}; export DEFCCNAME
 %endif
+# Set this so that configure will have a value even if the current version of
+# autoconf doesn't set one.
+runstatedir=%{_localstatedir}/run; export runstatedir
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
 INCLUDES=-I%{_includedir}/et
 CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC -fno-strict-aliasing -fstack-protector-all`"
@@ -450,6 +456,13 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 # Now build it.
 make
 popd
+
+# Sanity check the KDC_RUN_DIR.
+configured_kdcrundir=`grep KDC_RUN_DIR src/include/osconf.h | awk '{print $NF}'`
+configured_kdcrundir=`eval echo $configured_kdcrundir`
+if test "$configured_kdcrundir" != %{_localstatedir}/run/krb5kdc ; then
+	exit 1
+fi
 
 # Build the docs.
 make -C src/doc paths.py version.py
@@ -552,6 +565,9 @@ for wrapper in \
 	%{SOURCE8} ; do
 	install -pm 755 ${wrapper} $RPM_BUILD_ROOT%{_sbindir}/
 done
+mkdir -p $RPM_BUILD_ROOT/%{_tmpfilesdir}
+install -pm 644 %{SOURCE39} $RPM_BUILD_ROOT/%{_tmpfilesdir}/
+mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/run/krb5kdc
 %else
 mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
 for init in \
@@ -825,6 +841,8 @@ exit 0
 %{_unitdir}/krb5kdc.service
 %{_unitdir}/kadmin.service
 %{_unitdir}/kprop.service
+%{_tmpfilesdir}/krb5-krb5kdc.conf
+%dir %{_localstatedir}/run/krb5kdc
 %else
 /etc/rc.d/init.d/krb5kdc
 /etc/rc.d/init.d/kadmin
@@ -998,6 +1016,15 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Feb  7 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-4
+- pull in patch from master to move the default directory which the KDC uses
+  when computing the socket path for a local OTP daemon from the database
+  directory (/var/kerberos/krb5kdc) to the newly-added run directory
+  (/run/krb5kdc), in line with what we're expecting in 1.13 (RT#7859)
+- add a tmpfiles.d configuration file to have /run/krb5kdc created at
+  boot-time
+- own /var/run/krb5kdc
+
 * Fri Jan 31 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-3
 - refresh nss_wrapper and add socket_wrapper to the %%check environment
 
