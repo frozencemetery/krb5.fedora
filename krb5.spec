@@ -1070,7 +1070,8 @@ exit 0
 - pull in patch from master to move the default directory which the KDC uses
   when computing the socket path for a local OTP daemon from the database
   directory (/var/kerberos/krb5kdc) to the newly-added run directory
-  (/run/krb5kdc), in line with what we're expecting in 1.13 (RT#7859)
+  (/run/krb5kdc), in line with what we're expecting in 1.13 (RT#7859, more
+  of #1040056)
 - add a tmpfiles.d configuration file to have /run/krb5kdc created at
   boot-time
 - own /var/run/krb5kdc
