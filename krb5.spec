@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.5
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -119,6 +119,8 @@ Patch156: krb5-1.11.3-1.12.1-credstoretest.patch
 Patch157: krb5-1.11-rcache-acquirecred-test.patch
 
 Patch158: krb5-master-keyring-kdcsync.patch
+
+Patch159: krb5-1.11-spnego-preserve-oid.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -398,6 +400,8 @@ ln -s NOTICE LICENSE
 %patch157 -p1 -b .rcache-acquirecred-test
 
 %patch158 -p1 -b .keyring-kdcsync
+
+%patch159 -p1 -b .spnego-preserve-oid
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -1066,12 +1070,18 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Feb 17 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-4
+- spnego: pull in patch from master to restore preserving the OID of the
+  mechanism the initiator requested when we have multiple OIDs for the same
+  mechanism, so that we reply using the same mechanism OID and the initiator
+  doesn't get confused (#1066000, RT#7858)
+
 * Mon Feb 10 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-3
 - pull in patch from master to move the default directory which the KDC uses
   when computing the socket path for a local OTP daemon from the database
   directory (/var/kerberos/krb5kdc) to the newly-added run directory
   (/run/krb5kdc), in line with what we're expecting in 1.13 (RT#7859, more
-  of #1040056)
+  of #1040056 as #1063905)
 - add a tmpfiles.d configuration file to have /run/krb5kdc created at
   boot-time
 - own /var/run/krb5kdc
