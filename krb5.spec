@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.1
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -100,6 +100,7 @@ Patch139: krb5-master-rcache-acquirecred-source.patch
 Patch140: krb5-master-empty-credstore.patch
 Patch141: krb5-master-rcache-acquirecred-test.patch
 Patch142: krb5-master-move-otp-sockets.patch
+Patch143: krb5-master-spnego-preserve-oid.patch
 Patch201: 0001-Don-t-try-to-stat-not-on-disk-ccache-residuals.patch
 Patch202: 0002-Use-an-in-memory-cache-until-we-need-the-target-s.patch
 Patch203: 0003-Learn-to-destroy-the-ccache-we-re-copying-from.patch
@@ -347,6 +348,7 @@ ln -s NOTICE LICENSE
 %patch140 -p1 -b .empty-credstore
 %patch141 -p1 -b .rcache-acquirecred-test
 %patch142 -p1 -b .move-otp-sockets
+%patch143 -p1 -b .spnego-preserve-oid
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -1016,12 +1018,18 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Feb 17 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-5
+- spnego: pull in patch from master to restore preserving the OID of the
+  mechanism the initiator requested when we have multiple OIDs for the same
+  mechanism, so that we reply using the same mechanism OID and the initiator
+  doesn't get confused (#1066000, RT#7858)
+
 * Fri Feb  7 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-4
 - pull in patch from master to move the default directory which the KDC uses
   when computing the socket path for a local OTP daemon from the database
   directory (/var/kerberos/krb5kdc) to the newly-added run directory
   (/run/krb5kdc), in line with what we're expecting in 1.13 (RT#7859, more
-  of #1040056)
+  of #1040056 as #1063905)
 - add a tmpfiles.d configuration file to have /run/krb5kdc created at
   boot-time
 - own /var/run/krb5kdc
