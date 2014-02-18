@@ -32,7 +32,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 20%{?dist}
+Release: 21%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -117,6 +117,8 @@ Patch154: krb5-1.11-rcache-acquirecred-source.patch
 Patch155: krb5-master-empty-credstore.patch
 Patch156: krb5-1.11.3-1.12.1-credstoretest.patch
 Patch157: krb5-1.11-rcache-acquirecred-test.patch
+
+Patch158: krb5-1.11-spnego-preserve-oid.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -388,6 +390,8 @@ ln -s NOTICE LICENSE
 %patch155 -p1 -b .empty-credstore
 %patch156 -p1 -b .credstoretest
 %patch157 -p1 -b .rcache-acquirecred-test
+
+%patch158 -p1 -b .spnego-preserve-oid
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -982,6 +986,12 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Feb 17 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-21
+- spnego: pull in patch from master to restore preserving the OID of the
+  mechanism the initiator requested when we have multiple OIDs for the same
+  mechanism, so that we reply using the same mechanism OID and the initiator
+  doesn't get confused (#1066000, RT#7858)
+
 * Fri Jan 31 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-20
 - add currently-proposed changes to teach ksu about credential cache
   collections and the default_ccache_name setting (#1015559,#1026099)
