@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.5
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -109,6 +109,7 @@ Patch137: krb5-1.11.3-prompter2.patch
 Patch142: krb5-master-keyring-offsets.patch
 Patch143: krb5-master-keyring-expiration.patch
 Patch148: krb5-1.11-preauthcore.patch
+Patch149: krb5-1.12-pwdch-fast.patch
 
 Patch151: krb5-master-rcache-internal-const.patch
 Patch152: krb5-master-rcache-acquirecred-cleanup.patch
@@ -390,6 +391,7 @@ ln -s NOTICE LICENSE
 %patch142 -p1 -b .keyring-offsets
 %patch143 -p1 -b .keyring-expiration
 %patch148 -p0 -b .preauthcore
+%patch149 -p1 -b .pwdch-fast
 
 %patch151 -p1 -b .rcache-internal-const
 %patch152 -p1 -b .rcache-acquirecred-cleanup
@@ -1070,6 +1072,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Mar 04 2014 Nathaniel McCallum <npmccallum@redhat.com> - 1.11.5-5
+- Backport fix for change password requests when using FAST (RT#7868)
+
 * Mon Feb 17 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-4
 - spnego: pull in patch from master to restore preserving the OID of the
   mechanism the initiator requested when we have multiple OIDs for the same
