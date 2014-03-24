@@ -118,7 +118,7 @@ BuildRequires: autoconf, bison, flex, gawk, gettext, pkgconfig, sed
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
 %endif
 BuildRequires: gzip, ncurses-devel, tar
-BuildRequires: python-sphinx
+BuildRequires: python-sphinx, texlive-pdftex
 # The texlive package got a lot more complicated here.
 %if 0%{?fedora} > 17 || 0%{?rhel} > 6
 # Taken from \usepackage directives produced by sphinx:
