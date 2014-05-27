@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.5
-Release: 5%{?dist}
+Release: 6%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -343,13 +343,13 @@ ln -s NOTICE LICENSE
 %patch302 -p1 -b .kinit-cccol
 %patch303 -p1 -b .keyring-strtol
 
-%patch400 -p1 -b .ksu-intermediates
-%patch401 -p1 -b .Don-t-try-to-stat-not-on-disk-ccache-residuals
-%patch402 -p1 -b .Use-an-in-memory-cache-until-we-need-the-target-s
-%patch403 -p1 -b .Learn-to-destroy-the-ccache-we-re-copying-from
-%patch404 -p1 -b .Try-to-use-the-default_ccache_name-d-as-the-target
-%patch405 -p1 -b .Be-more-careful-of-target-ccache-collections
-%patch406 -p1 -b .Copy-config-entries-to-the-target-ccache
+#%patch400 -p1 -b .ksu-intermediates
+#%patch401 -p1 -b .Don-t-try-to-stat-not-on-disk-ccache-residuals
+#%patch402 -p1 -b .Use-an-in-memory-cache-until-we-need-the-target-s
+#%patch403 -p1 -b .Learn-to-destroy-the-ccache-we-re-copying-from
+#%patch404 -p1 -b .Try-to-use-the-default_ccache_name-d-as-the-target
+#%patch405 -p1 -b .Be-more-careful-of-target-ccache-collections
+#%patch406 -p1 -b .Copy-config-entries-to-the-target-ccache
 
 %patch60 -p1 -b .pam
 
@@ -1072,6 +1072,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon May 27 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-6
+- back out currently-proposed changes to teach ksu about credential cache
+  collections and the default_ccache_name setting (#1089035) for now
+
 * Tue Mar 04 2014 Nathaniel McCallum <npmccallum@redhat.com> - 1.11.5-5
 - Backport fix for change password requests when using FAST (RT#7868)
 
