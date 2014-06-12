@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.1
-Release: 7%{?dist}
+Release: 8%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -102,6 +102,7 @@ Patch140: krb5-master-empty-credstore.patch
 Patch141: krb5-master-rcache-acquirecred-test.patch
 Patch142: krb5-master-move-otp-sockets.patch
 Patch143: krb5-master-spnego-preserve-oid.patch
+Patch144: krb5-1.12-tcl86.patch
 Patch201: 0001-Don-t-try-to-stat-not-on-disk-ccache-residuals.patch
 Patch202: 0002-Use-an-in-memory-cache-until-we-need-the-target-s.patch
 Patch203: 0003-Learn-to-destroy-the-ccache-we-re-copying-from.patch
@@ -352,6 +353,7 @@ ln -s NOTICE LICENSE
 %patch141 -p1 -b .rcache-acquirecred-test
 %patch142 -p1 -b .move-otp-sockets
 %patch143 -p1 -b .spnego-preserve-oid
+%patch144 -p1 -b .tcl86
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -1021,6 +1023,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Jun 12 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-8
+- pull in fix for building against tcl 8.6 (#1107061)
+
 * Sun Jun 08 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.12.1-7
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
 
