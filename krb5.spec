@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.5
-Release: 6%{?dist}
+Release: 7%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -122,6 +122,7 @@ Patch157: krb5-1.11-rcache-acquirecred-test.patch
 Patch158: krb5-master-keyring-kdcsync.patch
 
 Patch159: krb5-1.11-spnego-preserve-oid.patch
+Patch160: krb5-1.12-tcl86.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -404,6 +405,7 @@ ln -s NOTICE LICENSE
 %patch158 -p1 -b .keyring-kdcsync
 
 %patch159 -p1 -b .spnego-preserve-oid
+%patch160 -p1 -b .tcl86
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -1072,7 +1074,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Mon May 27 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-6
+* Tue Jun 24 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-7
+- pull in fix for building against tcl 8.6 (#1107061)
+
+* Tue May 27 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-6
 - back out currently-proposed changes to teach ksu about credential cache
   collections and the default_ccache_name setting (#1089035) for now
 
