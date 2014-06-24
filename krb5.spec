@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.1
-Release: 8%{?dist}
+Release: 9%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -103,6 +103,7 @@ Patch141: krb5-master-rcache-acquirecred-test.patch
 Patch142: krb5-master-move-otp-sockets.patch
 Patch143: krb5-master-spnego-preserve-oid.patch
 Patch144: krb5-1.12-tcl86.patch
+Patch145: krb5-master-mechd.patch
 Patch201: 0001-Don-t-try-to-stat-not-on-disk-ccache-residuals.patch
 Patch202: 0002-Use-an-in-memory-cache-until-we-need-the-target-s.patch
 Patch203: 0003-Learn-to-destroy-the-ccache-we-re-copying-from.patch
@@ -354,6 +355,7 @@ ln -s NOTICE LICENSE
 %patch142 -p1 -b .move-otp-sockets
 %patch143 -p1 -b .spnego-preserve-oid
 %patch144 -p1 -b .tcl86
+%patch145 -p1 -b .master-mechd
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -542,6 +544,10 @@ install -pm 644 %{SOURCE6} $RPM_BUILD_ROOT/etc/krb5.conf
 # Parent of configuration file for list of loadable GSS mechs ("mechs").  This
 # location is not relative to sysconfdir, but is hard-coded in g_initialize.c.
 mkdir -m 755 -p $RPM_BUILD_ROOT/etc/gss
+# Parent of groups of configuration files for a list of loadable GSS mechs
+# ("mechs").  This location is not relative to sysconfdir, and is also
+# hard-coded in g_initialize.c.
+mkdir -m 755 -p $RPM_BUILD_ROOT/etc/gss/mech.d
 
 # If the default configuration needs to start specifying a default cache
 # location, add it now, then fixup the timestamp so that it looks the same.
@@ -929,8 +935,9 @@ exit 0
 %defattr(-,root,root,-)
 %doc README NOTICE LICENSE
 %docdir %{_mandir}
-# This is a hard-coded, not-dependent-on-the-configure-script path.
+# These are hard-coded, not-dependent-on-the-configure-script paths.
 %dir /etc/gss
+%dir /etc/gss/mech.d
 %verify(not md5 size mtime) %config(noreplace) /etc/krb5.conf
 /%{_mandir}/man5/.k5identity.5*
 /%{_mandir}/man5/.k5login.5*
@@ -1023,6 +1030,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Jun 24 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-9
+- pull in changes from upstream which add processing of the contents of
+  /etc/gss/mech.d/*.conf when loading GSS modules (#1102839)
+
 * Thu Jun 12 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-8
 - pull in fix for building against tcl 8.6 (#1107061)
 
