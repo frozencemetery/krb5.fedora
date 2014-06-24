@@ -123,6 +123,7 @@ Patch158: krb5-master-keyring-kdcsync.patch
 
 Patch159: krb5-1.11-spnego-preserve-oid.patch
 Patch160: krb5-1.12-tcl86.patch
+Patch161: krb5-1.11-mechd.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -406,6 +407,7 @@ ln -s NOTICE LICENSE
 
 %patch159 -p1 -b .spnego-preserve-oid
 %patch160 -p1 -b .tcl86
+%patch161 -p1 -b .master-mechd
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -594,6 +596,10 @@ install -pm 644 %{SOURCE6} $RPM_BUILD_ROOT/etc/krb5.conf
 # Parent of configuration file for list of loadable GSS mechs ("mechs").  This
 # location is not relative to sysconfdir, but is hard-coded in g_initialize.c.
 mkdir -m 755 -p $RPM_BUILD_ROOT/etc/gss
+# Parent of groups of configuration files for a list of loadable GSS mechs
+# ("mechs").  This location is not relative to sysconfdir, and is also
+# hard-coded in g_initialize.c.
+mkdir -m 755 -p $RPM_BUILD_ROOT/etc/gss/mech.d
 
 # If the default configuration needs to start specifying a default cache
 # location, add it now, then fixup the timestamp so that it looks the same.
@@ -981,8 +987,9 @@ exit 0
 %defattr(-,root,root,-)
 %doc README NOTICE LICENSE
 %docdir %{_mandir}
-# This is a hard-coded, not-dependent-on-the-configure-script path.
+# These are hard-coded, not-dependent-on-the-configure-script paths.
 %dir /etc/gss
+%dir /etc/gss/mech.d
 %verify(not md5 size mtime) %config(noreplace) /etc/krb5.conf
 /%{_mandir}/man5/.k5identity.5*
 /%{_mandir}/man5/.k5login.5*
@@ -1075,6 +1082,8 @@ exit 0
 
 %changelog
 * Tue Jun 24 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-7
+- pull in changes from upstream which add processing of the contents of
+  /etc/gss/mech.d/*.conf when loading GSS modules (#1102839)
 - pull in fix for building against tcl 8.6 (#1107061)
 
 * Tue May 27 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-6
