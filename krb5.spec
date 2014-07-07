@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.5
-Release: 7%{?dist}
+Release: 8%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -124,6 +124,8 @@ Patch158: krb5-master-keyring-kdcsync.patch
 Patch159: krb5-1.11-spnego-preserve-oid.patch
 Patch160: krb5-1.12-tcl86.patch
 Patch161: krb5-1.11-mechd.patch
+Patch162: krb5-1.12-CVE-2014-4341_4342.patch
+Patch163: krb5-1.11-CVE-2014-4341_4342-tests.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -408,6 +410,8 @@ ln -s NOTICE LICENSE
 %patch159 -p1 -b .spnego-preserve-oid
 %patch160 -p1 -b .tcl86
 %patch161 -p1 -b .master-mechd
+%patch162 -p1 -b .CVE-2014-4341_4342
+%patch163 -p1 -b .CVE-2014-4341_4342-tests
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -1081,6 +1085,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Jul  7 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-8
+- pull in fix for denial of service by injection of malformed GSSAPI tokens
+  (CVE-2014-4341, CVE-2014-4342, #1116181)
+
 * Tue Jun 24 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-7
 - pull in changes from upstream which add processing of the contents of
   /etc/gss/mech.d/*.conf when loading GSS modules (#1102839)
