@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.1
-Release: 10%{?dist}
+Release: 11%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -937,7 +937,9 @@ exit 0
 
 %files libs -f %{gettext_domain}.lang
 %defattr(-,root,root,-)
-%doc README NOTICE LICENSE
+%doc README NOTICE
+%{!?_licensedir:%global license %%doc}
+%license LICENSE
 %docdir %{_mandir}
 # These are hard-coded, not-dependent-on-the-configure-script paths.
 %dir /etc/gss
@@ -1034,6 +1036,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Sat Jul 12 2014 Tom Callaway <spot@fedoraproject.org> - 1.12.1-11
+- fix license handling
+
 * Mon Jul  7 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-10
 - pull in fix for denial of service by injection of malformed GSSAPI tokens
   (CVE-2014-4341, CVE-2014-4342, #1116181)
