@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.1
-Release: 11%{?dist}
+Release: 12%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -106,6 +106,7 @@ Patch144: krb5-1.12-tcl86.patch
 Patch145: krb5-master-mechd.patch
 Patch146: krb5-1.12-CVE-2014-4341_4342.patch
 Patch147: krb5-1.12-CVE-2014-4341_4342-tests.patch
+Patch148: krb5-gssapi-mech-doublefree.patch
 Patch201: 0001-Don-t-try-to-stat-not-on-disk-ccache-residuals.patch
 Patch202: 0002-Use-an-in-memory-cache-until-we-need-the-target-s.patch
 Patch203: 0003-Learn-to-destroy-the-ccache-we-re-copying-from.patch
@@ -360,6 +361,7 @@ ln -s NOTICE LICENSE
 %patch145 -p1 -b .master-mechd
 %patch146 -p1 -b .CVE-2014-4341_4342
 %patch147 -p1 -b .CVE-2014-4341_4342
+%patch148 -p1 -b .gssapi-mech-doublefree
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -1036,6 +1038,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Jul 16 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-12
+- gssapi: pull in proposed fix for a double free in initiators (David
+  Woodhouse, #1117963)
+
 * Sat Jul 12 2014 Tom Callaway <spot@fedoraproject.org> - 1.12.1-11
 - fix license handling
 
