@@ -1,0 +1,49 @@
+From: David Woodhouse <David.Woodhouse@intel.com>
+
+In commit cd7d6b08 ("Verify acceptor's mech in SPNEGO initiator") the
+pointer sc->internal_mech became an alias into sc->mech_set->elements[],
+which should be considered constant for the duration of the SPNEGO
+context.
+
+So don't free it.
+
+This led to the obvious crashes in the allocator, and also to strange
+behaviour with Firefox failing to fall back to alternative mechanisms
+when it should have done.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1117963
+
+==31436== Invalid free() / delete / delete[] / realloc()
+==31436==    at 0x4A07577: free (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==31436==    by 0x3AE900D6B9: generic_gss_release_oid_set (gssapi_alloc.h:93)
+==31436==    by 0x3AE903775F: release_spnego_ctx (spnego_mech.c:2895)
+==31436==    by 0x3AE9037830: spnego_gss_delete_sec_context (spnego_mech.c:2164)
+==31436==    by 0x3AE9012292: gss_delete_sec_context (g_delete_sec_context.c:90)
+==31436==  Address 0x4fb5510 is 0 bytes inside a block of size 80 free'd
+==31436==    at 0x4A07577: free (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==31436==    by 0x3AE900C88E: generic_gss_release_oid (oid_ops.c:103)
+==31436==    by 0x3AE903BE85: spnego_gss_init_sec_context (spnego_mech.c:792)
+==31436==    by 0x3AE90154CA: gss_init_sec_context (g_init_sec_context.c:210)
+---
+ src/lib/gssapi/spnego/spnego_mech.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/lib/gssapi/spnego/spnego_mech.c b/src/lib/gssapi/spnego/spnego_mech.c
+index 173c6d2..8f829d8 100644
+--- a/src/lib/gssapi/spnego/spnego_mech.c
++++ b/src/lib/gssapi/spnego/spnego_mech.c
+@@ -818,7 +818,6 @@ init_ctx_reselect(OM_uint32 *minor_status, spnego_gss_ctx_id_t sc,
+ 	OM_uint32 tmpmin;
+ 	size_t i;
+ 
+-	generic_gss_release_oid(&tmpmin, &sc->internal_mech);
+ 	gss_delete_sec_context(&tmpmin, &sc->ctx_handle,
+ 			       GSS_C_NO_BUFFER);
+ 
+-- 
+1.9.3
+
+
+-- 
+David Woodhouse                            Open Source Technology Centre
+David.Woodhouse@intel.com                              Intel Corporation
