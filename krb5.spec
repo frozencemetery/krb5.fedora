@@ -1004,7 +1004,7 @@ exit 0
 
 * Wed Jul 16 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-23
 - gssapi: pull in proposed fix for a double free in initiators (David
-  Woodhouse, #1117963)
+  Woodhouse, CVE-2014-4343, #1117963)
 
 * Mon Jul  7 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-22
 - pull in fix for denial of service by injection of malformed GSSAPI tokens
