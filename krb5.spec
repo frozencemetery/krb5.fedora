@@ -1046,7 +1046,7 @@ exit 0
 
 * Wed Jul 16 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-12
 - gssapi: pull in proposed fix for a double free in initiators (David
-  Woodhouse, #1117963)
+  Woodhouse, CVE-2014-4343, #1117963)
 
 * Sat Jul 12 2014 Tom Callaway <spot@fedoraproject.org> - 1.12.1-11
 - fix license handling
