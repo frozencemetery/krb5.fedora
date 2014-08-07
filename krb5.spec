@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.1
-Release: 13%{?dist}
+Release: 14%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.1-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -108,6 +108,8 @@ Patch146: krb5-1.12-CVE-2014-4341_4342.patch
 Patch147: krb5-1.12-CVE-2014-4341_4342-tests.patch
 Patch148: krb5-gssapi-mech-doublefree.patch
 Patch149: krb5-gssapi-spnego-deref.patch
+Patch150: http://web.mit.edu/kerberos/advisories/2014-001-patch.txt
+Patch151: http://web.mit.edu/kerberos/advisories/2014-001-patch.txt.asc
 Patch201: 0001-Don-t-try-to-stat-not-on-disk-ccache-residuals.patch
 Patch202: 0002-Use-an-in-memory-cache-until-we-need-the-target-s.patch
 Patch203: 0003-Learn-to-destroy-the-ccache-we-re-copying-from.patch
@@ -364,6 +366,7 @@ ln -s NOTICE LICENSE
 %patch147 -p1 -b .CVE-2014-4341_4342
 %patch148 -p1 -b .gssapi-mech-doublefree
 %patch149 -p1 -b .gssapi-spnego-deref
+%patch150 -p1 -b .2014-001
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -1040,6 +1043,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Aug  7 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-14
+- incorporate fix for MITKRB5-SA-2014-001 (CVE-2014-4345)
+
 * Mon Jul 21 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-13
 - gssapi: pull in upstream fix for a possible NULL dereference
   in spnego (CVE-2014-4344)
