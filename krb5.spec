@@ -32,7 +32,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.3
-Release: 24%{?dist}
+Release: 25%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.3-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -125,6 +125,9 @@ Patch160: krb5-1.11-CVE-2014-4341_4342-tests.patch
 
 Patch161: krb5-gssapi-mech-doublefree.patch
 Patch162: krb5-gssapi-spnego-deref.patch
+
+Patch163: http://web.mit.edu/kerberos/advisories/2014-001-patch.txt
+Patch164: http://web.mit.edu/kerberos/advisories/2014-001-patch.txt.asc
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -404,6 +407,8 @@ ln -s NOTICE LICENSE
 
 %patch161 -p1 -b .gssapi-mech-doublefree
 %patch162 -p1 -b .gssapi-spnego-deref
+
+%patch163 -p1 -b .2014-001
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -998,6 +1003,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Aug  7 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-25
+- incorporate fix for MITKRB5-SA-2014-001 (CVE-2014-4345)
+
 * Mon Jul 21 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.3-24
 - gssapi: pull in upstream fix for a possible NULL dereference
   in spnego (CVE-2014-4344)
