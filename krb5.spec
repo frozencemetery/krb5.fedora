@@ -98,7 +98,6 @@ Patch139: krb5-master-rcache-acquirecred-source.patch
 Patch141: krb5-master-rcache-acquirecred-test.patch
 Patch142: krb5-master-move-otp-sockets.patch
 Patch145: krb5-master-mechd.patch
-Patch149: krb5-gssapi-spnego-deref.patch
 Patch150: http://web.mit.edu/kerberos/advisories/2014-001-patch.txt
 Patch151: http://web.mit.edu/kerberos/advisories/2014-001-patch.txt.asc
 Patch201: 0001-In-ksu-merge-krb5_ccache_copy-and-_restricted.patch
@@ -348,7 +347,6 @@ ln -s NOTICE LICENSE
 %patch141 -p1 -b .rcache-acquirecred-test
 %patch142 -p1 -b .move-otp-sockets
 %patch145 -p1 -b .master-mechd
-%patch149 -p1 -b .gssapi-spnego-deref
 %patch150 -p1 -b .2014-001
 
 # Take the execute bit off of documentation.
@@ -1037,6 +1035,7 @@ exit 0
   - drop patch for RT#7926, fixed in 1.12.2
   - drop patches for CVE-2014-4341/CVE-2014-4342, included in 1.12.2
   - drop patch for CVE-2014-4343, included in 1.12.2
+  - drop patch for CVE-2014-4344, included in 1.12.2
 - replace older proposed changes for ksu with backports of the changes
   after review and merging upstream (#1015559, #1026099, #1118347)
 
