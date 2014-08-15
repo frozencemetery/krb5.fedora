@@ -94,7 +94,6 @@ Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch136: krb5-master-rcache-internal-const.patch
 Patch137: krb5-master-rcache-acquirecred-cleanup.patch
-Patch138: krb5-master-rcache-acquirecred-leak.patch
 Patch139: krb5-master-rcache-acquirecred-source.patch
 Patch140: krb5-master-empty-credstore.patch
 Patch141: krb5-master-rcache-acquirecred-test.patch
@@ -351,7 +350,6 @@ ln -s NOTICE LICENSE
 
 %patch136 -p1 -b .rcache-internal-const
 %patch137 -p1 -b .rcache-acquirecred-cleanup
-%patch138 -p1 -b .rcache-acquirecred-leak
 %patch139 -p1 -b .rcache-acquirecred-source
 %patch140 -p1 -b .empty-credstore
 %patch141 -p1 -b .rcache-acquirecred-test
@@ -1042,8 +1040,9 @@ exit 0
 %changelog
 * Fri Aug 15 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-1
 - update to 1.12.2
-  - drop patch for RT#7820, merged in 1.12.2
+  - drop patch for RT#7820, fixed in 1.12.2
   - drop patch for #231147, fixed as RT#3277 in 1.12.2
+  - drop patch for RT#7818, fixed in 1.12.2
 - replace older proposed changes for ksu with backports of the changes
   after review and merging upstream (#1015559, #1026099, #1118347)
 
