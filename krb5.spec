@@ -1040,6 +1040,7 @@ exit 0
   - drop patch for RT#7836, fixed in 1.12.2
   - drop patch for RT#7858, fixed in 1.12.2
   - drop patch for RT#7924, fixed in 1.12.2
+  - drop patch for RT#7926, fixed in 1.12.2
 - replace older proposed changes for ksu with backports of the changes
   after review and merging upstream (#1015559, #1026099, #1118347)
 
