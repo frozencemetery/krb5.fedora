@@ -40,10 +40,10 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.12.1
-Release: 14%{?dist}
+Version: 1.12.2
+Release: 1%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.1-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.2-signed.tar
 Source0: krb5-%{version}.tar.gz
 Source1: krb5-%{version}.tar.gz.asc
 # Use a dummy krb5-%{version}-pdf.tar.xz the first time through, then
@@ -93,7 +93,6 @@ Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
-Patch135: krb5-master-keyring-kdcsync.patch
 Patch136: krb5-master-rcache-internal-const.patch
 Patch137: krb5-master-rcache-acquirecred-cleanup.patch
 Patch138: krb5-master-rcache-acquirecred-leak.patch
@@ -351,8 +350,6 @@ ln -s NOTICE LICENSE
 %patch129 -p1 -b .run_user_0
 
 %patch134 -p1 -b .kpasswdtest
-
-%patch135 -p1 -b .keyring-kdcsync
 
 %patch136 -p1 -b .rcache-internal-const
 %patch137 -p1 -b .rcache-acquirecred-cleanup
@@ -1045,7 +1042,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Fri Aug 15 2014 Nalin Dahyabhai <nalin@redhat.com>
+* Fri Aug 15 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-1
+- update to 1.12.2
+  - drop patch for RT#7820, merged in 1.12.2
 - replace older proposed changes for ksu with backports of the changes
   after review and merging upstream (#1015559, #1026099, #1118347)
 
