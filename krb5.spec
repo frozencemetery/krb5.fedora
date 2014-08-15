@@ -110,12 +110,13 @@ Patch148: krb5-gssapi-mech-doublefree.patch
 Patch149: krb5-gssapi-spnego-deref.patch
 Patch150: http://web.mit.edu/kerberos/advisories/2014-001-patch.txt
 Patch151: http://web.mit.edu/kerberos/advisories/2014-001-patch.txt.asc
-Patch201: 0001-Don-t-try-to-stat-not-on-disk-ccache-residuals.patch
-Patch202: 0002-Use-an-in-memory-cache-until-we-need-the-target-s.patch
-Patch203: 0003-Learn-to-destroy-the-ccache-we-re-copying-from.patch
-Patch204: 0004-Try-to-use-the-default_ccache_name-d-as-the-target.patch
-Patch205: 0005-Be-more-careful-of-target-ccache-collections.patch
-Patch206: 0006-Copy-config-entries-to-the-target-ccache.patch
+Patch201: 0001-In-ksu-merge-krb5_ccache_copy-and-_restricted.patch
+Patch202: 0002-In-ksu-don-t-stat-not-on-disk-ccache-residuals.patch
+Patch203: 0003-Use-an-intermediate-memory-cache-in-ksu.patch
+Patch204: 0004-Make-ksu-respect-the-default_ccache_name-setting.patch
+Patch205: 0005-Copy-config-entries-to-the-ksu-target-ccache.patch
+Patch206: 0006-Use-more-randomness-for-ksu-secondary-cache-names.patch
+Patch207: 0007-Make-krb5_cc_new_unique-create-DIR-directories.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -318,14 +319,15 @@ certificate.
 %setup -q -a 3 -a 100 -a 102
 ln -s NOTICE LICENSE
 
-%patch1 -p1 -b .pwdch-fast
+%patch201 -p1 -b .In-ksu-merge-krb5_ccache_copy-and-_restricted
+%patch202 -p1 -b .In-ksu-don-t-stat-not-on-disk-ccache-residuals
+%patch203 -p1 -b .Use-an-intermediate-memory-cache-in-ksu
+%patch204 -p1 -b .Make-ksu-respect-the-default_ccache_name-setting
+%patch205 -p1 -b .Copy-config-entries-to-the-ksu-target-ccache
+%patch206 -p1 -b .Use-more-randomness-for-ksu-secondary-cache-names
+%patch207 -p1 -b .Make-krb5_cc_new_unique-create-DIR-directories
 
-%patch201 -p1 -b .Don-t-try-to-stat-not-on-disk-ccache-residuals
-%patch202 -p1 -b .Use-an-in-memory-cache-until-we-need-the-target-s
-%patch203 -p1 -b .Learn-to-destroy-the-ccache-we-re-copying-from
-%patch204 -p1 -b .Try-to-use-the-default_ccache_name-d-as-the-target
-%patch205 -p1 -b .Be-more-careful-of-target-ccache-collections
-%patch206 -p1 -b .Copy-config-entries-to-the-target-ccache
+%patch1 -p1 -b .pwdch-fast
 
 %patch60 -p1 -b .pam
 
@@ -1043,6 +1045,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Aug 15 2014 Nalin Dahyabhai <nalin@redhat.com>
+- replace older proposed changes for ksu with backports of the changes
+  after review and merging upstream (#1015559, #1026099, #1118347)
+
 * Thu Aug  7 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.1-14
 - incorporate fix for MITKRB5-SA-2014-001 (CVE-2014-4345)
 
