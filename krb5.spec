@@ -84,7 +84,6 @@ Patch23: krb5-1.3.1-dns.patch
 Patch29: krb5-1.10-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch39: krb5-1.12-api.patch
-Patch56: krb5-1.10-doublelog.patch
 Patch59: krb5-1.10-kpasswd_tcp.patch
 Patch60: krb5-1.12.1-pam.patch
 Patch63: krb5-1.12-selinux-label.patch
@@ -339,7 +338,6 @@ ln -s NOTICE LICENSE
 %patch29 -p1 -b .kprop-mktemp
 %patch30 -p1 -b .send-pr-tempfile
 %patch39 -p1 -b .api
-%patch56 -p1 -b .doublelog
 %patch59 -p1 -b .kpasswd_tcp
 %patch71 -p1 -b .dirsrv-accountlock %{?_rawbuild}
 %patch86 -p0 -b .debuginfo
@@ -1045,6 +1043,7 @@ exit 0
 * Fri Aug 15 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-1
 - update to 1.12.2
   - drop patch for RT#7820, merged in 1.12.2
+  - drop patch for #231147, fixed as RT#3277 in 1.12.2
 - replace older proposed changes for ksu with backports of the changes
   after review and merging upstream (#1015559, #1026099, #1118347)
 
