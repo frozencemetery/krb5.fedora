@@ -97,7 +97,6 @@ Patch137: krb5-master-rcache-acquirecred-cleanup.patch
 Patch139: krb5-master-rcache-acquirecred-source.patch
 Patch141: krb5-master-rcache-acquirecred-test.patch
 Patch142: krb5-master-move-otp-sockets.patch
-Patch144: krb5-1.12-tcl86.patch
 Patch145: krb5-master-mechd.patch
 Patch146: krb5-1.12-CVE-2014-4341_4342.patch
 Patch147: krb5-1.12-CVE-2014-4341_4342-tests.patch
@@ -351,7 +350,6 @@ ln -s NOTICE LICENSE
 %patch139 -p1 -b .rcache-acquirecred-source
 %patch141 -p1 -b .rcache-acquirecred-test
 %patch142 -p1 -b .move-otp-sockets
-%patch144 -p1 -b .tcl86
 %patch145 -p1 -b .master-mechd
 %patch146 -p1 -b .CVE-2014-4341_4342
 %patch147 -p1 -b .CVE-2014-4341_4342
@@ -1041,6 +1039,7 @@ exit 0
   - drop patch for RT#7818, fixed in 1.12.2
   - drop patch for RT#7836, fixed in 1.12.2
   - drop patch for RT#7858, fixed in 1.12.2
+  - drop patch for RT#7924, fixed in 1.12.2
 - replace older proposed changes for ksu with backports of the changes
   after review and merging upstream (#1015559, #1026099, #1118347)
 
