@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -1021,6 +1021,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Sun Aug 17 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.12.2-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
+
 * Fri Aug 15 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-1
 - update to 1.12.2
   - drop patch for RT#7820, fixed in 1.12.2
