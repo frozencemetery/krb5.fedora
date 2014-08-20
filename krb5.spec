@@ -1107,7 +1107,7 @@ exit 0
 - pull in upstream fix for an incorrect check on the value returned by a
   strdup() call (#1132062)
 - pull in upstream fix for a possible null dereference in a db2 btree error
-  case (#1132062)
+  case (#1132063)
 - pull in upstream rewrite of getclhoststr() in the iprop service, to
   correctly detect wnen a client principal name is malformed (#1132067)
 
