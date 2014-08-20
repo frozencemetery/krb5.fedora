@@ -1,0 +1,43 @@
+commit f5345bba2a993066f9b886dae491d211ed9be057
+Author: Greg Hudson <ghudson@mit.edu>
+Date:   Thu Dec 20 14:17:45 2012 -0500
+
+    Avoid null dereference in BDB dbtree error case
+    
+    An error case in __bt_first would deference a null pointer.  This is
+    an old upstream BDB bug.  Use a separate variable to hold the result
+    of mpool_get() until it has been checked.  Reported by Nickolai
+    Zeldovich <nickolai@csail.mit.edu>.
+    
+    ticket: 7511
+
+diff --git a/src/plugins/kdb/db2/libdb2/btree/bt_seq.c b/src/plugins/kdb/db2/libdb2/btree/bt_seq.c
+index 5707cab..b39d89e 100644
+--- a/src/plugins/kdb/db2/libdb2/btree/bt_seq.c
++++ b/src/plugins/kdb/db2/libdb2/btree/bt_seq.c
+@@ -400,7 +400,7 @@ __bt_first(t, key, erval, exactp)
+ 	EPG *erval;
+ 	int *exactp;
+ {
+-	PAGE *h;
++	PAGE *h, *hprev;
+ 	EPG *ep, save;
+ 	db_pgno_t pg;
+ 
+@@ -444,14 +444,14 @@ __bt_first(t, key, erval, exactp)
+ 					break;
+ 				if (h->pgno != save.page->pgno)
+ 					mpool_put(t->bt_mp, h, 0);
+-				if ((h = mpool_get(t->bt_mp,
++				if ((hprev = mpool_get(t->bt_mp,
+ 				    h->prevpg, 0)) == NULL) {
+ 					if (h->pgno == save.page->pgno)
+ 						mpool_put(t->bt_mp,
+ 						    save.page, 0);
+ 					return (RET_ERROR);
+ 				}
+-				ep->page = h;
++				ep->page = h = hprev;
+ 				ep->index = NEXTINDEX(h);
+ 			}
+ 			--ep->index;
