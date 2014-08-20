@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.2
-Release: 2%{?dist}
+Release: 3%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -98,6 +98,7 @@ Patch139: krb5-master-rcache-acquirecred-source.patch
 Patch141: krb5-master-rcache-acquirecred-test.patch
 Patch142: krb5-master-move-otp-sockets.patch
 Patch145: krb5-master-mechd.patch
+Patch146: krb5-master-strdupcheck.patch
 Patch201: 0001-In-ksu-merge-krb5_ccache_copy-and-_restricted.patch
 Patch202: 0002-In-ksu-don-t-stat-not-on-disk-ccache-residuals.patch
 Patch203: 0003-Use-an-intermediate-memory-cache-in-ksu.patch
@@ -345,6 +346,7 @@ ln -s NOTICE LICENSE
 %patch141 -p1 -b .rcache-acquirecred-test
 %patch142 -p1 -b .move-otp-sockets
 %patch145 -p1 -b .master-mechd
+%patch146 -p1 -b .master-strdupcheck
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -1021,6 +1023,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Aug 20 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-3
+- pull in upstream fix for an incorrect check on the value returned by a
+  strdup() call (#1132062)
+
 * Sun Aug 17 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.12.2-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
 
