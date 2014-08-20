@@ -135,6 +135,7 @@ Patch167: http://web.mit.edu/kerberos/advisories/2014-001-patch.txt.asc
 
 Patch168: krb5-master-strdupcheck.patch
 Patch169: krb5-master-hprev.patch
+Patch170: krb5-master-getclhoststr.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -428,6 +429,7 @@ ln -s NOTICE LICENSE
 %patch166 -p1 -b .2014-001
 %patch168 -p1 -b .master-strdupcheck
 %patch169 -p1 -b .master-hprev
+%patch170 -p1 -b .master-getclhoststr
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -1106,6 +1108,8 @@ exit 0
   strdup() call (#1132062)
 - pull in upstream fix for a possible null dereference in a db2 btree error
   case (#1132062)
+- pull in upstream rewrite of getclhoststr() in the iprop service, to
+  correctly detect wnen a client principal name is malformed (#1132067)
 
 * Thu Aug  7 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-11
 - incorporate fix for MITKRB5-SA-2014-001 (CVE-2014-4345)

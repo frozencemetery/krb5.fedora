@@ -1,0 +1,46 @@
+commit 093704b74884dca424ffe5a88765e3c513f71ecb
+Author: Greg Hudson <ghudson@mit.edu>
+Date:   Thu Mar 21 01:48:22 2013 -0400
+
+    Clean up getclhoststr in ipropd_svc.c
+    
+    Based on a patch from Xi Wang <xi@mit.edu>.
+
+diff --git a/src/kadmin/server/ipropd_svc.c b/src/kadmin/server/ipropd_svc.c
+index ca96295..008bff0 100644
+--- a/src/kadmin/server/ipropd_svc.c
++++ b/src/kadmin/server/ipropd_svc.c
+@@ -239,24 +239,16 @@ out:
+  * Return arg cl str ptr on success, else NULL.
+  */
+ static char *
+-getclhoststr(char *clprinc, char *cl, size_t len)
++getclhoststr(const char *clprinc, char *cl, size_t len)
+ {
+-    char *s;
+-    if ((s = strchr(clprinc, '/')) != NULL) {
+-	/* XXX "!++s"?  */
+-	if (!++s)
+-	    return NULL;
+-	if (strlcpy(cl, s, len) >= len)
+-	    return NULL;
+-	/* XXX Copy with @REALM first, with bounds check, then
+-	   chop off the realm??  */
+-	if ((s = strchr(cl, '@')) != NULL) {
+-	    *s = '\0';
+-	    return (cl); /* success */
+-	}
+-    }
+-
+-    return (NULL);
++    const char *s, *e;
++
++    if ((s = strchr(clprinc, '/')) == NULL || (e = strchr(++s, '@')) == NULL ||
++	(size_t)(e - s) >= len)
++	return NULL;
++    memcpy(cl, s, e - s);
++    cl[e - s] = '\0';
++    return (cl);
+ }
+ 
+ static kdb_fullresync_result_t *
