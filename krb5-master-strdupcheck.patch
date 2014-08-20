@@ -1,0 +1,25 @@
+Tweaked to apply to 1.11.5.
+
+commit b6810da129512b6d0200580d78d22d38cc214e21
+Author: Lukas Slebodnik <lslebodn@redhat.com>
+Date:   Sat Jun 21 17:09:31 2014 +0200
+
+    Fix error check in krb5_ldap_parse_principal_name
+    
+    Test the correct variable for NULL to detect a strdup failure.
+    
+    [ghudson@mit.edu: clarified commit message]
+
+diff --git a/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c b/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c
+index 21695a9..44bf339 100644
+--- a/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c
++++ b/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c
+@@ -412,7 +412,7 @@ krb5_ldap_parse_principal_name(char *i_princ_name, char **o_princ_name)
+     at_rlm_name = strrchr(i_princ_name, '@');
+     if (!at_rlm_name) {
+         *o_princ_name = strdup(i_princ_name);
+-        if (!o_princ_name)
++        if (!*o_princ_name)
+             return ENOMEM;
+     } else {
+         krb5int_buf_init_dynamic(&buf);
