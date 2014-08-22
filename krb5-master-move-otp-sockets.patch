@@ -1,4 +1,4 @@
-Adjusted to apply after the local doublelog patch.
+Adjusted to apply to 1.12.2.
 
 commit 1e4bdcfed2c7bda94d5c135cc32a5993ca032501
 Author: Nathaniel McCallum <npmccallum@redhat.com>
@@ -103,8 +103,9 @@ diff --git a/src/configure.in b/src/configure.in
 index 2145d54..c2eaf78 100644
 --- a/src/configure.in
 +++ b/src/configure.in
-@@ -1,5 +1,11 @@
- K5_AC_INIT([aclocal.m4])
+@@ -9,6 +9,12 @@
+ fi
+ AC_SUBST(SYSCONFCONF)
  
 +# If $runstatedir isn't set by autoconf (<2.70), set it manually.
 +if test x"$runstatedir" == x; then
@@ -153,8 +154,8 @@ index e13042a..f83ff4e 100644
  		  -e 's+@LOCALSTATEDIR+$(LOCALSTATEDIR)+' \
 +		  -e 's+@RUNSTATEDIR+$(RUNSTATEDIR)+' \
  		  -e 's+@SYSCONFDIR+$(SYSCONFDIR)+' \
- 		  -e 's+:/etc/krb5.conf:/etc/krb5.conf"+:/etc/krb5.conf"+' \
- 		  -e 's+"/etc/krb5.conf:/etc/krb5.conf"+"/etc/krb5.conf"+' \
+ 		  -e 's+@DYNOBJEXT+$(DYNOBJEXT)+' \
+ 		  -e 's+@SYSCONFCONF+$(SYSCONFCONF)+'
 diff --git a/src/include/osconf.hin b/src/include/osconf.hin
 index 90ab86d..871503a 100644
 --- a/src/include/osconf.hin
