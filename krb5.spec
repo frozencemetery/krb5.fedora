@@ -37,19 +37,20 @@
 %global configure_default_ccache_name 1
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 %endif
+%global prerelease -alpha1
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.12.2
-Release: 3%{?dist}
+Version: 1.13
+Release: 0%{?dist}.alpha1.1
 # Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.2-signed.tar
-Source0: krb5-%{version}.tar.gz
-Source1: krb5-%{version}.tar.gz.asc
+# http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13-alpha1-signed.tar
+Source0: krb5-%{version}%{prerelease}.tar.gz
+Source1: krb5-%{version}%{prerelease}.tar.gz.asc
 # Use a dummy krb5-%{version}-pdf.tar.xz the first time through, then
 #  tar cvJf $RPM_SOURCE_DIR/krb5-%%{version}-pdf.tar.xz build-pdf/*.pdf
 # after the build phase finishes.
-Source3: krb5-%{version}-pdf.tar.xz
+Source3: krb5-%{version}%{prerelease}-pdf.tar.xz
 Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
@@ -76,36 +77,18 @@ Source100: nss_wrapper-0.0-20140204195100.git3d58327.tar.xz
 Source101: noport.c
 Source102: socket_wrapper-0.0-20140204194748.gitf3b2ece.tar.xz
 
-Patch1: krb5-1.12-pwdch-fast.patch
 Patch6: krb5-1.12-ksu-path.patch
 Patch12: krb5-1.12-ktany.patch
 Patch16: krb5-1.12-buildconf.patch
 Patch23: krb5-1.3.1-dns.patch
-Patch29: krb5-1.10-kprop-mktemp.patch
-Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch39: krb5-1.12-api.patch
-Patch59: krb5-1.10-kpasswd_tcp.patch
 Patch60: krb5-1.12.1-pam.patch
-Patch63: krb5-1.12-selinux-label.patch
-Patch71: krb5-1.11-dirsrv-accountlock.patch
+Patch63: krb5-1.13-selinux-label.patch
+Patch71: krb5-1.13-dirsrv-accountlock.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
-Patch136: krb5-master-rcache-internal-const.patch
-Patch137: krb5-master-rcache-acquirecred-cleanup.patch
-Patch139: krb5-master-rcache-acquirecred-source.patch
-Patch141: krb5-master-rcache-acquirecred-test.patch
-Patch142: krb5-master-move-otp-sockets.patch
-Patch145: krb5-master-mechd.patch
-Patch146: krb5-master-strdupcheck.patch
-Patch201: 0001-In-ksu-merge-krb5_ccache_copy-and-_restricted.patch
-Patch202: 0002-In-ksu-don-t-stat-not-on-disk-ccache-residuals.patch
-Patch203: 0003-Use-an-intermediate-memory-cache-in-ksu.patch
-Patch204: 0004-Make-ksu-respect-the-default_ccache_name-setting.patch
-Patch205: 0005-Copy-config-entries-to-the-ksu-target-ccache.patch
-Patch206: 0006-Use-more-randomness-for-ksu-secondary-cache-names.patch
-Patch207: 0007-Make-krb5_cc_new_unique-create-DIR-directories.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -238,8 +221,6 @@ Requires: chkconfig
 # we drop files in its directory, but we don't want to own that directory
 Requires: logrotate
 Requires(preun): initscripts
-# mktemp is used by krb5-send-pr
-Requires: coreutils
 # we specify /usr/share/dict/words as the default dict_file in kdc.conf
 Requires: /usr/share/dict/words
 %if %{WITH_SYSVERTO}
@@ -272,8 +253,6 @@ realm, you need to install this package.
 Summary: Kerberos 5 programs for use on workstations
 Group: System Environment/Base
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
-# mktemp is used by krb5-send-pr
-Requires: coreutils
 
 %description workstation
 Kerberos is a network authentication system. The krb5-workstation
@@ -305,18 +284,8 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -a 3 -a 100 -a 102
+%setup -q -n %{name}-%{version}%{prerelease} -a 3 -a 100 -a 102
 ln -s NOTICE LICENSE
-
-%patch201 -p1 -b .In-ksu-merge-krb5_ccache_copy-and-_restricted
-%patch202 -p1 -b .In-ksu-don-t-stat-not-on-disk-ccache-residuals
-%patch203 -p1 -b .Use-an-intermediate-memory-cache-in-ksu
-%patch204 -p1 -b .Make-ksu-respect-the-default_ccache_name-setting
-%patch205 -p1 -b .Copy-config-entries-to-the-ksu-target-ccache
-%patch206 -p1 -b .Use-more-randomness-for-ksu-secondary-cache-names
-%patch207 -p1 -b .Make-krb5_cc_new_unique-create-DIR-directories
-
-%patch1 -p1 -b .pwdch-fast
 
 %patch60 -p1 -b .pam
 
@@ -326,10 +295,7 @@ ln -s NOTICE LICENSE
 %patch12 -p1 -b .ktany
 %patch16 -p1 -b .buildconf %{?_rawbuild}
 %patch23 -p1 -b .dns %{?_rawbuild}
-%patch29 -p1 -b .kprop-mktemp
-%patch30 -p1 -b .send-pr-tempfile
 %patch39 -p1 -b .api
-%patch59 -p1 -b .kpasswd_tcp
 %patch71 -p1 -b .dirsrv-accountlock %{?_rawbuild}
 %patch86 -p0 -b .debuginfo
 %patch105 -p1 -b .kvno
@@ -339,14 +305,6 @@ ln -s NOTICE LICENSE
 %patch129 -p1 -b .run_user_0
 
 %patch134 -p1 -b .kpasswdtest
-
-%patch136 -p1 -b .rcache-internal-const
-%patch137 -p1 -b .rcache-acquirecred-cleanup
-%patch139 -p1 -b .rcache-acquirecred-source
-%patch141 -p1 -b .rcache-acquirecred-test
-%patch142 -p1 -b .move-otp-sockets
-%patch145 -p1 -b .master-mechd
-%patch146 -p1 -b .master-strdupcheck
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -364,8 +322,6 @@ touch -r $inldif 60kerberos.ldif
 
 # Rebuild the configure scripts.
 pushd src
-#autoheader
-#autoconf
 ./util/reconf --verbose
 popd
 
@@ -378,9 +334,7 @@ mkdir -p socket_wrapper/build
 cfg="src/kadmin/testing/proto/kdc.conf.proto \
      src/kadmin/testing/proto/krb5.conf.proto \
      src/lib/kadm5/unit-test/api.current/init-v2.exp \
-     src/util/k5test.py \
-     src/tests/mk_migr/ldap_backend/input_conf/*.conf \
-     src/tests/mk_migr/db2_backend/input_conf/*.conf"
+     src/util/k5test.py"
 LONG_BIT=`getconf LONG_BIT`
 PORT=`expr 61000 + $LONG_BIT - 48`
 sed -i -e s,61000,`expr "$PORT" + 0`,g $cfg
@@ -442,9 +396,11 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 %endif
 %if %{WITH_OPENSSL}
 	--with-pkinit-crypto-impl=openssl \
+	--with-tls-impl=openssl \
 %endif
 %if %{WITH_NSS}
 	--with-crypto-impl=nss \
+	--without-tls-impl \
 %endif
 %if %{WITH_SYSVERTO}
 	--with-system-verto \
@@ -656,6 +612,10 @@ for section in 1 5 8 ; do
 		       $RPM_BUILD_ROOT/%{_mandir}/man${section}/
 done
 
+# This script just tells you to send bug reports to krb5-bugs@mit.edu, but
+# since we don't have a man page for it, just drop it.
+rm $RPM_BUILD_ROOT/%{_sbindir}/krb5-send-pr
+
 %find_lang %{gettext_domain}
 
 %clean
@@ -831,12 +791,6 @@ exit 0
 %{_mandir}/man1/ksu.1*
 %config(noreplace) /etc/pam.d/ksu
 
-# Problem-reporting tool.
-%{_sbindir}/krb5-send-pr
-%dir %{_datadir}/gnats
-%{_datadir}/gnats/mit
-%{_mandir}/man1/krb5-send-pr.1*
-
 %files server
 %defattr(-,root,root,-)
 %docdir %{_mandir}
@@ -870,13 +824,6 @@ exit 0
 %dir %{_libdir}/krb5/plugins/preauth
 %dir %{_libdir}/krb5/plugins/authdata
 %{_libdir}/krb5/plugins/preauth/otp.so
-
-
-# Problem-reporting tool.
-%{_sbindir}/krb5-send-pr
-%dir %{_datadir}/gnats
-%{_datadir}/gnats/mit
-%{_mandir}/man1/krb5-send-pr.1*
 
 # KDC binaries and configuration.
 %{_mandir}/man5/kadm5.acl.5*
@@ -961,6 +908,9 @@ exit 0
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/*
 %{_libdir}/krb5/plugins/kdb/db2.so
+%if %{WITH_OPENSSL}
+%{_libdir}/krb5/plugins/tls/k5tls.so
+%endif
 %dir %{_var}/kerberos
 %dir %{_var}/kerberos/krb5
 %dir %{_var}/kerberos/krb5/user
@@ -1023,6 +973,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Aug 22 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-4
+- update to 1.13 alpha1
+  - drop upstreamed and backported patches
+
 * Wed Aug 20 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-3
 - pull in upstream fix for an incorrect check on the value returned by a
   strdup() call (#1132062)
