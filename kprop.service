@@ -4,7 +4,7 @@ After=syslog.target network.target
 
 [Service]
 Type=forking
-ExecStart=/usr/sbin/_kpropd -S
+ExecStart=/usr/sbin/_kpropd
 
 [Install]
 WantedBy=multi-user.target

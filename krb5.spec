@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.2
-Release: 3%{?dist}
+Release: 4%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -1023,6 +1023,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Aug 26 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-4
+- kpropd hasn't bothered with -S since 1.11; stop trying to use that flag
+  in the systemd unit file
+
 * Wed Aug 20 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-3
 - pull in upstream fix for an incorrect check on the value returned by a
   strdup() call (#1132062)
