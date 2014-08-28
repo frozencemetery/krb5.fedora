@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.5
-Release: 13%{?dist}
+Release: 14%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -136,6 +136,7 @@ Patch167: http://web.mit.edu/kerberos/advisories/2014-001-patch.txt.asc
 Patch168: krb5-master-strdupcheck.patch
 Patch169: krb5-master-hprev.patch
 Patch170: krb5-master-getclhoststr.patch
+Patch171: krb5-master-compatible-keys.patch
 
 # Patches for otp plugin backport
 Patch201: krb5-1.11.2-keycheck.patch
@@ -430,6 +431,7 @@ ln -s NOTICE LICENSE
 %patch168 -p1 -b .master-strdupcheck
 %patch169 -p1 -b .master-hprev
 %patch170 -p1 -b .master-getclhoststr
+%patch171 -p1 -b .master-compatible-keys
 
 %patch201 -p1 -b .keycheck
 %patch202 -p1 -b .otp
@@ -1103,6 +1105,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Aug 28 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-14
+- backport fix for trying all compatible keys when not being strict about
+  acceptor names while reading AP-REQs (RT#7883, #1078888)
+
 * Tue Aug 26 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-13
 - kpropd hasn't bothered with -S since 1.11; stop trying to use that flag
   in the systemd unit file
