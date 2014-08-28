@@ -1,0 +1,53 @@
+On a glibc system, EAI_NODATA isn't defined unless _GNU_SOURCE is.  The
+recommended thing is to use AC_USE_SYSTEM_EXTENSIONS to get all extensions
+defined, but that would require fixups in varous other places, so we go for the
+smaller change here.
+
+--- krb5-1.11/src/lib/krb5/os/hostrealm.c
++++ krb5-1.11/src/lib/krb5/os/hostrealm.c
+@@ -30,6 +30,9 @@
+  * OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
++/* We need to have EAI_NODATA and friends declared. */
++#define _GNU_SOURCE
++
+ #include "k5-int.h"
+ #include "os-proto.h"
+ #include "fake-addrinfo.h"
+--- krb5-1.11/src/lib/krb5/os/sendto_kdc.c
++++ krb5-1.11/src/lib/krb5/os/sendto_kdc.c
+@@ -27,6 +27,9 @@
+ /* Send packet to KDC for realm; wait for response, retransmitting
+  * as necessary. */
+ 
++/* We need to have EAI_NODATA and friends declared. */
++#define _GNU_SOURCE
++
+ #include "fake-addrinfo.h"
+ #include "k5-int.h"
+ 
+--- krb5-1.11/src/util/support/fake-addrinfo.c
++++ krb5-1.11/src/util/support/fake-addrinfo.c
+@@ -101,6 +101,9 @@
+  *   these functions, and throw all this away.  Pleeease?  :-)
+  */
+ 
++/* We need to have EAI_NODATA and friends declared. */
++#define _GNU_SOURCE
++
+ #include "port-sockets.h"
+ #include "socket-utils.h"
+ #include "k5-platform.h"
+--- krb5-1.12/src/lib/krad/client.c
++++ krb5-1.12/src/lib/krad/client.c
+@@ -27,6 +27,9 @@
+  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
++/* We need to have EAI_NODATA and friends declared. */
++#define _GNU_SOURCE
++
+ #include <k5-queue.h>
+ #include "internal.h"
+ 
