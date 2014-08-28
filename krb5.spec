@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.2
-Release: 4%{?dist}
+Release: 5%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -99,6 +99,7 @@ Patch141: krb5-master-rcache-acquirecred-test.patch
 Patch142: krb5-master-move-otp-sockets.patch
 Patch145: krb5-master-mechd.patch
 Patch146: krb5-master-strdupcheck.patch
+Patch147: krb5-master-compatible-keys.patch
 Patch201: 0001-In-ksu-merge-krb5_ccache_copy-and-_restricted.patch
 Patch202: 0002-In-ksu-don-t-stat-not-on-disk-ccache-residuals.patch
 Patch203: 0003-Use-an-intermediate-memory-cache-in-ksu.patch
@@ -347,6 +348,7 @@ ln -s NOTICE LICENSE
 %patch142 -p1 -b .move-otp-sockets
 %patch145 -p1 -b .master-mechd
 %patch146 -p1 -b .master-strdupcheck
+%patch147 -p1 -b .master-compatible-keys
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -1023,6 +1025,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Aug 28 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-5
+- backport fix for trying all compatible keys when not being strict about
+  acceptor names while reading AP-REQs (RT#7883, #1078888)
+
 * Tue Aug 26 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-4
 - kpropd hasn't bothered with -S since 1.11; stop trying to use that flag
   in the systemd unit file
