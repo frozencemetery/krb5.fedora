@@ -1,0 +1,562 @@
+From f7825e81b1ebf533c1dba9f84ae9ad36073a89cf Mon Sep 17 00:00:00 2001
+From: Nalin Dahyabhai <nalin@dahyabhai.net>
+Date: Thu, 17 Apr 2014 17:19:03 -0400
+Subject: [PATCH 09/13] Check names in the server's cert when using KKDCP
+
+When we connect to a KDC using an HTTPS proxy, check that the naming
+information in the certificate matches the name or address which we
+extracted from the server URL in the configuration.
+
+ticket: 7929
+---
+ src/include/k5-trace.h       |   5 +
+ src/lib/krb5/os/Makefile.in  |   3 +
+ src/lib/krb5/os/checkhost.c  | 251 +++++++++++++++++++++++++++++++++++++++++++
+ src/lib/krb5/os/checkhost.h  |  39 +++++++
+ src/lib/krb5/os/deps         |  14 ++-
+ src/lib/krb5/os/sendto_kdc.c |  53 +++++++--
+ 6 files changed, 355 insertions(+), 10 deletions(-)
+ create mode 100644 src/lib/krb5/os/checkhost.c
+ create mode 100644 src/lib/krb5/os/checkhost.h
+
+diff --git a/src/include/k5-trace.h b/src/include/k5-trace.h
+index 046bc95..9e75b29 100644
+--- a/src/include/k5-trace.h
++++ b/src/include/k5-trace.h
+@@ -324,6 +324,11 @@ void krb5int_trace(krb5_context context, const char *fmt, ...);
+     TRACE(c, "Resolving hostname {str}", hostname)
+ #define TRACE_SENDTO_KDC_RESPONSE(c, len, raddr)                        \
+     TRACE(c, "Received answer ({int} bytes) from {raddr}", len, raddr)
++#define TRACE_SENDTO_KDC_HTTPS_SERVER_NAME_MISMATCH(c, hostname)        \
++    TRACE(c, "HTTPS certificate name mismatch: server certificate is "  \
++          "not for \"{str}\"", hostname)
++#define TRACE_SENDTO_KDC_HTTPS_SERVER_NAME_MATCH(c, hostname)           \
++    TRACE(c, "HTTPS certificate name matched \"{str}\"", hostname)
+ #define TRACE_SENDTO_KDC_HTTPS_NO_REMOTE_CERTIFICATE(c)                 \
+     TRACE(c, "HTTPS server certificate not received")
+ #define TRACE_SENDTO_KDC_HTTPS_PROXY_CERTIFICATE_ERROR(c, depth,        \
+diff --git a/src/lib/krb5/os/Makefile.in b/src/lib/krb5/os/Makefile.in
+index fb4001a..fa8a093 100644
+--- a/src/lib/krb5/os/Makefile.in
++++ b/src/lib/krb5/os/Makefile.in
+@@ -13,6 +13,7 @@ STLIBOBJS= \
+ 	c_ustime.o	\
+ 	ccdefname.o	\
+ 	changepw.o	\
++	checkhost.o	\
+ 	dnsglue.o	\
+ 	dnssrv.o	\
+ 	expand_path.o	\
+@@ -59,6 +60,7 @@ OBJS= \
+ 	$(OUTPRE)c_ustime.$(OBJEXT)	\
+ 	$(OUTPRE)ccdefname.$(OBJEXT)	\
+ 	$(OUTPRE)changepw.$(OBJEXT)	\
++	$(OUTPRE)checkhost.$(OBJEXT)	\
+ 	$(OUTPRE)dnsglue.$(OBJEXT)	\
+ 	$(OUTPRE)dnssrv.$(OBJEXT)	\
+ 	$(OUTPRE)expand_path.$(OBJEXT)	\
+@@ -105,6 +107,7 @@ SRCS= \
+ 	$(srcdir)/c_ustime.c	\
+ 	$(srcdir)/ccdefname.c	\
+ 	$(srcdir)/changepw.c	\
++	$(srcdir)/checkhost.c	\
+ 	$(srcdir)/dnsglue.c	\
+ 	$(srcdir)/dnssrv.c	\
+ 	$(srcdir)/expand_path.c	\
+diff --git a/src/lib/krb5/os/checkhost.c b/src/lib/krb5/os/checkhost.c
+new file mode 100644
+index 0000000..a91615d
+--- /dev/null
++++ b/src/lib/krb5/os/checkhost.c
+@@ -0,0 +1,251 @@
++/*
++ * Copyright 2014 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "k5-int.h"
++#include "k5-utf8.h"
++
++#ifdef PROXY_TLS_IMPL_OPENSSL
++#include <openssl/ssl.h>
++#include <openssl/x509.h>
++#include <openssl/x509v3.h>
++#include "checkhost.h"
++
++/* Return the passed-in character, lower-cased if it's an ASCII character. */
++static inline char
++ascii_tolower(char p)
++{
++    if (KRB5_UPPER(p))
++        return p + ('a' - 'A');
++    return p;
++}
++
++/*
++ * Check a single label.  If allow_wildcard is true, and the presented name
++ * includes a wildcard, return true and note that we matched a wildcard.
++ * Otherwise, for both the presented and expected values, do a case-insensitive
++ * comparison of ASCII characters, and a case-sensitive comparison of
++ * everything else.
++ */
++static krb5_boolean
++label_match(const char *presented, size_t plen, const char *expected,
++            size_t elen, krb5_boolean allow_wildcard, krb5_boolean *wildcard)
++{
++    unsigned int i;
++
++    if (allow_wildcard && plen == 1 && presented[0] == '*') {
++        *wildcard = TRUE;
++        return TRUE;
++    }
++
++    if (plen != elen)
++        return FALSE;
++
++    for (i = 0; i < elen; i++) {
++        if (ascii_tolower(presented[i]) != ascii_tolower(expected[i]))
++            return FALSE;
++    }
++    return TRUE;
++}
++
++/* Break up the two names and check them, label by label. */
++static krb5_boolean
++domain_match(const char *presented, size_t plen, const char *expected)
++{
++    const char *p, *q, *r, *s;
++    int n_label;
++    krb5_boolean used_wildcard = FALSE;
++
++    n_label = 0;
++    p = presented;
++    r = expected;
++    while (p < presented + plen && *r != '\0') {
++        q = memchr(p, '.', plen - (p - presented));
++        if (q == NULL)
++            q = presented + plen;
++        s = r + strcspn(r, ".");
++        if (!label_match(p, q - p, r, s - r, n_label == 0, &used_wildcard))
++            return FALSE;
++        p = q < presented + plen ? q + 1 : q;
++        r = *s ? s + 1 : s;
++        n_label++;
++    }
++    if (used_wildcard && n_label <= 2)
++        return FALSE;
++    if (p == presented + plen && *r == '\0')
++        return TRUE;
++    return FALSE;
++}
++
++/* Fetch the list of subjectAltNames from a certificate. */
++static GENERAL_NAMES *
++get_cert_sans(X509 *x)
++{
++    int ext;
++    X509_EXTENSION *san_ext;
++
++    ext = X509_get_ext_by_NID(x, NID_subject_alt_name, -1);
++    if (ext < 0)
++        return NULL;
++    san_ext = X509_get_ext(x, ext);
++    if (san_ext == NULL)
++        return NULL;
++    return X509V3_EXT_d2i(san_ext);
++}
++
++/* Fetch a CN value from the subjct name field, returning its length, or -1 if
++ * there is no subject name or it contains no CN value. */
++static ssize_t
++get_cert_cn(X509 *x, char *buf, size_t bufsize)
++{
++    X509_NAME *name;
++
++    name = X509_get_subject_name(x);
++    if (name == NULL)
++        return -1;
++    return X509_NAME_get_text_by_NID(name, NID_commonName, buf, bufsize);
++}
++
++/*
++ * Return true if the passed-in expected IP address matches any of the names we
++ * can recover from the server certificate, false otherwise.
++ */
++krb5_boolean
++k5_check_cert_address(X509 *x, const char *text)
++{
++    char buf[1024];
++    GENERAL_NAMES *sans;
++    GENERAL_NAME *san = NULL;
++    ASN1_OCTET_STRING *ip;
++    krb5_boolean found_ip_san = FALSE, matched = FALSE;
++    int n_sans, i;
++    size_t name_length;
++    union {
++        struct in_addr in;
++        struct in6_addr in6;
++    } name;
++
++    /* Parse the IP address into an octet string. */
++    ip = M_ASN1_OCTET_STRING_new();
++    if (ip == NULL)
++        return FALSE;
++
++    if (inet_aton(text, &name.in) == 1)
++        name_length = sizeof(name.in);
++    else if (inet_pton(AF_INET6, text, &name.in6) == 1)
++        name_length = sizeof(name.in6);
++    else
++        name_length = 0;
++
++    if (name_length == 0) {
++        ASN1_OCTET_STRING_free(ip);
++        return FALSE;
++    }
++    M_ASN1_OCTET_STRING_set(ip, &name, name_length);
++
++    /* Check for matches in ipaddress subjectAltName values. */
++    sans = get_cert_sans(x);
++    if (sans != NULL) {
++        n_sans = sk_GENERAL_NAME_num(sans);
++        for (i = 0; i < n_sans; i++) {
++            san = sk_GENERAL_NAME_value(sans, i);
++            if (san->type != GEN_IPADD)
++                continue;
++            found_ip_san = TRUE;
++            matched = ASN1_OCTET_STRING_cmp(ip, san->d.iPAddress) == 0;
++            if (matched)
++                break;
++        }
++        sk_GENERAL_NAME_pop_free(sans, GENERAL_NAME_free);
++    }
++    ASN1_OCTET_STRING_free(ip);
++
++    if (matched)
++        return TRUE;
++    if (found_ip_san)
++        return matched;
++
++    /* Check for a match against the CN value in the peer's subject name. */
++    name_length = get_cert_cn(x, buf, sizeof(buf));
++    if (name_length >= 0) {
++        /* Do a string compare to check if it's an acceptable value. */
++        return strlen(text) == name_length &&
++               strncmp(text, buf, name_length) == 0;
++    }
++
++    /* We didn't find a match. */
++    return FALSE;
++}
++
++/*
++ * Return true if the passed-in expected name matches any of the names we can
++ * recover from a server certificate, false otherwise.
++ */
++krb5_boolean
++k5_check_cert_servername(X509 *x, const char *expected)
++{
++    char buf[1024];
++    GENERAL_NAMES *sans;
++    GENERAL_NAME *san = NULL;
++    unsigned char *dnsname;
++    krb5_boolean found_dns_san = FALSE, matched = FALSE;
++    int name_length, n_sans, i;
++
++    /* Check for matches in dnsname subjectAltName values. */
++    sans = get_cert_sans(x);
++    if (sans != NULL) {
++        n_sans = sk_GENERAL_NAME_num(sans);
++        for (i = 0; i < n_sans; i++) {
++            san = sk_GENERAL_NAME_value(sans, i);
++            if (san->type != GEN_DNS)
++                continue;
++            found_dns_san = TRUE;
++            dnsname = NULL;
++            name_length = ASN1_STRING_to_UTF8(&dnsname, san->d.dNSName);
++            if (dnsname == NULL)
++                continue;
++            matched = domain_match((char *)dnsname, name_length, expected);
++            OPENSSL_free(dnsname);
++            if (matched)
++                break;
++        }
++        sk_GENERAL_NAME_pop_free(sans, GENERAL_NAME_free);
++    }
++
++    if (matched)
++        return TRUE;
++    if (found_dns_san)
++        return matched;
++
++    /* Check for a match against the CN value in the peer's subject name. */
++    name_length = get_cert_cn(x, buf, sizeof(buf));
++    if (name_length >= 0)
++        return domain_match(buf, name_length, expected);
++
++    /* We didn't find a match. */
++    return FALSE;
++}
++#endif
+diff --git a/src/lib/krb5/os/checkhost.h b/src/lib/krb5/os/checkhost.h
+new file mode 100644
+index 0000000..b9d751e
+--- /dev/null
++++ b/src/lib/krb5/os/checkhost.h
+@@ -0,0 +1,39 @@
++/* -*- mode: c; c-basic-offset: 4; indent-tabs-mode: nil -*- */
++/*
++ * Copyright 2014 Red Hat, Inc.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/*
++ * Certificate subjectAltName check prototypes.
++ */
++
++#ifndef KRB5_LIBOS_CHECKHOST_PROTO__
++#define KRB5_LIBOS_CHECKHOST_PROTO__
++
++krb5_boolean k5_check_cert_servername(X509 *x, const char *expected);
++krb5_boolean k5_check_cert_address(X509 *x, const char *expected);
++
++#endif /* KRB5_LIBOS_CHECKHOST_PROTO__ */
+diff --git a/src/lib/krb5/os/deps b/src/lib/krb5/os/deps
+index 3dd6d46..d56ff30 100644
+--- a/src/lib/krb5/os/deps
++++ b/src/lib/krb5/os/deps
+@@ -49,6 +49,17 @@ changepw.so changepw.po $(OUTPRE)changepw.$(OBJEXT): \
+   $(top_srcdir)/include/krb5/locate_plugin.h $(top_srcdir)/include/krb5/plugin.h \
+   $(top_srcdir)/include/port-sockets.h $(top_srcdir)/include/socket-utils.h \
+   changepw.c os-proto.h
++checkhost.so checkhost.po $(OUTPRE)checkhost.$(OBJEXT): \
++  $(BUILDTOP)/include/autoconf.h $(BUILDTOP)/include/krb5/krb5.h \
++  $(BUILDTOP)/include/osconf.h $(BUILDTOP)/include/profile.h \
++  $(COM_ERR_DEPS) $(top_srcdir)/include/k5-buf.h $(top_srcdir)/include/k5-err.h \
++  $(top_srcdir)/include/k5-gmt_mktime.h $(top_srcdir)/include/k5-int-pkinit.h \
++  $(top_srcdir)/include/k5-int.h $(top_srcdir)/include/k5-platform.h \
++  $(top_srcdir)/include/k5-plugin.h $(top_srcdir)/include/k5-thread.h \
++  $(top_srcdir)/include/k5-trace.h $(top_srcdir)/include/k5-utf8.h \
++  $(top_srcdir)/include/krb5.h $(top_srcdir)/include/krb5/authdata_plugin.h \
++  $(top_srcdir)/include/krb5/plugin.h $(top_srcdir)/include/port-sockets.h \
++  $(top_srcdir)/include/socket-utils.h checkhost.c checkhost.h
+ dnsglue.so dnsglue.po $(OUTPRE)dnsglue.$(OBJEXT): $(BUILDTOP)/include/autoconf.h \
+   $(BUILDTOP)/include/krb5/krb5.h $(BUILDTOP)/include/osconf.h \
+   $(BUILDTOP)/include/profile.h $(COM_ERR_DEPS) $(top_srcdir)/include/k5-buf.h \
+@@ -418,7 +429,8 @@ sendto_kdc.so sendto_kdc.po $(OUTPRE)sendto_kdc.$(OBJEXT): \
+   $(top_srcdir)/include/k5-trace.h $(top_srcdir)/include/krb5.h \
+   $(top_srcdir)/include/krb5/authdata_plugin.h $(top_srcdir)/include/krb5/locate_plugin.h \
+   $(top_srcdir)/include/krb5/plugin.h $(top_srcdir)/include/port-sockets.h \
+-  $(top_srcdir)/include/socket-utils.h os-proto.h sendto_kdc.c
++  $(top_srcdir)/include/socket-utils.h checkhost.h os-proto.h \
++  sendto_kdc.c
+ sn2princ.so sn2princ.po $(OUTPRE)sn2princ.$(OBJEXT): \
+   $(BUILDTOP)/include/autoconf.h $(BUILDTOP)/include/krb5/krb5.h \
+   $(BUILDTOP)/include/osconf.h $(BUILDTOP)/include/profile.h \
+diff --git a/src/lib/krb5/os/sendto_kdc.c b/src/lib/krb5/os/sendto_kdc.c
+index 4bd8698..f083c0f 100644
+--- a/src/lib/krb5/os/sendto_kdc.c
++++ b/src/lib/krb5/os/sendto_kdc.c
+@@ -80,6 +80,7 @@
+ #include <openssl/x509.h>
+ #include <openssl/x509v3.h>
+ #include <dirent.h>
++#include "checkhost.h"
+ #endif
+ 
+ #define MAX_PASS                    3
+@@ -148,6 +149,7 @@ struct conn_state {
+     krb5_boolean defer;
+     struct {
+         const char *uri_path;
++        const char *servername;
+         char *https_request;
+ #ifdef PROXY_TLS_IMPL_OPENSSL
+         SSL *ssl;
+@@ -158,6 +160,7 @@ struct conn_state {
+ #ifdef PROXY_TLS_IMPL_OPENSSL
+ /* Extra-data identifier, used to pass context into the verify callback. */
+ static int ssl_ex_context_id = -1;
++static int ssl_ex_conn_id = -1;
+ #endif
+ 
+ void
+@@ -169,6 +172,7 @@ k5_sendto_kdc_initialize(void)
+     OpenSSL_add_all_algorithms();
+ 
+     ssl_ex_context_id = SSL_get_ex_new_index(0, NULL, NULL, NULL, NULL);
++    ssl_ex_conn_id = SSL_get_ex_new_index(0, NULL, NULL, NULL, NULL);
+ #endif
+ }
+ 
+@@ -635,7 +639,8 @@ set_transport_message(struct conn_state *state, const krb5_data *realm,
+ static krb5_error_code
+ add_connection(struct conn_state **conns, k5_transport transport,
+                krb5_boolean defer, struct addrinfo *ai, size_t server_index,
+-               const krb5_data *realm, const char *uri_path, char **udpbufp)
++               const krb5_data *realm, const char *hostname,
++               const char *uri_path, char **udpbufp)
+ {
+     struct conn_state *state, **tailptr;
+ 
+@@ -661,6 +666,7 @@ add_connection(struct conn_state **conns, k5_transport transport,
+         state->service_write = service_https_write;
+         state->service_read = service_https_read;
+         state->http.uri_path = uri_path;
++        state->http.servername = hostname;
+     } else {
+         state->service_connect = NULL;
+         state->service_write = NULL;
+@@ -760,8 +766,8 @@ resolve_server(krb5_context context, const krb5_data *realm,
+         ai.ai_addrlen = entry->addrlen;
+         ai.ai_addr = (struct sockaddr *)&entry->addr;
+         defer = (entry->transport != transport);
+-        return add_connection(conns, entry->transport, defer, &ai, ind,
+-                              realm, entry->uri_path, udpbufp);
++        return add_connection(conns, entry->transport, defer, &ai, ind, realm,
++                              NULL, entry->uri_path, udpbufp);
+     }
+ 
+     /* If the entry has a specified transport, use it. */
+@@ -787,7 +793,7 @@ resolve_server(krb5_context context, const krb5_data *realm,
+     retval = 0;
+     for (a = addrs; a != 0 && retval == 0; a = a->ai_next) {
+         retval = add_connection(conns, transport, FALSE, a, ind, realm,
+-                                entry->uri_path, udpbufp);
++                                entry->hostname, entry->uri_path, udpbufp);
+     }
+ 
+     /* For TCP_OR_UDP entries, add each address again with the non-preferred
+@@ -797,7 +803,7 @@ resolve_server(krb5_context context, const krb5_data *realm,
+         for (a = addrs; a != 0 && retval == 0; a = a->ai_next) {
+             a->ai_socktype = socktype_for_transport(transport);
+             retval = add_connection(conns, transport, TRUE, a, ind, realm,
+-                                    entry->uri_path, udpbufp);
++                                    entry->hostname, entry->uri_path, udpbufp);
+         }
+     }
+     freeaddrinfo(addrs);
+@@ -1260,6 +1266,20 @@ cleanup:
+     return err;
+ }
+ 
++static krb5_boolean
++ssl_check_name_or_ip(X509 *x, const char *expected_name)
++{
++    struct in_addr in;
++    struct in6_addr in6;
++
++    if (inet_aton(expected_name, &in) != 0 ||
++        inet_pton(AF_INET6, expected_name, &in6) != 0) {
++        return k5_check_cert_address(x, expected_name);
++    } else {
++        return k5_check_cert_servername(x, expected_name);
++    }
++}
++
+ static int
+ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *store_ctx)
+ {
+@@ -1268,12 +1288,14 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *store_ctx)
+     BIO *bio;
+     krb5_context context;
+     int err, depth;
+-    const char *cert = NULL, *errstr;
++    struct conn_state *conn = NULL;
++    const char *cert = NULL, *errstr, *expected_name;
+     size_t count;
+ 
+     ssl = X509_STORE_CTX_get_ex_data(store_ctx,
+                                      SSL_get_ex_data_X509_STORE_CTX_idx());
+     context = SSL_get_ex_data(ssl, ssl_ex_context_id);
++    conn = SSL_get_ex_data(ssl, ssl_ex_conn_id);
+     /* We do have the peer's cert, right? */
+     x = X509_STORE_CTX_get_current_cert(store_ctx);
+     if (x == NULL) {
+@@ -1299,8 +1321,19 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *store_ctx)
+         }
+         return 0;
+     }
+-    /* All done. */
+-    return 1;
++    /* If we're not looking at the peer, we're done and everything's ok. */
++    if (depth != 0)
++        return 1;
++    /* Check if the name we expect to find is in the certificate. */
++    expected_name = conn->http.servername;
++    if (ssl_check_name_or_ip(x, expected_name)) {
++        TRACE_SENDTO_KDC_HTTPS_SERVER_NAME_MATCH(context, expected_name);
++        return 1;
++    } else {
++        TRACE_SENDTO_KDC_HTTPS_SERVER_NAME_MISMATCH(context, expected_name);
++    }
++    /* The name didn't match. */
++    return 0;
+ }
+ 
+ /*
+@@ -1317,7 +1350,7 @@ setup_ssl(krb5_context context, const krb5_data *realm,
+     SSL_CTX *ctx = NULL;
+     SSL *ssl = NULL;
+ 
+-    if (ssl_ex_context_id == -1)
++    if (ssl_ex_context_id == -1 || ssl_ex_conn_id == -1)
+         goto kill_conn;
+ 
+     /* Do general SSL library setup. */
+@@ -1339,6 +1372,8 @@ setup_ssl(krb5_context context, const krb5_data *realm,
+ 
+     if (!SSL_set_ex_data(ssl, ssl_ex_context_id, context))
+         goto kill_conn;
++    if (!SSL_set_ex_data(ssl, ssl_ex_conn_id, conn))
++        goto kill_conn;
+ 
+     /* Tell the SSL library about the socket. */
+     if (!SSL_set_fd(ssl, conn->fd))
+-- 
+2.1.0
+

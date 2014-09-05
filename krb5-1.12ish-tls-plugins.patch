@@ -1,0 +1,1680 @@
+Adapt to headers being included in a different order in sendto_kdc.c.
+Drop portions which drop checkhost.c and checkhost.h.
+
+commit 472349d2a47fbc7db82e46ba46411b95c312fc1f
+Author: Greg Hudson <ghudson@mit.edu>
+Date:   Sun Jun 22 10:42:14 2014 -0400
+
+    Move KKDCP OpenSSL code to an internal plugin
+    
+    Create an internal pluggable interface "tls" with one in-tree dynamic
+    plugin module named "k5tls".  Move all of the OpenSSL calls to the
+    plugin module, and make the libkrb5 code load and invoke the plugin.
+    This way we do not load or initialize libssl unless an HTTP proxy is
+    used.
+    
+    ticket: 7929
+
+diff --git a/src/Makefile.in b/src/Makefile.in
+index 5e2cf4e..92bb60a 100644
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -20,6 +20,7 @@ SUBDIRS=util include lib \
+ 	@ldap_plugin_dir@ \
+ 	plugins/preauth/otp \
+ 	plugins/preauth/pkinit \
++	plugins/tls/k5tls \
+ 	kdc kadmin slave clients appl tests \
+ 	config-files build-tools man doc @po@
+ WINSUBDIRS=include util lib ccapi windows clients appl
+@@ -62,7 +63,7 @@ INSTALLMKDIRS = $(KRB5ROOT) $(KRB5MANROOT) $(KRB5OTHERMKDIRS) \
+ 		$(KRB5_LIBDIR) $(KRB5_INCDIR) \
+ 		$(KRB5_DB_MODULE_DIR) $(KRB5_PA_MODULE_DIR) \
+ 		$(KRB5_AD_MODULE_DIR) \
+-		$(KRB5_LIBKRB5_MODULE_DIR) \
++		$(KRB5_LIBKRB5_MODULE_DIR) $(KRB5_TLS_MODULE_DIR) \
+ 		@localstatedir@ @localstatedir@/krb5kdc \
+ 		$(KRB5_INCSUBDIRS) $(datadir) $(EXAMPLEDIR) \
+ 		$(PKGCONFIG_DIR)
+diff --git a/src/config/pre.in b/src/config/pre.in
+index e1d7e4b..fd8ee56 100644
+--- a/src/config/pre.in
++++ b/src/config/pre.in
+@@ -213,6 +213,7 @@ KRB5_DB_MODULE_DIR = $(MODULE_DIR)/kdb
+ KRB5_PA_MODULE_DIR = $(MODULE_DIR)/preauth
+ KRB5_AD_MODULE_DIR = $(MODULE_DIR)/authdata
+ KRB5_LIBKRB5_MODULE_DIR = $(MODULE_DIR)/libkrb5
++KRB5_TLS_MODULE_DIR = $(MODULE_DIR)/tls
+ KRB5_LOCALEDIR = @localedir@
+ GSS_MODULE_DIR = @libdir@/gss
+ KRB5_INCSUBDIRS = \
+diff --git a/src/configure.in b/src/configure.in
+index 8aa513e..43509ab 100644
+--- a/src/configure.in
++++ b/src/configure.in
+@@ -308,6 +308,11 @@ no)
+   ;;
+ esac
+ 
++if test "$PROXY_TLS_IMPL" = no; then
++   AC_DEFINE(PROXY_TLS_IMPL_NONE,1,
++             [Define if no HTTP TLS implementation is selected])
++fi
++
+ AC_SUBST(PROXY_TLS_IMPL)
+ AC_SUBST(PROXY_TLS_IMPL_CFLAGS)
+ AC_SUBST(PROXY_TLS_IMPL_LIBS)
+@@ -1386,6 +1391,7 @@ dnl	ccapi ccapi/lib ccapi/lib/unix ccapi/server ccapi/server/unix ccapi/test
+ 	plugins/authdata/greet
+ 	plugins/authdata/greet_client
+ 	plugins/authdata/greet_server
++	plugins/tls/k5tls
+ 
+ 	clients clients/klist clients/kinit clients/kvno
+ 	clients/kdestroy clients/kpasswd clients/ksu clients/kswitch
+diff --git a/src/include/k5-int.h b/src/include/k5-int.h
+index 9f14ee0..38846eb 100644
+--- a/src/include/k5-int.h
++++ b/src/include/k5-int.h
+@@ -1083,7 +1083,8 @@ struct plugin_interface {
+ #define PLUGIN_INTERFACE_LOCALAUTH   5
+ #define PLUGIN_INTERFACE_HOSTREALM   6
+ #define PLUGIN_INTERFACE_AUDIT       7
+-#define PLUGIN_NUM_INTERFACES        8
++#define PLUGIN_INTERFACE_TLS         8
++#define PLUGIN_NUM_INTERFACES        9
+ 
+ /* Retrieve the plugin module of type interface_id and name modname,
+  * storing the result into module. */
+@@ -1126,6 +1127,7 @@ typedef struct krb5_preauth_context_st krb5_preauth_context;
+ struct ccselect_module_handle;
+ struct localauth_module_handle;
+ struct hostrealm_module_handle;
++struct k5_tls_vtable_st;
+ struct _krb5_context {
+     krb5_magic      magic;
+     krb5_enctype    *in_tkt_etypes;
+@@ -1169,6 +1171,9 @@ struct _krb5_context {
+     /* hostrealm module stuff */
+     struct hostrealm_module_handle **hostrealm_handles;
+ 
++    /* TLS module vtable (if loaded) */
++    struct k5_tls_vtable_st *tls;
++
+     /* error detail info */
+     struct errinfo err;
+ 
+diff --git a/src/include/k5-tls.h b/src/include/k5-tls.h
+new file mode 100644
+index 0000000..0661c05
+--- /dev/null
++++ b/src/include/k5-tls.h
+@@ -0,0 +1,104 @@
++/* -*- mode: c; c-basic-offset: 4; indent-tabs-mode: nil -*- */
++/* include/k5-tls.h - internal pluggable interface for TLS */
++/*
++ * Copyright (C) 2014 by the Massachusetts Institute of Technology.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * * Redistributions of source code must retain the above copyright
++ *   notice, this list of conditions and the following disclaimer.
++ *
++ * * Redistributions in binary form must reproduce the above copyright
++ *   notice, this list of conditions and the following disclaimer in
++ *   the documentation and/or other materials provided with the
++ *   distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
++ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
++ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
++ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
++ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
++ * OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/*
++ * This internal pluggable interface allows libkrb5 to load an in-tree module
++ * providing TLS support at runtime.  It is currently tailored for the needs of
++ * the OpenSSL module as used for HTTP proxy support.  As an internal
++ * interface, it can be changed to fit different implementations and consumers
++ * without regard for backward compatibility.
++ */
++
++#ifndef K5_TLS_H
++#define K5_TLS_H
++
++#include "k5-int.h"
++
++/* An abstract type for localauth module data. */
++typedef struct k5_tls_handle_st *k5_tls_handle;
++
++typedef enum {
++    DATA_READ, DONE, WANT_READ, WANT_WRITE, ERROR_TLS
++} k5_tls_status;
++
++/*
++ * Create a handle for fd, where the server certificate must match servername
++ * and be trusted according to anchors.  anchors is a null-terminated list
++ * using the DIR:/FILE:/ENV: syntax borrowed from PKINIT.  If anchors is null,
++ * use the system default trust anchors.
++ */
++typedef krb5_error_code
++(*k5_tls_setup_fn)(krb5_context context, SOCKET fd, const char *servername,
++                   char **anchors, k5_tls_handle *handle_out);
++
++/*
++ * Write len bytes of data using TLS.  Return DONE if writing is complete,
++ * WANT_READ or WANT_WRITE if the underlying socket must be readable or
++ * writable to continue, and ERROR_TLS if the TLS channel or underlying socket
++ * experienced an error.  After WANT_READ or WANT_WRITE, the operation will be
++ * retried with the same arguments even if some data has already been written.
++ * (OpenSSL makes this contract easy to fulfill.  For other implementations we
++ * might want to change it.)
++ */
++typedef k5_tls_status
++(*k5_tls_write_fn)(krb5_context context, k5_tls_handle handle,
++                   const void *data, size_t len);
++
++/*
++ * Read up to data_size bytes of data using TLS.  Return DATA_READ and set
++ * *len_out if any data is read.  Return DONE if there is no more data to be
++ * read on the connection, WANT_READ or WANT_WRITE if the underlying socket
++ * must be readable or writable to continue, and ERROR_TLS if the TLS channel
++ * or underlying socket experienced an error.
++ *
++ * After DATA_READ, there may still be pending buffered data to read.  The
++ * caller must call this method again with additional buffer space before
++ * selecting for reading on the underlying socket.
++ */
++typedef k5_tls_status
++(*k5_tls_read_fn)(krb5_context context, k5_tls_handle handle, void *data,
++                  size_t data_size, size_t *len_out);
++
++/* Release a handle.  Do not pass a null pointer. */
++typedef void
++(*k5_tls_free_handle_fn)(krb5_context context, k5_tls_handle handle);
++
++/* All functions are mandatory unless they are all null, in which case the
++ * caller should assume that TLS is unsupported. */
++typedef struct k5_tls_vtable_st {
++    k5_tls_setup_fn setup;
++    k5_tls_write_fn write;
++    k5_tls_read_fn read;
++    k5_tls_free_handle_fn free_handle;
++} *k5_tls_vtable;
++
++#endif /* K5_TLS_H */
+diff --git a/src/include/k5-trace.h b/src/include/k5-trace.h
+index 9e75b29..a0aa85a 100644
+--- a/src/include/k5-trace.h
++++ b/src/include/k5-trace.h
+@@ -324,23 +324,11 @@ void krb5int_trace(krb5_context context, const char *fmt, ...);
+     TRACE(c, "Resolving hostname {str}", hostname)
+ #define TRACE_SENDTO_KDC_RESPONSE(c, len, raddr)                        \
+     TRACE(c, "Received answer ({int} bytes) from {raddr}", len, raddr)
+-#define TRACE_SENDTO_KDC_HTTPS_SERVER_NAME_MISMATCH(c, hostname)        \
+-    TRACE(c, "HTTPS certificate name mismatch: server certificate is "  \
+-          "not for \"{str}\"", hostname)
+-#define TRACE_SENDTO_KDC_HTTPS_SERVER_NAME_MATCH(c, hostname)           \
+-    TRACE(c, "HTTPS certificate name matched \"{str}\"", hostname)
+-#define TRACE_SENDTO_KDC_HTTPS_NO_REMOTE_CERTIFICATE(c)                 \
+-    TRACE(c, "HTTPS server certificate not received")
+-#define TRACE_SENDTO_KDC_HTTPS_PROXY_CERTIFICATE_ERROR(c, depth,        \
+-                                                       namelen, name,   \
+-                                                       err, errs)       \
+-    TRACE(c, "HTTPS certificate error at {int} ({lenstr}): "            \
+-          "{int} ({str})", depth, namelen, name, err, errs)
+-#define TRACE_SENDTO_KDC_HTTPS_ERROR_CONNECT(c, raddr)                  \
++#define TRACE_SENDTO_KDC_HTTPS_ERROR_CONNECT(c, raddr)          \
+     TRACE(c, "HTTPS error connecting to {raddr}", raddr)
+-#define TRACE_SENDTO_KDC_HTTPS_ERROR_RECV(c, raddr, err)                \
+-    TRACE(c, "HTTPS error receiving from {raddr}: {errno}", raddr, err)
+-#define TRACE_SENDTO_KDC_HTTPS_ERROR_SEND(c, raddr)                     \
++#define TRACE_SENDTO_KDC_HTTPS_ERROR_RECV(c, raddr)             \
++    TRACE(c, "HTTPS error receiving from {raddr}", raddr)
++#define TRACE_SENDTO_KDC_HTTPS_ERROR_SEND(c, raddr)     \
+     TRACE(c, "HTTPS error sending to {raddr}", raddr)
+ #define TRACE_SENDTO_KDC_HTTPS_SEND(c, raddr)                           \
+     TRACE(c, "Sending HTTPS request to {raddr}", raddr)
+@@ -383,6 +371,19 @@ void krb5int_trace(krb5_context context, const char *fmt, ...);
+     TRACE(c, "TGS reply didn't decode with subkey; trying session key " \
+           "({keyblock)}", keyblock)
+ 
++#define TRACE_TLS_ERROR(c, errs)                \
++    TRACE(c, "TLS error: {str}", errs)
++#define TRACE_TLS_NO_REMOTE_CERTIFICATE(c)              \
++    TRACE(c, "TLS server certificate not received")
++#define TRACE_TLS_CERT_ERROR(c, depth, namelen, name, err, errs)        \
++    TRACE(c, "TLS certificate error at {int} ({lenstr}): {int} ({str})", \
++          depth, namelen, name, err, errs)
++#define TRACE_TLS_SERVER_NAME_MISMATCH(c, hostname)                     \
++    TRACE(c, "TLS certificate name mismatch: server certificate is "    \
++          "not for \"{str}\"", hostname)
++#define TRACE_TLS_SERVER_NAME_MATCH(c, hostname)                        \
++    TRACE(c, "TLS certificate name matched \"{str}\"", hostname)
++
+ #define TRACE_TKT_CREDS(c, creds, cache)                            \
+     TRACE(c, "Getting credentials {creds} using ccache {ccache}",   \
+           creds, cache)
+diff --git a/src/lib/krb5/Makefile.in b/src/lib/krb5/Makefile.in
+index 472c008..d9cddc1 100644
+--- a/src/lib/krb5/Makefile.in
++++ b/src/lib/krb5/Makefile.in
+@@ -56,8 +56,7 @@ RELDIR=krb5
+ SHLIB_EXPDEPS = \
+ 	$(TOPLIBD)/libk5crypto$(SHLIBEXT) \
+ 	$(COM_ERR_DEPLIB) $(SUPPORT_DEPLIB)
+-SHLIB_EXPLIBS=-lk5crypto -lcom_err $(PROXY_TLS_IMPL_LIBS) $(SUPPORT_LIB) \
+-	@GEN_LIB@ $(LIBS)
++SHLIB_EXPLIBS=-lk5crypto -lcom_err $(SUPPORT_LIB) @GEN_LIB@ $(LIBS)
+ 
+ all-unix:: all-liblinks
+ 
+diff --git a/src/lib/krb5/krb/copy_ctx.c b/src/lib/krb5/krb/copy_ctx.c
+index 4237023..322c288 100644
+--- a/src/lib/krb5/krb/copy_ctx.c
++++ b/src/lib/krb5/krb/copy_ctx.c
+@@ -81,6 +81,7 @@ krb5_copy_context(krb5_context ctx, krb5_context *nctx_out)
+     nctx->ccselect_handles = NULL;
+     nctx->localauth_handles = NULL;
+     nctx->hostrealm_handles = NULL;
++    nctx->tls = NULL;
+     nctx->kdblog_context = NULL;
+     nctx->trace_callback = NULL;
+     nctx->trace_callback_data = NULL;
+diff --git a/src/lib/krb5/krb/init_ctx.c b/src/lib/krb5/krb/init_ctx.c
+index 6801bb1..6548f36 100644
+--- a/src/lib/krb5/krb/init_ctx.c
++++ b/src/lib/krb5/krb/init_ctx.c
+@@ -319,6 +319,7 @@ krb5_free_context(krb5_context ctx)
+     k5_localauth_free_context(ctx);
+     k5_plugin_free_context(ctx);
+     free(ctx->plugin_base_dir);
++    free(ctx->tls);
+ 
+     ctx->magic = 0;
+     free(ctx);
+diff --git a/src/lib/krb5/krb/plugin.c b/src/lib/krb5/krb/plugin.c
+index 8b62c7b..7375f51 100644
+--- a/src/lib/krb5/krb/plugin.c
++++ b/src/lib/krb5/krb/plugin.c
+@@ -55,7 +55,8 @@ const char *interface_names[] = {
+     "ccselect",
+     "localauth",
+     "hostrealm",
+-    "audit"
++    "audit",
++    "tls"
+ };
+ 
+ /* Return the context's interface structure for id, or NULL if invalid. */
+diff --git a/src/lib/krb5/krb5_libinit.c b/src/lib/krb5/krb5_libinit.c
+index b72bc58..eb40124 100644
+--- a/src/lib/krb5/krb5_libinit.c
++++ b/src/lib/krb5/krb5_libinit.c
+@@ -55,8 +55,6 @@ int krb5int_lib_init(void)
+     if (err)
+         return err;
+ 
+-    k5_sendto_kdc_initialize();
+-
+     return 0;
+ }
+ 
+diff --git a/src/lib/krb5/os/Makefile.in b/src/lib/krb5/os/Makefile.in
+index fa8a093..ea68990 100644
+--- a/src/lib/krb5/os/Makefile.in
++++ b/src/lib/krb5/os/Makefile.in
+@@ -2,7 +2,7 @@ mydir=lib$(S)krb5$(S)os
+ BUILDTOP=$(REL)..$(S)..$(S)..
+ DEFINES=-DLIBDIR=\"$(KRB5_LIBDIR)\" -DBINDIR=\"$(CLIENT_BINDIR)\" \
+ 	-DSBINDIR=\"$(ADMIN_BINDIR)\"
+-LOCALINCLUDES= $(PROXY_TLS_IMPL_CFLAGS) -I$(top_srcdir)/util/profile
++LOCALINCLUDES= -I$(top_srcdir)/util/profile
+ 
+ ##DOS##BUILDTOP = ..\..\..
+ ##DOS##PREFIXDIR=os
+@@ -13,7 +13,6 @@ STLIBOBJS= \
+ 	c_ustime.o	\
+ 	ccdefname.o	\
+ 	changepw.o	\
+-	checkhost.o	\
+ 	dnsglue.o	\
+ 	dnssrv.o	\
+ 	expand_path.o	\
+diff --git a/src/lib/krb5/os/deps b/src/lib/krb5/os/deps
+index d56ff30..211354c 100644
+--- a/src/lib/krb5/os/deps
++++ b/src/lib/krb5/os/deps
+@@ -49,17 +49,6 @@ changepw.so changepw.po $(OUTPRE)changepw.$(OBJEXT): \
+   $(top_srcdir)/include/krb5/locate_plugin.h $(top_srcdir)/include/krb5/plugin.h \
+   $(top_srcdir)/include/port-sockets.h $(top_srcdir)/include/socket-utils.h \
+   changepw.c os-proto.h
+-checkhost.so checkhost.po $(OUTPRE)checkhost.$(OBJEXT): \
+-  $(BUILDTOP)/include/autoconf.h $(BUILDTOP)/include/krb5/krb5.h \
+-  $(BUILDTOP)/include/osconf.h $(BUILDTOP)/include/profile.h \
+-  $(COM_ERR_DEPS) $(top_srcdir)/include/k5-buf.h $(top_srcdir)/include/k5-err.h \
+-  $(top_srcdir)/include/k5-gmt_mktime.h $(top_srcdir)/include/k5-int-pkinit.h \
+-  $(top_srcdir)/include/k5-int.h $(top_srcdir)/include/k5-platform.h \
+-  $(top_srcdir)/include/k5-plugin.h $(top_srcdir)/include/k5-thread.h \
+-  $(top_srcdir)/include/k5-trace.h $(top_srcdir)/include/k5-utf8.h \
+-  $(top_srcdir)/include/krb5.h $(top_srcdir)/include/krb5/authdata_plugin.h \
+-  $(top_srcdir)/include/krb5/plugin.h $(top_srcdir)/include/port-sockets.h \
+-  $(top_srcdir)/include/socket-utils.h checkhost.c checkhost.h
+ dnsglue.so dnsglue.po $(OUTPRE)dnsglue.$(OBJEXT): $(BUILDTOP)/include/autoconf.h \
+   $(BUILDTOP)/include/krb5/krb5.h $(BUILDTOP)/include/osconf.h \
+   $(BUILDTOP)/include/profile.h $(COM_ERR_DEPS) $(top_srcdir)/include/k5-buf.h \
+@@ -429,7 +418,7 @@ sendto_kdc.so sendto_kdc.po $(OUTPRE)sendto_kdc.$(OBJEXT): \
+   $(top_srcdir)/include/k5-trace.h $(top_srcdir)/include/krb5.h \
+   $(top_srcdir)/include/krb5/authdata_plugin.h $(top_srcdir)/include/krb5/locate_plugin.h \
+   $(top_srcdir)/include/krb5/plugin.h $(top_srcdir)/include/port-sockets.h \
+-  $(top_srcdir)/include/socket-utils.h checkhost.h os-proto.h \
++  $(top_srcdir)/include/socket-utils.h os-proto.h \
+   sendto_kdc.c
+ sn2princ.so sn2princ.po $(OUTPRE)sn2princ.$(OBJEXT): \
+   $(BUILDTOP)/include/autoconf.h $(BUILDTOP)/include/krb5/krb5.h \
+diff --git a/src/lib/krb5/os/locate_kdc.c b/src/lib/krb5/os/locate_kdc.c
+index 1f2039c..160a2d0 100644
+--- a/src/lib/krb5/os/locate_kdc.c
++++ b/src/lib/krb5/os/locate_kdc.c
+@@ -177,7 +177,6 @@ oom:
+     return ENOMEM;
+ }
+ 
+-#ifdef PROXY_TLS_IMPL_OPENSSL
+ static void
+ parse_uri_if_https(char *host_or_uri, k5_transport *transport, char **host,
+                    char **uri_path)
+@@ -195,13 +194,6 @@ parse_uri_if_https(char *host_or_uri, k5_transport *transport, char **host,
+         }
+     }
+ }
+-#else
+-static void
+-parse_uri_if_https(char *host_or_uri, k5_transport *transport, char **host,
+-                   char **uri)
+-{
+-}
+-#endif
+ 
+ /* Return true if server is identical to an entry in list. */
+ static krb5_boolean
+diff --git a/src/lib/krb5/os/os-proto.h b/src/lib/krb5/os/os-proto.h
+index 34bf028..69ee376 100644
+--- a/src/lib/krb5/os/os-proto.h
++++ b/src/lib/krb5/os/os-proto.h
+@@ -187,6 +187,5 @@ krb5_error_code localauth_k5login_initvt(krb5_context context, int maj_ver,
+                                          krb5_plugin_vtable vtable);
+ krb5_error_code localauth_an2ln_initvt(krb5_context context, int maj_ver,
+                                        int min_ver, krb5_plugin_vtable vtable);
+-void k5_sendto_kdc_initialize(void);
+ 
+ #endif /* KRB5_LIBOS_INT_PROTO__ */
+diff --git a/src/lib/krb5/os/sendto_kdc.c b/src/lib/krb5/os/sendto_kdc.c
+index a572831..2242240 100644
+--- a/src/lib/krb5/os/sendto_kdc.c
++++ b/src/lib/krb5/os/sendto_kdc.c
+@@ -54,6 +54,7 @@
+  * as necessary. */
+ 
+ #include "fake-addrinfo.h"
++#include "k5-tls.h"
+ #include "k5-int.h"
+ 
+ #include "os-proto.h"
+@@ -74,15 +75,6 @@
+ #endif
+ #endif
+ 
+-#ifdef PROXY_TLS_IMPL_OPENSSL
+-#include <openssl/err.h>
+-#include <openssl/ssl.h>
+-#include <openssl/x509.h>
+-#include <openssl/x509v3.h>
+-#include <dirent.h>
+-#include "checkhost.h"
+-#endif
+-
+ #define MAX_PASS                    3
+ #define DEFAULT_UDP_PREF_LIMIT   1465
+ #define HARD_UDP_LIMIT          32700 /* could probably do 64K-epsilon ? */
+@@ -147,29 +139,30 @@ struct conn_state {
+         const char *uri_path;
+         const char *servername;
+         char *https_request;
+-#ifdef PROXY_TLS_IMPL_OPENSSL
+-        SSL *ssl;
+-#endif
++        k5_tls_handle tls;
+     } http;
+ };
+ 
+-#ifdef PROXY_TLS_IMPL_OPENSSL
+-/* Extra-data identifier, used to pass context into the verify callback. */
+-static int ssl_ex_context_id = -1;
+-static int ssl_ex_conn_id = -1;
+-#endif
+-
+-void
+-k5_sendto_kdc_initialize(void)
++/* Set up context->tls.  On allocation failure, return ENOMEM.  On plugin load
++ * failure, set context->tls to point to a nulled vtable and return 0. */
++static krb5_error_code
++init_tls_vtable(krb5_context context)
+ {
+-#ifdef PROXY_TLS_IMPL_OPENSSL
+-    SSL_library_init();
+-    SSL_load_error_strings();
+-    OpenSSL_add_all_algorithms();
++    krb5_plugin_initvt_fn initfn;
+ 
+-    ssl_ex_context_id = SSL_get_ex_new_index(0, NULL, NULL, NULL, NULL);
+-    ssl_ex_conn_id = SSL_get_ex_new_index(0, NULL, NULL, NULL, NULL);
+-#endif
++    if (context->tls != NULL)
++        return 0;
++
++    context->tls = calloc(1, sizeof(*context->tls));
++    if (context->tls == NULL)
++        return ENOMEM;
++
++    /* Attempt to load the module; just let it stay nulled out on failure. */
++    k5_plugin_register_dyn(context, PLUGIN_INTERFACE_TLS, "k5tls", "tls");
++    if (k5_plugin_load(context, PLUGIN_INTERFACE_TLS, "k5tls", &initfn) == 0)
++        (*initfn)(context, 0, 0, (krb5_plugin_vtable)context->tls);
++
++    return 0;
+ }
+ 
+ /* Get current time in milliseconds. */
+@@ -184,21 +177,15 @@ get_curtime_ms(time_ms *time_out)
+     return 0;
+ }
+ 
+-#ifdef PROXY_TLS_IMPL_OPENSSL
+ static void
+-free_http_ssl_data(struct conn_state *state)
++free_http_tls_data(krb5_context context, struct conn_state *state)
+ {
+-    SSL_free(state->http.ssl);
+-    state->http.ssl = NULL;
++    if (state->http.tls != NULL)
++        context->tls->free_handle(context, state->http.tls);
++    state->http.tls = NULL;
+     free(state->http.https_request);
+     state->http.https_request = NULL;
+ }
+-#else
+-static void
+-free_http_ssl_data(struct conn_state *state)
+-{
+-}
+-#endif
+ 
+ #ifdef USE_POLL
+ 
+@@ -532,7 +519,6 @@ static fd_handler_fn service_udp_read;
+ static fd_handler_fn service_https_write;
+ static fd_handler_fn service_https_read;
+ 
+-#ifdef PROXY_TLS_IMPL_OPENSSL
+ static krb5_error_code
+ make_proxy_request(struct conn_state *state, const krb5_data *realm,
+                    const krb5_data *message, char **req_out, size_t *len_out)
+@@ -585,14 +571,6 @@ cleanup:
+     krb5_free_data(NULL, encoded_pm);
+     return ret;
+ }
+-#else
+-static krb5_error_code
+-make_proxy_request(struct conn_state *state, const krb5_data *realm,
+-                   const krb5_data *message, char **req_out, size_t *len_out)
+-{
+-    abort();
+-}
+-#endif
+ 
+ /* Set up the actual message we will send across the underlying transport to
+  * communicate the payload message, using one or both of state->out.sgbuf. */
+@@ -963,7 +941,7 @@ static void
+ kill_conn(krb5_context context, struct conn_state *conn,
+           struct select_state *selstate)
+ {
+-    free_http_ssl_data(conn);
++    free_http_tls_data(context, conn);
+ 
+     if (socktype_for_transport(conn->addr.transport) == SOCK_STREAM)
+         TRACE_SENDTO_KDC_TCP_DISCONNECT(context, &conn->addr);
+@@ -1145,249 +1123,44 @@ service_udp_read(krb5_context context, const krb5_data *realm,
+     return TRUE;
+ }
+ 
+-#ifdef PROXY_TLS_IMPL_OPENSSL
+-/* Output any error strings that OpenSSL's accumulated as tracing messages. */
+-static void
+-flush_ssl_errors(krb5_context context)
+-{
+-    unsigned long err;
+-    char buf[128];
+-
+-    while ((err = ERR_get_error()) != 0) {
+-        ERR_error_string_n(err, buf, sizeof(buf));
+-        TRACE_SENDTO_KDC_HTTPS_ERROR(context, buf);
+-    }
+-}
+-
+-static krb5_error_code
+-load_http_anchor_file(X509_STORE *store, const char *path)
+-{
+-    FILE *fp;
+-    STACK_OF(X509_INFO) *sk = NULL;
+-    X509_INFO *xi;
+-    int i;
+-
+-    fp = fopen(path, "r");
+-    if (fp == NULL)
+-        return errno;
+-    sk = PEM_X509_INFO_read(fp, NULL, NULL, NULL);
+-    fclose(fp);
+-    if (sk == NULL)
+-        return ENOENT;
+-    for (i = 0; i < sk_X509_INFO_num(sk); i++) {
+-        xi = sk_X509_INFO_value(sk, i);
+-        if (xi->x509 != NULL)
+-            X509_STORE_add_cert(store, xi->x509);
+-    }
+-    sk_X509_INFO_pop_free(sk, X509_INFO_free);
+-    return 0;
+-}
+-
+-static krb5_error_code
+-load_http_anchor_dir(X509_STORE *store, const char *path)
+-{
+-    DIR *d = NULL;
+-    struct dirent *dentry = NULL;
+-    char filename[1024];
+-    krb5_boolean found_any = FALSE;
+-
+-    d = opendir(path);
+-    if (d == NULL)
+-        return ENOENT;
+-    while ((dentry = readdir(d)) != NULL) {
+-        if (dentry->d_name[0] != '.') {
+-            snprintf(filename, sizeof(filename), "%s/%s",
+-                     path, dentry->d_name);
+-            if (load_http_anchor_file(store, filename) == 0)
+-                found_any = TRUE;
+-        }
+-    }
+-    closedir(d);
+-    return found_any ? 0 : ENOENT;
+-}
+-
+-static krb5_error_code
+-load_http_anchor(SSL_CTX *ctx, const char *location)
++/* Set up conn->http.tls.  Return true on success. */
++static krb5_boolean
++setup_tls(krb5_context context, const krb5_data *realm,
++          struct conn_state *conn, struct select_state *selstate)
+ {
+-    X509_STORE *store;
+-    const char *envloc;
+-
+-    store = SSL_CTX_get_cert_store(ctx);
+-    if (strncmp(location, "FILE:", 5) == 0) {
+-        return load_http_anchor_file(store, location + 5);
+-    } else if (strncmp(location, "DIR:", 4) == 0) {
+-        return load_http_anchor_dir(store, location + 4);
+-    } else if (strncmp(location, "ENV:", 4) == 0) {
+-        envloc = getenv(location + 4);
+-        if (envloc == NULL)
+-            return ENOENT;
+-        return load_http_anchor(ctx, envloc);
+-    }
+-    return EINVAL;
+-}
++    krb5_error_code ret;
++    krb5_boolean ok = FALSE;
++    char **anchors = NULL, *realmstr = NULL;
++    const char *names[4];
+ 
+-static krb5_error_code
+-load_http_verify_anchors(krb5_context context, const krb5_data *realm,
+-                         SSL_CTX *sctx)
+-{
+-    const char *anchors[4];
+-    char **values = NULL, *realmz;
+-    unsigned int i;
+-    krb5_error_code err;
++    if (init_tls_vtable(context) != 0 || context->tls->setup == NULL)
++        return FALSE;
+ 
+-    realmz = k5memdup0(realm->data, realm->length, &err);
+-    if (realmz == NULL)
++    realmstr = k5memdup0(realm->data, realm->length, &ret);
++    if (realmstr == NULL)
+         goto cleanup;
+ 
+     /* Load the configured anchors. */
+-    anchors[0] = KRB5_CONF_REALMS;
+-    anchors[1] = realmz;
+-    anchors[2] = KRB5_CONF_HTTP_ANCHORS;
+-    anchors[3] = NULL;
+-    if (profile_get_values(context->profile, anchors, &values) == 0) {
+-        for (i = 0; values[i] != NULL; i++) {
+-            err = load_http_anchor(sctx, values[i]);
+-            if (err != 0)
+-                break;
+-        }
+-        profile_free_list(values);
+-    } else {
+-        /* Use the library defaults. */
+-        if (SSL_CTX_set_default_verify_paths(sctx) != 1)
+-            err = ENOENT;
+-    }
+-
+-cleanup:
+-    free(realmz);
+-    return err;
+-}
+-
+-static krb5_boolean
+-ssl_check_name_or_ip(X509 *x, const char *expected_name)
+-{
+-    struct in_addr in;
+-    struct in6_addr in6;
+-
+-    if (inet_aton(expected_name, &in) != 0 ||
+-        inet_pton(AF_INET6, expected_name, &in6) != 0) {
+-        return k5_check_cert_address(x, expected_name);
+-    } else {
+-        return k5_check_cert_servername(x, expected_name);
+-    }
+-}
++    names[0] = KRB5_CONF_REALMS;
++    names[1] = realmstr;
++    names[2] = KRB5_CONF_HTTP_ANCHORS;
++    names[3] = NULL;
++    ret = profile_get_values(context->profile, names, &anchors);
++    if (ret != 0 && ret != PROF_NO_RELATION)
++        goto cleanup;
+ 
+-static int
+-ssl_verify_callback(int preverify_ok, X509_STORE_CTX *store_ctx)
+-{
+-    X509 *x;
+-    SSL *ssl;
+-    BIO *bio;
+-    krb5_context context;
+-    int err, depth;
+-    struct conn_state *conn = NULL;
+-    const char *cert = NULL, *errstr, *expected_name;
+-    size_t count;
+-
+-    ssl = X509_STORE_CTX_get_ex_data(store_ctx,
+-                                     SSL_get_ex_data_X509_STORE_CTX_idx());
+-    context = SSL_get_ex_data(ssl, ssl_ex_context_id);
+-    conn = SSL_get_ex_data(ssl, ssl_ex_conn_id);
+-    /* We do have the peer's cert, right? */
+-    x = X509_STORE_CTX_get_current_cert(store_ctx);
+-    if (x == NULL) {
+-        TRACE_SENDTO_KDC_HTTPS_NO_REMOTE_CERTIFICATE(context);
+-        return 0;
+-    }
+-    /* Figure out where we are. */
+-    depth = X509_STORE_CTX_get_error_depth(store_ctx);
+-    if (depth < 0)
+-        return 0;
+-    /* If there's an error at this level that we're not ignoring, fail. */
+-    err = X509_STORE_CTX_get_error(store_ctx);
+-    if (err != X509_V_OK) {
+-        bio = BIO_new(BIO_s_mem());
+-        if (bio != NULL) {
+-            X509_NAME_print_ex(bio, x->cert_info->subject, 0, 0);
+-            count = BIO_get_mem_data(bio, &cert);
+-            errstr = X509_verify_cert_error_string(err);
+-            TRACE_SENDTO_KDC_HTTPS_PROXY_CERTIFICATE_ERROR(context, depth,
+-                                                           count, cert, err,
+-                                                           errstr);
+-            BIO_free(bio);
+-        }
+-        return 0;
+-    }
+-    /* If we're not looking at the peer, we're done and everything's ok. */
+-    if (depth != 0)
+-        return 1;
+-    /* Check if the name we expect to find is in the certificate. */
+-    expected_name = conn->http.servername;
+-    if (ssl_check_name_or_ip(x, expected_name)) {
+-        TRACE_SENDTO_KDC_HTTPS_SERVER_NAME_MATCH(context, expected_name);
+-        return 1;
+-    } else {
+-        TRACE_SENDTO_KDC_HTTPS_SERVER_NAME_MISMATCH(context, expected_name);
++    if (context->tls->setup(context, conn->fd, conn->http.servername, anchors,
++                            &conn->http.tls) != 0) {
++        TRACE_SENDTO_KDC_HTTPS_ERROR_CONNECT(context, &conn->addr);
++        goto cleanup;
+     }
+-    /* The name didn't match. */
+-    return 0;
+-}
+ 
+-/*
+- * Set up structures that we use to manage the SSL handling for this connection
+- * and apply any non-default settings.  Kill the connection and return false if
+- * anything goes wrong while we're doing that; return true otherwise.
+- */
+-static krb5_boolean
+-setup_ssl(krb5_context context, const krb5_data *realm,
+-          struct conn_state *conn, struct select_state *selstate)
+-{
+-    int e;
+-    long options;
+-    SSL_CTX *ctx = NULL;
+-    SSL *ssl = NULL;
++    ok = TRUE;
+ 
+-    if (ssl_ex_context_id == -1 || ssl_ex_conn_id == -1)
+-        goto kill_conn;
+-
+-    /* Do general SSL library setup. */
+-    ctx = SSL_CTX_new(SSLv23_client_method());
+-    if (ctx == NULL)
+-        goto kill_conn;
+-    options = SSL_CTX_get_options(ctx);
+-    SSL_CTX_set_options(ctx, options | SSL_OP_NO_SSLv2);
+-
+-    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, ssl_verify_callback);
+-    X509_STORE_set_flags(SSL_CTX_get_cert_store(ctx), 0);
+-    e = load_http_verify_anchors(context, realm, ctx);
+-    if (e != 0)
+-        goto kill_conn;
+-
+-    ssl = SSL_new(ctx);
+-    if (ssl == NULL)
+-        goto kill_conn;
+-
+-    if (!SSL_set_ex_data(ssl, ssl_ex_context_id, context))
+-        goto kill_conn;
+-    if (!SSL_set_ex_data(ssl, ssl_ex_conn_id, conn))
+-        goto kill_conn;
+-
+-    /* Tell the SSL library about the socket. */
+-    if (!SSL_set_fd(ssl, conn->fd))
+-        goto kill_conn;
+-    SSL_set_connect_state(ssl);
+-
+-    SSL_CTX_free(ctx);
+-    conn->http.ssl = ssl;
+-
+-    return TRUE;
+-
+-kill_conn:
+-    TRACE_SENDTO_KDC_HTTPS_ERROR_CONNECT(context, &conn->addr);
+-    flush_ssl_errors(context);
+-    SSL_free(ssl);
+-    SSL_CTX_free(ctx);
+-    kill_conn(context, conn, selstate);
+-    return FALSE;
++cleanup:
++    free(realmstr);
++    profile_free_list(anchors);
++    return ok;
+ }
+ 
+ /* Set conn->state to READING when done; otherwise, call a cm_set_. */
+@@ -1395,50 +1168,41 @@ static krb5_boolean
+ service_https_write(krb5_context context, const krb5_data *realm,
+                     struct conn_state *conn, struct select_state *selstate)
+ {
+-    ssize_t nwritten;
+-    int e;
++    k5_tls_status st;
+ 
+     /* If this is our first time in here, set up the SSL context. */
+-    if (conn->http.ssl == NULL && !setup_ssl(context, realm, conn, selstate))
++    if (conn->http.tls == NULL && !setup_tls(context, realm, conn, selstate)) {
++        kill_conn(context, conn, selstate);
+         return FALSE;
++    }
+ 
+     /* Try to transmit our request to the server. */
+-    nwritten = SSL_write(conn->http.ssl, SG_BUF(conn->out.sgp),
+-                         SG_LEN(conn->out.sgbuf));
+-    if (nwritten <= 0) {
+-        e = SSL_get_error(conn->http.ssl, nwritten);
+-        if (e == SSL_ERROR_WANT_READ) {
+-            cm_read(selstate, conn->fd);
+-            return FALSE;
+-        } else if (e == SSL_ERROR_WANT_WRITE) {
+-            cm_write(selstate, conn->fd);
+-            return FALSE;
+-        }
++    st = context->tls->write(context, conn->http.tls, SG_BUF(conn->out.sgp),
++                             SG_LEN(conn->out.sgbuf));
++    if (st == DONE) {
++        TRACE_SENDTO_KDC_HTTPS_SEND(context, &conn->addr);
++        cm_read(selstate, conn->fd);
++        conn->state = READING;
++    } else if (st == WANT_READ) {
++        cm_read(selstate, conn->fd);
++    } else if (st == WANT_WRITE) {
++        cm_write(selstate, conn->fd);
++    } else if (st == ERROR_TLS) {
+         TRACE_SENDTO_KDC_HTTPS_ERROR_SEND(context, &conn->addr);
+-        flush_ssl_errors(context);
+         kill_conn(context, conn, selstate);
+-        return FALSE;
+     }
+ 
+-    /* Done writing, switch to reading. */
+-    TRACE_SENDTO_KDC_HTTPS_SEND(context, &conn->addr);
+-    cm_read(selstate, conn->fd);
+-    conn->state = READING;
+     return FALSE;
+ }
+ 
+-/*
+- * Return true on readable data, call a cm_read/write function and return
+- * false if the SSL layer needs it, kill the connection otherwise.
+- */
++/* Return true on finished data.  Call a cm_read/write function and return
++ * false if the TLS layer needs it.  Kill the connection on error. */
+ static krb5_boolean
+ https_read_bytes(krb5_context context, struct conn_state *conn,
+                  struct select_state *selstate)
+ {
+-    size_t bufsize;
+-    ssize_t nread;
+-    krb5_boolean readbytes = FALSE;
+-    int e = 0;
++    size_t bufsize, nread;
++    k5_tls_status st;
+     char *tmp;
+     struct incoming_message *in = &conn->in;
+ 
+@@ -1458,31 +1222,26 @@ https_read_bytes(krb5_context context, struct conn_state *conn,
+             in->bufsize = bufsize;
+         }
+ 
+-        nread = SSL_read(conn->http.ssl, &in->buf[in->pos],
+-                         in->bufsize - in->pos - 1);
+-        if (nread <= 0)
++        st = context->tls->read(context, conn->http.tls, &in->buf[in->pos],
++                                in->bufsize - in->pos - 1, &nread);
++        if (st != DATA_READ)
+             break;
++
+         in->pos += nread;
+         in->buf[in->pos] = '\0';
+-        readbytes = TRUE;
+     }
+ 
+-    e = SSL_get_error(conn->http.ssl, nread);
+-    if (e == SSL_ERROR_WANT_READ) {
++    if (st == DONE)
++        return TRUE;
++
++    if (st == WANT_READ) {
+         cm_read(selstate, conn->fd);
+-        return FALSE;
+-    } else if (e == SSL_ERROR_WANT_WRITE) {
++    } else if (st == WANT_WRITE) {
+         cm_write(selstate, conn->fd);
+-        return FALSE;
+-    } else if ((e == SSL_ERROR_ZERO_RETURN) ||
+-               (e == SSL_ERROR_SYSCALL && nread == 0 && readbytes)) {
+-        return TRUE;
++    } else if (st == ERROR_TLS) {
++        TRACE_SENDTO_KDC_HTTPS_ERROR_RECV(context, &conn->addr);
++        kill_conn(context, conn, selstate);
+     }
+-
+-    e = readbytes ? SOCKET_ERRNO : ECONNRESET;
+-    TRACE_SENDTO_KDC_HTTPS_ERROR_RECV(context, &conn->addr, e);
+-    flush_ssl_errors(context);
+-    kill_conn(context, conn, selstate);
+     return FALSE;
+ }
+ 
+@@ -1531,20 +1290,6 @@ kill_conn:
+     kill_conn(context, conn, selstate);
+     return FALSE;
+ }
+-#else
+-static krb5_boolean
+-service_https_write(krb5_context context, const krb5_data *realm,
+-                    struct conn_state *conn, struct select_state *selstate)
+-{
+-    abort();
+-}
+-static krb5_boolean
+-service_https_read(krb5_context context, const krb5_data *realm,
+-                   struct conn_state *conn, struct select_state *selstate)
+-{
+-    abort();
+-}
+-#endif
+ 
+ /* Return the maximum of endtime and the endtime fields of all currently active
+  * TCP connections. */
+@@ -1765,7 +1510,7 @@ cleanup:
+             if (socktype_for_transport(state->addr.transport) == SOCK_STREAM)
+                 TRACE_SENDTO_KDC_TCP_DISCONNECT(context, &state->addr);
+             closesocket(state->fd);
+-            free_http_ssl_data(state);
++            free_http_tls_data(context, state);
+         }
+         if (state->state == READING && state->in.buf != udpbuf)
+             free(state->in.buf);
+diff --git a/src/plugins/tls/k5tls/Makefile.in b/src/plugins/tls/k5tls/Makefile.in
+new file mode 100644
+index 0000000..4d58df0
+--- /dev/null
++++ b/src/plugins/tls/k5tls/Makefile.in
+@@ -0,0 +1,22 @@
++mydir=plugins$(S)tls$(S)k5tls
++BUILDTOP=$(REL)..$(S)..$(S)..
++MODULE_INSTALL_DIR = $(KRB5_TLS_MODULE_DIR)
++LOCALINCLUDES= $(PROXY_TLS_IMPL_CFLAGS)
++
++LIBBASE=k5tls
++LIBMAJOR=0
++LIBMINOR=0
++RELDIR=../plugins/tls/k5tls
++SHLIB_EXPDEPS= $(KRB5_DEPLIB) $(SUPPORT_DEPLIB)
++SHLIB_EXPLIBS= $(KRB5_LIB) $(SUPPORT_LIB) $(PROXY_TLS_IMPL_LIBS)
++
++STLIBOBJS=openssl.o notls.o
++
++SRCS=$(srcdir)/openssl.c $(srcdir)/notls.c
++
++all-unix:: all-liblinks
++install-unix:: install-libs
++clean-unix:: clean-libs clean-libobjs
++
++@libnover_frag@
++@libobj_frag@
+diff --git a/src/plugins/tls/k5tls/deps b/src/plugins/tls/k5tls/deps
+new file mode 100644
+index 0000000..a6088a7
+--- /dev/null
++++ b/src/plugins/tls/k5tls/deps
+@@ -0,0 +1,25 @@
++#
++# Generated makefile dependencies follow.
++#
++openssl.so openssl.po $(OUTPRE)openssl.$(OBJEXT): $(BUILDTOP)/include/autoconf.h \
++  $(BUILDTOP)/include/krb5/krb5.h $(BUILDTOP)/include/osconf.h \
++  $(BUILDTOP)/include/profile.h $(COM_ERR_DEPS) $(top_srcdir)/include/k5-buf.h \
++  $(top_srcdir)/include/k5-err.h $(top_srcdir)/include/k5-gmt_mktime.h \
++  $(top_srcdir)/include/k5-int-pkinit.h $(top_srcdir)/include/k5-int.h \
++  $(top_srcdir)/include/k5-platform.h $(top_srcdir)/include/k5-plugin.h \
++  $(top_srcdir)/include/k5-thread.h $(top_srcdir)/include/k5-tls.h \
++  $(top_srcdir)/include/k5-trace.h $(top_srcdir)/include/k5-utf8.h \
++  $(top_srcdir)/include/krb5.h $(top_srcdir)/include/krb5/authdata_plugin.h \
++  $(top_srcdir)/include/krb5/plugin.h $(top_srcdir)/include/port-sockets.h \
++  $(top_srcdir)/include/socket-utils.h openssl.c
++notls.so notls.po $(OUTPRE)notls.$(OBJEXT): $(BUILDTOP)/include/autoconf.h \
++  $(BUILDTOP)/include/krb5/krb5.h $(BUILDTOP)/include/osconf.h \
++  $(BUILDTOP)/include/profile.h $(COM_ERR_DEPS) $(top_srcdir)/include/k5-buf.h \
++  $(top_srcdir)/include/k5-err.h $(top_srcdir)/include/k5-gmt_mktime.h \
++  $(top_srcdir)/include/k5-int-pkinit.h $(top_srcdir)/include/k5-int.h \
++  $(top_srcdir)/include/k5-platform.h $(top_srcdir)/include/k5-plugin.h \
++  $(top_srcdir)/include/k5-thread.h $(top_srcdir)/include/k5-tls.h \
++  $(top_srcdir)/include/k5-trace.h $(top_srcdir)/include/k5-utf8.h \
++  $(top_srcdir)/include/krb5.h $(top_srcdir)/include/krb5/authdata_plugin.h \
++  $(top_srcdir)/include/krb5/plugin.h $(top_srcdir)/include/port-sockets.h \
++  $(top_srcdir)/include/socket-utils.h notls.c
+diff --git a/src/plugins/tls/k5tls/k5tls.exports b/src/plugins/tls/k5tls/k5tls.exports
+new file mode 100644
+index 0000000..d67d928
+--- /dev/null
++++ b/src/plugins/tls/k5tls/k5tls.exports
+@@ -0,0 +1 @@
++tls_k5tls_initvt
+diff --git a/src/plugins/tls/k5tls/notls.c b/src/plugins/tls/k5tls/notls.c
+new file mode 100644
+index 0000000..7be0a4a
+--- /dev/null
++++ b/src/plugins/tls/k5tls/notls.c
+@@ -0,0 +1,53 @@
++/* -*- mode: c; c-basic-offset: 4; indent-tabs-mode: nil -*- */
++/* plus/tls/k5tls/none.c - Stub TLS module implementation */
++/*
++ * Copyright (C) 2014 by the Massachusetts Institute of Technology.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * * Redistributions of source code must retain the above copyright
++ *   notice, this list of conditions and the following disclaimer.
++ *
++ * * Redistributions in binary form must reproduce the above copyright
++ *   notice, this list of conditions and the following disclaimer in
++ *   the documentation and/or other materials provided with the
++ *   distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
++ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
++ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
++ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
++ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
++ * OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/* This dummy module is used if no TLS implemented is selected. */
++
++#include "k5-int.h"
++#include "k5-utf8.h"
++#include "k5-tls.h"
++
++#ifdef PROXY_TLS_IMPL_NONE
++
++krb5_error_code
++tls_k5tls_initvt(krb5_context context, int maj_ver, int min_ver,
++                 krb5_plugin_vtable vtable);
++
++krb5_error_code
++tls_k5tls_initvt(krb5_context context, int maj_ver, int min_ver,
++                 krb5_plugin_vtable vtable)
++{
++    /* Leave all vtable functions nulled. */
++    return 0;
++}
++
++#endif /* PROXY_TLS_IMPL_NONE */
+diff --git a/src/plugins/tls/k5tls/openssl.c b/src/plugins/tls/k5tls/openssl.c
+new file mode 100644
+index 0000000..0691a34
+--- /dev/null
++++ b/src/plugins/tls/k5tls/openssl.c
+@@ -0,0 +1,570 @@
++/* -*- mode: c; c-basic-offset: 4; indent-tabs-mode: nil -*- */
++/* plugins/tls/k5tls/openssl.c - OpenSSL TLS module implementation */
++/*
++ * Copyright 2013,2014 Red Hat, Inc.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *    1. Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *
++ *    2. Redistributions in binary form must reproduce the above copyright
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
++ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
++ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "k5-int.h"
++#include "k5-utf8.h"
++#include "k5-tls.h"
++
++#ifdef PROXY_TLS_IMPL_OPENSSL
++#include <openssl/err.h>
++#include <openssl/ssl.h>
++#include <openssl/x509.h>
++#include <openssl/x509v3.h>
++#include <dirent.h>
++
++struct k5_tls_handle_st {
++    SSL *ssl;
++    char *servername;
++};
++
++static int ex_context_id = -1;
++static int ex_handle_id = -1;
++
++MAKE_INIT_FUNCTION(init_openssl);
++
++int
++init_openssl()
++{
++    SSL_library_init();
++    SSL_load_error_strings();
++    OpenSSL_add_all_algorithms();
++    ex_context_id = SSL_get_ex_new_index(0, NULL, NULL, NULL, NULL);
++    ex_handle_id = SSL_get_ex_new_index(0, NULL, NULL, NULL, NULL);
++    return 0;
++}
++
++static void
++flush_errors(krb5_context context)
++{
++    unsigned long err;
++    char buf[128];
++
++    while ((err = ERR_get_error()) != 0) {
++        ERR_error_string_n(err, buf, sizeof(buf));
++        TRACE_TLS_ERROR(context, buf);
++    }
++}
++
++/* Return the passed-in character, lower-cased if it's an ASCII character. */
++static inline char
++ascii_tolower(char p)
++{
++    if (KRB5_UPPER(p))
++        return p + ('a' - 'A');
++    return p;
++}
++
++/*
++ * Check a single label.  If allow_wildcard is true, and the presented name
++ * includes a wildcard, return true and note that we matched a wildcard.
++ * Otherwise, for both the presented and expected values, do a case-insensitive
++ * comparison of ASCII characters, and a case-sensitive comparison of
++ * everything else.
++ */
++static krb5_boolean
++label_match(const char *presented, size_t plen, const char *expected,
++            size_t elen, krb5_boolean allow_wildcard, krb5_boolean *wildcard)
++{
++    unsigned int i;
++
++    if (allow_wildcard && plen == 1 && presented[0] == '*') {
++        *wildcard = TRUE;
++        return TRUE;
++    }
++
++    if (plen != elen)
++        return FALSE;
++
++    for (i = 0; i < elen; i++) {
++        if (ascii_tolower(presented[i]) != ascii_tolower(expected[i]))
++            return FALSE;
++    }
++    return TRUE;
++}
++
++/* Break up the two names and check them, label by label. */
++static krb5_boolean
++domain_match(const char *presented, size_t plen, const char *expected)
++{
++    const char *p, *q, *r, *s;
++    int n_label;
++    krb5_boolean used_wildcard = FALSE;
++
++    n_label = 0;
++    p = presented;
++    r = expected;
++    while (p < presented + plen && *r != '\0') {
++        q = memchr(p, '.', plen - (p - presented));
++        if (q == NULL)
++            q = presented + plen;
++        s = r + strcspn(r, ".");
++        if (!label_match(p, q - p, r, s - r, n_label == 0, &used_wildcard))
++            return FALSE;
++        p = q < presented + plen ? q + 1 : q;
++        r = *s ? s + 1 : s;
++        n_label++;
++    }
++    if (used_wildcard && n_label <= 2)
++        return FALSE;
++    if (p == presented + plen && *r == '\0')
++        return TRUE;
++    return FALSE;
++}
++
++/* Fetch the list of subjectAltNames from a certificate. */
++static GENERAL_NAMES *
++get_cert_sans(X509 *x)
++{
++    int ext;
++    X509_EXTENSION *san_ext;
++
++    ext = X509_get_ext_by_NID(x, NID_subject_alt_name, -1);
++    if (ext < 0)
++        return NULL;
++    san_ext = X509_get_ext(x, ext);
++    if (san_ext == NULL)
++        return NULL;
++    return X509V3_EXT_d2i(san_ext);
++}
++
++/* Fetch a CN value from the subjct name field, returning its length, or -1 if
++ * there is no subject name or it contains no CN value. */
++static int
++get_cert_cn(X509 *x, char *buf, size_t bufsize)
++{
++    X509_NAME *name;
++
++    name = X509_get_subject_name(x);
++    if (name == NULL)
++        return -1;
++    return X509_NAME_get_text_by_NID(name, NID_commonName, buf, bufsize);
++}
++
++/* Return true if text matches any of the addresses we can recover from x. */
++static krb5_boolean
++check_cert_address(X509 *x, const char *text)
++{
++    char buf[1024];
++    GENERAL_NAMES *sans;
++    GENERAL_NAME *san = NULL;
++    ASN1_OCTET_STRING *ip;
++    krb5_boolean found_ip_san = FALSE, matched = FALSE;
++    int n_sans, i;
++    int name_length;
++    struct in_addr sin;
++    struct in6_addr sin6;
++
++    /* Parse the IP address into an octet string. */
++    ip = M_ASN1_OCTET_STRING_new();
++    if (ip == NULL)
++        return FALSE;
++    if (inet_pton(AF_INET, text, &sin)) {
++        M_ASN1_OCTET_STRING_set(ip, &sin, sizeof(sin));
++    } else if (inet_pton(AF_INET6, text, &sin6)) {
++        M_ASN1_OCTET_STRING_set(ip, &sin6, sizeof(sin6));
++    } else {
++        ASN1_OCTET_STRING_free(ip);
++        return FALSE;
++    }
++
++    /* Check for matches in ipaddress subjectAltName values. */
++    sans = get_cert_sans(x);
++    if (sans != NULL) {
++        n_sans = sk_GENERAL_NAME_num(sans);
++        for (i = 0; i < n_sans; i++) {
++            san = sk_GENERAL_NAME_value(sans, i);
++            if (san->type != GEN_IPADD)
++                continue;
++            found_ip_san = TRUE;
++            matched = (ASN1_OCTET_STRING_cmp(ip, san->d.iPAddress) == 0);
++            if (matched)
++                break;
++        }
++        sk_GENERAL_NAME_pop_free(sans, GENERAL_NAME_free);
++    }
++    ASN1_OCTET_STRING_free(ip);
++
++    if (found_ip_san)
++        return matched;
++
++    /* Check for a match against the CN value in the peer's subject name. */
++    name_length = get_cert_cn(x, buf, sizeof(buf));
++    if (name_length >= 0) {
++        /* Do a string compare to check if it's an acceptable value. */
++        return strlen(text) == (size_t)name_length &&
++               strncmp(text, buf, name_length) == 0;
++    }
++
++    /* We didn't find a match. */
++    return FALSE;
++}
++
++/* Return true if expected matches any of the names we can recover from x. */
++static krb5_boolean
++check_cert_servername(X509 *x, const char *expected)
++{
++    char buf[1024];
++    GENERAL_NAMES *sans;
++    GENERAL_NAME *san = NULL;
++    unsigned char *dnsname;
++    krb5_boolean found_dns_san = FALSE, matched = FALSE;
++    int name_length, n_sans, i;
++
++    /* Check for matches in dnsname subjectAltName values. */
++    sans = get_cert_sans(x);
++    if (sans != NULL) {
++        n_sans = sk_GENERAL_NAME_num(sans);
++        for (i = 0; i < n_sans; i++) {
++            san = sk_GENERAL_NAME_value(sans, i);
++            if (san->type != GEN_DNS)
++                continue;
++            found_dns_san = TRUE;
++            dnsname = NULL;
++            name_length = ASN1_STRING_to_UTF8(&dnsname, san->d.dNSName);
++            if (dnsname == NULL)
++                continue;
++            matched = domain_match((char *)dnsname, name_length, expected);
++            OPENSSL_free(dnsname);
++            if (matched)
++                break;
++        }
++        sk_GENERAL_NAME_pop_free(sans, GENERAL_NAME_free);
++    }
++
++    if (matched)
++        return TRUE;
++    if (found_dns_san)
++        return matched;
++
++    /* Check for a match against the CN value in the peer's subject name. */
++    name_length = get_cert_cn(x, buf, sizeof(buf));
++    if (name_length >= 0)
++        return domain_match(buf, name_length, expected);
++
++    /* We didn't find a match. */
++    return FALSE;
++}
++
++static krb5_boolean
++check_cert_name_or_ip(X509 *x, const char *expected_name)
++{
++    struct in_addr in;
++    struct in6_addr in6;
++
++    if (inet_pton(AF_INET, expected_name, &in) != 0 ||
++        inet_pton(AF_INET6, expected_name, &in6) != 0) {
++        return check_cert_address(x, expected_name);
++    } else {
++        return check_cert_servername(x, expected_name);
++    }
++}
++
++static int
++verify_callback(int preverify_ok, X509_STORE_CTX *store_ctx)
++{
++    X509 *x;
++    SSL *ssl;
++    BIO *bio;
++    krb5_context context;
++    int err, depth;
++    k5_tls_handle handle;
++    const char *cert = NULL, *errstr, *expected_name;
++    size_t count;
++
++    ssl = X509_STORE_CTX_get_ex_data(store_ctx,
++                                     SSL_get_ex_data_X509_STORE_CTX_idx());
++    context = SSL_get_ex_data(ssl, ex_context_id);
++    handle = SSL_get_ex_data(ssl, ex_handle_id);
++    assert(context != NULL && handle != NULL);
++    /* We do have the peer's cert, right? */
++    x = X509_STORE_CTX_get_current_cert(store_ctx);
++    if (x == NULL) {
++        TRACE_TLS_NO_REMOTE_CERTIFICATE(context);
++        return 0;
++    }
++    /* Figure out where we are. */
++    depth = X509_STORE_CTX_get_error_depth(store_ctx);
++    if (depth < 0)
++        return 0;
++    /* If there's an error at this level that we're not ignoring, fail. */
++    err = X509_STORE_CTX_get_error(store_ctx);
++    if (err != X509_V_OK) {
++        bio = BIO_new(BIO_s_mem());
++        if (bio != NULL) {
++            X509_NAME_print_ex(bio, x->cert_info->subject, 0, 0);
++            count = BIO_get_mem_data(bio, &cert);
++            errstr = X509_verify_cert_error_string(err);
++            TRACE_TLS_CERT_ERROR(context, depth, count, cert, err, errstr);
++            BIO_free(bio);
++        }
++        return 0;
++    }
++    /* If we're not looking at the peer, we're done and everything's ok. */
++    if (depth != 0)
++        return 1;
++    /* Check if the name we expect to find is in the certificate. */
++    expected_name = handle->servername;
++    if (check_cert_name_or_ip(x, expected_name)) {
++        TRACE_TLS_SERVER_NAME_MATCH(context, expected_name);
++        return 1;
++    } else {
++        TRACE_TLS_SERVER_NAME_MISMATCH(context, expected_name);
++    }
++    /* The name didn't match. */
++    return 0;
++}
++
++static krb5_error_code
++load_anchor_file(X509_STORE *store, const char *path)
++{
++    FILE *fp;
++    STACK_OF(X509_INFO) *sk = NULL;
++    X509_INFO *xi;
++    int i;
++
++    fp = fopen(path, "r");
++    if (fp == NULL)
++        return errno;
++    sk = PEM_X509_INFO_read(fp, NULL, NULL, NULL);
++    fclose(fp);
++    if (sk == NULL)
++        return ENOENT;
++    for (i = 0; i < sk_X509_INFO_num(sk); i++) {
++        xi = sk_X509_INFO_value(sk, i);
++        if (xi->x509 != NULL)
++            X509_STORE_add_cert(store, xi->x509);
++    }
++    sk_X509_INFO_pop_free(sk, X509_INFO_free);
++    return 0;
++}
++
++static krb5_error_code
++load_anchor_dir(X509_STORE *store, const char *path)
++{
++    DIR *d = NULL;
++    struct dirent *dentry = NULL;
++    char filename[1024];
++    krb5_boolean found_any = FALSE;
++
++    d = opendir(path);
++    if (d == NULL)
++        return ENOENT;
++    while ((dentry = readdir(d)) != NULL) {
++        if (dentry->d_name[0] != '.') {
++            snprintf(filename, sizeof(filename), "%s/%s",
++                     path, dentry->d_name);
++            if (load_anchor_file(store, filename) == 0)
++                found_any = TRUE;
++        }
++    }
++    closedir(d);
++    return found_any ? 0 : ENOENT;
++}
++
++static krb5_error_code
++load_anchor(SSL_CTX *ctx, const char *location)
++{
++    X509_STORE *store;
++    const char *envloc;
++
++    store = SSL_CTX_get_cert_store(ctx);
++    if (strncmp(location, "FILE:", 5) == 0) {
++        return load_anchor_file(store, location + 5);
++    } else if (strncmp(location, "DIR:", 4) == 0) {
++        return load_anchor_dir(store, location + 4);
++    } else if (strncmp(location, "ENV:", 4) == 0) {
++        envloc = getenv(location + 4);
++        if (envloc == NULL)
++            return ENOENT;
++        return load_anchor(ctx, envloc);
++    }
++    return EINVAL;
++}
++
++static krb5_error_code
++load_anchors(krb5_context context, char **anchors, SSL_CTX *sctx)
++{
++    unsigned int i;
++    krb5_error_code ret;
++
++    if (anchors != NULL) {
++        for (i = 0; anchors[i] != NULL; i++) {
++            ret = load_anchor(sctx, anchors[i]);
++            if (ret)
++                return ret;
++        }
++    } else {
++        /* Use the library defaults. */
++        if (SSL_CTX_set_default_verify_paths(sctx) != 1)
++            return ENOENT;
++    }
++
++    return 0;
++}
++
++static krb5_error_code
++setup(krb5_context context, SOCKET fd, const char *servername,
++      char **anchors, k5_tls_handle *handle_out)
++{
++    int e;
++    long options;
++    SSL_CTX *ctx = NULL;
++    SSL *ssl = NULL;
++    k5_tls_handle handle = NULL;
++
++    *handle_out = NULL;
++
++    (void)CALL_INIT_FUNCTION(init_openssl);
++    if (ex_context_id == -1 || ex_handle_id == -1)
++        return KRB5_PLUGIN_OP_NOTSUPP;
++
++    /* Do general SSL library setup. */
++    ctx = SSL_CTX_new(SSLv23_client_method());
++    if (ctx == NULL)
++        goto error;
++    options = SSL_CTX_get_options(ctx);
++    SSL_CTX_set_options(ctx, options | SSL_OP_NO_SSLv2);
++
++    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, verify_callback);
++    X509_STORE_set_flags(SSL_CTX_get_cert_store(ctx), 0);
++    e = load_anchors(context, anchors, ctx);
++    if (e != 0)
++        goto error;
++
++    ssl = SSL_new(ctx);
++    if (ssl == NULL)
++        goto error;
++
++    if (!SSL_set_fd(ssl, fd))
++        goto error;
++    SSL_set_connect_state(ssl);
++
++    /* Create a handle and allow verify_callback to access it. */
++    handle = malloc(sizeof(*handle));
++    if (handle == NULL || !SSL_set_ex_data(ssl, ex_handle_id, handle))
++        goto error;
++
++    handle->ssl = ssl;
++    handle->servername = strdup(servername);
++    if (handle->servername == NULL)
++        goto error;
++    *handle_out = handle;
++    SSL_CTX_free(ctx);
++    return 0;
++
++error:
++    flush_errors(context);
++    free(handle);
++    SSL_free(ssl);
++    SSL_CTX_free(ctx);
++    return KRB5_PLUGIN_OP_NOTSUPP;
++}
++
++static k5_tls_status
++write_tls(krb5_context context, k5_tls_handle handle, const void *data,
++          size_t len)
++{
++    int nwritten, e;
++
++    /* Try to transmit our request; allow verify_callback to access context. */
++    if (!SSL_set_ex_data(handle->ssl, ex_context_id, context))
++        return ERROR_TLS;
++    nwritten = SSL_write(handle->ssl, data, len);
++    (void)SSL_set_ex_data(handle->ssl, ex_context_id, NULL);
++    if (nwritten > 0)
++        return DONE;
++
++    e = SSL_get_error(handle->ssl, nwritten);
++    if (e == SSL_ERROR_WANT_READ)
++        return WANT_READ;
++    else if (e == SSL_ERROR_WANT_WRITE)
++        return WANT_WRITE;
++    flush_errors(context);
++    return ERROR_TLS;
++}
++
++static k5_tls_status
++read_tls(krb5_context context, k5_tls_handle handle, void *data,
++         size_t data_size, size_t *len_out)
++{
++    ssize_t nread;
++    int e;
++
++    *len_out = 0;
++
++    /* Try to read response data; allow verify_callback to access context. */
++    if (!SSL_set_ex_data(handle->ssl, ex_context_id, context))
++        return ERROR_TLS;
++    nread = SSL_read(handle->ssl, data, data_size);
++    (void)SSL_set_ex_data(handle->ssl, ex_context_id, NULL);
++    if (nread > 0) {
++        *len_out = nread;
++        return DATA_READ;
++    }
++
++    e = SSL_get_error(handle->ssl, nread);
++    if (e == SSL_ERROR_WANT_READ)
++        return WANT_READ;
++    else if (e == SSL_ERROR_WANT_WRITE)
++        return WANT_WRITE;
++
++    if (e == SSL_ERROR_ZERO_RETURN || (e == SSL_ERROR_SYSCALL && nread == 0))
++        return DONE;
++
++    flush_errors(context);
++    return ERROR_TLS;
++}
++
++static void
++free_handle(krb5_context context, k5_tls_handle handle)
++{
++    SSL_free(handle->ssl);
++    free(handle->servername);
++    free(handle);
++}
++
++krb5_error_code
++tls_k5tls_initvt(krb5_context context, int maj_ver, int min_ver,
++                 krb5_plugin_vtable vtable);
++
++krb5_error_code
++tls_k5tls_initvt(krb5_context context, int maj_ver, int min_ver,
++                 krb5_plugin_vtable vtable)
++{
++    k5_tls_vtable vt;
++
++    vt = (k5_tls_vtable)vtable;
++    vt->setup = setup;
++    vt->write = write_tls;
++    vt->read = read_tls;
++    vt->free_handle = free_handle;
++    return 0;
++}
++
++#endif /* PROXY_TLS_IMPL_OPENSSL */

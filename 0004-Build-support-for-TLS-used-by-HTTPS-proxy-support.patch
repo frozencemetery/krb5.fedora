@@ -1,0 +1,187 @@
+From d0be57ac45ea639baa3cff0dd2108c34e834bfa7 Mon Sep 17 00:00:00 2001
+From: "Robbie Harwood (frozencemetery)" <rharwood@club.cc.cmu.edu>
+Date: Fri, 16 Aug 2013 12:45:03 -0400
+Subject: [PATCH 04/13] Build support for TLS used by HTTPS proxy support
+
+Add a --with-proxy-tls-impl option to configure, taking 'openssl',
+'auto', or invocation as --without-proxy-tls-impl.  Use related CFLAGS
+when building lib/krb5/os, and LIBS when linking libkrb5.  Call the
+OpenSSL library startup functions during library initialization.
+
+ticket: 7929
+---
+ src/Makefile.in              |  1 +
+ src/config/pre.in            |  5 +++++
+ src/configure.in             | 40 ++++++++++++++++++++++++++++++++++++++++
+ src/lib/krb5/Makefile.in     |  3 ++-
+ src/lib/krb5/krb5_libinit.c  |  2 ++
+ src/lib/krb5/os/Makefile.in  |  2 +-
+ src/lib/krb5/os/os-proto.h   |  1 +
+ src/lib/krb5/os/sendto_kdc.c | 14 ++++++++++++++
+ 8 files changed, 66 insertions(+), 2 deletions(-)
+
+diff --git a/src/Makefile.in b/src/Makefile.in
+index 1725093..5e2cf4e 100644
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -553,6 +553,7 @@ pyrunenv.vals: Makefile
+ 	for i in $(RUN_VARS); do \
+ 		eval echo 'env['\\\'$$i\\\''] = '\\\'\$$$$i\\\'; \
+ 	done > $@
++	echo "proxy_tls_impl = '$(PROXY_TLS_IMPL)'" >> $@
+ 
+ runenv.py: pyrunenv.vals
+ 	echo 'env = {}' > $@
+diff --git a/src/config/pre.in b/src/config/pre.in
+index fbc5c11..e1d7e4b 100644
+--- a/src/config/pre.in
++++ b/src/config/pre.in
+@@ -428,6 +428,11 @@ PKINIT_CRYPTO_IMPL		= @PKINIT_CRYPTO_IMPL@
+ PKINIT_CRYPTO_IMPL_CFLAGS	= @PKINIT_CRYPTO_IMPL_CFLAGS@
+ PKINIT_CRYPTO_IMPL_LIBS		= @PKINIT_CRYPTO_IMPL_LIBS@
+ 
++# TLS implementation selection for HTTPS proxy support
++PROXY_TLS_IMPL                  = @PROXY_TLS_IMPL@
++PROXY_TLS_IMPL_CFLAGS           = @PROXY_TLS_IMPL_CFLAGS@
++PROXY_TLS_IMPL_LIBS             = @PROXY_TLS_IMPL_LIBS@
++
+ # error table rules
+ #
+ ### /* these are invoked as $(...) foo.et, which works, but could be better */
+diff --git a/src/configure.in b/src/configure.in
+index 9bc4663..39e3738 100644
+--- a/src/configure.in
++++ b/src/configure.in
+@@ -272,6 +272,46 @@ AC_SUBST(PKINIT_CRYPTO_IMPL)
+ AC_SUBST(PKINIT_CRYPTO_IMPL_CFLAGS)
+ AC_SUBST(PKINIT_CRYPTO_IMPL_LIBS)
+ 
++# WITH_PROXY_TLS_IMPL
++
++AC_ARG_WITH([proxy-tls-impl],
++AC_HELP_STRING([--with-proxy-tls-impl=IMPL],
++               [use specified TLS implementation for HTTPS @<:@auto@:>@]),
++[PROXY_TLS_IMPL=$withval],[PROXY_TLS_IMPL=auto])
++case "$PROXY_TLS_IMPL" in
++openssl|auto)
++  AC_CHECK_LIB(ssl,SSL_CTX_new,[have_lib_ssl=true],[have_lib_ssl=false],
++               -lcrypto)
++  AC_MSG_CHECKING([for OpenSSL])
++  if test x$have_lib_ssl = xtrue ; then
++    AC_DEFINE(PROXY_TLS_IMPL_OPENSSL,1,
++              [Define if HTTPS TLS implementation is OpenSSL])
++    AC_MSG_RESULT([yes])
++    PROXY_TLS_IMPL_LIBS="-lssl -lcrypto"
++    PROXY_TLS_IMPL=openssl
++    AC_MSG_NOTICE(HTTPS support will use TLS from '$PROXY_TLS_IMPL')
++  else
++    if test "$PROXY_TLS_IMPL" = openssl ; then
++      AC_MSG_ERROR([OpenSSL not found!])
++    else
++      AC_MSG_WARN([OpenSSL not found!])
++    fi
++    PROXY_TLS_IMPL=no
++    AC_MSG_NOTICE(building without HTTPS support)
++  fi
++  ;;
++no)
++  AC_MSG_NOTICE(building without HTTPS support)
++  ;;
++*)
++  AC_MSG_ERROR([Unsupported HTTPS proxy TLS implementation $withval])
++  ;;
++esac
++
++AC_SUBST(PROXY_TLS_IMPL)
++AC_SUBST(PROXY_TLS_IMPL_CFLAGS)
++AC_SUBST(PROXY_TLS_IMPL_LIBS)
++
+ AC_ARG_ENABLE([aesni],
+ AC_HELP_STRING([--disable-aesni],[Do not build with AES-NI support]), ,
+ enable_aesni=check)
+diff --git a/src/lib/krb5/Makefile.in b/src/lib/krb5/Makefile.in
+index d9cddc1..472c008 100644
+--- a/src/lib/krb5/Makefile.in
++++ b/src/lib/krb5/Makefile.in
+@@ -56,7 +56,8 @@ RELDIR=krb5
+ SHLIB_EXPDEPS = \
+ 	$(TOPLIBD)/libk5crypto$(SHLIBEXT) \
+ 	$(COM_ERR_DEPLIB) $(SUPPORT_DEPLIB)
+-SHLIB_EXPLIBS=-lk5crypto -lcom_err $(SUPPORT_LIB) @GEN_LIB@ $(LIBS)
++SHLIB_EXPLIBS=-lk5crypto -lcom_err $(PROXY_TLS_IMPL_LIBS) $(SUPPORT_LIB) \
++	@GEN_LIB@ $(LIBS)
+ 
+ all-unix:: all-liblinks
+ 
+diff --git a/src/lib/krb5/krb5_libinit.c b/src/lib/krb5/krb5_libinit.c
+index f83d25b..f2382d1 100644
+--- a/src/lib/krb5/krb5_libinit.c
++++ b/src/lib/krb5/krb5_libinit.c
+@@ -58,6 +58,8 @@ int krb5int_lib_init(void)
+     if (err)
+         return err;
+ 
++    k5_sendto_kdc_initialize();
++
+     return 0;
+ }
+ 
+diff --git a/src/lib/krb5/os/Makefile.in b/src/lib/krb5/os/Makefile.in
+index 5add9f9..fb4001a 100644
+--- a/src/lib/krb5/os/Makefile.in
++++ b/src/lib/krb5/os/Makefile.in
+@@ -2,7 +2,7 @@ mydir=lib$(S)krb5$(S)os
+ BUILDTOP=$(REL)..$(S)..$(S)..
+ DEFINES=-DLIBDIR=\"$(KRB5_LIBDIR)\" -DBINDIR=\"$(CLIENT_BINDIR)\" \
+ 	-DSBINDIR=\"$(ADMIN_BINDIR)\"
+-LOCALINCLUDES=-I$(top_srcdir)/util/profile
++LOCALINCLUDES= $(PROXY_TLS_IMPL_CFLAGS) -I$(top_srcdir)/util/profile
+ 
+ ##DOS##BUILDTOP = ..\..\..
+ ##DOS##PREFIXDIR=os
+diff --git a/src/lib/krb5/os/os-proto.h b/src/lib/krb5/os/os-proto.h
+index 3196bca..f23dda5 100644
+--- a/src/lib/krb5/os/os-proto.h
++++ b/src/lib/krb5/os/os-proto.h
+@@ -184,5 +184,6 @@ krb5_error_code localauth_k5login_initvt(krb5_context context, int maj_ver,
+                                          krb5_plugin_vtable vtable);
+ krb5_error_code localauth_an2ln_initvt(krb5_context context, int maj_ver,
+                                        int min_ver, krb5_plugin_vtable vtable);
++void k5_sendto_kdc_initialize(void);
+ 
+ #endif /* KRB5_LIBOS_INT_PROTO__ */
+diff --git a/src/lib/krb5/os/sendto_kdc.c b/src/lib/krb5/os/sendto_kdc.c
+index 3f99ce8..c6aae8e 100644
+--- a/src/lib/krb5/os/sendto_kdc.c
++++ b/src/lib/krb5/os/sendto_kdc.c
+@@ -48,6 +48,10 @@
+ #endif
+ #endif
+ 
++#ifdef PROXY_TLS_IMPL_OPENSSL
++#include <openssl/ssl.h>
++#endif
++
+ #define MAX_PASS                    3
+ #define DEFAULT_UDP_PREF_LIMIT   1465
+ #define HARD_UDP_LIMIT          32700 /* could probably do 64K-epsilon ? */
+@@ -107,6 +111,16 @@ struct conn_state {
+     krb5_boolean defer;
+ };
+ 
++void
++k5_sendto_kdc_initialize(void)
++{
++#ifdef PROXY_TLS_IMPL_OPENSSL
++    SSL_library_init();
++    SSL_load_error_strings();
++    OpenSSL_add_all_algorithms();
++#endif
++}
++
+ /* Get current time in milliseconds. */
+ static krb5_error_code
+ get_curtime_ms(time_ms *time_out)
+-- 
+2.1.0
+

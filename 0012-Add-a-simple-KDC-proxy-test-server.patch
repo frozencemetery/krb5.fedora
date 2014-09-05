@@ -1,0 +1,526 @@
+From 142255ba9af4ce1016a8eadf147e599ee490f1f7 Mon Sep 17 00:00:00 2001
+From: Nalin Dahyabhai <nalin@dahyabhai.net>
+Date: Fri, 7 Feb 2014 18:03:29 -0500
+Subject: [PATCH 12/13] Add a simple KDC proxy test server
+
+This proxy server uses python-paste to run the kdcproxy from
+https://pypi.python.org/pypi/kdcproxy.  It should be used along
+with the proxy.pem certificate in ../tests/dejagnu/proxy-certs.
+
+ticket: 7929
+---
+ src/tests/dejagnu/proxy-certs/ca.pem             |  28 +++++
+ src/tests/dejagnu/proxy-certs/make-certs.sh      | 124 +++++++++++++++++++++++
+ src/tests/dejagnu/proxy-certs/proxy-badsig.pem   |  56 ++++++++++
+ src/tests/dejagnu/proxy-certs/proxy-ideal.pem    |  56 ++++++++++
+ src/tests/dejagnu/proxy-certs/proxy-no-match.pem |  54 ++++++++++
+ src/tests/dejagnu/proxy-certs/proxy-san.pem      |  56 ++++++++++
+ src/tests/dejagnu/proxy-certs/proxy-subject.pem  |  54 ++++++++++
+ src/util/paste-kdcproxy.py                       |  18 ++++
+ 8 files changed, 446 insertions(+)
+ create mode 100644 src/tests/dejagnu/proxy-certs/ca.pem
+ create mode 100755 src/tests/dejagnu/proxy-certs/make-certs.sh
+ create mode 100644 src/tests/dejagnu/proxy-certs/proxy-badsig.pem
+ create mode 100644 src/tests/dejagnu/proxy-certs/proxy-ideal.pem
+ create mode 100644 src/tests/dejagnu/proxy-certs/proxy-no-match.pem
+ create mode 100644 src/tests/dejagnu/proxy-certs/proxy-san.pem
+ create mode 100644 src/tests/dejagnu/proxy-certs/proxy-subject.pem
+ create mode 100755 src/util/paste-kdcproxy.py
+
+diff --git a/src/tests/dejagnu/proxy-certs/ca.pem b/src/tests/dejagnu/proxy-certs/ca.pem
+new file mode 100644
+index 0000000..e0f8dc7
+--- /dev/null
++++ b/src/tests/dejagnu/proxy-certs/ca.pem
+@@ -0,0 +1,28 @@
++-----BEGIN CERTIFICATE-----
++MIIEuzCCA6OgAwIBAgIBATANBgkqhkiG9w0BAQUFADCBmTELMAkGA1UEBhMCVVMx
++FjAUBgNVBAgTDU1hc3NhY2h1c2V0dHMxEjAQBgNVBAcTCUNhbWJyaWRnZTEMMAoG
++A1UEChMDTUlUMSIwIAYDVQQLExlJbnNlY3VyZSBLZXJiZXJvcyB0ZXN0IENBMSww
++KgYDVQQDFCN0ZXN0IHN1aXRlIENBOyBkbyBub3QgdXNlIG90aGVyd2lzZTAeFw0x
++NDA1MDIxOTA2MDhaFw0yNTA0MTQxOTA2MDhaMIGZMQswCQYDVQQGEwJVUzEWMBQG
++A1UECBMNTWFzc2FjaHVzZXR0czESMBAGA1UEBxMJQ2FtYnJpZGdlMQwwCgYDVQQK
++EwNNSVQxIjAgBgNVBAsTGUluc2VjdXJlIEtlcmJlcm9zIHRlc3QgQ0ExLDAqBgNV
++BAMUI3Rlc3Qgc3VpdGUgQ0E7IGRvIG5vdCB1c2Ugb3RoZXJ3aXNlMIIBIjANBgkq
++hkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1zudnpN8FP7iLn1vgkyTSn/RQxXx1yt6
++zikHaMrVPjkjXPPUoCFpWS3eeI4aQFoj93L5MwZDmSxOflBAqLwV2AMAacrYnNPJ
++IkHtbYKdVsvw9b4INTWqV9/DOODO7UowyMppmO35/pUXaLL+AjHjLw1/EhQ3ZYtq
++fpAMOkf5TnS5GtqZFlrYgZKE8vTC8BxDKM7FYhWYz7kp/tG3S8O/RTnP7Nd+h1Yd
++pmlHBGfuwIRIJz5xNw6KIcCy3Q0NNoKnh00WVwLmR+x11BGSkMjiZZkwJ5D0RObS
++g13QD/itrGoV2gtPzjQgNPfTrjsMvyOWAAFrWVR3QLTxnnmXsqnXvwIDAQABo4IB
++CjCCAQYwHQYDVR0OBBYEFHO5+DSYzq8rvQhUldyvn0y4AqlHMIHGBgNVHSMEgb4w
++gbuAFHO5+DSYzq8rvQhUldyvn0y4AqlHoYGfpIGcMIGZMQswCQYDVQQGEwJVUzEW
++MBQGA1UECBMNTWFzc2FjaHVzZXR0czESMBAGA1UEBxMJQ2FtYnJpZGdlMQwwCgYD
++VQQKEwNNSVQxIjAgBgNVBAsTGUluc2VjdXJlIEtlcmJlcm9zIHRlc3QgQ0ExLDAq
++BgNVBAMUI3Rlc3Qgc3VpdGUgQ0E7IGRvIG5vdCB1c2Ugb3RoZXJ3aXNlggEBMAsG
++A1UdDwQEAwIB/jAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBBQUAA4IBAQAM
++Mf4ptC6WoQBH3GoTfgBL0WlIeYeSFmLO7IaSjpK0FV6F/yF7iPFSXcpmu23m6USY
++LRSxnAvxFTi+h1S5Za9O2Pjq88R9nHmesg4v8HJqOw4HpkDowYo2lumjIMfAutyR
++MQUOujYJW1WyZ2PidN5M1exDeMgQN9nVjUCx/WKD9fnzOjOOR1Sc8Us2KpoyccIi
++A+ABHubCvSO3cln0Sp7qjkssJScZtouzPu8FYiroTIR+1oSIKTpJiik1EptlsTea
++L6fHTMHspFhZaiUJFHWTBAgn/dT+UkFntHdHGI6HWBThFVW05hKoarBA7N25W7FN
++AHyfC0lKds4qFiBQkpdi
++-----END CERTIFICATE-----
+diff --git a/src/tests/dejagnu/proxy-certs/make-certs.sh b/src/tests/dejagnu/proxy-certs/make-certs.sh
+new file mode 100755
+index 0000000..1191bf0
+--- /dev/null
++++ b/src/tests/dejagnu/proxy-certs/make-certs.sh
+@@ -0,0 +1,124 @@
++#!/bin/sh -e
++
++PWD=`pwd`
++NAMETYPE=1
++KEYSIZE=2048
++DAYS=4000
++REALM=KRBTEST.COM
++TLS_SERVER_EKU=1.3.6.1.5.5.7.3.1
++PROXY_EKU_LIST=$TLS_SERVER_EKU
++
++cat > openssl.cnf << EOF
++[req]
++prompt = no
++distinguished_name = \$ENV::SUBJECT
++
++[ca]
++default_ca = test_ca
++
++[test_ca]
++new_certs_dir = $PWD
++serial = $PWD/ca.srl
++database = $PWD/ca.db
++certificate = $PWD/ca.pem
++private_key = $PWD/privkey.pem
++default_days = $DAYS
++x509_extensions = exts_proxy
++policy = proxyname
++default_md = sha1
++unique_subject = no
++email_in_dn = no
++
++[signer]
++CN = test CA certificate
++C = US
++ST = Massachusetts
++L = Cambridge
++O = MIT
++OU = Insecure Kerberos test CA
++CN = test suite CA; do not use otherwise
++
++[proxy]
++C = US
++ST = Massachusetts
++O = KRBTEST.COM
++CN = PROXYinSubject
++
++[localhost]
++C = US
++ST = Massachusetts
++O = KRBTEST.COM
++CN = localhost
++
++[proxyname]
++C = supplied
++ST = supplied
++O = supplied
++CN = supplied
++
++[exts_ca]
++subjectKeyIdentifier = hash
++authorityKeyIdentifier = keyid:always,issuer:always
++keyUsage = nonRepudiation,digitalSignature,keyEncipherment,dataEncipherment,keyAgreement,keyCertSign,cRLSign
++basicConstraints = critical,CA:TRUE
++
++[exts_proxy]
++subjectKeyIdentifier = hash
++authorityKeyIdentifier = keyid:always,issuer:always
++keyUsage = nonRepudiation,digitalSignature,keyEncipherment,keyAgreement
++basicConstraints = critical,CA:FALSE
++subjectAltName = DNS:proxyŠubjectÄltÑame,DNS:proxySubjectAltName,IP:127.0.0.1,IP:::1,DNS:localhost
++extendedKeyUsage = $PROXY_EKU_LIST
++
++[exts_proxy_no_san]
++subjectKeyIdentifier = hash
++authorityKeyIdentifier = keyid:always,issuer:always
++keyUsage = nonRepudiation,digitalSignature,keyEncipherment,keyAgreement
++basicConstraints = critical,CA:FALSE
++extendedKeyUsage = $PROXY_EKU_LIST
++EOF
++
++# Generate a private key.
++openssl genrsa $KEYSIZE -nodes > privkey.pem
++
++# Generate a "CA" certificate.
++SUBJECT=signer openssl req -config openssl.cnf -new -x509 -extensions exts_ca \
++    -set_serial 1 -days $DAYS -key privkey.pem -out ca.pem
++
++# Generate proxy certificate signing requests.
++SUBJECT=proxy openssl req -config openssl.cnf -new -key privkey.pem \
++	-out proxy.csr
++SUBJECT=localhost openssl req -config openssl.cnf -new -key privkey.pem \
++	-out localhost.csr
++
++# Issue the certificate with the right name in a subjectAltName.
++echo 02 > ca.srl
++cat /dev/null > ca.db
++SUBJECT=proxy openssl ca  -config openssl.cnf -extensions exts_proxy \
++    -batch -days $DAYS -notext -out tmp.pem -in proxy.csr
++cat privkey.pem tmp.pem > proxy-san.pem
++
++# Issue a certificate that only has the name in the subject field
++SUBJECT=proxy openssl ca  -config openssl.cnf -extensions exts_proxy_no_san \
++    -batch -days $DAYS -notext -out tmp.pem -in localhost.csr
++cat privkey.pem tmp.pem > proxy-subject.pem
++
++# Issue a certificate that doesn't include any matching name values.
++SUBJECT=proxy openssl ca  -config openssl.cnf -extensions exts_proxy_no_san \
++    -batch -days $DAYS -notext -out tmp.pem -in proxy.csr
++cat privkey.pem tmp.pem > proxy-no-match.pem
++
++# Issue a certificate that contains all matching name values.
++SUBJECT=proxy openssl ca  -config openssl.cnf -extensions exts_proxy \
++    -batch -days $DAYS -notext -out tmp.pem -in localhost.csr
++cat privkey.pem tmp.pem > proxy-ideal.pem
++
++# Corrupt the signature on the certificate.
++SUBJECT=proxy openssl x509 -outform der -in proxy-ideal.pem -out bad.der
++length=`od -Ad bad.der | tail -n 1 | awk '{print $1}'`
++dd if=/dev/zero bs=1 of=bad.der count=16 seek=`expr $length - 16`
++SUBJECT=proxy openssl x509 -inform der -in bad.der -out tmp.pem
++cat privkey.pem tmp.pem > proxy-badsig.pem
++
++# Clean up.
++rm -f openssl.cnf proxy.csr localhost.csr privkey.pem ca.db ca.db.old ca.srl ca.srl.old ca.db.attr ca.db.attr.old 02.pem 03.pem 04.pem 05.pem tmp.pem bad.der
+diff --git a/src/tests/dejagnu/proxy-certs/proxy-badsig.pem b/src/tests/dejagnu/proxy-certs/proxy-badsig.pem
+new file mode 100644
+index 0000000..2b31f7d
+--- /dev/null
++++ b/src/tests/dejagnu/proxy-certs/proxy-badsig.pem
+@@ -0,0 +1,56 @@
++-----BEGIN RSA PRIVATE KEY-----
++MIIEpQIBAAKCAQEA1zudnpN8FP7iLn1vgkyTSn/RQxXx1yt6zikHaMrVPjkjXPPU
++oCFpWS3eeI4aQFoj93L5MwZDmSxOflBAqLwV2AMAacrYnNPJIkHtbYKdVsvw9b4I
++NTWqV9/DOODO7UowyMppmO35/pUXaLL+AjHjLw1/EhQ3ZYtqfpAMOkf5TnS5GtqZ
++FlrYgZKE8vTC8BxDKM7FYhWYz7kp/tG3S8O/RTnP7Nd+h1YdpmlHBGfuwIRIJz5x
++Nw6KIcCy3Q0NNoKnh00WVwLmR+x11BGSkMjiZZkwJ5D0RObSg13QD/itrGoV2gtP
++zjQgNPfTrjsMvyOWAAFrWVR3QLTxnnmXsqnXvwIDAQABAoIBAQCqvhpeMDXhGgoo
++Q03wmfrGwPsrMv91aIK1hYrhMPdVs1JAbRYiKh8+pcq07FYa8udRaB4UwkVh/+oM
++/nEs6niRsl/jjQ2l68TFrnNByroynvr6l9Q/EeGecF6Ygo7lY1OsFhcLQM5vjarS
++XhxvdU/6hcRmfS8tGRpUaMWqfmpiN3YgJcgt8SoYhiwAYDTMJjNyWC61lO7IqNVR
++4kntiM24sfAu1sdZynX8Gp2GrpNChapEuhilQ8RayjuStEYr2abcSIjfZFHQXN7o
++TnjL+AQUzc/ZTXDGnIe9ZzZeFz8UCueeoN6KPxfrq9UUWRL6qt7gOIMdhYR6lFxt
++6pj6kLhxAoGBAO5DTnTKDfCMY2/AsTzCJvMGSY0bT1rsdDxrpqjrbUSeMHV3s5Lm
++vEPnnm+05FD/vi99+HZjHXAZFkhA3ubij2qWFPBnQ5YUoh17IW/Ae4bzY2uXikgL
++tLZ+R+OrcGYQQlvPn//PLsxbfdk5vraqzm08kIX0T4o4Iz8ST5NFJ8hVAoGBAOdB
++ahXr14563Cjeu0pSQ1nXoz3IXdnDwePXasYhxQHl8Ayk8qZS5pt7r07H3dqq6pvn
++e09gZINJe47B9UhkR3H5bPyz/kujKS4zqo3Zlbryzm3V0BWqjNj+j8E2YuQKNQr+
++c480jn2FzwW66w0i3n4U4KUn1w2/iq5AnVzyNkPDAoGAWLYEsyU79XE/4K79DqM3
++P0r6/afKbw8U5B4syj4FzAOeBU6RNMPmGt5VNkBCtgnSdPpRFTsoDcG5cyN8GrkG
++Lug8WZoJJwr9pT5gH6yqEX/zZ27f1J1PJpd0CsedLNMm8eonJ2arhPkXrVZ7tKV6
++AGAJa2agatUmAmi96hZYjpUCgYEA32abJEgsedEIhFb/GYI03ELryRCaUXfCA+gj
++lvoihn3qE1z5qGGns4adyX5dPRQmBqxtvDXDg+zl9vg6i0+MkXdCqTD8tXcOnjp9
++RgFvmyVa9FI8beHPpQTuPNncWK3fpho/6pT8Hhi48LEsxwjrZWOnzQSaxQZH46Q6
++IQNAFt8CgYEAkflxXvA2/2naix+riaBzv5EVJB7ilbfWiWtq2LEAtwrQ5XNFjrtK
++g45jKrZ/ezAzTfPa5Dwn4xcImd0MIavnJhDu2ATxMGB0GATLlDH2HZvU7UwKLpTW
++6Hlol4yRcX4GSEOxJ2ZpWYNIOYH0yDf1qLJXs1j8Fi3zWRe+V1kff4w=
++-----END RSA PRIVATE KEY-----
++-----BEGIN CERTIFICATE-----
++MIIE3TCCA8WgAwIBAgIBBTANBgkqhkiG9w0BAQUFADCBmTELMAkGA1UEBhMCVVMx
++FjAUBgNVBAgTDU1hc3NhY2h1c2V0dHMxEjAQBgNVBAcTCUNhbWJyaWRnZTEMMAoG
++A1UEChMDTUlUMSIwIAYDVQQLExlJbnNlY3VyZSBLZXJiZXJvcyB0ZXN0IENBMSww
++KgYDVQQDFCN0ZXN0IHN1aXRlIENBOyBkbyBub3QgdXNlIG90aGVyd2lzZTAeFw0x
++NDA1MDIxOTA2MDlaFw0yNTA0MTQxOTA2MDlaME8xCzAJBgNVBAYTAlVTMRYwFAYD
++VQQIEw1NYXNzYWNodXNldHRzMRQwEgYDVQQKEwtLUkJURVNULkNPTTESMBAGA1UE
++AxMJbG9jYWxob3N0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1zud
++npN8FP7iLn1vgkyTSn/RQxXx1yt6zikHaMrVPjkjXPPUoCFpWS3eeI4aQFoj93L5
++MwZDmSxOflBAqLwV2AMAacrYnNPJIkHtbYKdVsvw9b4INTWqV9/DOODO7UowyMpp
++mO35/pUXaLL+AjHjLw1/EhQ3ZYtqfpAMOkf5TnS5GtqZFlrYgZKE8vTC8BxDKM7F
++YhWYz7kp/tG3S8O/RTnP7Nd+h1YdpmlHBGfuwIRIJz5xNw6KIcCy3Q0NNoKnh00W
++VwLmR+x11BGSkMjiZZkwJ5D0RObSg13QD/itrGoV2gtPzjQgNPfTrjsMvyOWAAFr
++WVR3QLTxnnmXsqnXvwIDAQABo4IBdzCCAXMwHQYDVR0OBBYEFHO5+DSYzq8rvQhU
++ldyvn0y4AqlHMIHGBgNVHSMEgb4wgbuAFHO5+DSYzq8rvQhUldyvn0y4AqlHoYGf
++pIGcMIGZMQswCQYDVQQGEwJVUzEWMBQGA1UECBMNTWFzc2FjaHVzZXR0czESMBAG
++A1UEBxMJQ2FtYnJpZGdlMQwwCgYDVQQKEwNNSVQxIjAgBgNVBAsTGUluc2VjdXJl
++IEtlcmJlcm9zIHRlc3QgQ0ExLDAqBgNVBAMUI3Rlc3Qgc3VpdGUgQ0E7IGRvIG5v
++dCB1c2Ugb3RoZXJ3aXNlggEBMAsGA1UdDwQEAwID6DAMBgNVHRMBAf8EAjAAMFkG
++A1UdEQRSMFCCFnByb3h5xaB1YmplY3TDhGx0w5FhbWWCE3Byb3h5U3ViamVjdEFs
++dE5hbWWHBH8AAAGHEAAAAAAAAAAAAAAAAAAAAAGCCWxvY2FsaG9zdDATBgNVHSUE
++DDAKBggrBgEFBQcDATANBgkqhkiG9w0BAQUFAAOCAQEAfTctgFjQSaevBi64q7yh
++GNsK3PqeNEALZz4pSXRbOwm0E4RpYIS7uqg1C4zJ5Zbd4V/dOX7q+T/iBS7gErzS
++rj21jH3Ggc92TmXzcFxMDCxLV0hO8xFkqg3P4sslJESOHxvEMTTf5s893yUb8vJ/
++DCvZXXRoRwPot9MFozkmcQcaTNunREWFvn4i4JXcMCSAfWTd+/VkpVsy69u3tj68
++7G2/K5nalvZikutEC+DyfyBuvDAoxIYzCi3VtQxCalW28Q5hzWV21QsvKTP5QBsh
++RaU2r0O58lZPPvrOrtWQBCudUgsnoraVLrjJshEQ4z/ZAAAAAAAAAAAAAAAAAAAA
++AA==
++-----END CERTIFICATE-----
+diff --git a/src/tests/dejagnu/proxy-certs/proxy-ideal.pem b/src/tests/dejagnu/proxy-certs/proxy-ideal.pem
+new file mode 100644
+index 0000000..4588f7d
+--- /dev/null
++++ b/src/tests/dejagnu/proxy-certs/proxy-ideal.pem
+@@ -0,0 +1,56 @@
++-----BEGIN RSA PRIVATE KEY-----
++MIIEpQIBAAKCAQEA1zudnpN8FP7iLn1vgkyTSn/RQxXx1yt6zikHaMrVPjkjXPPU
++oCFpWS3eeI4aQFoj93L5MwZDmSxOflBAqLwV2AMAacrYnNPJIkHtbYKdVsvw9b4I
++NTWqV9/DOODO7UowyMppmO35/pUXaLL+AjHjLw1/EhQ3ZYtqfpAMOkf5TnS5GtqZ
++FlrYgZKE8vTC8BxDKM7FYhWYz7kp/tG3S8O/RTnP7Nd+h1YdpmlHBGfuwIRIJz5x
++Nw6KIcCy3Q0NNoKnh00WVwLmR+x11BGSkMjiZZkwJ5D0RObSg13QD/itrGoV2gtP
++zjQgNPfTrjsMvyOWAAFrWVR3QLTxnnmXsqnXvwIDAQABAoIBAQCqvhpeMDXhGgoo
++Q03wmfrGwPsrMv91aIK1hYrhMPdVs1JAbRYiKh8+pcq07FYa8udRaB4UwkVh/+oM
++/nEs6niRsl/jjQ2l68TFrnNByroynvr6l9Q/EeGecF6Ygo7lY1OsFhcLQM5vjarS
++XhxvdU/6hcRmfS8tGRpUaMWqfmpiN3YgJcgt8SoYhiwAYDTMJjNyWC61lO7IqNVR
++4kntiM24sfAu1sdZynX8Gp2GrpNChapEuhilQ8RayjuStEYr2abcSIjfZFHQXN7o
++TnjL+AQUzc/ZTXDGnIe9ZzZeFz8UCueeoN6KPxfrq9UUWRL6qt7gOIMdhYR6lFxt
++6pj6kLhxAoGBAO5DTnTKDfCMY2/AsTzCJvMGSY0bT1rsdDxrpqjrbUSeMHV3s5Lm
++vEPnnm+05FD/vi99+HZjHXAZFkhA3ubij2qWFPBnQ5YUoh17IW/Ae4bzY2uXikgL
++tLZ+R+OrcGYQQlvPn//PLsxbfdk5vraqzm08kIX0T4o4Iz8ST5NFJ8hVAoGBAOdB
++ahXr14563Cjeu0pSQ1nXoz3IXdnDwePXasYhxQHl8Ayk8qZS5pt7r07H3dqq6pvn
++e09gZINJe47B9UhkR3H5bPyz/kujKS4zqo3Zlbryzm3V0BWqjNj+j8E2YuQKNQr+
++c480jn2FzwW66w0i3n4U4KUn1w2/iq5AnVzyNkPDAoGAWLYEsyU79XE/4K79DqM3
++P0r6/afKbw8U5B4syj4FzAOeBU6RNMPmGt5VNkBCtgnSdPpRFTsoDcG5cyN8GrkG
++Lug8WZoJJwr9pT5gH6yqEX/zZ27f1J1PJpd0CsedLNMm8eonJ2arhPkXrVZ7tKV6
++AGAJa2agatUmAmi96hZYjpUCgYEA32abJEgsedEIhFb/GYI03ELryRCaUXfCA+gj
++lvoihn3qE1z5qGGns4adyX5dPRQmBqxtvDXDg+zl9vg6i0+MkXdCqTD8tXcOnjp9
++RgFvmyVa9FI8beHPpQTuPNncWK3fpho/6pT8Hhi48LEsxwjrZWOnzQSaxQZH46Q6
++IQNAFt8CgYEAkflxXvA2/2naix+riaBzv5EVJB7ilbfWiWtq2LEAtwrQ5XNFjrtK
++g45jKrZ/ezAzTfPa5Dwn4xcImd0MIavnJhDu2ATxMGB0GATLlDH2HZvU7UwKLpTW
++6Hlol4yRcX4GSEOxJ2ZpWYNIOYH0yDf1qLJXs1j8Fi3zWRe+V1kff4w=
++-----END RSA PRIVATE KEY-----
++-----BEGIN CERTIFICATE-----
++MIIE3TCCA8WgAwIBAgIBBTANBgkqhkiG9w0BAQUFADCBmTELMAkGA1UEBhMCVVMx
++FjAUBgNVBAgTDU1hc3NhY2h1c2V0dHMxEjAQBgNVBAcTCUNhbWJyaWRnZTEMMAoG
++A1UEChMDTUlUMSIwIAYDVQQLExlJbnNlY3VyZSBLZXJiZXJvcyB0ZXN0IENBMSww
++KgYDVQQDFCN0ZXN0IHN1aXRlIENBOyBkbyBub3QgdXNlIG90aGVyd2lzZTAeFw0x
++NDA1MDIxOTA2MDlaFw0yNTA0MTQxOTA2MDlaME8xCzAJBgNVBAYTAlVTMRYwFAYD
++VQQIEw1NYXNzYWNodXNldHRzMRQwEgYDVQQKEwtLUkJURVNULkNPTTESMBAGA1UE
++AxMJbG9jYWxob3N0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1zud
++npN8FP7iLn1vgkyTSn/RQxXx1yt6zikHaMrVPjkjXPPUoCFpWS3eeI4aQFoj93L5
++MwZDmSxOflBAqLwV2AMAacrYnNPJIkHtbYKdVsvw9b4INTWqV9/DOODO7UowyMpp
++mO35/pUXaLL+AjHjLw1/EhQ3ZYtqfpAMOkf5TnS5GtqZFlrYgZKE8vTC8BxDKM7F
++YhWYz7kp/tG3S8O/RTnP7Nd+h1YdpmlHBGfuwIRIJz5xNw6KIcCy3Q0NNoKnh00W
++VwLmR+x11BGSkMjiZZkwJ5D0RObSg13QD/itrGoV2gtPzjQgNPfTrjsMvyOWAAFr
++WVR3QLTxnnmXsqnXvwIDAQABo4IBdzCCAXMwHQYDVR0OBBYEFHO5+DSYzq8rvQhU
++ldyvn0y4AqlHMIHGBgNVHSMEgb4wgbuAFHO5+DSYzq8rvQhUldyvn0y4AqlHoYGf
++pIGcMIGZMQswCQYDVQQGEwJVUzEWMBQGA1UECBMNTWFzc2FjaHVzZXR0czESMBAG
++A1UEBxMJQ2FtYnJpZGdlMQwwCgYDVQQKEwNNSVQxIjAgBgNVBAsTGUluc2VjdXJl
++IEtlcmJlcm9zIHRlc3QgQ0ExLDAqBgNVBAMUI3Rlc3Qgc3VpdGUgQ0E7IGRvIG5v
++dCB1c2Ugb3RoZXJ3aXNlggEBMAsGA1UdDwQEAwID6DAMBgNVHRMBAf8EAjAAMFkG
++A1UdEQRSMFCCFnByb3h5xaB1YmplY3TDhGx0w5FhbWWCE3Byb3h5U3ViamVjdEFs
++dE5hbWWHBH8AAAGHEAAAAAAAAAAAAAAAAAAAAAGCCWxvY2FsaG9zdDATBgNVHSUE
++DDAKBggrBgEFBQcDATANBgkqhkiG9w0BAQUFAAOCAQEAfTctgFjQSaevBi64q7yh
++GNsK3PqeNEALZz4pSXRbOwm0E4RpYIS7uqg1C4zJ5Zbd4V/dOX7q+T/iBS7gErzS
++rj21jH3Ggc92TmXzcFxMDCxLV0hO8xFkqg3P4sslJESOHxvEMTTf5s893yUb8vJ/
++DCvZXXRoRwPot9MFozkmcQcaTNunREWFvn4i4JXcMCSAfWTd+/VkpVsy69u3tj68
++7G2/K5nalvZikutEC+DyfyBuvDAoxIYzCi3VtQxCalW28Q5hzWV21QsvKTP5QBsh
++RaU2r0O58lZPPvrOrtWQBCudUgsnoraVLrjJshEQ4z/ZA9fVtX2ndCSIoyWpWk01
++gQ==
++-----END CERTIFICATE-----
+diff --git a/src/tests/dejagnu/proxy-certs/proxy-no-match.pem b/src/tests/dejagnu/proxy-certs/proxy-no-match.pem
+new file mode 100644
+index 0000000..a97c1c7
+--- /dev/null
++++ b/src/tests/dejagnu/proxy-certs/proxy-no-match.pem
+@@ -0,0 +1,54 @@
++-----BEGIN RSA PRIVATE KEY-----
++MIIEpQIBAAKCAQEA1zudnpN8FP7iLn1vgkyTSn/RQxXx1yt6zikHaMrVPjkjXPPU
++oCFpWS3eeI4aQFoj93L5MwZDmSxOflBAqLwV2AMAacrYnNPJIkHtbYKdVsvw9b4I
++NTWqV9/DOODO7UowyMppmO35/pUXaLL+AjHjLw1/EhQ3ZYtqfpAMOkf5TnS5GtqZ
++FlrYgZKE8vTC8BxDKM7FYhWYz7kp/tG3S8O/RTnP7Nd+h1YdpmlHBGfuwIRIJz5x
++Nw6KIcCy3Q0NNoKnh00WVwLmR+x11BGSkMjiZZkwJ5D0RObSg13QD/itrGoV2gtP
++zjQgNPfTrjsMvyOWAAFrWVR3QLTxnnmXsqnXvwIDAQABAoIBAQCqvhpeMDXhGgoo
++Q03wmfrGwPsrMv91aIK1hYrhMPdVs1JAbRYiKh8+pcq07FYa8udRaB4UwkVh/+oM
++/nEs6niRsl/jjQ2l68TFrnNByroynvr6l9Q/EeGecF6Ygo7lY1OsFhcLQM5vjarS
++XhxvdU/6hcRmfS8tGRpUaMWqfmpiN3YgJcgt8SoYhiwAYDTMJjNyWC61lO7IqNVR
++4kntiM24sfAu1sdZynX8Gp2GrpNChapEuhilQ8RayjuStEYr2abcSIjfZFHQXN7o
++TnjL+AQUzc/ZTXDGnIe9ZzZeFz8UCueeoN6KPxfrq9UUWRL6qt7gOIMdhYR6lFxt
++6pj6kLhxAoGBAO5DTnTKDfCMY2/AsTzCJvMGSY0bT1rsdDxrpqjrbUSeMHV3s5Lm
++vEPnnm+05FD/vi99+HZjHXAZFkhA3ubij2qWFPBnQ5YUoh17IW/Ae4bzY2uXikgL
++tLZ+R+OrcGYQQlvPn//PLsxbfdk5vraqzm08kIX0T4o4Iz8ST5NFJ8hVAoGBAOdB
++ahXr14563Cjeu0pSQ1nXoz3IXdnDwePXasYhxQHl8Ayk8qZS5pt7r07H3dqq6pvn
++e09gZINJe47B9UhkR3H5bPyz/kujKS4zqo3Zlbryzm3V0BWqjNj+j8E2YuQKNQr+
++c480jn2FzwW66w0i3n4U4KUn1w2/iq5AnVzyNkPDAoGAWLYEsyU79XE/4K79DqM3
++P0r6/afKbw8U5B4syj4FzAOeBU6RNMPmGt5VNkBCtgnSdPpRFTsoDcG5cyN8GrkG
++Lug8WZoJJwr9pT5gH6yqEX/zZ27f1J1PJpd0CsedLNMm8eonJ2arhPkXrVZ7tKV6
++AGAJa2agatUmAmi96hZYjpUCgYEA32abJEgsedEIhFb/GYI03ELryRCaUXfCA+gj
++lvoihn3qE1z5qGGns4adyX5dPRQmBqxtvDXDg+zl9vg6i0+MkXdCqTD8tXcOnjp9
++RgFvmyVa9FI8beHPpQTuPNncWK3fpho/6pT8Hhi48LEsxwjrZWOnzQSaxQZH46Q6
++IQNAFt8CgYEAkflxXvA2/2naix+riaBzv5EVJB7ilbfWiWtq2LEAtwrQ5XNFjrtK
++g45jKrZ/ezAzTfPa5Dwn4xcImd0MIavnJhDu2ATxMGB0GATLlDH2HZvU7UwKLpTW
++6Hlol4yRcX4GSEOxJ2ZpWYNIOYH0yDf1qLJXs1j8Fi3zWRe+V1kff4w=
++-----END RSA PRIVATE KEY-----
++-----BEGIN CERTIFICATE-----
++MIIEhzCCA2+gAwIBAgIBBDANBgkqhkiG9w0BAQUFADCBmTELMAkGA1UEBhMCVVMx
++FjAUBgNVBAgTDU1hc3NhY2h1c2V0dHMxEjAQBgNVBAcTCUNhbWJyaWRnZTEMMAoG
++A1UEChMDTUlUMSIwIAYDVQQLExlJbnNlY3VyZSBLZXJiZXJvcyB0ZXN0IENBMSww
++KgYDVQQDFCN0ZXN0IHN1aXRlIENBOyBkbyBub3QgdXNlIG90aGVyd2lzZTAeFw0x
++NDA1MDIxOTA2MDhaFw0yNTA0MTQxOTA2MDhaMFQxCzAJBgNVBAYTAlVTMRYwFAYD
++VQQIEw1NYXNzYWNodXNldHRzMRQwEgYDVQQKEwtLUkJURVNULkNPTTEXMBUGA1UE
++AxMOUFJPWFlpblN1YmplY3QwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
++AQDXO52ek3wU/uIufW+CTJNKf9FDFfHXK3rOKQdoytU+OSNc89SgIWlZLd54jhpA
++WiP3cvkzBkOZLE5+UECovBXYAwBpytic08kiQe1tgp1Wy/D1vgg1NapX38M44M7t
++SjDIymmY7fn+lRdosv4CMeMvDX8SFDdli2p+kAw6R/lOdLka2pkWWtiBkoTy9MLw
++HEMozsViFZjPuSn+0bdLw79FOc/s136HVh2maUcEZ+7AhEgnPnE3DoohwLLdDQ02
++gqeHTRZXAuZH7HXUEZKQyOJlmTAnkPRE5tKDXdAP+K2sahXaC0/ONCA099OuOwy/
++I5YAAWtZVHdAtPGeeZeyqde/AgMBAAGjggEcMIIBGDAdBgNVHQ4EFgQUc7n4NJjO
++ryu9CFSV3K+fTLgCqUcwgcYGA1UdIwSBvjCBu4AUc7n4NJjOryu9CFSV3K+fTLgC
++qUehgZ+kgZwwgZkxCzAJBgNVBAYTAlVTMRYwFAYDVQQIEw1NYXNzYWNodXNldHRz
++MRIwEAYDVQQHEwlDYW1icmlkZ2UxDDAKBgNVBAoTA01JVDEiMCAGA1UECxMZSW5z
++ZWN1cmUgS2VyYmVyb3MgdGVzdCBDQTEsMCoGA1UEAxQjdGVzdCBzdWl0ZSBDQTsg
++ZG8gbm90IHVzZSBvdGhlcndpc2WCAQEwCwYDVR0PBAQDAgPoMAwGA1UdEwEB/wQC
++MAAwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDQYJKoZIhvcNAQEFBQADggEBAMsP++r4
++vki0mBJg3POpp0i+H6zNMimoYLLtM5NvwXinfFuFQKbwLm8QWuHVifjfCYxMUm+l
++iL5cS/bq+SUWGDmrlOhsuu4+aYaxgNiEyki5Rol6miSOHbfOhzX8yp0EBPpq08dg
++SEdrTd/FIl4qgkkb1A4RJYZRErn/fbsyjJN66KIfSOXJuC8XMBf03Vw9f2rdrHJa
++r5lVGvqa4wjO2MPq9vVK52VFrbU/zuyyCUtggyIOwGLGSY0Axtbci+IHToDBQes+
++6W4WwSUCssWfIZXQDLjFw1oRHnN43fXmX5vsVLi7YvOFHOAa1BDnDtCTZit26xVA
++Mdic66hR2jHP0TE=
++-----END CERTIFICATE-----
+diff --git a/src/tests/dejagnu/proxy-certs/proxy-san.pem b/src/tests/dejagnu/proxy-certs/proxy-san.pem
+new file mode 100644
+index 0000000..ac8bbaa
+--- /dev/null
++++ b/src/tests/dejagnu/proxy-certs/proxy-san.pem
+@@ -0,0 +1,56 @@
++-----BEGIN RSA PRIVATE KEY-----
++MIIEpQIBAAKCAQEA1zudnpN8FP7iLn1vgkyTSn/RQxXx1yt6zikHaMrVPjkjXPPU
++oCFpWS3eeI4aQFoj93L5MwZDmSxOflBAqLwV2AMAacrYnNPJIkHtbYKdVsvw9b4I
++NTWqV9/DOODO7UowyMppmO35/pUXaLL+AjHjLw1/EhQ3ZYtqfpAMOkf5TnS5GtqZ
++FlrYgZKE8vTC8BxDKM7FYhWYz7kp/tG3S8O/RTnP7Nd+h1YdpmlHBGfuwIRIJz5x
++Nw6KIcCy3Q0NNoKnh00WVwLmR+x11BGSkMjiZZkwJ5D0RObSg13QD/itrGoV2gtP
++zjQgNPfTrjsMvyOWAAFrWVR3QLTxnnmXsqnXvwIDAQABAoIBAQCqvhpeMDXhGgoo
++Q03wmfrGwPsrMv91aIK1hYrhMPdVs1JAbRYiKh8+pcq07FYa8udRaB4UwkVh/+oM
++/nEs6niRsl/jjQ2l68TFrnNByroynvr6l9Q/EeGecF6Ygo7lY1OsFhcLQM5vjarS
++XhxvdU/6hcRmfS8tGRpUaMWqfmpiN3YgJcgt8SoYhiwAYDTMJjNyWC61lO7IqNVR
++4kntiM24sfAu1sdZynX8Gp2GrpNChapEuhilQ8RayjuStEYr2abcSIjfZFHQXN7o
++TnjL+AQUzc/ZTXDGnIe9ZzZeFz8UCueeoN6KPxfrq9UUWRL6qt7gOIMdhYR6lFxt
++6pj6kLhxAoGBAO5DTnTKDfCMY2/AsTzCJvMGSY0bT1rsdDxrpqjrbUSeMHV3s5Lm
++vEPnnm+05FD/vi99+HZjHXAZFkhA3ubij2qWFPBnQ5YUoh17IW/Ae4bzY2uXikgL
++tLZ+R+OrcGYQQlvPn//PLsxbfdk5vraqzm08kIX0T4o4Iz8ST5NFJ8hVAoGBAOdB
++ahXr14563Cjeu0pSQ1nXoz3IXdnDwePXasYhxQHl8Ayk8qZS5pt7r07H3dqq6pvn
++e09gZINJe47B9UhkR3H5bPyz/kujKS4zqo3Zlbryzm3V0BWqjNj+j8E2YuQKNQr+
++c480jn2FzwW66w0i3n4U4KUn1w2/iq5AnVzyNkPDAoGAWLYEsyU79XE/4K79DqM3
++P0r6/afKbw8U5B4syj4FzAOeBU6RNMPmGt5VNkBCtgnSdPpRFTsoDcG5cyN8GrkG
++Lug8WZoJJwr9pT5gH6yqEX/zZ27f1J1PJpd0CsedLNMm8eonJ2arhPkXrVZ7tKV6
++AGAJa2agatUmAmi96hZYjpUCgYEA32abJEgsedEIhFb/GYI03ELryRCaUXfCA+gj
++lvoihn3qE1z5qGGns4adyX5dPRQmBqxtvDXDg+zl9vg6i0+MkXdCqTD8tXcOnjp9
++RgFvmyVa9FI8beHPpQTuPNncWK3fpho/6pT8Hhi48LEsxwjrZWOnzQSaxQZH46Q6
++IQNAFt8CgYEAkflxXvA2/2naix+riaBzv5EVJB7ilbfWiWtq2LEAtwrQ5XNFjrtK
++g45jKrZ/ezAzTfPa5Dwn4xcImd0MIavnJhDu2ATxMGB0GATLlDH2HZvU7UwKLpTW
++6Hlol4yRcX4GSEOxJ2ZpWYNIOYH0yDf1qLJXs1j8Fi3zWRe+V1kff4w=
++-----END RSA PRIVATE KEY-----
++-----BEGIN CERTIFICATE-----
++MIIE4jCCA8qgAwIBAgIBAjANBgkqhkiG9w0BAQUFADCBmTELMAkGA1UEBhMCVVMx
++FjAUBgNVBAgTDU1hc3NhY2h1c2V0dHMxEjAQBgNVBAcTCUNhbWJyaWRnZTEMMAoG
++A1UEChMDTUlUMSIwIAYDVQQLExlJbnNlY3VyZSBLZXJiZXJvcyB0ZXN0IENBMSww
++KgYDVQQDFCN0ZXN0IHN1aXRlIENBOyBkbyBub3QgdXNlIG90aGVyd2lzZTAeFw0x
++NDA1MDIxOTA2MDhaFw0yNTA0MTQxOTA2MDhaMFQxCzAJBgNVBAYTAlVTMRYwFAYD
++VQQIEw1NYXNzYWNodXNldHRzMRQwEgYDVQQKEwtLUkJURVNULkNPTTEXMBUGA1UE
++AxMOUFJPWFlpblN1YmplY3QwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
++AQDXO52ek3wU/uIufW+CTJNKf9FDFfHXK3rOKQdoytU+OSNc89SgIWlZLd54jhpA
++WiP3cvkzBkOZLE5+UECovBXYAwBpytic08kiQe1tgp1Wy/D1vgg1NapX38M44M7t
++SjDIymmY7fn+lRdosv4CMeMvDX8SFDdli2p+kAw6R/lOdLka2pkWWtiBkoTy9MLw
++HEMozsViFZjPuSn+0bdLw79FOc/s136HVh2maUcEZ+7AhEgnPnE3DoohwLLdDQ02
++gqeHTRZXAuZH7HXUEZKQyOJlmTAnkPRE5tKDXdAP+K2sahXaC0/ONCA099OuOwy/
++I5YAAWtZVHdAtPGeeZeyqde/AgMBAAGjggF3MIIBczAdBgNVHQ4EFgQUc7n4NJjO
++ryu9CFSV3K+fTLgCqUcwgcYGA1UdIwSBvjCBu4AUc7n4NJjOryu9CFSV3K+fTLgC
++qUehgZ+kgZwwgZkxCzAJBgNVBAYTAlVTMRYwFAYDVQQIEw1NYXNzYWNodXNldHRz
++MRIwEAYDVQQHEwlDYW1icmlkZ2UxDDAKBgNVBAoTA01JVDEiMCAGA1UECxMZSW5z
++ZWN1cmUgS2VyYmVyb3MgdGVzdCBDQTEsMCoGA1UEAxQjdGVzdCBzdWl0ZSBDQTsg
++ZG8gbm90IHVzZSBvdGhlcndpc2WCAQEwCwYDVR0PBAQDAgPoMAwGA1UdEwEB/wQC
++MAAwWQYDVR0RBFIwUIIWcHJveHnFoHViamVjdMOEbHTDkWFtZYITcHJveHlTdWJq
++ZWN0QWx0TmFtZYcEfwAAAYcQAAAAAAAAAAAAAAAAAAAAAYIJbG9jYWxob3N0MBMG
++A1UdJQQMMAoGCCsGAQUFBwMBMA0GCSqGSIb3DQEBBQUAA4IBAQAH6AWuyRLzMbKq
++MUlyg9ZIar8p0Ms0/UEaa6Xm3/cfm6HSujtgcYlDN3M86Z3zWzWdTrOHsRr/YSG3
++H3YDhJToKqxcjgho+1xdBPm0xuFsJcypRqGj/mIaJSoa+wC2AdY1EdE+URsh87XC
++SHYNbxAVo8qBHMjtROm6AKb2YusYqHnkT+U6nc4Pn9UnIzmu4wfoSB+X1vtY24TP
++AtXNYQEG4BkgSrcsgoL+z/+wtZLU8QFk6JRO7Bedq711Oh/taEasZHjRAmnqC5TB
++Ab2fnwWuoVZHqz2qydeywXUKrZlctuRVdjE++wOt9xuMPKFGo0PKDw/SymCe61Q8
++Nc/d2mhz
++-----END CERTIFICATE-----
+diff --git a/src/tests/dejagnu/proxy-certs/proxy-subject.pem b/src/tests/dejagnu/proxy-certs/proxy-subject.pem
+new file mode 100644
+index 0000000..e17918f
+--- /dev/null
++++ b/src/tests/dejagnu/proxy-certs/proxy-subject.pem
+@@ -0,0 +1,54 @@
++-----BEGIN RSA PRIVATE KEY-----
++MIIEpQIBAAKCAQEA1zudnpN8FP7iLn1vgkyTSn/RQxXx1yt6zikHaMrVPjkjXPPU
++oCFpWS3eeI4aQFoj93L5MwZDmSxOflBAqLwV2AMAacrYnNPJIkHtbYKdVsvw9b4I
++NTWqV9/DOODO7UowyMppmO35/pUXaLL+AjHjLw1/EhQ3ZYtqfpAMOkf5TnS5GtqZ
++FlrYgZKE8vTC8BxDKM7FYhWYz7kp/tG3S8O/RTnP7Nd+h1YdpmlHBGfuwIRIJz5x
++Nw6KIcCy3Q0NNoKnh00WVwLmR+x11BGSkMjiZZkwJ5D0RObSg13QD/itrGoV2gtP
++zjQgNPfTrjsMvyOWAAFrWVR3QLTxnnmXsqnXvwIDAQABAoIBAQCqvhpeMDXhGgoo
++Q03wmfrGwPsrMv91aIK1hYrhMPdVs1JAbRYiKh8+pcq07FYa8udRaB4UwkVh/+oM
++/nEs6niRsl/jjQ2l68TFrnNByroynvr6l9Q/EeGecF6Ygo7lY1OsFhcLQM5vjarS
++XhxvdU/6hcRmfS8tGRpUaMWqfmpiN3YgJcgt8SoYhiwAYDTMJjNyWC61lO7IqNVR
++4kntiM24sfAu1sdZynX8Gp2GrpNChapEuhilQ8RayjuStEYr2abcSIjfZFHQXN7o
++TnjL+AQUzc/ZTXDGnIe9ZzZeFz8UCueeoN6KPxfrq9UUWRL6qt7gOIMdhYR6lFxt
++6pj6kLhxAoGBAO5DTnTKDfCMY2/AsTzCJvMGSY0bT1rsdDxrpqjrbUSeMHV3s5Lm
++vEPnnm+05FD/vi99+HZjHXAZFkhA3ubij2qWFPBnQ5YUoh17IW/Ae4bzY2uXikgL
++tLZ+R+OrcGYQQlvPn//PLsxbfdk5vraqzm08kIX0T4o4Iz8ST5NFJ8hVAoGBAOdB
++ahXr14563Cjeu0pSQ1nXoz3IXdnDwePXasYhxQHl8Ayk8qZS5pt7r07H3dqq6pvn
++e09gZINJe47B9UhkR3H5bPyz/kujKS4zqo3Zlbryzm3V0BWqjNj+j8E2YuQKNQr+
++c480jn2FzwW66w0i3n4U4KUn1w2/iq5AnVzyNkPDAoGAWLYEsyU79XE/4K79DqM3
++P0r6/afKbw8U5B4syj4FzAOeBU6RNMPmGt5VNkBCtgnSdPpRFTsoDcG5cyN8GrkG
++Lug8WZoJJwr9pT5gH6yqEX/zZ27f1J1PJpd0CsedLNMm8eonJ2arhPkXrVZ7tKV6
++AGAJa2agatUmAmi96hZYjpUCgYEA32abJEgsedEIhFb/GYI03ELryRCaUXfCA+gj
++lvoihn3qE1z5qGGns4adyX5dPRQmBqxtvDXDg+zl9vg6i0+MkXdCqTD8tXcOnjp9
++RgFvmyVa9FI8beHPpQTuPNncWK3fpho/6pT8Hhi48LEsxwjrZWOnzQSaxQZH46Q6
++IQNAFt8CgYEAkflxXvA2/2naix+riaBzv5EVJB7ilbfWiWtq2LEAtwrQ5XNFjrtK
++g45jKrZ/ezAzTfPa5Dwn4xcImd0MIavnJhDu2ATxMGB0GATLlDH2HZvU7UwKLpTW
++6Hlol4yRcX4GSEOxJ2ZpWYNIOYH0yDf1qLJXs1j8Fi3zWRe+V1kff4w=
++-----END RSA PRIVATE KEY-----
++-----BEGIN CERTIFICATE-----
++MIIEgjCCA2qgAwIBAgIBAzANBgkqhkiG9w0BAQUFADCBmTELMAkGA1UEBhMCVVMx
++FjAUBgNVBAgTDU1hc3NhY2h1c2V0dHMxEjAQBgNVBAcTCUNhbWJyaWRnZTEMMAoG
++A1UEChMDTUlUMSIwIAYDVQQLExlJbnNlY3VyZSBLZXJiZXJvcyB0ZXN0IENBMSww
++KgYDVQQDFCN0ZXN0IHN1aXRlIENBOyBkbyBub3QgdXNlIG90aGVyd2lzZTAeFw0x
++NDA1MDIxOTA2MDhaFw0yNTA0MTQxOTA2MDhaME8xCzAJBgNVBAYTAlVTMRYwFAYD
++VQQIEw1NYXNzYWNodXNldHRzMRQwEgYDVQQKEwtLUkJURVNULkNPTTESMBAGA1UE
++AxMJbG9jYWxob3N0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1zud
++npN8FP7iLn1vgkyTSn/RQxXx1yt6zikHaMrVPjkjXPPUoCFpWS3eeI4aQFoj93L5
++MwZDmSxOflBAqLwV2AMAacrYnNPJIkHtbYKdVsvw9b4INTWqV9/DOODO7UowyMpp
++mO35/pUXaLL+AjHjLw1/EhQ3ZYtqfpAMOkf5TnS5GtqZFlrYgZKE8vTC8BxDKM7F
++YhWYz7kp/tG3S8O/RTnP7Nd+h1YdpmlHBGfuwIRIJz5xNw6KIcCy3Q0NNoKnh00W
++VwLmR+x11BGSkMjiZZkwJ5D0RObSg13QD/itrGoV2gtPzjQgNPfTrjsMvyOWAAFr
++WVR3QLTxnnmXsqnXvwIDAQABo4IBHDCCARgwHQYDVR0OBBYEFHO5+DSYzq8rvQhU
++ldyvn0y4AqlHMIHGBgNVHSMEgb4wgbuAFHO5+DSYzq8rvQhUldyvn0y4AqlHoYGf
++pIGcMIGZMQswCQYDVQQGEwJVUzEWMBQGA1UECBMNTWFzc2FjaHVzZXR0czESMBAG
++A1UEBxMJQ2FtYnJpZGdlMQwwCgYDVQQKEwNNSVQxIjAgBgNVBAsTGUluc2VjdXJl
++IEtlcmJlcm9zIHRlc3QgQ0ExLDAqBgNVBAMUI3Rlc3Qgc3VpdGUgQ0E7IGRvIG5v
++dCB1c2Ugb3RoZXJ3aXNlggEBMAsGA1UdDwQEAwID6DAMBgNVHRMBAf8EAjAAMBMG
++A1UdJQQMMAoGCCsGAQUFBwMBMA0GCSqGSIb3DQEBBQUAA4IBAQCzGPT+QOrl9mbJ
++nsGlPlLUOF+PYz0a/9V/iznlofxwCXiRi2ryMpLFbjLeOvjLJ3UzyNKtmEeudTBM
++yfR4i8tb9WA7Oh0BjK1+kD4688bAUXiIDhueKBjonmPvMd9kq3MDd4vDLkcZk6R4
++4IcbdwhzSBmnJH8ha2J82XShPpRq5CZNR9+vTyFwGdGWdPDjTMiXoXAmpRemcEgO
++iO4Gxvcrg/Z06Ys3eLze7QHNMAEwXhC4rUR34j5I2zgU7CEhff3AktLmnKVa8go8
++4BJT/n3XGB+3gdAEihQmgCEZetHH+YxAR0Ppn3ty7fpAlOnbRJqpeu6TMN8x/lL8
++c6JtDWRG
++-----END CERTIFICATE-----
+diff --git a/src/util/paste-kdcproxy.py b/src/util/paste-kdcproxy.py
+new file mode 100755
+index 0000000..1e56b89
+--- /dev/null
++++ b/src/util/paste-kdcproxy.py
+@@ -0,0 +1,18 @@
++#!/usr/bin/python
++import kdcproxy
++from paste import httpserver
++import os
++import sys
++
++if len(sys.argv) > 1:
++    port = sys.argv[1]
++else:
++    port = 8443
++if len(sys.argv) > 2:
++    pem = sys.argv[2]
++else:
++    pem = '*'
++server = httpserver.serve(kdcproxy.Application(), port=port, ssl_pem=pem,
++                          start_loop=False)
++os.write(sys.stdout.fileno(), 'proxy server ready\n')
++server.serve_forever()
+-- 
+2.1.0
+

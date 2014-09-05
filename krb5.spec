@@ -84,7 +84,7 @@ Patch23: krb5-1.3.1-dns.patch
 Patch29: krb5-1.10-kprop-mktemp.patch
 Patch30: krb5-1.3.4-send-pr-tempfile.patch
 Patch39: krb5-1.12-api.patch
-Patch59: krb5-1.10-kpasswd_tcp.patch
+Patch59: krb5-1.12ish-kpasswd_tcp.patch
 Patch60: krb5-1.12.1-pam.patch
 Patch63: krb5-1.12-selinux-label.patch
 Patch71: krb5-1.11-dirsrv-accountlock.patch
@@ -109,6 +109,21 @@ Patch205: 0005-Copy-config-entries-to-the-ksu-target-ccache.patch
 Patch206: 0006-Use-more-randomness-for-ksu-secondary-cache-names.patch
 Patch207: 0007-Make-krb5_cc_new_unique-create-DIR-directories.patch
 Patch300: krb5-1.12-kpasswd-skip-address-check.patch
+Patch301: 0000-Refactor-cm-functions-in-sendto_kdc.c.patch
+Patch302: 0001-Simplify-sendto_kdc.c.patch
+Patch303: 0002-Add-helper-to-determine-if-a-KDC-is-the-master.patch
+Patch304: 0003-Use-k5_transport-_strategy-enums-for-k5_sendto.patch
+Patch305: 0004-Build-support-for-TLS-used-by-HTTPS-proxy-support.patch
+Patch306: 0005-Add-ASN.1-codec-for-KKDCP-s-KDC-PROXY-MESSAGE.patch
+Patch307: 0006-Dispatch-style-protocol-switching-for-transport.patch
+Patch308: 0007-HTTPS-transport-Microsoft-KKDCPP-implementation.patch
+Patch309: 0008-Load-custom-anchors-when-using-KKDCP.patch
+Patch310: 0009-Check-names-in-the-server-s-cert-when-using-KKDCP.patch
+Patch311: 0010-Add-some-longer-form-docs-for-HTTPS.patch
+Patch312: 0011-Have-k5test.py-provide-runenv-to-python-tests.patch
+Patch313: 0012-Add-a-simple-KDC-proxy-test-server.patch
+Patch314: 0013-Add-tests-for-MS-KKDCP-client-support.patch
+Patch315: krb5-1.12ish-tls-plugins.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -320,6 +335,22 @@ ln -s NOTICE LICENSE
 %patch207 -p1 -b .Make-krb5_cc_new_unique-create-DIR-directories
 
 %patch300 -p1 -b .kpasswd-skip-address-check
+%patch301 -p1 -b .Refactor-cm-functions-in-sendto_kdc.c
+%patch302 -p1 -b .Simplify-sendto_kdc.c
+%patch303 -p1 -b .Add-helper-to-determine-if-a-KDC-is-the-master
+%patch304 -p1 -b .Use-k5_transport-_strategy-enums-for-k5_sendto
+%patch305 -p1 -b .Build-support-for-TLS-used-by-HTTPS-proxy-support
+%patch306 -p1 -b .Add-ASN.1-codec-for-KKDCP-s-KDC-PROXY-MESSAGE
+%patch307 -p1 -b .Dispatch-style-protocol-switching-for-transport
+%patch308 -p1 -b .HTTPS-transport-Microsoft-KKDCPP-implementation
+%patch309 -p1 -b .Load-custom-anchors-when-using-KKDCP
+%patch310 -p1 -b .Check-names-in-the-server-s-cert-when-using-KKDCP
+%patch311 -p1 -b .Add-some-longer-form-docs-for-HTTPS
+%patch312 -p1 -b .Have-k5test.py-provide-runenv-to-python-tests
+%patch313 -p1 -b .Add-a-simple-KDC-proxy-test-server
+%patch314 -p1 -b .Add-tests-for-MS-KKDCP-client-support
+%patch315 -p1 -b .tls-plugins
+chmod u+x src/util/paste-kdcproxy.py
 
 %patch1 -p1 -b .pwdch-fast
 
@@ -630,6 +661,7 @@ done
 # Plug-in directories.
 install -pdm 755 $RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/preauth
 install -pdm 755 $RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/kdb
+install -pdm 755 $RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/tls
 install -pdm 755 $RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/authdata
 
 # The rest of the binaries, headers, libraries, and docs.
@@ -967,6 +999,7 @@ exit 0
 %dir %{_libdir}/krb5
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/*
+%{_libdir}/krb5/plugins/tls/k5tls.so
 %{_libdir}/krb5/plugins/kdb/db2.so
 %dir %{_var}/kerberos
 %dir %{_var}/kerberos/krb5
@@ -1036,6 +1069,11 @@ exit 0
   between NAT and upcoming HTTPS support, can cause us to erroneously
   report an error to the user when the server actually reported success
   (RT #7886)
+- backport support for accessing KDCs and kpasswd services via HTTPS
+  proxies (marked by being specified as https URIs instead as hostnames
+  or hostname-and-port), such as the one implemented in python-kdcproxy
+  (RT #7929, #109919), and pick up a subsequent patch to build HTTPS
+  as a plugin
 
 * Thu Aug 28 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-5
 - backport fix for trying all compatible keys when not being strict about

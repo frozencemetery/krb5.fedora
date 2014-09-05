@@ -25,8 +25,8 @@ smaller change here.
 +#define _GNU_SOURCE
 +
  #include "fake-addrinfo.h"
+ #include "k5-tls.h"
  #include "k5-int.h"
- 
 --- krb5-1.11/src/util/support/fake-addrinfo.c
 +++ krb5-1.11/src/util/support/fake-addrinfo.c
 @@ -101,6 +101,9 @@
