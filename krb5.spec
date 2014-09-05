@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.2
-Release: 5%{?dist}
+Release: 6%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -108,6 +108,7 @@ Patch204: 0004-Make-ksu-respect-the-default_ccache_name-setting.patch
 Patch205: 0005-Copy-config-entries-to-the-ksu-target-ccache.patch
 Patch206: 0006-Use-more-randomness-for-ksu-secondary-cache-names.patch
 Patch207: 0007-Make-krb5_cc_new_unique-create-DIR-directories.patch
+Patch300: krb5-1.12-kpasswd-skip-address-check.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -317,6 +318,8 @@ ln -s NOTICE LICENSE
 %patch205 -p1 -b .Copy-config-entries-to-the-ksu-target-ccache
 %patch206 -p1 -b .Use-more-randomness-for-ksu-secondary-cache-names
 %patch207 -p1 -b .Make-krb5_cc_new_unique-create-DIR-directories
+
+%patch300 -p1 -b .kpasswd-skip-address-check
 
 %patch1 -p1 -b .pwdch-fast
 
@@ -1027,6 +1030,13 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Fri Sep  5 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-6
+- backport patch to make the client skip checking the server's reply
+  address when processing responses to password-change requests, which
+  between NAT and upcoming HTTPS support, can cause us to erroneously
+  report an error to the user when the server actually reported success
+  (RT #7886)
+
 * Thu Aug 28 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-5
 - backport fix for trying all compatible keys when not being strict about
   acceptor names while reading AP-REQs (RT#7883, #1078888)
