@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.5
-Release: 14%{?dist}
+Release: 15%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -151,12 +151,14 @@ Patch303: krb5-keyring-strtol.patch
 
 # Patches to teach ksu about cache collections
 Patch400: 0000-ksu-intermediates.patch
-Patch401: 0001-Don-t-try-to-stat-not-on-disk-ccache-residuals.patch
-Patch402: 0002-Use-an-in-memory-cache-until-we-need-the-target-s.patch
-Patch403: 0003-Learn-to-destroy-the-ccache-we-re-copying-from.patch
-Patch404: 0004-Try-to-use-the-default_ccache_name-d-as-the-target.patch
-Patch405: 0005-Be-more-careful-of-target-ccache-collections.patch
-Patch406: 0006-Copy-config-entries-to-the-target-ccache.patch
+Patch401: 0001-In-ksu-merge-krb5_ccache_copy-and-_restricted.patch
+Patch402: 0002-In-ksu-don-t-stat-not-on-disk-ccache-residuals.patch
+Patch403: 0003-Use-an-intermediate-memory-cache-in-ksu.patch
+Patch404: 0004-Make-ksu-respect-the-default_ccache_name-setting.patch
+Patch405: 0005-Copy-config-entries-to-the-ksu-target-ccache.patch
+Patch406: 0006-Use-more-randomness-for-ksu-secondary-cache-names.patch
+Patch407: 0007-Make-krb5_cc_new_unique-create-DIR-directories.patch
+Patch408: krb5-1.11-base64-exports.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -358,13 +360,15 @@ ln -s NOTICE LICENSE
 %patch302 -p1 -b .kinit-cccol
 %patch303 -p1 -b .keyring-strtol
 
-#%patch400 -p1 -b .ksu-intermediates
-#%patch401 -p1 -b .Don-t-try-to-stat-not-on-disk-ccache-residuals
-#%patch402 -p1 -b .Use-an-in-memory-cache-until-we-need-the-target-s
-#%patch403 -p1 -b .Learn-to-destroy-the-ccache-we-re-copying-from
-#%patch404 -p1 -b .Try-to-use-the-default_ccache_name-d-as-the-target
-#%patch405 -p1 -b .Be-more-careful-of-target-ccache-collections
-#%patch406 -p1 -b .Copy-config-entries-to-the-target-ccache
+%patch400 -p1 -b .ksu-intermediates
+%patch401 -p1 -b .In-ksu-merge-krb5_ccache_copy-and-_restricted
+%patch402 -p1 -b .In-ksu-don-t-stat-not-on-disk-ccache-residuals
+%patch403 -p1 -b .Use-an-intermediate-memory-cache-in-ksu
+%patch404 -p1 -b .Make-ksu-respect-the-default_ccache_name-setting
+%patch405 -p1 -b .Copy-config-entries-to-the-ksu-target-ccache
+%patch406 -p1 -b .Use-more-randomness-for-ksu-secondary-cache-names
+%patch407 -p1 -b .Make-krb5_cc_new_unique-create-DIR-directories
+%patch408 -p1 -b .base64-exports
 
 %patch60 -p1 -b .pam
 
@@ -1105,6 +1109,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Sat Sep  6 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-15
+- replace older proposed changes for ksu with backports of the changes
+  after review and merging upstream (#1015559, #1026099, #1118347)
+
 * Thu Aug 28 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-14
 - backport fix for trying all compatible keys when not being strict about
   acceptor names while reading AP-REQs (RT#7883, #1078888)

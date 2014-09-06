@@ -1,0 +1,21 @@
+The first three things in the exports list were different in 1.11.
+
+commit 3ee5792e0324071ccaad69a04e091f3c6abf1bfc
+Author: Robbie Harwood (frozencemetery) <rharwood@club.cc.cmu.edu>
+Date:   Mon Jul 22 16:20:46 2013 -0400
+
+    Add base64 functions to libkrb5support exports
+    
+    This was previously not an issue because nothing outside of
+    libkrb5support used them.
+
+diff --git a/src/util/support/libkrb5support-fixed.exports b/src/util/support/libkrb5support-fixed.exports
+index d6f881d..876f360 100644
+--- a/src/util/support/libkrb5support-fixed.exports
++++ b/src/util/support/libkrb5support-fixed.exports
+@@ -1,3 +1,5 @@
++k5_base64_decode
++k5_base64_encode
+ k5_json_array_add
+ k5_json_array_create
+ k5_json_array_get
