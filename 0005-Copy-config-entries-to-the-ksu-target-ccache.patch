@@ -1,19 +1,21 @@
-From 0d2a65745287238c5e5e2cc2fc68c40b358e68e4 Mon Sep 17 00:00:00 2001
+From 297496f0938955ba4aaf0ebecf4e393e527b8cbf Mon Sep 17 00:00:00 2001
 From: Nalin Dahyabhai <nalin@dahyabhai.net>
 Date: Tue, 29 Oct 2013 16:27:20 -0400
-Subject: [PATCH 6/6] Copy config entries to the target ccache
+Subject: [PATCH 5/7] Copy config entries to the ksu target ccache
 
 When we try to screen out expired creds while reading them from one
 ccache to eventually store in another, also keep configuration entries.
+
+ticket: 7986 (new)
 ---
  src/clients/ksu/ccache.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/src/clients/ksu/ccache.c b/src/clients/ksu/ccache.c
-index 2a97893..83b5e46 100644
+index 4693bd4..0f9e042 100644
 --- a/src/clients/ksu/ccache.c
 +++ b/src/clients/ksu/ccache.c
-@@ -269,7 +269,8 @@ krb5_error_code krb5_get_nonexp_tkts(context, cc, creds_array)
+@@ -219,7 +219,8 @@ krb5_error_code krb5_get_nonexp_tkts(context, cc, creds_array)
  
      while (!(retval = krb5_cc_next_cred(context, cc, &cur, &creds))){
  
@@ -24,5 +26,5 @@ index 2a97893..83b5e46 100644
                  return retval;
              }
 -- 
-1.8.5.3
+2.0.4
 
