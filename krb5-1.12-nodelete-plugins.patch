@@ -1,0 +1,59 @@
+commit 0f46175d632ae03ab7d4cfba5e62534d31e128e0
+Author: Greg Hudson <ghudson@mit.edu>
+Date:   Wed Jun 25 11:41:54 2014 -0400
+
+    Load plugins with RTLD_NODELETE if possible
+    
+    On platforms which support RTLD_NODELETE, use it to load plugin
+    modules.  While using this flag makes plugins stay in the process map
+    after libkrb5/libgssapi_krb5 are unloaded, it solves several problems:
+    
+    1. It prevents plugin modules which link against OpenSSL (PKINIT and
+    k5tls) from repeatedly initializing instances of libssl or libcrypto,
+    leaking heap memory each time.  This is only an issue because we
+    cannot safely uninitialize OpenSSL.
+    
+    2. It prevents finalization ordering issues from causing a process
+    crash when unloading libgssapi_krb5 (issue #7135).
+    
+    3. It makes memory leak tracing with valgrind easier.
+    
+    ticket: 7947 (new)
+
+diff --git a/src/util/support/plugins.c b/src/util/support/plugins.c
+index a04dfc3..ca4b128 100644
+--- a/src/util/support/plugins.c
++++ b/src/util/support/plugins.c
+@@ -45,6 +45,20 @@
+ 
+ #include "k5-platform.h"
+ 
++#if USE_DLOPEN
++#ifdef RTLD_GROUP
++#define GROUP RTLD_GROUP
++#else
++#define GROUP 0
++#endif
++#ifdef RTLD_NODELETE
++#define NODELETE RTLD_NODELETE
++#else
++#define NODELETE 0
++#endif
++#define PLUGIN_DLOPEN_FLAGS (RTLD_NOW | RTLD_LOCAL | GROUP | NODELETE)
++#endif
++
+ #if USE_DLOPEN && USE_CFBUNDLE
+ #include <CoreFoundation/CoreFoundation.h>
+ 
+@@ -257,11 +271,6 @@ krb5int_open_plugin (const char *filepath, struct plugin_file_handle **h, struct
+         }
+ #endif /* USE_CFBUNDLE */
+ 
+-#ifdef RTLD_GROUP
+-#define PLUGIN_DLOPEN_FLAGS (RTLD_NOW | RTLD_LOCAL | RTLD_GROUP)
+-#else
+-#define PLUGIN_DLOPEN_FLAGS (RTLD_NOW | RTLD_LOCAL)
+-#endif
+         if (!err) {
+             handle = dlopen(filepath, PLUGIN_DLOPEN_FLAGS);
+             if (handle == NULL) {

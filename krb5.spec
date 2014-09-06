@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.2
-Release: 6%{?dist}
+Release: 7%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -124,6 +124,7 @@ Patch312: 0011-Have-k5test.py-provide-runenv-to-python-tests.patch
 Patch313: 0012-Add-a-simple-KDC-proxy-test-server.patch
 Patch314: 0013-Add-tests-for-MS-KKDCP-client-support.patch
 Patch315: krb5-1.12ish-tls-plugins.patch
+Patch316: krb5-1.12-nodelete-plugins.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -350,6 +351,7 @@ ln -s NOTICE LICENSE
 %patch313 -p1 -b .Add-a-simple-KDC-proxy-test-server
 %patch314 -p1 -b .Add-tests-for-MS-KKDCP-client-support
 %patch315 -p1 -b .tls-plugins
+%patch316 -p1 -b .nodelete-plugins
 chmod u+x src/util/paste-kdcproxy.py
 
 %patch1 -p1 -b .pwdch-fast
@@ -1063,16 +1065,20 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Sat Sep  6 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-7
+- pull in patch from master to load plugins with RTLD_NODELETE, when
+  defined (RT#7947)
+
 * Fri Sep  5 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-6
 - backport patch to make the client skip checking the server's reply
   address when processing responses to password-change requests, which
   between NAT and upcoming HTTPS support, can cause us to erroneously
   report an error to the user when the server actually reported success
-  (RT #7886)
+  (RT#7886)
 - backport support for accessing KDCs and kpasswd services via HTTPS
   proxies (marked by being specified as https URIs instead as hostnames
   or hostname-and-port), such as the one implemented in python-kdcproxy
-  (RT #7929, #109919), and pick up a subsequent patch to build HTTPS
+  (RT#7929, #109919), and pick up a subsequent patch to build HTTPS
   as a plugin
 
 * Thu Aug 28 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-5
