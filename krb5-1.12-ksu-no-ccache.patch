@@ -1,0 +1,36 @@
+commit 26e202d26b47d62fbff4f153fc7f03cc300cc4ab
+Author: Nalin Dahyabhai <nalin@redhat.com>
+Date:   Mon Sep 8 13:34:05 2014 -0400
+
+    Fix ksu crash in cases where it obtains the TGT
+    
+    In order to allow ksu to use any locally-present service key for
+    verifying creds, the previous change to ksu switched from using a
+    retrieved or obtained TGT to fetch creds for the local "host" service,
+    and then passing those creds to krb5_verify_init_creds(), to passing the
+    retrieved TGT directly to krb5_verify_init_creds().  It did not take
+    care to retrieve the TGT from the temporary ccache if it had obtained
+    them, and in those cases it would attempt to verify NULL creds.
+
+diff --git a/src/clients/ksu/krb_auth_su.c b/src/clients/ksu/krb_auth_su.c
+index dd0a127..bd37c9c 100644
+--- a/src/clients/ksu/krb_auth_su.c
++++ b/src/clients/ksu/krb_auth_su.c
+@@ -122,6 +122,17 @@ krb5_boolean krb5_auth_check(context, client_pname, hostname, options,
+             return FALSE;
+         }
+ 
++        retval = krb5_cc_retrieve_cred(context, cc,
++                                       KRB5_TC_MATCH_SRV_NAMEONLY |
++                                       KRB5_TC_SUPPORTED_KTYPES,
++                                       &tgtq, &tgt);
++
++        if (! retval) retval = krb5_check_exp(context, tgt.times);
++
++        if (retval){
++            com_err(prog_name, retval, _("while getting initial credentials"));
++            return (FALSE) ;
++        }
+ #else
+         plain_dump_principal (context, client);
+         fprintf(stderr,
