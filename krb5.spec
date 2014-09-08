@@ -42,7 +42,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13
-Release: 0%{?dist}.alpha1.2
+Release: 0%{?dist}.alpha1.3
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13-alpha1-signed.tar
 Source0: krb5-%{version}%{prerelease}.tar.gz
@@ -285,7 +285,7 @@ certificate.
 
 %prep
 %setup -q -n %{name}-%{version}%{prerelease} -a 3 -a 100 -a 102
-ln -s NOTICE LICENSE
+ln NOTICE LICENSE
 
 %patch60 -p1 -b .pam
 
@@ -973,6 +973,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Sep  8 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.13-0.alpha1.3
+- fix the problem where the %%license file has been a dangling symlink
+
 * Tue Aug 26 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.13-0.alpha1.2
 - kpropd hasn't bothered with -S since 1.11; stop trying to use that flag
   in the systemd unit file
