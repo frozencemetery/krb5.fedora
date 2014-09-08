@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.2
-Release: 7%{?dist}
+Release: 8%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -325,7 +325,7 @@ certificate.
 
 %prep
 %setup -q -a 3 -a 100 -a 102
-ln -s NOTICE LICENSE
+ln NOTICE LICENSE
 
 %patch201 -p1 -b .In-ksu-merge-krb5_ccache_copy-and-_restricted
 %patch202 -p1 -b .In-ksu-don-t-stat-not-on-disk-ccache-residuals
@@ -1065,6 +1065,9 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Sep  8 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-8
+- fix the problem where the %%license file has been a dangling symlink
+
 * Sat Sep  6 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-7
 - pull in patch from master to load plugins with RTLD_NODELETE, when
   defined (RT#7947)
