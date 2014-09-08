@@ -125,6 +125,7 @@ Patch313: 0012-Add-a-simple-KDC-proxy-test-server.patch
 Patch314: 0013-Add-tests-for-MS-KKDCP-client-support.patch
 Patch315: krb5-1.12ish-tls-plugins.patch
 Patch316: krb5-1.12-nodelete-plugins.patch
+Patch317: krb5-1.12-ksu-untyped-default-ccache-name.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -352,6 +353,7 @@ ln NOTICE LICENSE
 %patch314 -p1 -b .Add-tests-for-MS-KKDCP-client-support
 %patch315 -p1 -b .tls-plugins
 %patch316 -p1 -b .nodelete-plugins
+%patch317 -p1 -b .ksu-untyped-default-ccache-name
 chmod u+x src/util/paste-kdcproxy.py
 
 %patch1 -p1 -b .pwdch-fast
@@ -1067,6 +1069,8 @@ exit 0
 %changelog
 * Mon Sep  8 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-8
 - fix the problem where the %%license file has been a dangling symlink
+- ksu: pull in fix from pull #206 to avoid breakage when the
+  default_ccache_name doesn't include a cache type as a prefix
 
 * Sat Sep  6 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-7
 - pull in patch from master to load plugins with RTLD_NODELETE, when
