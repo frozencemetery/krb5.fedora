@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.2
-Release: 8%{?dist}
+Release: 9%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -127,6 +127,7 @@ Patch315: krb5-1.12ish-tls-plugins.patch
 Patch316: krb5-1.12-nodelete-plugins.patch
 Patch317: krb5-1.12-ksu-untyped-default-ccache-name.patch
 Patch318: krb5-1.12-ksu-no-ccache.patch
+Patch319: krb5-bug_1145425_CVE-2014-5351.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -391,6 +392,8 @@ chmod u+x src/util/paste-kdcproxy.py
 %patch146 -p1 -b .master-strdupcheck
 %patch147 -p1 -b .master-compatible-keys
 %patch148 -p1 -b .system-exts
+
+%patch319 -p1
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -1069,6 +1072,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Sep 29 2014 Roland Mainz <rmainz@redhat.com> - 1.12.2-9
+- fix for CVE-2014-5351 (#1145425) "krb5: current keys returned when
+  randomizing the keys for a service principal"
+
 * Mon Sep  8 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.12.2-8
 - fix the problem where the %%license file has been a dangling symlink
 - ksu: pull in fix from pull #206 to avoid breakage when the
