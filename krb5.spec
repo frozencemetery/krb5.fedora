@@ -89,6 +89,7 @@ Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
+Patch135: krb5-bug_1145425_CVE-2014-5351.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -305,6 +306,8 @@ ln NOTICE LICENSE
 %patch129 -p1 -b .run_user_0
 
 %patch134 -p1 -b .kpasswdtest
+
+%patch135 -p1
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -973,6 +976,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Mon Sep 29 2014 Roland Mainz <rmainz@redhat.com> - 1.13-0.alpha1.3
+- fix for CVE-2014-5351 (#1145425) "krb5: current keys returned when
+  randomizing the keys for a service principal"
+
 * Mon Sep  8 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.13-0.alpha1.3
 - fix the problem where the %%license file has been a dangling symlink
 
