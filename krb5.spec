@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.5
-Release: 15%{?dist}
+Release: 16%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -159,6 +159,7 @@ Patch405: 0005-Copy-config-entries-to-the-ksu-target-ccache.patch
 Patch406: 0006-Use-more-randomness-for-ksu-secondary-cache-names.patch
 Patch407: 0007-Make-krb5_cc_new_unique-create-DIR-directories.patch
 Patch408: krb5-1.11-base64-exports.patch
+Patch409: krb5-11.1_CVE-2014-5351_001.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -369,6 +370,8 @@ ln -s NOTICE LICENSE
 %patch406 -p1 -b .Use-more-randomness-for-ksu-secondary-cache-names
 %patch407 -p1 -b .Make-krb5_cc_new_unique-create-DIR-directories
 %patch408 -p1 -b .base64-exports
+
+%patch409 -p1
 
 %patch60 -p1 -b .pam
 
@@ -1109,6 +1112,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Tue Sep 30 2014 Roland Mainz <rmainz@redhat.com> - 1.11.5-16
+- fix for CVE-2014-5351 (#1145425) "krb5: current keys returned when
+  randomizing the keys for a service principal"
+
 * Sat Sep  6 2014 Nalin Dahyabhai <nalin@redhat.com> - 1.11.5-15
 - replace older proposed changes for ksu with backports of the changes
   after review and merging upstream (#1015559, #1026099, #1118347)
