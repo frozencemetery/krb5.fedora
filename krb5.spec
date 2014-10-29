@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13
-Release: 1%{?dist}
+Release: 2%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -985,6 +985,11 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Oct 29 2014 Roland Mainz <rmainz@redhat.com> - 1.13-0
+- Bump 1%%{?dist} to 2%%{?dist} to workaround RPM sort issue
+  which would lead yum updates to treat the last alpha as newer
+  than the final version.  
+
 * Wed Oct 29 2014 Roland Mainz <rmainz@redhat.com> - 1.13-0
 - Update from krb5-1.13-alpha1 to final krb5-1.13
 - Removed patch for CVE-2014-5351 (#1145425) "krb5: current
