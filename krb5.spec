@@ -37,14 +37,18 @@
 %global configure_default_ccache_name 1
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 %endif
-%global prerelease -alpha1
+
+%global prerelease %{nil}
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13
-Release: 1%{?dist}.alpha1.3
-# Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13-alpha1-signed.tar
+Release: 1%{?dist}
+# - Maybe we should explode from the now-available-to-everybody tarball instead?
+# http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13-signed.tar
+# - The sources below are stored in a lookaside cache. Upload with
+# $ fedpkg upload krb5-1.13.tar.gz krb5-1.13.tar.gz.asc # (and don't remove,
+# otherwise you can't go back or branch from a previous point)
 Source0: krb5-%{version}%{prerelease}.tar.gz
 Source1: krb5-%{version}%{prerelease}.tar.gz.asc
 # Use a dummy krb5-%{version}-pdf.tar.xz the first time through, then
@@ -71,7 +75,7 @@ Source37: kadmind.init
 Source38: krb5kdc.init
 Source39: krb5-krb5kdc.conf
 
-BuildRequires: cmake
+BuildRequires: cmake pax xz
 # Carry this locally until it's available in a packaged form.
 Source100: nss_wrapper-0.0-20140204195100.git3d58327.tar.xz
 Source101: noport.c
@@ -89,7 +93,6 @@ Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
-Patch135: krb5-bug_1145425_CVE-2014-5351.patch
 Patch136: krb5-socket_wrapper_eventfd_prototype_mismatch.patch
 
 License: MIT
@@ -308,8 +311,9 @@ ln NOTICE LICENSE
 
 %patch134 -p1 -b .kpasswdtest
 
-%patch135 -p1
+%if 0%{?fedora} >= 21 || 0%{?rhel} > 7
 %patch136 -p1
+%endif
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -437,6 +441,9 @@ sphinx-build -a -b latex -t pathsubs doc build-pdf
 for pdf in admin appdev basic build plugindev user ; do
 	test -s build-pdf/$pdf.pdf || make -C build-pdf
 done
+# new krb5-%{version}-pdf.tar.xz, see above
+pax -wv -x ustar build-pdf/*.pdf | xz -9 >"krb5-%{version}-pdf.tar.xz.new"
+# false
 
 # Build the test wrappers.
 pushd nss_wrapper/build
@@ -978,6 +985,14 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Oct 29 2014 Roland Mainz <rmainz@redhat.com> - 1.13-0
+- Update from krb5-1.13-alpha1 to final krb5-1.13
+- Removed patch for CVE-2014-5351 (#1145425) "krb5: current
+  keys returned when randomizing the keys for a service principal" -
+  now part of upstream sources
+- Use patch for glibc |eventfd()| prototype mismatch (#1147887) only
+  for Fedora > 20
+
 * Tue Sep 30 2014 Roland Mainz <rmainz@redhat.com> - 1.13-0.alpha1.3
 - fix build failure caused by change of prototype for glibc
   |eventfd()| (#1147887)
