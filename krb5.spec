@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.5
-Release: 16%{?dist}
+Release: 17%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -160,6 +160,7 @@ Patch406: 0006-Use-more-randomness-for-ksu-secondary-cache-names.patch
 Patch407: 0007-Make-krb5_cc_new_unique-create-DIR-directories.patch
 Patch408: krb5-1.11-base64-exports.patch
 Patch409: krb5-11.1_CVE-2014-5351_001.patch
+Patch410: krb5-CVE_2014_5353_fix_LDAP_misused_policy_name_crash.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -372,6 +373,7 @@ ln -s NOTICE LICENSE
 %patch408 -p1 -b .base64-exports
 
 %patch409 -p1
+%patch410 -p1
 
 %patch60 -p1 -b .pam
 
@@ -1112,6 +1114,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Wed Dec 17 2014 Roland Mainz <rmainz@redhat.com> - 1.11.5-17
+- fix for CVE-2014-5353 (#1174543) "Fix LDAP misused policy
+  name crash"
+
 * Tue Sep 30 2014 Roland Mainz <rmainz@redhat.com> - 1.11.5-16
 - fix for CVE-2014-5351 (#1145425) "krb5: current keys returned when
   randomizing the keys for a service principal"
