@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13
-Release: 2%{?dist}
+Release: 3%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -94,6 +94,7 @@ Patch105: krb5-kvno-230379.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch136: krb5-socket_wrapper_eventfd_prototype_mismatch.patch
+Patch137: krb5-CVE_2014_5353_fix_LDAP_misused_policy_name_crash.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -314,6 +315,8 @@ ln NOTICE LICENSE
 %if 0%{?fedora} >= 21 || 0%{?rhel} > 7
 %patch136 -p1
 %endif
+
+%patch137 -p1
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -985,12 +988,16 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
-* Wed Oct 29 2014 Roland Mainz <rmainz@redhat.com> - 1.13-0
+* Wed Dec 17 2014 Roland Mainz <rmainz@redhat.com> - 1.13-3
+- fix for CVE-2014-5353 (#1174543) "Fix LDAP misused policy
+  name crash"  
+
+* Wed Oct 29 2014 Roland Mainz <rmainz@redhat.com> - 1.13-2
 - Bump 1%%{?dist} to 2%%{?dist} to workaround RPM sort issue
   which would lead yum updates to treat the last alpha as newer
   than the final version.  
 
-* Wed Oct 29 2014 Roland Mainz <rmainz@redhat.com> - 1.13-0
+* Wed Oct 29 2014 Roland Mainz <rmainz@redhat.com> - 1.13-1
 - Update from krb5-1.13-alpha1 to final krb5-1.13
 - Removed patch for CVE-2014-5351 (#1145425) "krb5: current
   keys returned when randomizing the keys for a service principal" -
