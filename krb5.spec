@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13
-Release: 3%{?dist}
+Release: 4%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -95,6 +95,7 @@ Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch136: krb5-socket_wrapper_eventfd_prototype_mismatch.patch
 Patch137: krb5-CVE_2014_5353_fix_LDAP_misused_policy_name_crash.patch
+Patch138: krb5-CVE_2014_5354_support_keyless_principals_in_LDAP.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -317,6 +318,7 @@ ln NOTICE LICENSE
 %endif
 
 %patch137 -p1
+%patch138 -p1
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -988,6 +990,10 @@ exit 0
 %{_sbindir}/uuserver
 
 %changelog
+* Thu Dec 19 2014 Roland Mainz <rmainz@redhat.com> - 1.13-4
+- fix for CVE-2014-5354 (#1174546) "krb5: NULL pointer
+  dereference when using keyless entries"  
+
 * Wed Dec 17 2014 Roland Mainz <rmainz@redhat.com> - 1.13-3
 - fix for CVE-2014-5353 (#1174543) "Fix LDAP misused policy
   name crash"  
