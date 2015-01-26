@@ -1,0 +1,118 @@
+From d5755694b620570defeecee772def90a2733c6cc Mon Sep 17 00:00:00 2001
+From: Simo Sorce <simo@redhat.com>
+Date: Tue, 20 Jan 2015 13:48:34 -0500
+Subject: [PATCH 1/2] Do not loop on principal unknown errors
+
+If the canonicalize flag is set, the MIT KDC always return the client
+principal when KRB5_KDC_ERR_C_PRICIPAL_UNKNOWN is returned.
+
+Check that this is really a referral by testing that the returned
+client realm differs from the requested one.
+
+[ghudson@mit.edu: simplified and narrowed is_referral() contract.
+Note that a WRONG_REALM response with e-data or FAST error padata
+could now be passed through k5_preauth_tryagain() if it has an empty
+crealm or a crealm equal to the requested client realm.  Such a
+response is unexpected in practice and there is nothing dangerous
+about handling it this way.]
+
+ticket: 8060
+target_version: 1.13.1
+tags: pullup
+---
+ src/lib/krb5/krb/get_in_tkt.c | 40 +++++++++++++---------------------------
+ 1 file changed, 13 insertions(+), 27 deletions(-)
+
+diff --git a/src/lib/krb5/krb/get_in_tkt.c b/src/lib/krb5/krb/get_in_tkt.c
+index 2c2b654..f9bc027 100644
+--- a/src/lib/krb5/krb/get_in_tkt.c
++++ b/src/lib/krb5/krb/get_in_tkt.c
+@@ -1379,33 +1379,23 @@ note_req_timestamp(krb5_context context, krb5_init_creds_context ctx,
+         AUTH_OFFSET : UNAUTH_OFFSET;
+ }
+ 
+-/* Determine whether the client realm in a KRB-ERROR is empty. */
+-static krb5_boolean
+-is_empty_crealm(krb5_error *err)
+-{
+-
+-    return (err->client == NULL || err->client->realm.length == 0);
+-}
+-
+ /*
+- * Determine whether a KRB-ERROR is a referral to another realm.
++ * Determine whether err is a client referral to another realm, given the
++ * previously requested client principal name.
+  *
+- * RFC 6806 Section 7 requires that KDCs return the referral realm in
+- * an error type WRONG_REALM, but Microsoft Windows Server 2003 (and
+- * possibly others) return the realm in a PRINCIPAL_UNKNOWN message.
+- * Detect this case by looking for a non-empty client.realm field in
+- * such responses.
++ * RFC 6806 Section 7 requires that KDCs return the referral realm in an error
++ * type WRONG_REALM, but Microsoft Windows Server 2003 (and possibly others)
++ * return the realm in a PRINCIPAL_UNKNOWN message.
+  */
+ static krb5_boolean
+-is_referral(krb5_init_creds_context ctx)
++is_referral(krb5_context context, krb5_error *err, krb5_principal client)
+ {
+-    krb5_error *err = ctx->err_reply;
+-
+-    if (err->error == KDC_ERR_WRONG_REALM)
+-        return TRUE;
+-    if (err->error != KDC_ERR_C_PRINCIPAL_UNKNOWN)
++    if (err->error != KDC_ERR_WRONG_REALM &&
++        err->error != KDC_ERR_C_PRINCIPAL_UNKNOWN)
++        return FALSE;
++    if (err->client == NULL)
+         return FALSE;
+-    return !is_empty_crealm(err);
++    return !krb5_realm_compare(context, err->client, client);
+ }
+ 
+ static krb5_error_code
+@@ -1467,12 +1457,8 @@ init_creds_step_reply(krb5_context context,
+                                              ctx->preauth_to_use);
+             ctx->preauth_required = TRUE;
+ 
+-        } else if (canon_flag && is_referral(ctx)) {
+-            if (is_empty_crealm(ctx->err_reply)) {
+-                /* Only WRONG_REALM referral types can reach this. */
+-                code = KRB5KDC_ERR_WRONG_REALM;
+-                goto cleanup;
+-            }
++        } else if (canon_flag && is_referral(context, ctx->err_reply,
++                                             ctx->request->client)) {
+             TRACE_INIT_CREDS_REFERRAL(context, &ctx->err_reply->client->realm);
+             /* Rewrite request.client with realm from error reply */
+             krb5_free_data_contents(context, &ctx->request->client->realm);
+
+From c0778ab2252ece4c3510788d9b72f7f5e3bb05dd Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Fri, 23 Jan 2015 12:52:31 -0500
+Subject: [PATCH 2/2] Add test for kinit -C WRONG_REALM response
+
+ticket: 8060
+---
+ src/tests/t_general.py | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/src/tests/t_general.py b/src/tests/t_general.py
+index 98e77a2..5349b05 100755
+--- a/src/tests/t_general.py
++++ b/src/tests/t_general.py
+@@ -33,6 +33,13 @@
+ 
+ realm = K5Realm(create_host=False)
+ 
++# Test that WRONG_REALM responses aren't treated as referrals unless
++# they contain a crealm field pointing to a different realm.
++# (Regression test for #8060.)
++out = realm.run([kinit, '-C', 'notfoundprinc'], expected_code=1)
++if 'not found in Kerberos database' not in out:
++    fail('Expected error message not seen in kinit -C output')
++
+ # Spot-check KRB5_TRACE output
+ tracefile = os.path.join(realm.testdir, 'trace')
+ realm.run(['env', 'KRB5_TRACE=' + tracefile, kinit, realm.user_princ],
