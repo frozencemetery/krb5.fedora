@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.2
-Release: 11%{?dist}
+Release: 12%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -130,6 +130,7 @@ Patch318: krb5-1.12-ksu-no-ccache.patch
 Patch319: krb5-bug_1145425_CVE-2014-5351.patch
 Patch320: krb5-CVE_2014_5353_fix_LDAP_misused_policy_name_crash.patch
 Patch321: krb5-CVE_2014_5354_support_keyless_principals_in_LDAP.patch
+Patch322: krb5-1.13_kinit_C_loop_krb5bug243.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -398,6 +399,7 @@ chmod u+x src/util/paste-kdcproxy.py
 %patch319 -p1
 %patch320 -p1
 %patch321 -p1
+%patch322 -p1 -b .krb5_1_13_kinit_C_loop_krb5bug243
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -1077,6 +1079,10 @@ exit 0
 
 
 %changelog
+* Mon Jan 26 2015 Roland Mainz <rmainz@redhat.com> - 1.12.2-12
+- fix for kinit -C loops (#1184629, MIT/krb5 issue 243, "Do not
+  loop on principal unknown errors").
+
 * Thu Dec 18 2014 Roland Mainz <rmainz@redhat.com> - 1.12.2-11
 - fix for CVE-2014-5354 (#1174546) "krb5: NULL pointer
   dereference when using keyless entries"  
