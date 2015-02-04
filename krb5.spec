@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13
-Release: 6%{?dist}
+Release: 7%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -107,8 +107,8 @@ BuildRequires: autoconf, bison, flex, gawk, gettext, pkgconfig, sed
 %if 0%{?fedora} >= 12 || 0%{?rhel} >= 6
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
 %endif
-BuildRequires: gzip, ncurses-devel, tar
-BuildRequires: python-sphinx, python-sphinx-latex, texlive-pdftex
+BuildRequires: gzip, ncurses-devel
+BuildRequires: python-sphinx, texlive-pdftex
 # The texlive package got a lot more complicated here.
 %if 0%{?fedora} > 17 || 0%{?rhel} > 6
 # Taken from \usepackage directives produced by sphinx:
@@ -322,7 +322,7 @@ ln NOTICE LICENSE
 %patch137 -p1
 %patch138 -p1
 %patch139 -p1 -b .krb5_1_13_kinit_C_loop_krb5bug243
-%patch140 -p1
+%patch140 -p1 -b .krb5-1.14-support-kdc_err_more_preauth_data_required
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -995,7 +995,12 @@ exit 0
 
 
 %changelog
-* Mon Feb 02 2015 Nathaniel McCallum <npmccallum@redhat.com>
+* Wed Feb 4 2015 Roland Mainz <rmainz@redhat.com> - 1.13-7
+- Remove "python-sphinx-latex" and "tar" from the build requirements
+  to fix build failures on F22 machines.
+- Minor spec cleanup
+
+* Mon Feb 02 2015 Nathaniel McCallum <npmccallum@redhat.com> - 1.13-6
 - Support KDC_ERR_MORE_PREAUTH_DATA_REQUIRED (RT#8063)
 
 * Mon Jan 26 2015 Roland Mainz <rmainz@redhat.com> - 1.13-5
