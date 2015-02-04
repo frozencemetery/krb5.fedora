@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.2
-Release: 12%{?dist}
+Release: 13%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -131,6 +131,7 @@ Patch319: krb5-bug_1145425_CVE-2014-5351.patch
 Patch320: krb5-CVE_2014_5353_fix_LDAP_misused_policy_name_crash.patch
 Patch321: krb5-CVE_2014_5354_support_keyless_principals_in_LDAP.patch
 Patch322: krb5-1.13_kinit_C_loop_krb5bug243.patch
+Patch323: krb5-1.14-Support-KDC_ERR_MORE_PREAUTH_DATA_REQUIRED.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -400,6 +401,7 @@ chmod u+x src/util/paste-kdcproxy.py
 %patch320 -p1
 %patch321 -p1
 %patch322 -p1 -b .krb5_1_13_kinit_C_loop_krb5bug243
+%patch323 -p1 -b .krb5-1.14-support-kdc_err_more_preauth_data_required
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -1079,6 +1081,9 @@ exit 0
 
 
 %changelog
+* Wed Feb 4 2015 Roland Mainz <rmainz@redhat.com> - 1.12.2-13
+- Support KDC_ERR_MORE_PREAUTH_DATA_REQUIRED (RT#8063)
+
 * Mon Jan 26 2015 Roland Mainz <rmainz@redhat.com> - 1.12.2-12
 - fix for kinit -C loops (#1184629, MIT/krb5 issue 243, "Do not
   loop on principal unknown errors").
