@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.5
-Release: 17%{?dist}
+Release: 18%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -161,6 +161,7 @@ Patch407: 0007-Make-krb5_cc_new_unique-create-DIR-directories.patch
 Patch408: krb5-1.11-base64-exports.patch
 Patch409: krb5-11.1_CVE-2014-5351_001.patch
 Patch410: krb5-CVE_2014_5353_fix_LDAP_misused_policy_name_crash.patch
+Patch411: krb5_cve_2014_9421_2014_9422_2014_9423_2014_5352_krb5-1.11.5-final.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -374,6 +375,7 @@ ln -s NOTICE LICENSE
 
 %patch409 -p1
 %patch410 -p1
+%patch411 -p1 -b .krb5_cve_2014_9421_2014_9422_2014_9423_2014_5352_krb5-1.11.5-final
 
 %patch60 -p1 -b .pam
 
@@ -1113,7 +1115,18 @@ exit 0
 %{_sbindir}/gss-server
 %{_sbindir}/uuserver
 
+
 %changelog
+* Wed Feb 4 2015 Roland Mainz <rmainz@redhat.com> - 1.11.5-18
+- fix for CVE-2014-5352 (#1179856) "gss_process_context_token()
+  incorrectly frees context (MITKRB5-SA-2015-001)"
+- fix for CVE-2014-9421 (#1179857) "kadmind doubly frees partial
+  deserialization results (MITKRB5-SA-2015-001)"
+- fix for CVE-2014-9422 (#1179861) "kadmind incorrectly
+  validates server principal name (MITKRB5-SA-2015-001)"
+- fix for CVE-2014-9423 (#1179863) "libgssrpc server applications
+  leak uninitialized bytes (MITKRB5-SA-2015-001)"
+
 * Wed Dec 17 2014 Roland Mainz <rmainz@redhat.com> - 1.11.5-17
 - fix for CVE-2014-5353 (#1174543) "Fix LDAP misused policy
   name crash"
