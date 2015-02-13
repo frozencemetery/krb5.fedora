@@ -42,19 +42,19 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.13
-Release: 8%{?dist}
+Version: 1.13.1
+Release: 1%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.1-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
-# $ fedpkg upload krb5-1.13.tar.gz krb5-1.13.tar.gz.asc # (and don't remove,
-# otherwise you can't go back or branch from a previous point)
+# $ fedpkg upload krb5-1.13.1.tar.gz krb5-1.13.1.tar.gz.asc # (and don't
+# remove, otherwise you can't go back or branch from a previous point)
 Source0: krb5-%{version}%{prerelease}.tar.gz
 Source1: krb5-%{version}%{prerelease}.tar.gz.asc
-# Use a dummy krb5-%{version}-pdf.tar.xz the first time through, then
-#  tar cvJf $RPM_SOURCE_DIR/krb5-%%{version}-pdf.tar.xz build-pdf/*.pdf
+# Use a dummy krb5-%{version}-pdf.pax.xz the first time through, then
+# $ pax -wv -x ustar build-pdf/*.pdf | xz -9 >"krb5-%{version}-pdf.pax.xz.new" #
 # after the build phase finishes.
-Source3: krb5-%{version}%{prerelease}-pdf.tar.xz
+Source3: krb5-%{version}%{prerelease}-pdf.pax.xz
 Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
@@ -94,11 +94,7 @@ Patch105: krb5-kvno-230379.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch136: krb5-socket_wrapper_eventfd_prototype_mismatch.patch
-Patch137: krb5-CVE_2014_5353_fix_LDAP_misused_policy_name_crash.patch
-Patch138: krb5-CVE_2014_5354_support_keyless_principals_in_LDAP.patch
-Patch139: krb5-1.13_kinit_C_loop_krb5bug243.patch
 Patch140: krb5-1.14-Support-KDC_ERR_MORE_PREAUTH_DATA_REQUIRED.patch
-Patch141: krb5_cve_2014_9421_2014_9422_2014_9423_2014_5352_fixed_whitespaces.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -320,18 +316,14 @@ ln NOTICE LICENSE
 %patch136 -p1
 %endif
 
-%patch137 -p1
-%patch138 -p1
-%patch139 -p1 -b .krb5_1_13_kinit_C_loop_krb5bug243
 %patch140 -p1 -b .krb5-1.14-support-kdc_err_more_preauth_data_required
-%patch141 -p1 -b .krb5_cve_2014_9421_2014_9422_2014_9423_2014_5352_fixed_whitespaces
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
 
 # Generate an FDS-compatible LDIF file.
 inldif=src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
-cat > 60kerberos.ldif << EOF
+cat > '60kerberos.ldif' << EOF
 # This is a variation on kerberos.ldif which 389 Directory Server will like.
 dn: cn=schema
 EOF
@@ -372,15 +364,15 @@ sed -i -e s,7778,`expr "$PORT" + 1`,g $cfg
 
 %build
 # Go ahead and supply tcl info, because configure doesn't know how to find it.
-. %{_libdir}/tclConfig.sh
+source %{_libdir}/tclConfig.sh
 pushd src
 # Keep the old default if the package is built against older releases.
 %if 0%{?compile_default_ccache_name}
-DEFCCNAME=%{compiled_default_ccache_name}; export DEFCCNAME
+export DEFCCNAME=%{compiled_default_ccache_name}
 %endif
 # Set this so that configure will have a value even if the current version of
 # autoconf doesn't set one.
-runstatedir=%{_localstatedir}/run; export runstatedir
+export runstatedir=%{_localstatedir}/run
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
 INCLUDES=-I%{_includedir}/et
 CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC -fno-strict-aliasing -fstack-protector-all`"
@@ -452,8 +444,8 @@ sphinx-build -a -b latex -t pathsubs doc build-pdf
 for pdf in admin appdev basic build plugindev user ; do
 	test -s build-pdf/$pdf.pdf || make -C build-pdf
 done
-# new krb5-%{version}-pdf.tar.xz, see above
-pax -wv -x ustar build-pdf/*.pdf | xz -9 >"krb5-%{version}-pdf.tar.xz.new"
+# new krb5-%{version}-pdf.pax.xz, see above
+pax -wv -x ustar build-pdf/*.pdf | xz -9 >"krb5-%{version}-pdf.pax.xz.new"
 # false
 
 # Build the test wrappers.
@@ -478,12 +470,12 @@ fi
 %endif
 
 # Set things up to use the test wrappers.
-NSS_WRAPPER_HOSTNAME=test.example.com ; export NSS_WRAPPER_HOSTNAME
-NSS_WRAPPER_HOSTS="`pwd`/nss_wrapper/fakehosts" ; export NSS_WRAPPER_HOSTS
-echo 127.0.0.1 $NSS_WRAPPER_HOSTNAME $NSS_WRAPPER_HOSTNAME localhost localhost >"$NSS_WRAPPER_HOSTS"
-NOPORT=53,111; export NOPORT
-SOCKET_WRAPPER_DIR=`pwd`/sockets; mkdir -p $SOCKET_WRAPPER_DIR; export SOCKET_WRAPPER_DIR
-LD_PRELOAD=`pwd`/noport.so:`pwd`/nss_wrapper/build/src/libnss_wrapper.so:`pwd`/socket_wrapper/build/src/libsocket_wrapper.so ; export LD_PRELOAD
+export NSS_WRAPPER_HOSTNAME=test.example.com
+export NSS_WRAPPER_HOSTS="$PWD/nss_wrapper/fakehosts"
+printf '127.0.0.1 %s %s %s %s\n' "$NSS_WRAPPER_HOSTNAME" "$NSS_WRAPPER_HOSTNAME" 'localhost' 'localhost' >"$NSS_WRAPPER_HOSTS"
+export NOPORT='53,111'
+export SOCKET_WRAPPER_DIR="$PWD/sockets" ; mkdir -p $SOCKET_WRAPPER_DIR
+export LD_PRELOAD="$PWD/noport.so:$PWD/nss_wrapper/build/src/libnss_wrapper.so:$PWD/socket_wrapper/build/src/libsocket_wrapper.so"
 
 # Run the test suite. We can't actually run the whole thing in the build
 # system, but we can at least run more than we used to.  The build system may
@@ -497,7 +489,7 @@ make -C src/clients check TMPDIR=%{_tmppath}
 keyctl session - make -C src/util check TMPDIR=%{_tmppath}
 
 %install
-[ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
+[ "$RPM_BUILD_ROOT" != '/' ] && rm -rf -- $RPM_BUILD_ROOT
 
 # Sample KDC config files (bundled kdc.conf and kadm5.acl).
 mkdir -p $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc
@@ -522,7 +514,7 @@ mkdir -m 755 -p $RPM_BUILD_ROOT/etc/gss/mech.d
 # If the default configuration needs to start specifying a default cache
 # location, add it now, then fixup the timestamp so that it looks the same.
 %if 0%{?configure_default_ccache_name}
-DEFCCNAME="%{configured_default_ccache_name}"; export DEFCCNAME
+export DEFCCNAME="%{configured_default_ccache_name}"
 awk '{print}
      /^# default_realm/{print " default_ccache_name =", ENVIRON["DEFCCNAME"]}' \
      %{SOURCE6} > $RPM_BUILD_ROOT/etc/krb5.conf
@@ -642,7 +634,7 @@ rm $RPM_BUILD_ROOT/%{_sbindir}/krb5-send-pr
 %find_lang %{gettext_domain}
 
 %clean
-[ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
+[ "$RPM_BUILD_ROOT" != '/' ] && rm -rf -- $RPM_BUILD_ROOT
 
 %post libs -p /sbin/ldconfig
 
@@ -651,7 +643,7 @@ rm $RPM_BUILD_ROOT/%{_sbindir}/krb5-send-pr
 # Triggered roughly on the version where this logic was introduced.
 # Try to add a default_ccache_name to /etc/krb5.conf, removing the previous
 # default which we configured, if we find it.
-DEFCCNAME="%{configured_default_ccache_name}"; export DEFCCNAME
+export DEFCCNAME="%{configured_default_ccache_name}"
 tmpfile=`mktemp /etc/krb5.conf.XXXXXX`
 if test -z "$tmpfile" ; then
 	# Give up.
@@ -997,6 +989,13 @@ exit 0
 
 
 %changelog
+* Fri Feb 13 2015 Roland Mainz <rmainz@redhat.com> - 1.13.1-1
+- Update to krb5-1.13.1
+  - drop patch for CVE_2014_5353_fix_LDAP_misused_policy_name_crash, fixed in krb5-1.13.1
+  - drop patch for kinit -C loops (MIT/krb5 bug #243), fixed in krb5-1.13.1
+  - drop patch for CVEs { 2014-9421, 2014-9422, 2014-9423, 2014-5352 }, fixed in krb5-1.13.1
+- Minor spec cleanup
+
 * Wed Feb 4 2015 Roland Mainz <rmainz@redhat.com> - 1.13-8
 - fix for CVE-2014-5352 (#1179856) "gss_process_context_token()
   incorrectly frees context (MITKRB5-SA-2015-001)"
