@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.2
-Release: 14%{?dist}
+Release: 15%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -133,6 +133,7 @@ Patch321: krb5-CVE_2014_5354_support_keyless_principals_in_LDAP.patch
 Patch322: krb5-1.13_kinit_C_loop_krb5bug243.patch
 Patch323: krb5-1.14-Support-KDC_ERR_MORE_PREAUTH_DATA_REQUIRED.patch
 Patch324: krb5_cve_2014_9421_2014_9422_2014_9423_2014_5352_krb5-1.12.2-final.patch
+Patch325: 0001-Allow-SPNEGO-fallback-to-NTLM-without-mechlistMIC.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -404,6 +405,7 @@ chmod u+x src/util/paste-kdcproxy.py
 %patch322 -p1 -b .krb5_1_13_kinit_C_loop_krb5bug243
 %patch323 -p1 -b .krb5-1.14-support-kdc_err_more_preauth_data_required
 %patch324 -p1 -b .krb5_cve_2014_9421_2014_9422_2014_9423_2014_5352_krb5-1.12.2-final
+%patch325 -p1 -b .NTLMSSP-fallback
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -1083,6 +1085,9 @@ exit 0
 
 
 %changelog
+* Tue Mar 17 2015 David Woodhouse <dwmw2@infradead.org> - 1.12.2-15
+- Fix NTLMSSP fallback (#1122324)
+
 * Wed Feb 4 2015 Roland Mainz <rmainz@redhat.com> - 1.12.2-14
 - fix for CVE-2014-5352 (#1179856) "gss_process_context_token()
   incorrectly frees context (MITKRB5-SA-2015-001)"
