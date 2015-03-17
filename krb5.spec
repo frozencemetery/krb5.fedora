@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.11.5
-Release: 18%{?dist}
+Release: 19%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.11/krb5-1.11.5-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -162,6 +162,9 @@ Patch408: krb5-1.11-base64-exports.patch
 Patch409: krb5-11.1_CVE-2014-5351_001.patch
 Patch410: krb5-CVE_2014_5353_fix_LDAP_misused_policy_name_crash.patch
 Patch411: krb5_cve_2014_9421_2014_9422_2014_9423_2014_5352_krb5-1.11.5-final.patch
+
+# Fix NTLMSSP fallback
+Patch412: 0001-Allow-SPNEGO-fallback-to-NTLM-without-mechlistMIC.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -448,6 +451,8 @@ ln -s NOTICE LICENSE
 %patch202 -p1 -b .otp
 %patch203 -p1 -b .otp2
 %patch204 -p1 -b .move-otp-sockets
+
+%patch412 -p1 -b .ntlmssp
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt
@@ -1117,6 +1122,9 @@ exit 0
 
 
 %changelog
+* Tue Mar 17 2015 David Woodhouse <dwmw2@infradead.org> - 1.11.5-19
+- Fix NTLMSSP fallback (#1122324)
+
 * Wed Feb 4 2015 Roland Mainz <rmainz@redhat.com> - 1.11.5-18
 - fix for CVE-2014-5352 (#1179856) "gss_process_context_token()
   incorrectly frees context (MITKRB5-SA-2015-001)"
