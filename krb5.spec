@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.1-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -95,6 +95,7 @@ Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch136: krb5-socket_wrapper_eventfd_prototype_mismatch.patch
 Patch140: krb5-1.14-Support-KDC_ERR_MORE_PREAUTH_DATA_REQUIRED.patch
+Patch141: krb5-1.12.1-CVE_2014_5355_fix_krb5_read_message_handling.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -317,6 +318,7 @@ ln NOTICE LICENSE
 %endif
 
 %patch140 -p1 -b .krb5-1.14-support-kdc_err_more_preauth_data_required
+%patch141 -p1 -b .krb5-1.12.1-cve_2014_5355_fix_krb5_read_message_handling
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -989,6 +991,10 @@ exit 0
 
 
 %changelog
+* Thu Mar 20 2015 Roland Mainz <rmainz@redhat.com> - 1.13.1-2
+- fix for CVE-2014-5355 (#1193939) "krb5: unauthenticated
+  denial of service in recvauth_common() and others"  
+
 * Fri Feb 13 2015 Roland Mainz <rmainz@redhat.com> - 1.13.1-1
 - Update to krb5-1.13.1
   - drop patch for CVE_2014_5353_fix_LDAP_misused_policy_name_crash, fixed in krb5-1.13.1
