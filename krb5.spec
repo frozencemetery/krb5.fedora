@@ -991,7 +991,7 @@ exit 0
 
 
 %changelog
-* Thu Mar 20 2015 Roland Mainz <rmainz@redhat.com> - 1.13.1-2
+* Thu Mar 19 2015 Roland Mainz <rmainz@redhat.com> - 1.13.1-2
 - fix for CVE-2014-5355 (#1193939) "krb5: unauthenticated
   denial of service in recvauth_common() and others"  
 
