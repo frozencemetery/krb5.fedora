@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.2
-Release: 15%{?dist}
+Release: 16%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -134,6 +134,7 @@ Patch322: krb5-1.13_kinit_C_loop_krb5bug243.patch
 Patch323: krb5-1.14-Support-KDC_ERR_MORE_PREAUTH_DATA_REQUIRED.patch
 Patch324: krb5_cve_2014_9421_2014_9422_2014_9423_2014_5352_krb5-1.12.2-final.patch
 Patch325: 0001-Allow-SPNEGO-fallback-to-NTLM-without-mechlistMIC.patch
+Patch326: krb5-1.12.1-CVE_2014_5355_fix_krb5_read_message_handling.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -406,6 +407,7 @@ chmod u+x src/util/paste-kdcproxy.py
 %patch323 -p1 -b .krb5-1.14-support-kdc_err_more_preauth_data_required
 %patch324 -p1 -b .krb5_cve_2014_9421_2014_9422_2014_9423_2014_5352_krb5-1.12.2-final
 %patch325 -p1 -b .NTLMSSP-fallback
+%patch326 -p1 -b .krb5-1.12.1-cve_2014_5355_fix_krb5_read_message_handling
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -1085,6 +1087,10 @@ exit 0
 
 
 %changelog
+* Thu Mar 19 2015 Roland Mainz <rmainz@redhat.com> - 1.12.2-16
+- fix for CVE-2014-5355 (#1193939) "krb5: unauthenticated
+  denial of service in recvauth_common() and others"  
+
 * Tue Mar 17 2015 David Woodhouse <dwmw2@infradead.org> - 1.12.2-15
 - Fix NTLMSSP fallback (#1122324)
 
