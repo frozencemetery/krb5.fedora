@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.1-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -606,6 +606,17 @@ make -C src DESTDIR=$RPM_BUILD_ROOT EXAMPLEDIR=%{libsdocdir}/examples install
 # list of link flags, and it helps prevent file conflicts on multilib systems.
 sed -r -i -e 's|^libdir=/usr/lib(64)?$|libdir=/usr/lib|g' $RPM_BUILD_ROOT%{_bindir}/krb5-config
 
+# FIXME: Temporay workaround for RH bug #1204646 ("krb5-config
+# returns wrong -specs path") so that development of krb5
+# dependicies gets unstuck.
+# This MUST be removed before rawhide becomes F23 ...
+sed -r -i -e "s/-specs=\/.+?\/redhat-hardened-ld//g" $RPM_BUILD_ROOT%{_bindir}/krb5-config
+
+if [[ "$(< $RPM_BUILD_ROOT%{_bindir}/krb5-config )" == *redhat-hardened-ld* ]] ; then
+	printf '# redhat-hardened-ld for krb5-config failed' 1>&2
+	exit 1
+fi
+
 %if %{separate_usr}
 # Move specific libraries from %%{_libdir} to /%%{_lib}, and fixup the symlinks.
 touch $RPM_BUILD_ROOT/rootfile
@@ -991,6 +1002,12 @@ exit 0
 
 
 %changelog
+* Wed Mar 25 2015 Roland Mainz <rmainz@redhat.com> - 1.13.1-3
+- Add temporay workaround for RH bug #1204646 ("krb5-config
+  returns wrong -specs path") which modifies krb5-config post
+  build so that development of krb5 dependicies gets unstuck.
+  This MUST be removed before rawhide becomes F23 ...
+
 * Thu Mar 19 2015 Roland Mainz <rmainz@redhat.com> - 1.13.1-2
 - fix for CVE-2014-5355 (#1193939) "krb5: unauthenticated
   denial of service in recvauth_common() and others"  
