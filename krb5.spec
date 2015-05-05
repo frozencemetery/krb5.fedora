@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.1
-Release: 3%{?dist}
+Release: 4%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.1-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -96,6 +96,7 @@ Patch134: krb5-1.11-kpasswdtest.patch
 Patch136: krb5-socket_wrapper_eventfd_prototype_mismatch.patch
 Patch140: krb5-1.14-Support-KDC_ERR_MORE_PREAUTH_DATA_REQUIRED.patch
 Patch141: krb5-1.12.1-CVE_2014_5355_fix_krb5_read_message_handling.patch
+Patch142: krb5-1.13.2-CVE_2015_2694_requires_preauth_bypass_in_PKINIT_enabled_KDC.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -319,6 +320,7 @@ ln NOTICE LICENSE
 
 %patch140 -p1 -b .krb5-1.14-support-kdc_err_more_preauth_data_required
 %patch141 -p1 -b .krb5-1.12.1-cve_2014_5355_fix_krb5_read_message_handling
+%patch142 -p1 -b .krb5-1.13.2-cve_2015_2694_requires_preauth_bypass_in_pkinit_enabled_kdc
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -1002,6 +1004,16 @@ exit 0
 
 
 %changelog
+* Mon May 4 2015 Roland Mainz <rmainz@redhat.com> - 1.13.1-4
+- fix for CVE-2015-2694 (#1216133) "requires_preauth bypass
+  in PKINIT-enabled KDC".
+  In MIT krb5 1.12 and later, when the KDC is configured with
+  PKINIT support, an unauthenticated remote attacker can
+  bypass the requires_preauth flag on a client principal and
+  obtain a ciphertext encrypted in the principal's long-term
+  key.  This ciphertext could be used to conduct an off-line
+  dictionary attack against the user's password.
+
 * Wed Mar 25 2015 Roland Mainz <rmainz@redhat.com> - 1.13.1-3
 - Add temporay workaround for RH bug #1204646 ("krb5-config
   returns wrong -specs path") which modifies krb5-config post
