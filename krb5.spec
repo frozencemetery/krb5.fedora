@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.2
-Release: 16%{?dist}
+Release: 17%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -135,6 +135,7 @@ Patch323: krb5-1.14-Support-KDC_ERR_MORE_PREAUTH_DATA_REQUIRED.patch
 Patch324: krb5_cve_2014_9421_2014_9422_2014_9423_2014_5352_krb5-1.12.2-final.patch
 Patch325: 0001-Allow-SPNEGO-fallback-to-NTLM-without-mechlistMIC.patch
 Patch326: krb5-1.12.1-CVE_2014_5355_fix_krb5_read_message_handling.patch
+Patch327: krb5-1.13.2-CVE_2015_2694_requires_preauth_bypass_in_PKINIT_enabled_KDC.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -408,6 +409,7 @@ chmod u+x src/util/paste-kdcproxy.py
 %patch324 -p1 -b .krb5_cve_2014_9421_2014_9422_2014_9423_2014_5352_krb5-1.12.2-final
 %patch325 -p1 -b .NTLMSSP-fallback
 %patch326 -p1 -b .krb5-1.12.1-cve_2014_5355_fix_krb5_read_message_handling
+%patch327 -p1 -b .krb5-1.13.2-cve_2015_2694_requires_preauth_bypass_in_pkinit_enabled_kdc
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -1087,6 +1089,16 @@ exit 0
 
 
 %changelog
+* Mon May 4 2015 Roland Mainz <rmainz@redhat.com> - 1.12.2-17
+- fix for CVE-2015-2694 (#1216133) "requires_preauth bypass
+  in PKINIT-enabled KDC".
+  In MIT krb5 1.12 and later, when the KDC is configured with
+  PKINIT support, an unauthenticated remote attacker can
+  bypass the requires_preauth flag on a client principal and
+  obtain a ciphertext encrypted in the principal's long-term
+  key.  This ciphertext could be used to conduct an off-line
+  dictionary attack against the user's password.
+
 * Thu Mar 19 2015 Roland Mainz <rmainz@redhat.com> - 1.12.2-16
 - fix for CVE-2014-5355 (#1193939) "krb5: unauthenticated
   denial of service in recvauth_common() and others"  
