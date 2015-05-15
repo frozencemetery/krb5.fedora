@@ -42,12 +42,12 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.13.1
-Release: 3%{?dist}
+Version: 1.13.2
+Release: 0%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.1-signed.tar
+# http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
-# $ fedpkg upload krb5-1.13.1.tar.gz krb5-1.13.1.tar.gz.asc # (and don't
+# $ fedpkg upload krb5-1.13.2.tar.gz krb5-1.13.2.tar.gz.asc # (and don't
 # remove, otherwise you can't go back or branch from a previous point)
 Source0: krb5-%{version}%{prerelease}.tar.gz
 Source1: krb5-%{version}%{prerelease}.tar.gz.asc
@@ -75,7 +75,6 @@ Source37: kadmind.init
 Source38: krb5kdc.init
 Source39: krb5-krb5kdc.conf
 
-BuildRequires: cmake pax xz
 # Carry this locally until it's available in a packaged form.
 Source100: nss_wrapper-0.0-20140204195100.git3d58327.tar.xz
 Source101: noport.c
@@ -95,14 +94,12 @@ Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch136: krb5-socket_wrapper_eventfd_prototype_mismatch.patch
 Patch140: krb5-1.14-Support-KDC_ERR_MORE_PREAUTH_DATA_REQUIRED.patch
-Patch141: krb5-1.12.1-CVE_2014_5355_fix_krb5_read_message_handling.patch
-Patch142: krb5-1.13.2-CVE_2015_2694_requires_preauth_bypass_in_PKINIT_enabled_KDC.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: autoconf, bison, flex, gawk, gettext, pkgconfig, sed
+BuildRequires: autoconf, bison, cmake, flex, gawk, gettext, ksh, pax, pkgconfig, sed, xz 
 %if 0%{?fedora} >= 12 || 0%{?rhel} >= 6
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
 %endif
@@ -231,6 +228,8 @@ Requires: logrotate
 Requires(preun): initscripts
 # we specify /usr/share/dict/words as the default dict_file in kdc.conf
 Requires: /usr/share/dict/words
+# we need this for zanata since this is the only working way to localise scripts
+Requires: ksh
 %if %{WITH_SYSVERTO}
 # for run-time, and for parts of the test suite
 BuildRequires: libverto-module-base
@@ -319,8 +318,6 @@ ln NOTICE LICENSE
 %endif
 
 %patch140 -p1 -b .krb5-1.14-support-kdc_err_more_preauth_data_required
-%patch141 -p1 -b .krb5-1.12.1-cve_2014_5355_fix_krb5_read_message_handling
-%patch142 -p1 -b .krb5-1.13.2-cve_2015_2694_requires_preauth_bypass_in_pkinit_enabled_kdc
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -493,7 +490,7 @@ make -C src/clients check TMPDIR=%{_tmppath}
 keyctl session - make -C src/util check TMPDIR=%{_tmppath}
 
 %install
-[ "$RPM_BUILD_ROOT" != '/' ] && rm -rf -- $RPM_BUILD_ROOT
+[ "$RPM_BUILD_ROOT" != '/' ] && rm -rf -- "$RPM_BUILD_ROOT"
 
 # Sample KDC config files (bundled kdc.conf and kadm5.acl).
 mkdir -p $RPM_BUILD_ROOT%{_var}/kerberos/krb5kdc
@@ -615,7 +612,7 @@ rellibdir=..
 while ! test -r $RPM_BUILD_ROOT/%{_libdir}/${rellibdir}/rootfile ; do
 	rellibdir=../${rellibdir}
 done
-rm -f $RPM_BUILD_ROOT/rootfile
+rm -f -- "$RPM_BUILD_ROOT/rootfile"
 mkdir -p $RPM_BUILD_ROOT/%{_lib}
 for library in libgssapi_krb5 libgssrpc libk5crypto libkrb5 libkrb5support ; do
 	mv $RPM_BUILD_ROOT/%{_libdir}/${library}.so.* $RPM_BUILD_ROOT/%{_lib}/
@@ -631,14 +628,22 @@ for section in 1 5 8 ; do
 		       $RPM_BUILD_ROOT/%{_mandir}/man${section}/
 done
 
+# Process shell scripts (needed later for zanata)
+for i in $(LC_ALL='C' file $RPM_BUILD_ROOT/%{_sbindir}/* | fgrep "POSIX shell script" | sed -r 's/(.+):[[:space:]].*/\1/') ; do
+	# todo: Add /usr/ast/bin/msgcvt to compile l10n catalog
+	shcomp "$i" "${i}.shbin"
+	rm "$i" ; mv "${i}.shbin" "${i}"
+done
+
+
 # This script just tells you to send bug reports to krb5-bugs@mit.edu, but
 # since we don't have a man page for it, just drop it.
-rm $RPM_BUILD_ROOT/%{_sbindir}/krb5-send-pr
+rm -- "$RPM_BUILD_ROOT/%{_sbindir}/krb5-send-pr"
 
 %find_lang %{gettext_domain}
 
 %clean
-[ "$RPM_BUILD_ROOT" != '/' ] && rm -rf -- $RPM_BUILD_ROOT
+[ "$RPM_BUILD_ROOT" != '/' ] && rm -rf -- "$RPM_BUILD_ROOT"
 
 %post libs -p /sbin/ldconfig
 
@@ -648,7 +653,7 @@ rm $RPM_BUILD_ROOT/%{_sbindir}/krb5-send-pr
 # Try to add a default_ccache_name to /etc/krb5.conf, removing the previous
 # default which we configured, if we find it.
 export DEFCCNAME="%{configured_default_ccache_name}"
-tmpfile=`mktemp /etc/krb5.conf.XXXXXX`
+tmpfile="$(mktemp /etc/krb5.conf.XXXXXX)"
 if test -z "$tmpfile" ; then
 	# Give up.
 	exit 0
@@ -684,7 +689,7 @@ if ! grep -q default_ccache_name /etc/krb5.conf ; then
 	fi
 fi
 if test -n "$tmpfile" ; then
-	rm -f "$tmpfile"
+	rm -f -- "$tmpfile"
 fi
 %endif
 
@@ -698,7 +703,7 @@ fi
 # Remove the init script for older servers.
 [ -x /etc/rc.d/init.d/krb5server ] && /sbin/chkconfig --del krb5server
 %if %{WITH_SYSTEMD}
-if [ $1 -eq 1 ] ; then
+if (( $1 == 1 )) ; then
     # Initial installation
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 fi
@@ -711,7 +716,7 @@ fi
 exit 0
 
 %preun server
-if [ "$1" -eq "0" ] ; then
+if (( "$1" == 0 )) ; then
 %if %{WITH_SYSTEMD}
 	/bin/systemctl --no-reload disable krb5kdc.service > /dev/null 2>&1 || :
 	/bin/systemctl --no-reload disable kadmin.service > /dev/null 2>&1 || :
@@ -733,13 +738,13 @@ exit 0
 %postun server
 %if %{WITH_SYSTEMD}
 /bin/systemctl daemon-reload >/dev/null 2>&1 || :
-if [ "$1" -ge 1 ] ; then
+if (( $1 >= 1 )) ; then
 	/bin/systemctl try-restart krb5kdc.service >/dev/null 2>&1 || :
 	/bin/systemctl try-restart kadmin.service >/dev/null 2>&1 || :
 	/bin/systemctl try-restart kprop.service >/dev/null 2>&1 || :
 fi
 %else
-if [ "$1" -ge 1 ] ; then
+if (( $1 >= 1 )) ; then
 	/sbin/service krb5kdc condrestart > /dev/null 2>&1 || :
 	/sbin/service kadmin condrestart > /dev/null 2>&1 || :
 	/sbin/service kprop condrestart > /dev/null 2>&1 || :
@@ -769,7 +774,7 @@ exit 0
 %endif
 
 %triggerun server -- krb5-server < 1.6.3-100
-if [ "$2" -eq "0" ] ; then
+if (( $2 == 0 )) ; then
 	/sbin/install-info --delete %{_infodir}/krb425.info.gz %{_infodir}/dir
 	/sbin/service krb524 stop > /dev/null 2>&1 || :
 	/sbin/chkconfig --del krb524 > /dev/null 2>&1 || :
@@ -993,6 +998,13 @@ exit 0
 
 
 %changelog
+* Thu May 14 2015 Roland Mainz <rmainz@redhat.com> - 1.13.2-0
+- Update to krb5-1.13.2
+  - drop patch for krb5-1.13.2-CVE_2015_2694_requires_preauth_bypass_in_PKINIT_enabled_KDC, fixed in krb5-1.13.2
+  - drop patch for krb5-1.12.1-CVE_2014_5355_fix_krb5_read_message_handling, fixed in krb5-1.13.2
+- Add script processing for upcoming Zanata l10n support
+- Minor spec cleanup
+
 * Mon May 4 2015 Roland Mainz <rmainz@redhat.com> - 1.13.1-3
 - fix for CVE-2015-2694 (#1216133) "requires_preauth bypass
   in PKINIT-enabled KDC".
