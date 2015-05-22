@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.2
-Release: 0%{?dist}
+Release: 1%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -94,6 +94,7 @@ Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch136: krb5-socket_wrapper_eventfd_prototype_mismatch.patch
 Patch140: krb5-1.14-Support-KDC_ERR_MORE_PREAUTH_DATA_REQUIRED.patch
+Patch143: krb5-tests_use_libs_from_build.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -318,6 +319,7 @@ ln NOTICE LICENSE
 %endif
 
 %patch140 -p1 -b .krb5-1.14-support-kdc_err_more_preauth_data_required
+%patch143 -p1 -b .krb5-tests_use_libs_from_build
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -998,6 +1000,10 @@ exit 0
 
 
 %changelog
+* Thu May 21 2015 Roland Mainz <rmainz@redhat.com> - 1.13.2-1
+- Add fix for RedHat Bug #1164304 ("Upstream unit tests loads
+  the installed shared libraries instead the ones from the build")
+
 * Thu May 14 2015 Roland Mainz <rmainz@redhat.com> - 1.13.2-0
 - Update to krb5-1.13.2
   - drop patch for krb5-1.13.2-CVE_2015_2694_requires_preauth_bypass_in_PKINIT_enabled_KDC, fixed in krb5-1.13.2
