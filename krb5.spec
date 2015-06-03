@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -95,6 +95,7 @@ Patch134: krb5-1.11-kpasswdtest.patch
 Patch136: krb5-socket_wrapper_eventfd_prototype_mismatch.patch
 Patch140: krb5-1.14-Support-KDC_ERR_MORE_PREAUTH_DATA_REQUIRED.patch
 Patch143: krb5-tests_use_libs_from_build.patch
+Patch144: krb5-1.13.3-bindresvport_sa_port_byte_swap_bug_triggering_selinux_avc_denial.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -320,7 +321,8 @@ ln NOTICE LICENSE
 
 %patch140 -p1 -b .krb5-1.14-support-kdc_err_more_preauth_data_required
 %patch143 -p1 -b .krb5-tests_use_libs_from_build
-
+%patch144 -p1 -b .krb5-1.13.3-bindresvport_sa_port_byte_swap_bug_triggering_selinux_avc_denial
+ 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
 
@@ -1000,6 +1002,11 @@ exit 0
 
 
 %changelog
+* Tue Jun 2 2015 Roland Mainz <rmainz@redhat.com> - 1.13.2-2
+- Add patch to fix Redhat Bug #1227542 ("[SELinux] AVC denials may appear
+  when kadmind starts"). The issue was caused by an unneeded |htons()|
+  which triggered SELinux AVC denials due to the "random" port usage.
+
 * Thu May 21 2015 Roland Mainz <rmainz@redhat.com> - 1.13.2-1
 - Add fix for RedHat Bug #1164304 ("Upstream unit tests loads
   the installed shared libraries instead the ones from the build")
