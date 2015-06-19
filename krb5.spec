@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.2
-Release: 2%{?dist}
+Release: 3%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -136,6 +136,7 @@ BuildRequires: keyutils, keyutils-libs-devel >= 1.5.8
 BuildRequires: libselinux-devel
 BuildRequires: pam-devel
 %if %{WITH_SYSTEMD}
+BuildRequires: systemd
 BuildRequires: systemd-units
 %endif
 # For the test framework.
@@ -210,6 +211,9 @@ Summary: The KDC and related programs for Kerberos 5
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 Requires(post): chkconfig
 %if %{WITH_SYSTEMD}
+Requires(post): systemd
+Requires(preun): systemd
+Requires(postun): systemd
 Requires(post): systemd-sysv
 Requires(post): systemd-units
 Requires(preun): systemd-units
@@ -704,9 +708,11 @@ fi
 %postun server-ldap -p /sbin/ldconfig
 
 %post server
+%systemd_post systemd-binfmt.service
 # Remove the init script for older servers.
 [ -x /etc/rc.d/init.d/krb5server ] && /sbin/chkconfig --del krb5server
 %if %{WITH_SYSTEMD}
+/bin/systemctl restart systemd-binfmt.service
 if (( $1 == 1 )) ; then
     # Initial installation
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
@@ -1002,6 +1008,9 @@ exit 0
 
 
 %changelog
+* Thu Jun 18 2015 Roland Mainz <rmainz@redhat.com> - 1.13.2-3
+- Fix dependicy on binfmt.service
+
 * Tue Jun 2 2015 Roland Mainz <rmainz@redhat.com> - 1.13.2-2
 - Add patch to fix Redhat Bug #1227542 ("[SELinux] AVC denials may appear
   when kadmind starts"). The issue was caused by an unneeded |htons()|
