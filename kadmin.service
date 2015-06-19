@@ -1,5 +1,6 @@
 [Unit]
 Description=Kerberos 5 Password-changing and Administration
+Requires=systemd-binfmt.service
 After=syslog.target network.target
 
 [Service]
