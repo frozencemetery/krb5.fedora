@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.2
-Release: 4%{?dist}
+Release: 5%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -136,7 +136,6 @@ BuildRequires: keyutils, keyutils-libs-devel >= 1.5.8
 BuildRequires: libselinux-devel
 BuildRequires: pam-devel
 %if %{WITH_SYSTEMD}
-BuildRequires: systemd
 BuildRequires: systemd-units
 %endif
 # For the test framework.
@@ -211,9 +210,6 @@ Summary: The KDC and related programs for Kerberos 5
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 Requires(post): chkconfig
 %if %{WITH_SYSTEMD}
-Requires(post): systemd
-Requires(preun): systemd
-Requires(postun): systemd
 Requires(post): systemd-sysv
 Requires(post): systemd-units
 Requires(preun): systemd-units
@@ -234,8 +230,6 @@ Requires: logrotate
 Requires(preun): initscripts
 # we specify /usr/share/dict/words as the default dict_file in kdc.conf
 Requires: /usr/share/dict/words
-# we need this for zanata since this is the only working way to localise scripts
-Requires: ksh
 %if %{WITH_SYSVERTO}
 # for run-time, and for parts of the test suite
 BuildRequires: libverto-module-base
@@ -647,14 +641,6 @@ for section in 1 5 8 ; do
 		       $RPM_BUILD_ROOT/%{_mandir}/man${section}/
 done
 
-# Process shell scripts (needed later for zanata)
-for i in $(LC_ALL='C' file $RPM_BUILD_ROOT/%{_sbindir}/* | fgrep "POSIX shell script" | sed -r 's/(.+):[[:space:]].*/\1/') ; do
-	# todo: Add /usr/ast/bin/msgcvt to compile l10n catalog
-	shcomp "$i" "${i}.shbin"
-	rm "$i" ; mv "${i}.shbin" "${i}"
-done
-
-
 # This script just tells you to send bug reports to krb5-bugs@mit.edu, but
 # since we don't have a man page for it, just drop it.
 rm -- "$RPM_BUILD_ROOT/%{_sbindir}/krb5-send-pr"
@@ -719,11 +705,9 @@ fi
 %postun server-ldap -p /sbin/ldconfig
 
 %post server
-%systemd_post systemd-binfmt.service
 # Remove the init script for older servers.
 [ -x /etc/rc.d/init.d/krb5server ] && /sbin/chkconfig --del krb5server
 %if %{WITH_SYSTEMD}
-/bin/systemctl restart systemd-binfmt.service
 if (( $1 == 1 )) ; then
     # Initial installation
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
@@ -1019,6 +1003,11 @@ exit 0
 
 
 %changelog
+* Thu Jun 25 2015 Roland Mainz <rmainz@redhat.com> - 1.13.2-5
+- Remove Zanata test glue and related workarounds
+  - Bug #1234292 ("IPA server cannot be run in container due to incorrect /usr/sbin/_kadmind")
+  - Bug #1234326 ("krb5-server introduces new rpm dependency on ksh")
+
 * Thu Jun 18 2015 Roland Mainz <rmainz@redhat.com> - 1.13.2-4
 - Fix dependicy on binfmt.service
 
