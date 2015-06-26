@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.2
-Release: 4%{?dist}
+Release: 5%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -76,9 +76,7 @@ Source38: krb5kdc.init
 Source39: krb5-krb5kdc.conf
 
 # Carry this locally until it's available in a packaged form.
-Source100: nss_wrapper-0.0-20140204195100.git3d58327.tar.xz
-Source101: noport.c
-Source102: socket_wrapper-0.0-20140204194748.gitf3b2ece.tar.xz
+Source100: noport.c
 
 Patch6: krb5-1.12-ksu-path.patch
 Patch12: krb5-1.12-ktany.patch
@@ -92,7 +90,6 @@ Patch86: krb5-1.9-debuginfo.patch
 Patch105: krb5-kvno-230379.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
-Patch136: krb5-socket_wrapper_eventfd_prototype_mismatch.patch
 Patch140: krb5-1.14-Support-KDC_ERR_MORE_PREAUTH_DATA_REQUIRED.patch
 Patch143: krb5-tests_use_libs_from_build.patch
 Patch144: krb5-1.13.3-bindresvport_sa_port_byte_swap_bug_triggering_selinux_avc_denial.patch
@@ -166,6 +163,9 @@ BuildRequires: nss-devel >= 3.13
 %if %{WITH_SYSVERTO}
 BuildRequires: libverto-devel
 %endif
+
+BuildRequires: nss_wrapper
+BuildRequires: socket_wrapper
 
 %description
 Kerberos V5 is a trusted-third-party network authentication system,
@@ -291,7 +291,7 @@ to obtain initial credentials from a KDC using a private key and a
 certificate.
 
 %prep
-%setup -q -n %{name}-%{version}%{prerelease} -a 3 -a 100 -a 102
+%setup -q -n %{name}-%{version}%{prerelease} -a 3
 ln NOTICE LICENSE
 
 %patch60 -p1 -b .pam
@@ -312,10 +312,6 @@ ln NOTICE LICENSE
 %patch129 -p1 -b .run_user_0
 
 %patch134 -p1 -b .kpasswdtest
-
-%if 0%{?fedora} >= 21 || 0%{?rhel} > 7
-%patch136 -p1
-%endif
 
 %patch140 -p1 -b .krb5-1.14-support-kdc_err_more_preauth_data_required
 %patch143 -p1 -b .krb5-tests_use_libs_from_build
@@ -339,10 +335,6 @@ touch -r $inldif 60kerberos.ldif
 pushd src
 ./util/reconf --verbose
 popd
-
-# Create build spaces for the test wrappers.
-mkdir -p nss_wrapper/build
-mkdir -p socket_wrapper/build
 
 # Mess with some of the default ports that we use for testing, so that multiple
 # builds going on the same host don't step on each other.
@@ -451,16 +443,6 @@ done
 pax -wv -x ustar build-pdf/*.pdf | xz -9 >"krb5-%{version}-pdf.pax.xz.new"
 # false
 
-# Build the test wrappers.
-pushd nss_wrapper/build
-cmake ..
-make
-popd
-pushd socket_wrapper/build
-cmake ..
-make
-popd
-
 # We need to cut off any access to locally-running nameservers, too.
 %{__cc} -fPIC -shared -o noport.so -Wall -Wextra $RPM_SOURCE_DIR/noport.c
 
@@ -472,13 +454,15 @@ if hostname | grep -q build ; then
 fi
 %endif
 
+mkdir nss_wrapper
+
 # Set things up to use the test wrappers.
 export NSS_WRAPPER_HOSTNAME=test.example.com
 export NSS_WRAPPER_HOSTS="$PWD/nss_wrapper/fakehosts"
 printf '127.0.0.1 %s %s %s %s\n' "$NSS_WRAPPER_HOSTNAME" "$NSS_WRAPPER_HOSTNAME" 'localhost' 'localhost' >"$NSS_WRAPPER_HOSTS"
 export NOPORT='53,111'
 export SOCKET_WRAPPER_DIR="$PWD/sockets" ; mkdir -p $SOCKET_WRAPPER_DIR
-export LD_PRELOAD="$PWD/noport.so:$PWD/nss_wrapper/build/src/libnss_wrapper.so:$PWD/socket_wrapper/build/src/libsocket_wrapper.so"
+export LD_PRELOAD="$PWD/noport.so:libnss_wrapper.so:libsocket_wrapper.so"
 
 # Run the test suite. We can't actually run the whole thing in the build
 # system, but we can at least run more than we used to.  The build system may
@@ -992,6 +976,10 @@ exit 0
 
 
 %changelog
+* Thu Jun 25 2015 Roland Mainz <rmainz@redhat.com> - 1.13.2-5
+- Use system nss_wrapper and socket_wrapper for testing.
+  Patch by Andreas Schneider <asn@redhat.com>
+
 * Thu Jun 25 2015 Roland Mainz <rmainz@redhat.com> - 1.13.2-4
 - Remove Zanata test glue and related workarounds
   - Bug #1234292 ("IPA server cannot be run in container due to incorrect /usr/sbin/_kadmind")
