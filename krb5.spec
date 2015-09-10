@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.2
-Release: 7%{?dist}
+Release: 8%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -51,8 +51,8 @@ Release: 7%{?dist}
 # remove, otherwise you can't go back or branch from a previous point)
 Source0: krb5-%{version}%{prerelease}.tar.gz
 Source1: krb5-%{version}%{prerelease}.tar.gz.asc
-# Use a dummy krb5-%{version}-pdf.pax.xz the first time through, then
-# $ pax -wv -x ustar build-pdf/*.pdf | xz -9 >"krb5-%{version}-pdf.pax.xz.new" #
+# Use a dummy krb5-foo-pdf.pax.xz the first time through, then
+# $ pax -wv -x ustar build-pdf/*.pdf | xz -9 >"krb5-foo-pdf.pax.xz.new" #
 # after the build phase finishes.
 Source3: krb5-%{version}%{prerelease}-pdf.pax.xz
 Source2: kprop.service
@@ -210,7 +210,7 @@ Summary: The KDC and related programs for Kerberos 5
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 Requires(post): chkconfig
 %if %{WITH_SYSTEMD}
-Requires(post): systemd-sysv
+#Requires(post): systemd-sysv
 Requires(post): systemd-units
 Requires(preun): systemd-units
 Requires(postun): systemd-units
@@ -633,6 +633,11 @@ done
 # since we don't have a man page for it, just drop it.
 rm -- "$RPM_BUILD_ROOT/%{_sbindir}/krb5-send-pr"
 
+# These files are already packaged elsewhere
+rm -- "$RPM_BUILD_ROOT/%{_docdir}/krb5-libs/examples/kdc.conf"
+rm -- "$RPM_BUILD_ROOT/%{_docdir}/krb5-libs/examples/krb5.conf"
+rm -- "$RPM_BUILD_ROOT/%{_docdir}/krb5-libs/examples/services.append"
+
 %find_lang %{gettext_domain}
 
 %clean
@@ -745,27 +750,6 @@ fi
 %endif
 exit 0
 
-%if %{WITH_SYSTEMD}
-%triggerun server -- krb5-server < 1.9.1-13
-# Save the current service runlevel info
-# User must manually run
-#  systemd-sysv-convert --apply krb5kdc
-#  systemd-sysv-convert --apply kadmin
-#  systemd-sysv-convert --apply kprop
-# to migrate them to systemd targets
-/usr/bin/systemd-sysv-convert --save krb5kdc >/dev/null 2>&1 ||:
-/usr/bin/systemd-sysv-convert --save kadmin >/dev/null 2>&1 ||:
-/usr/bin/systemd-sysv-convert --save kprop >/dev/null 2>&1 ||:
-
-# Run these because the SysV package being removed won't do them
-/sbin/chkconfig --del krb5kdc >/dev/null 2>&1 || :
-/sbin/chkconfig --del kadmin >/dev/null 2>&1 || :
-/sbin/chkconfig --del kprop >/dev/null 2>&1 || :
-/bin/systemctl try-restart krb5kdc.service >/dev/null 2>&1 || :
-/bin/systemctl try-restart kadmin.service >/dev/null 2>&1 || :
-/bin/systemctl try-restart kprop.service >/dev/null 2>&1 || :
-%endif
-
 %triggerun server -- krb5-server < 1.6.3-100
 if (( $2 == 0 )) ; then
 	/sbin/install-info --delete %{_infodir}/krb425.info.gz %{_infodir}/dir
@@ -777,6 +761,7 @@ exit 0
 %files workstation
 %defattr(-,root,root,-)
 %doc src/config-files/services.append
+%doc src/config-files/krb5.conf
 %doc build-html/*
 %doc build-pdf/user.pdf build-pdf/basic.pdf
 %attr(0755,root,root) %doc src/config-files/convert-config-files
@@ -812,6 +797,7 @@ exit 0
 %defattr(-,root,root,-)
 %docdir %{_mandir}
 %doc build-pdf/admin.pdf build-pdf/build.pdf
+%doc src/config-files/kdc.conf
 %if %{WITH_SYSTEMD}
 %{_unitdir}/krb5kdc.service
 %{_unitdir}/kadmin.service
@@ -993,6 +979,11 @@ exit 0
 
 
 %changelog
+* Thu Sep 10 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2-8
+- Remove dependency on systemd-sysv which is no longer needed for fedora > 20
+  This also fixes a fail-to-build issue.
+- Miscalaneous spec cleanup fixes
+
 * Thu Sep 10 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2-7
 - Support config snippets in /etc/krb5.conf.d/ and /usr/share/krb5.conf.d/
   (#1225792, #1146370, #1145808)
