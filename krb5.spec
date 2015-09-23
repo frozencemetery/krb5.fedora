@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.2
-Release: 9%{?dist}
+Release: 10%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -881,7 +881,6 @@ exit 0
 %dir /etc/gss
 %dir /etc/gss/mech.d
 %dir /etc/krb5.conf.d
-%dir /usr/share/krb5.conf.d
 %verify(not md5 size mtime) %config(noreplace) /etc/krb5.conf
 /%{_mandir}/man5/.k5identity.5*
 /%{_mandir}/man5/.k5login.5*
@@ -978,7 +977,11 @@ exit 0
 
 
 %changelog
-* Fri Sep 23 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2-9
+* Wed Sep 23 2015 Robbie Harwood <rharwood@redhat.co,> - 1.13.2-10
+- Whoops, forgot a step in the previous commit
+- Fix date on previous entry (though it would be nice if it were Friday)
+
+* Wed Sep 23 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2-9
 - Nix /usr/share/krb5.conf.d
 
 * Fri Sep 11 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2.7
