@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.2
-Release: 7%{?dist}
+Release: 9%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -490,9 +490,8 @@ mkdir -p $RPM_BUILD_ROOT%{_var}/kerberos/krb5/user
 mkdir -p $RPM_BUILD_ROOT/etc
 install -pm 644 %{SOURCE6} $RPM_BUILD_ROOT/etc/krb5.conf
 
-# krb5.conf has default include on these directores.
+# krb5.conf has default include on this directory.
 mkdir -p $RPM_BUILD_ROOT/etc/krb5.conf.d
-mkdir -p $RPM_BUILD_ROOT/usr/share/krb5.conf.d
 
 # Parent of configuration file for list of loadable GSS mechs ("mechs").  This
 # location is not relative to sysconfdir, but is hard-coded in g_initialize.c.
@@ -979,6 +978,9 @@ exit 0
 
 
 %changelog
+* Fri Sep 23 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2-9
+- Nix /usr/share/krb5.conf.d
+
 * Fri Sep 11 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2.7
 - Support config snippets in /etc/krb5.conf.d/ and /usr/share/krb5.conf.d/
   (#1225792, #1146370, #1145808)
