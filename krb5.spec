@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.2
-Release: 10%{?dist}
+Release: 11%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -51,10 +51,7 @@ Release: 10%{?dist}
 # remove, otherwise you can't go back or branch from a previous point)
 Source0: krb5-%{version}%{prerelease}.tar.gz
 Source1: krb5-%{version}%{prerelease}.tar.gz.asc
-# Use a dummy krb5-foo-pdf.pax.xz the first time through, then
-# $ pax -wv -x ustar build-pdf/*.pdf | xz -9 >"krb5-foo-pdf.pax.xz.new" #
-# after the build phase finishes.
-Source3: krb5-%{version}%{prerelease}-pdf.pax.xz
+Source3: krb5-%{version}%{prerelease}-pdfs.tar
 Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
@@ -98,14 +95,12 @@ License: MIT
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: autoconf, bison, cmake, flex, gawk, gettext, ksh, pax, pkgconfig, sed, xz 
+BuildRequires: autoconf, bison, cmake, flex, gawk, gettext, pkgconfig, sed
 %if 0%{?fedora} >= 12 || 0%{?rhel} >= 6
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
 %endif
 BuildRequires: gzip, ncurses-devel
 BuildRequires: python-sphinx, texlive-pdftex
-# The texlive package got a lot more complicated here.
-%if 0%{?fedora} > 17 || 0%{?rhel} > 6
 # Taken from \usepackage directives produced by sphinx:
 BuildRequires: tex(babel.sty)
 BuildRequires: tex(bookmark.sty)
@@ -123,32 +118,22 @@ BuildRequires: tex(titlesec.sty)
 BuildRequires: tex(threeparttable.sty)
 BuildRequires: tex(wrapfig.sty)
 BuildRequires: tex(report.cls)
-%else
-BuildRequires: texlive-texmf, texlive-texmf-latex
-%endif
+BuildRequires: tex(upquote.sty)
 # Typical fonts, and the commands which we need to have present.
 BuildRequires: texlive, texlive-latex, texlive-texmf-fonts
 BuildRequires: /usr/bin/pdflatex /usr/bin/makeindex
 BuildRequires: keyutils, keyutils-libs-devel >= 1.5.8
 BuildRequires: libselinux-devel
 BuildRequires: pam-devel
-%if %{WITH_SYSTEMD}
 BuildRequires: systemd-units
-%endif
 # For the test framework.
 BuildRequires: perl, dejagnu, tcl-devel
 BuildRequires: net-tools, rpcbind
-%if 0%{?fedora} >= 13 || 0%{?rhel} > 6
 BuildRequires: hostname
 BuildRequires: iproute
-%endif
-%if 0%{?fedora} >= 9
 BuildRequires: python-pyrad
-%endif
-%if 0%{?fedora} >= 8
 %ifarch %{ix86} x86_64
 BuildRequires: yasm
-%endif
 %endif
 
 %if %{WITH_LDAP}
@@ -176,9 +161,7 @@ practice of sending passwords over the network in unencrypted form.
 Summary: Development files needed to compile Kerberos 5 programs
 Group: Development/Libraries
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
-%if 0%{?fedora} >= 12 || 0%{?rhel} >= 6
 Requires: libcom_err-devel
-%endif
 Requires: keyutils-libs-devel, libselinux-devel
 Requires: libverto-devel
 
@@ -191,11 +174,6 @@ to install this package.
 %package libs
 Summary: The shared libraries used by Kerberos 5
 Group: System Environment/Libraries
-%if 0%{?rhel} == 6
-# Some of the older libsmbclient builds here incorrectly called
-# krb5_locate_kdc(), which was mistakenly exported in 1.9.
-Conflicts: libsmbclient < 3.5.10-124
-%endif
 Requires: coreutils, gawk, grep, sed
 Requires: keyutils-libs >= 1.5.8
 Requires: crypto-policies
@@ -210,16 +188,9 @@ Group: System Environment/Daemons
 Summary: The KDC and related programs for Kerberos 5
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 Requires(post): chkconfig
-%if %{WITH_SYSTEMD}
-#Requires(post): systemd-sysv
 Requires(post): systemd-units
 Requires(preun): systemd-units
 Requires(postun): systemd-units
-%else
-Requires(preun): chkconfig
-# portreserve is used by init scripts for kadmind, kpropd, and krb5kdc
-Requires: portreserve
-%endif
 Requires(post): initscripts
 Requires(postun): initscripts
 # we need 'status -l' to work, and that option was added in 8.99
@@ -231,11 +202,9 @@ Requires: logrotate
 Requires(preun): initscripts
 # we specify /usr/share/dict/words as the default dict_file in kdc.conf
 Requires: /usr/share/dict/words
-%if %{WITH_SYSVERTO}
 # for run-time, and for parts of the test suite
 BuildRequires: libverto-module-base
 Requires: libverto-module-base
-%endif
 
 %description server
 Kerberos is a network authentication system. The krb5-server package
@@ -268,24 +237,14 @@ package contains the basic Kerberos programs (kinit, klist, kdestroy,
 kpasswd). If your network uses Kerberos, this package should be
 installed on every workstation.
 
-%if 0%{?fedora} >= 17 || 0%{?rhel} > 6
 %package pkinit
-%else
-%package pkinit-openssl
-%endif
 Summary: The PKINIT module for Kerberos 5
 Group: System Environment/Libraries
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
-%if 0%{?fedora} >= 17 || 0%{?rhel} >= 6
 Obsoletes: krb5-pkinit-openssl < %{version}-%{release}
 Provides: krb5-pkinit-openssl = %{version}-%{release}
-%endif
 
-%if 0%{?fedora} >= 17 || 0%{?rhel} > 6
 %description pkinit
-%else
-%description pkinit-openssl
-%endif
 Kerberos is a network authentication system. The krb5-pkinit
 package contains the PKINIT plugin, which allows clients
 to obtain initial credentials from a KDC using a private key and a
@@ -440,8 +399,8 @@ sphinx-build -a -b latex -t pathsubs doc build-pdf
 for pdf in admin appdev basic build plugindev user ; do
 	test -s build-pdf/$pdf.pdf || make -C build-pdf
 done
-# new krb5-%{version}-pdf.pax.xz, see above
-pax -wv -x ustar build-pdf/*.pdf | xz -9 >"krb5-%{version}-pdf.pax.xz.new"
+# new krb5-%{version}-pdf
+tar -cf "krb5-%{version}-pdfs.tar.new" build-pdf/*.pdf
 # false
 
 # We need to cut off any access to locally-running nameservers, too.
@@ -511,7 +470,6 @@ grep default_ccache_name $RPM_BUILD_ROOT/etc/krb5.conf
 %endif
 
 # Server init scripts (krb5kdc,kadmind,kpropd) and their sysconfig files.
-%if %{WITH_SYSTEMD}
 mkdir -p $RPM_BUILD_ROOT%{_unitdir}
 for unit in \
 	%{SOURCE5}\
@@ -531,28 +489,6 @@ done
 mkdir -p $RPM_BUILD_ROOT/%{_tmpfilesdir}
 install -pm 644 %{SOURCE39} $RPM_BUILD_ROOT/%{_tmpfilesdir}/
 mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/run/krb5kdc
-%else
-mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
-for init in \
-	%{SOURCE36}\
-	%{SOURCE37} \
-	%{SOURCE38} ; do
-	# In the past, the init script was supposed to be named after the
-	# service that the started daemon provided.  Changing their names
-	# is an upgrade-time problem I'm in no hurry to deal with.
-	service=`basename ${init} .init`
-	install -pm 755 ${init} \
-	$RPM_BUILD_ROOT/etc/rc.d/init.d/${service%d}
-done
-# portreserve configuration files.
-mkdir -p $RPM_BUILD_ROOT/etc/portreserve
-for portreserve in \
-	%{SOURCE31} \
-	%{SOURCE32} ; do
-	install -pm 644 ${portreserve} \
-	$RPM_BUILD_ROOT/etc/portreserve/`basename ${portreserve} .portreserve`
-done
-%endif
 
 mkdir -p $RPM_BUILD_ROOT/etc/sysconfig
 for sysconfig in \
@@ -697,54 +633,30 @@ fi
 %post server
 # Remove the init script for older servers.
 [ -x /etc/rc.d/init.d/krb5server ] && /sbin/chkconfig --del krb5server
-%if %{WITH_SYSTEMD}
 if (( $1 == 1 )) ; then
     # Initial installation
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 fi
-%else
-# Install the new ones.
-/sbin/chkconfig --add krb5kdc
-/sbin/chkconfig --add kadmin
-/sbin/chkconfig --add kprop
-%endif
 exit 0
 
 %preun server
 if (( "$1" == 0 )) ; then
-%if %{WITH_SYSTEMD}
 	/bin/systemctl --no-reload disable krb5kdc.service > /dev/null 2>&1 || :
 	/bin/systemctl --no-reload disable kadmin.service > /dev/null 2>&1 || :
 	/bin/systemctl --no-reload disable kprop.service > /dev/null 2>&1 || :
 	/bin/systemctl stop krb5kdc.service > /dev/null 2>&1 || :
 	/bin/systemctl stop kadmin.service > /dev/null 2>&1 || :
 	/bin/systemctl stop kprop.service > /dev/null 2>&1 || :
-%else
-	/sbin/chkconfig --del krb5kdc
-	/sbin/chkconfig --del kadmin
-	/sbin/chkconfig --del kprop
-	/sbin/service krb5kdc stop > /dev/null 2>&1 || :
-	/sbin/service kadmin stop > /dev/null 2>&1 || :
-	/sbin/service kprop stop > /dev/null 2>&1 || :
-%endif
 fi
 exit 0
 
 %postun server
-%if %{WITH_SYSTEMD}
 /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 if (( $1 >= 1 )) ; then
 	/bin/systemctl try-restart krb5kdc.service >/dev/null 2>&1 || :
 	/bin/systemctl try-restart kadmin.service >/dev/null 2>&1 || :
 	/bin/systemctl try-restart kprop.service >/dev/null 2>&1 || :
 fi
-%else
-if (( $1 >= 1 )) ; then
-	/sbin/service krb5kdc condrestart > /dev/null 2>&1 || :
-	/sbin/service kadmin condrestart > /dev/null 2>&1 || :
-	/sbin/service kprop condrestart > /dev/null 2>&1 || :
-fi
-%endif
 exit 0
 
 %triggerun server -- krb5-server < 1.6.3-100
@@ -924,11 +836,7 @@ exit 0
 %{_libdir}/libverto.so.*
 %endif
 
-%if 0%{?fedora} >= 17 || 0%{?rhel} > 6
 %files pkinit
-%else
-%files pkinit-openssl
-%endif
 %defattr(-,root,root,-)
 %dir %{_libdir}/krb5
 %dir %{_libdir}/krb5/plugins
@@ -974,6 +882,10 @@ exit 0
 
 
 %changelog
+* Wed Sep 23 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2-11
+- Drop dependency on pax, ksh
+- Remove support for fedora < 20
+
 * Wed Sep 23 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2-10
 - Nix /usr/share/krb5.conf.d to reduce complexity
 
