@@ -1,0 +1,13 @@
+e2fsprogs in is missing a declaration for this function.  However, it is
+present as a symbol.  And we know its declaration internally.
+--- krb5/src/kadmin/cli/ss_wrapper.c	2015-09-23 20:51:05.843606511 +0000
++++ krb5/src/kadmin/cli/ss_wrapper.c	2015-09-23 20:52:03.783605671 +0000
+@@ -29,6 +29,8 @@
+ #include <ss/ss.h>
+ #include "kadmin.h"
+ 
++int ss_execute_command(int sci_idx, char **);
++
+ extern ss_request_table kadmin_cmds;
+ extern int exit_status;
+ extern char *whoami;

@@ -38,12 +38,12 @@
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 %endif
 
-%global prerelease %{nil}
+%global prerelease -alpha1
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.13.2
-Release: 11%{?dist}
+Version: 1.14
+Release: 1%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -75,21 +75,12 @@ Source39: krb5-krb5kdc.conf
 # Carry this locally until it's available in a packaged form.
 Source100: noport.c
 
-Patch6: krb5-1.12-ksu-path.patch
-Patch12: krb5-1.12-ktany.patch
 Patch16: krb5-1.12-buildconf.patch
 Patch23: krb5-1.3.1-dns.patch
-Patch39: krb5-1.12-api.patch
 Patch60: krb5-1.12.1-pam.patch
-Patch63: krb5-1.13-selinux-label.patch
-Patch71: krb5-1.13-dirsrv-accountlock.patch
-Patch86: krb5-1.9-debuginfo.patch
-Patch105: krb5-kvno-230379.patch
-Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
-Patch140: krb5-1.14-Support-KDC_ERR_MORE_PREAUTH_DATA_REQUIRED.patch
 Patch143: krb5-tests_use_libs_from_build.patch
-Patch144: krb5-1.13.3-bindresvport_sa_port_byte_swap_bug_triggering_selinux_avc_denial.patch
+Patch145: krb5-1.14-ss_execute_command-missing.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -255,27 +246,11 @@ certificate.
 ln NOTICE LICENSE
 
 %patch60 -p1 -b .pam
-
-%patch63 -p1 -b .selinux-label
-
-%patch6  -p1 -b .ksu-path
-%patch12 -p1 -b .ktany
 %patch16 -p1 -b .buildconf %{?_rawbuild}
 %patch23 -p1 -b .dns %{?_rawbuild}
-%patch39 -p1 -b .api
-%patch71 -p1 -b .dirsrv-accountlock %{?_rawbuild}
-%patch86 -p0 -b .debuginfo
-%patch105 -p1 -b .kvno
-
-# Apply when the hard-wired or configured default location is
-# DIR:/run/user/%%{uid}/krb5cc.
-%patch129 -p1 -b .run_user_0
-
 %patch134 -p1 -b .kpasswdtest
-
-%patch140 -p1 -b .krb5-1.14-support-kdc_err_more_preauth_data_required
 %patch143 -p1 -b .krb5-tests_use_libs_from_build
-%patch144 -p1 -b .krb5-1.13.3-bindresvport_sa_port_byte_swap_bug_triggering_selinux_avc_denial
+%patch145 -p1 -b .ss_execute_command
  
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -570,6 +545,9 @@ rm -- "$RPM_BUILD_ROOT/%{_sbindir}/krb5-send-pr"
 rm -- "$RPM_BUILD_ROOT/%{_docdir}/krb5-libs/examples/kdc.conf"
 rm -- "$RPM_BUILD_ROOT/%{_docdir}/krb5-libs/examples/krb5.conf"
 rm -- "$RPM_BUILD_ROOT/%{_docdir}/krb5-libs/examples/services.append"
+
+# This is needed only for tests
+rm -- "$RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/preauth/test.so"
 
 %find_lang %{gettext_domain}
 
@@ -882,6 +860,11 @@ exit 0
 
 
 %changelog
+* Wed Sep 23 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-1
+- New upstream version; krb5-1.14-alpha1
+- Drop patches that have since been applied
+- Work around an issue with ss_execute_command() not being available
+
 * Wed Sep 23 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2-11
 - Drop dependency on pax, ksh
 - Remove support for fedora < 20
