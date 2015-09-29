@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 1%{?dist}
+Release: 2%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -81,6 +81,7 @@ Patch60: krb5-1.12.1-pam.patch
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch143: krb5-tests_use_libs_from_build.patch
 Patch145: krb5-1.14-ss_execute_command-missing.patch
+Patch146: krb5-1.14-no_system_krb5_conf.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -251,7 +252,8 @@ ln NOTICE LICENSE
 %patch134 -p1 -b .kpasswdtest
 %patch143 -p1 -b .krb5-tests_use_libs_from_build
 %patch145 -p1 -b .ss_execute_command
- 
+%patch146 -p1 -b .no_system_krb5_conf
+
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
 
@@ -424,6 +426,9 @@ mkdir -p $RPM_BUILD_ROOT%{_var}/kerberos/krb5/user
 # Default configuration file for everything.
 mkdir -p $RPM_BUILD_ROOT/etc
 install -pm 644 %{SOURCE6} $RPM_BUILD_ROOT/etc/krb5.conf
+
+# Default include on this directory
+mkdir -p $RPM_BUILD_ROOT/etc/krb5.conf.d
 
 # Parent of configuration file for list of loadable GSS mechs ("mechs").  This
 # location is not relative to sysconfdir, but is hard-coded in g_initialize.c.
@@ -768,6 +773,7 @@ exit 0
 # These are hard-coded, not-dependent-on-the-configure-script paths.
 %dir /etc/gss
 %dir /etc/gss/mech.d
+%dir /etc/krb5.conf.d
 %verify(not md5 size mtime) %config(noreplace) /etc/krb5.conf
 /%{_mandir}/man5/.k5identity.5*
 /%{_mandir}/man5/.k5login.5*
@@ -860,6 +866,10 @@ exit 0
 
 
 %changelog
+* Tue Sep 29 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-2
+- Patch around bad system krb5.conf in test suite
+- Reinstate /etc/krb5.conf.d
+
 * Wed Sep 23 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-1
 - New upstream version; krb5-1.14-alpha1
 - Drop patches that have since been applied
