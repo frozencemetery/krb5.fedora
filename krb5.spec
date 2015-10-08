@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.2
-Release: 12%{?dist}
+Release: 13%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -91,6 +91,7 @@ Patch140: krb5-1.14-Support-KDC_ERR_MORE_PREAUTH_DATA_REQUIRED.patch
 Patch143: krb5-tests_use_libs_from_build.patch
 Patch144: krb5-1.13.3-bindresvport_sa_port_byte_swap_bug_triggering_selinux_avc_denial.patch
 Patch146: krb5-1.14-no_system_krb5_conf.patch
+Patch147: krb5-1.14-client_referral_principal.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -279,6 +280,8 @@ ln NOTICE LICENSE
 %patch146 -p1 -b .no_system_krb5_conf
 
 %patch144 -p1 -b .krb5-1.13.3-bindresvport_sa_port_byte_swap_bug_triggering_selinux_avc_denial
+
+%patch147 -p1 -b .client_referral_principal.patch
  
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -889,6 +892,9 @@ exit 0
 
 
 %changelog
+* Thu Oct 08 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2-13
+- Work around KDC client prinicipal in referrals issue (#1259844)
+
 * Thu Oct 01 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2-12
 - Enable building with bad system /etc/krb5.conf
 
