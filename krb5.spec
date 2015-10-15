@@ -38,12 +38,12 @@
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 %endif
 
-%global prerelease %{nil}
+%global prerelease -beta1
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.13.2
-Release: 13%{?dist}
+Version: 1.14
+Release: 1%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -84,14 +84,10 @@ Patch60: krb5-1.12.1-pam.patch
 Patch63: krb5-1.13-selinux-label.patch
 Patch71: krb5-1.13-dirsrv-accountlock.patch
 Patch86: krb5-1.9-debuginfo.patch
-Patch105: krb5-kvno-230379.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
-Patch140: krb5-1.14-Support-KDC_ERR_MORE_PREAUTH_DATA_REQUIRED.patch
 Patch143: krb5-tests_use_libs_from_build.patch
-Patch144: krb5-1.13.3-bindresvport_sa_port_byte_swap_bug_triggering_selinux_avc_denial.patch
 Patch146: krb5-1.14-no_system_krb5_conf.patch
-Patch147: krb5-1.14-client_referral_principal.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -267,7 +263,6 @@ ln NOTICE LICENSE
 %patch39 -p1 -b .api
 %patch71 -p1 -b .dirsrv-accountlock %{?_rawbuild}
 %patch86 -p0 -b .debuginfo
-%patch105 -p1 -b .kvno
 
 # Apply when the hard-wired or configured default location is
 # DIR:/run/user/%%{uid}/krb5cc.
@@ -275,14 +270,9 @@ ln NOTICE LICENSE
 
 %patch134 -p1 -b .kpasswdtest
 
-%patch140 -p1 -b .krb5-1.14-support-kdc_err_more_preauth_data_required
 %patch143 -p1 -b .krb5-tests_use_libs_from_build
 %patch146 -p1 -b .no_system_krb5_conf
 
-%patch144 -p1 -b .krb5-1.13.3-bindresvport_sa_port_byte_swap_bug_triggering_selinux_avc_denial
-
-%patch147 -p1 -b .client_referral_principal.patch
- 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
 
@@ -579,6 +569,9 @@ rm -- "$RPM_BUILD_ROOT/%{_sbindir}/krb5-send-pr"
 rm -- "$RPM_BUILD_ROOT/%{_docdir}/krb5-libs/examples/kdc.conf"
 rm -- "$RPM_BUILD_ROOT/%{_docdir}/krb5-libs/examples/krb5.conf"
 rm -- "$RPM_BUILD_ROOT/%{_docdir}/krb5-libs/examples/services.append"
+
+# This is only needed for tests
+rm -- "$RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/preauth/test.so"
 
 %find_lang %{gettext_domain}
 
@@ -892,6 +885,9 @@ exit 0
 
 
 %changelog
+* Thu Oct 15 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-beta1-1
+- New upstream beta version
+
 * Thu Oct 08 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2-13
 - Work around KDC client prinicipal in referrals issue (#1259844)
 
