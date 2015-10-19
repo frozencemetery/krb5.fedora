@@ -1,0 +1,18 @@
+On x86 rawhide, usage of OFD locks causes deadlock in the test suite.
+TEMPORARILY revert their usage until I can investigate the deeper issue with
+their usage here.
+
+diff --git a/src/lib/krb5/os/lock_file.c b/src/lib/krb5/os/lock_file.c
+index a2f247c..f7f5bb4 100644
+--- a/src/lib/krb5/os/lock_file.c
++++ b/src/lib/krb5/os/lock_file.c
+@@ -68,7 +68,8 @@
+ static int
+ ofdlock(int fd, int cmd, struct flock *lock_arg)
+ {
+-#ifdef F_OFD_SETLKW
++#if 0
++/* #ifdef F_OFD_SETLKW */
+     int st, ofdcmd;
+ 
+     assert(cmd == F_SETLKW || cmd == F_SETLK);

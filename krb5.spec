@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 1%{?dist}
+Release: 2%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -88,6 +88,7 @@ Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch143: krb5-tests_use_libs_from_build.patch
 Patch146: krb5-1.14-no_system_krb5_conf.patch
+Patch148: krb5-disable_ofd_locks.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -272,6 +273,7 @@ ln NOTICE LICENSE
 
 %patch143 -p1 -b .krb5-tests_use_libs_from_build
 %patch146 -p1 -b .no_system_krb5_conf
+%patch148 -p1 -b .disable_ofd_locks
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -885,6 +887,9 @@ exit 0
 
 
 %changelog
+* Mon Oct 19 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-beta1-2
+- TEMPORARILY disable usage of OFD locks as a workaround for x86
+
 * Thu Oct 15 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-beta1-1
 - New upstream beta version
 
