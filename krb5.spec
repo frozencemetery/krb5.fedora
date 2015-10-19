@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 2%{?dist}
+Release: 3%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -450,6 +450,7 @@ install -pm 644 %{SOURCE6} $RPM_BUILD_ROOT/etc/krb5.conf
 
 # Default include on this directory
 mkdir -p $RPM_BUILD_ROOT/etc/krb5.conf.d
+ln -sv /etc/crypto-policies/back-ends/krb5.conf $RPM_BUILD_ROOT/etc/krb5.conf.d/crypto-policies
 
 # Parent of configuration file for list of loadable GSS mechs ("mechs").  This
 # location is not relative to sysconfdir, but is hard-coded in g_initialize.c.
@@ -796,6 +797,7 @@ exit 0
 %dir /etc/gss/mech.d
 %dir /etc/krb5.conf.d
 %verify(not md5 size mtime) %config(noreplace) /etc/krb5.conf
+%config(noreplace) /etc/krb5.conf.d/crypto-policies
 /%{_mandir}/man5/.k5identity.5*
 /%{_mandir}/man5/.k5login.5*
 /%{_mandir}/man5/k5identity.5*
@@ -887,6 +889,9 @@ exit 0
 
 
 %changelog
+* Mon Oct 19 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-beta1-3
+- Start using crypto-policies
+
 * Mon Oct 19 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-beta1-2
 - TEMPORARILY disable usage of OFD locks as a workaround for x86
 
