@@ -1,0 +1,24 @@
+From eb7aa0386f60496aabcb1f30893649bb6599d6d1 Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Thu, 22 Oct 2015 14:27:33 -0400
+Subject: [PATCH] Ensure pwsize is initialized
+
+---
+ src/lib/kadm5/chpass_util.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/lib/kadm5/chpass_util.c b/src/lib/kadm5/chpass_util.c
+index 408b0eb..02305be 100644
+--- a/src/lib/kadm5/chpass_util.c
++++ b/src/lib/kadm5/chpass_util.c
+@@ -74,6 +74,7 @@ kadm5_ret_t _kadm5_chpass_principal_util(void *server_handle,
+     if (ret_pw)
+         *ret_pw = NULL;
+ 
++    pwsize = 0;
+     if (new_pw != NULL) {
+         new_password = new_pw;
+     } else { /* read the password */
+-- 
+2.6.1
+

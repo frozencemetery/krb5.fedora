@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 4%{?dist}
+Release: 5%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -89,6 +89,7 @@ Patch134: krb5-1.11-kpasswdtest.patch
 Patch143: krb5-tests_use_libs_from_build.patch
 Patch146: krb5-1.14-no_system_krb5_conf.patch
 Patch148: krb5-disable_ofd_locks.patch
+Patch149: krb5-1.14-pwsize_initialize.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -274,6 +275,7 @@ ln NOTICE LICENSE
 %patch143 -p1 -b .krb5-tests_use_libs_from_build
 %patch146 -p1 -b .no_system_krb5_conf
 %patch148 -p1 -b .disable_ofd_locks
+%patch149 -p1 -b .pwsize_initialize
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -889,6 +891,9 @@ exit 0
 
 
 %changelog
+* Thu Oct 22 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-beta1-5
+- Ensure pwsize is initialized in chpass_util.c
+
 * Thu Oct 22 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-beta1-4
 - Fix typo of crypto-policies file in previous version
 
