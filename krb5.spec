@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.2
-Release: 11%{?dist}
+Release: 12%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -94,6 +94,10 @@ Patch140: krb5-1.14-Support-KDC_ERR_MORE_PREAUTH_DATA_REQUIRED.patch
 Patch143: krb5-tests_use_libs_from_build.patch
 Patch144: krb5-1.13.3-bindresvport_sa_port_byte_swap_bug_triggering_selinux_avc_denial.patch
 Patch146: krb5-1.14-client_referral_principal.patch
+Patch150: krb5-CVE-2015-2695-SPNEGO_aliasing.patch
+Patch151: krb5-CVE-2015-2696-IAKERB_aliasing.patch
+Patch152: krb5-CVE-2015-2697-build_principal_memory.patch
+
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -318,6 +322,10 @@ ln NOTICE LICENSE
 %patch143 -p1 -b .krb5-tests_use_libs_from_build
 %patch144 -p1 -b .krb5-1.13.3-bindresvport_sa_port_byte_swap_bug_triggering_selinux_avc_denial
 %patch146 -p1 -b .client_referral_principal.patch
+
+%patch150 -p1 -b .CVE-2015-2695-SPNEGO_aliasing
+%patch151 -p1 -b .CVE-2015-2696-IAKERB_aliasing
+%patch152 -p1 -b .CVE-2015-2697-build_principal_memory
  
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -979,6 +987,9 @@ exit 0
 
 
 %changelog
+* Tue Oct 27 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2-12
+- Fix CVE-2015-2695, CVE-2015-2696, CVE-2015-2697
+
 * Thu Oct 08 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2-11
 - Fix an issue with kdc client principals on referrals (#1259844)
 
