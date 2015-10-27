@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.2
-Release: 17%{?dist}
+Release: 18%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -136,6 +136,9 @@ Patch324: krb5_cve_2014_9421_2014_9422_2014_9423_2014_5352_krb5-1.12.2-final.pat
 Patch325: 0001-Allow-SPNEGO-fallback-to-NTLM-without-mechlistMIC.patch
 Patch326: krb5-1.12.1-CVE_2014_5355_fix_krb5_read_message_handling.patch
 Patch327: krb5-1.13.2-CVE_2015_2694_requires_preauth_bypass_in_PKINIT_enabled_KDC.patch
+Patch150: krb5-CVE-2015-2695-SPNEGO_aliasing.patch
+Patch151: krb5-CVE-2015-2696-IAKERB_aliasing.patch
+Patch152: krb5-CVE-2015-2697-build_principal_memory.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -411,6 +414,10 @@ chmod u+x src/util/paste-kdcproxy.py
 %patch326 -p1 -b .krb5-1.12.1-cve_2014_5355_fix_krb5_read_message_handling
 %patch327 -p1 -b .krb5-1.13.2-cve_2015_2694_requires_preauth_bypass_in_pkinit_enabled_kdc
 
+%patch150 -p1 -b .CVE-2015-2695-SPNEGO_aliasing
+%patch151 -p1 -b .CVE-2015-2696-IAKERB_aliasing
+%patch152 -p1 -b .CVE-2015-2697-build_principal_memory
+ 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
 
@@ -1089,6 +1096,9 @@ exit 0
 
 
 %changelog
+* Tue Oct 27 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2-18
+- Fix CVE-2015-2695, CVE-2015-2696, CVE-2015-2697
+
 * Mon May 4 2015 Roland Mainz <rmainz@redhat.com> - 1.12.2-17
 - fix for CVE-2015-2694 (#1216133) "requires_preauth bypass
   in PKINIT-enabled KDC".
