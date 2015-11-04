@@ -41,7 +41,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.12.2
-Release: 18%{?dist}
+Release: 19%{?dist}
 # Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.12/krb5-1.12.2-signed.tar
 Source0: krb5-%{version}.tar.gz
@@ -139,6 +139,7 @@ Patch327: krb5-1.13.2-CVE_2015_2694_requires_preauth_bypass_in_PKINIT_enabled_KD
 Patch150: krb5-CVE-2015-2695-SPNEGO_aliasing.patch
 Patch151: krb5-CVE-2015-2696-IAKERB_aliasing.patch
 Patch152: krb5-CVE-2015-2697-build_principal_memory.patch
+Patch153: krb5-CVE-2015-2698-fix_iakerb_spnego.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -417,7 +418,8 @@ chmod u+x src/util/paste-kdcproxy.py
 %patch150 -p1 -b .CVE-2015-2695-SPNEGO_aliasing
 %patch151 -p1 -b .CVE-2015-2696-IAKERB_aliasing
 %patch152 -p1 -b .CVE-2015-2697-build_principal_memory
- 
+%patch153 -p1 -b .CVE-2015-2698-fix_iakerb_spnego
+
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
 
@@ -1096,7 +1098,10 @@ exit 0
 
 
 %changelog
-* Tue Oct 27 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2-18
+* Wed Nov 04 2015 Robbie Harwood <rharwood@redhat.com> - 1.12.2-19
+- Patch CVE-2015-2698
+
+* Tue Oct 27 2015 Robbie Harwood <rharwood@redhat.com> - 1.12.2-18
 - Fix CVE-2015-2695, CVE-2015-2696, CVE-2015-2697
 
 * Mon May 4 2015 Roland Mainz <rmainz@redhat.com> - 1.12.2-17
