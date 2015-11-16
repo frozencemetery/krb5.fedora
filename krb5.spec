@@ -38,12 +38,12 @@
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 %endif
 
-%global prerelease -beta1
+%global prerelease -beta2
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 7%{?dist}
+Release: 8%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -86,14 +86,8 @@ Patch71: krb5-1.13-dirsrv-accountlock.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
-Patch143: krb5-tests_use_libs_from_build.patch
-Patch146: krb5-1.14-no_system_krb5_conf.patch
 Patch148: krb5-disable_ofd_locks.patch
 Patch149: krb5-1.14-pwsize_initialize.patch
-Patch150: krb5-CVE-2015-2695-SPNEGO_aliasing.patch
-Patch151: krb5-CVE-2015-2696-IAKERB_aliasing.patch
-Patch152: krb5-CVE-2015-2697-build_principal_memory.patch
-Patch153: krb5-CVE-2015-2698-fix_iakerb_spnego.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -276,15 +270,8 @@ ln NOTICE LICENSE
 
 %patch134 -p1 -b .kpasswdtest
 
-%patch143 -p1 -b .krb5-tests_use_libs_from_build
-%patch146 -p1 -b .no_system_krb5_conf
 %patch148 -p1 -b .disable_ofd_locks
 %patch149 -p1 -b .pwsize_initialize
-
-%patch150 -p1 -b .CVE-2015-2695-SPNEGO_aliasing
-%patch151 -p1 -b .CVE-2015-2696-IAKERB_aliasing
-%patch152 -p1 -b .CVE-2015-2697-build_principal_memory
-%patch153 -p1 -b .CVE-2015-2698-fix_iakerb_spnego
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -900,6 +887,9 @@ exit 0
 
 
 %changelog
+* Mon Nov 16 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-beta2-8
+- New upstream beta version
+
 * Wed Nov 04 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-beta1-7
 - Patch CVE-2015-2698
 
