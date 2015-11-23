@@ -1,49 +1,26 @@
 %global WITH_LDAP 1
 %global WITH_DIRSRV 1
-%if 0%{?fedora} >= 17 || 0%{?rhel} > 6
+
 # These next two *will* change.
 %global WITH_OPENSSL 1
 %global WITH_NSS 0
-%global WITH_SYSVERTO 1
-%else
-%global WITH_OPENSSL 1
-%global WITH_NSS 0
-%global WITH_SYSVERTO 0
-%endif
-# The "move everything to /usr" feature landed in Fedora 17, but we didn't
-# catch up until the Fedora 18 development cycle, at which point we found
-# that some packages were hard-coding paths.
-%if 0%{?fedora} > 17 || 0%{?rhel} > 6
-%global separate_usr 0
-%else
-%global separate_usr 1
-%endif
-# Systemd landed in Fedora 15, but this package was cut over for Fedora 16.
-%if 0%{?fedora} >= 16 || 0%{?rhel} > 6
+
 %global WITH_SYSTEMD 1
-%else
-%global WITH_SYSTEMD 0
-%endif
+
 # Set this so that find-lang.sh will recognize the .po files.
 %global gettext_domain mit-krb5
 # Guess where the -libs subpackage's docs are going to go.
 %define libsdocdir %{?_pkgdocdir:%(echo %{_pkgdocdir} | sed -e s,krb5,krb5-libs,g)}%{!?_pkgdocdir:%{_docdir}/%{name}-libs-%{version}}
 # Figure out where the default ccache lives and how we set it.
-%if 0%{?fedora} > 18 && 0%{?fedora} < 20
-%global compile_default_ccache_name 1
-%global compiled_default_ccache_name DIR:/run/user/%%{uid}/krb5cc
-%endif
-%if 0%{?fedora} >= 20 || 0%{?rhel} > 6
 %global configure_default_ccache_name 1
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
-%endif
 
-%global prerelease -beta2
+%global prerelease %{nil}
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 8%{?dist}
+Release: 9%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -94,9 +71,7 @@ URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, bison, cmake, flex, gawk, gettext, pkgconfig, sed
-%if 0%{?fedora} >= 12 || 0%{?rhel} >= 6
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
-%endif
 BuildRequires: gzip, ncurses-devel
 BuildRequires: python-sphinx, texlive-pdftex
 # Taken from \usepackage directives produced by sphinx:
@@ -130,6 +105,7 @@ BuildRequires: net-tools, rpcbind
 BuildRequires: hostname
 BuildRequires: iproute
 BuildRequires: python-pyrad
+BuildRequires: libverto-devel
 %ifarch %{ix86} x86_64
 BuildRequires: yasm
 %endif
@@ -142,9 +118,6 @@ BuildRequires: openssl-devel >= 0.9.8
 %endif
 %if %{WITH_NSS}
 BuildRequires: nss-devel >= 3.13
-%endif
-%if %{WITH_SYSVERTO}
-BuildRequires: libverto-devel
 %endif
 
 BuildRequires: nss_wrapper
@@ -332,11 +305,7 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	CC="%{__cc}" \
 	CFLAGS="$CFLAGS" \
 	CPPFLAGS="$CPPFLAGS" \
-%if 0%{?fedora} >= 7 || 0%{?rhel} >= 6
 	SS_LIB="-lss" \
-%else
-	SS_LIB="-lss -lncurses" \
-%endif
 	--enable-shared \
 	--localstatedir=%{_var}/kerberos \
 	--disable-rpath \
@@ -365,11 +334,7 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--with-crypto-impl=nss \
 	--without-tls-impl \
 %endif
-%if %{WITH_SYSVERTO}
 	--with-system-verto \
-%else
-	--without-system-verto \
-%endif
 	--with-pam \
 	--with-selinux
 # Now build it.
@@ -538,23 +503,6 @@ if [[ "$(< $RPM_BUILD_ROOT%{_bindir}/krb5-config )" == *redhat-hardened-ld* ]] ;
 	printf '# redhat-hardened-ld for krb5-config failed' 1>&2
 	exit 1
 fi
-
-%if %{separate_usr}
-# Move specific libraries from %%{_libdir} to /%%{_lib}, and fixup the symlinks.
-touch $RPM_BUILD_ROOT/rootfile
-rellibdir=..
-while ! test -r $RPM_BUILD_ROOT/%{_libdir}/${rellibdir}/rootfile ; do
-	rellibdir=../${rellibdir}
-done
-rm -f -- "$RPM_BUILD_ROOT/rootfile"
-mkdir -p $RPM_BUILD_ROOT/%{_lib}
-for library in libgssapi_krb5 libgssrpc libk5crypto libkrb5 libkrb5support ; do
-	mv $RPM_BUILD_ROOT/%{_libdir}/${library}.so.* $RPM_BUILD_ROOT/%{_lib}/
-	pushd $RPM_BUILD_ROOT/%{_libdir}
-	ln -fs ${rellibdir}/%{_lib}/${library}.so.*.* ${library}.so
-	popd
-done
-%endif
 
 # Install processed man pages.
 for section in 1 5 8 ; do
@@ -801,26 +749,15 @@ exit 0
 /%{_mandir}/man5/k5identity.5*
 /%{_mandir}/man5/k5login.5*
 /%{_mandir}/man5/krb5.conf.5*
-%if %{separate_usr}
-/%{_lib}/libgssapi_krb5.so.*
-/%{_lib}/libgssrpc.so.*
-/%{_lib}/libk5crypto.so.*
-%else
 %{_libdir}/libgssapi_krb5.so.*
 %{_libdir}/libgssrpc.so.*
 %{_libdir}/libk5crypto.so.*
-%endif
 %{_libdir}/libkadm5clnt_mit.so.*
 %{_libdir}/libkadm5srv_mit.so.*
 %{_libdir}/libkdb5.so.*
 %{_libdir}/libkrad.so.*
-%if %{separate_usr}
-/%{_lib}/libkrb5.so.*
-/%{_lib}/libkrb5support.so.*
-%else
 %{_libdir}/libkrb5.so.*
 %{_libdir}/libkrb5support.so.*
-%endif
 %dir %{_libdir}/krb5
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/*
@@ -831,15 +768,6 @@ exit 0
 %dir %{_var}/kerberos
 %dir %{_var}/kerberos/krb5
 %dir %{_var}/kerberos/krb5/user
-%if ! %{WITH_SYSVERTO}
-%{_libdir}/libverto-k5ev.so
-%{_libdir}/libverto-k5ev.so.*
-# These really shouldn't be here, but until we have a system copy of libverto,
-# don't force people who are using libverto to install the KDC just to get the
-# shared library.  Not that there are any development headers, but anyway.
-%{_libdir}/libverto.so
-%{_libdir}/libverto.so.*
-%endif
 
 %files pkinit
 %defattr(-,root,root,-)
@@ -887,6 +815,10 @@ exit 0
 
 
 %changelog
+* Mon Nov 23 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-9
+- Upstream release.  No actual change from beta, just version bump
+- Clean up unused parts of spec file
+
 * Mon Nov 16 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-beta2-8
 - New upstream beta version
 
