@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 9%{?dist}
+Release: 10%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -380,7 +380,7 @@ mkdir nss_wrapper
 # Set things up to use the test wrappers.
 export NSS_WRAPPER_HOSTNAME=test.example.com
 export NSS_WRAPPER_HOSTS="$PWD/nss_wrapper/fakehosts"
-printf '127.0.0.1 %s %s %s %s\n' "$NSS_WRAPPER_HOSTNAME" "$NSS_WRAPPER_HOSTNAME" 'localhost' 'localhost' >"$NSS_WRAPPER_HOSTS"
+echo "127.0.0.1 $NSS_WRAPPER_HOSTNAME localhost" > $NSS_WRAPPER_HOSTS
 export NOPORT='53,111'
 export SOCKET_WRAPPER_DIR="$PWD/sockets" ; mkdir -p $SOCKET_WRAPPER_DIR
 export LD_PRELOAD="$PWD/noport.so:libnss_wrapper.so:libsocket_wrapper.so"
@@ -815,6 +815,9 @@ exit 0
 
 
 %changelog
+* Tue Nov 24 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-10
+- Fix FTBFS by no longer working around bug in nss_wrapper
+
 * Mon Nov 23 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-9
 - Upstream release.  No actual change from beta, just version bump
 - Clean up unused parts of spec file
