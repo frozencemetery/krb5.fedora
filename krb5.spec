@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 2%{?dist}
+Release: 3%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -64,7 +64,7 @@ Patch86: krb5-1.9-debuginfo.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch148: krb5-disable_ofd_locks.patch
-Patch149: krb5-1.14-pwsize_initialize.patch
+Patch150: krb5-fix_interposer.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -244,7 +244,7 @@ ln NOTICE LICENSE
 %patch134 -p1 -b .kpasswdtest
 
 %patch148 -p1 -b .disable_ofd_locks
-%patch149 -p1 -b .pwsize_initialize
+%patch150 -p1 -b .fix_interposer
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -380,7 +380,7 @@ mkdir nss_wrapper
 # Set things up to use the test wrappers.
 export NSS_WRAPPER_HOSTNAME=test.example.com
 export NSS_WRAPPER_HOSTS="$PWD/nss_wrapper/fakehosts"
-printf '127.0.0.1 %s %s %s %s\n' "$NSS_WRAPPER_HOSTNAME" "$NSS_WRAPPER_HOSTNAME" 'localhost' 'localhost' >"$NSS_WRAPPER_HOSTS"
+echo "127.0.0.1 $NSS_WRAPPER_HOSTNAME localhost" > $NSS_WRAPPER_HOSTS
 export NOPORT='53,111'
 export SOCKET_WRAPPER_DIR="$PWD/sockets" ; mkdir -p $SOCKET_WRAPPER_DIR
 export LD_PRELOAD="$PWD/noport.so:libnss_wrapper.so:libsocket_wrapper.so"
@@ -815,6 +815,12 @@ exit 0
 
 
 %changelog
+* Thu Dec 10 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-3
+- Backport patch to fix interposer
+- Fix FTBFS by removing workaround for a now-gone cwrap bug
+- Drop pwsize initialization patch
+- Resolves: #1284985
+
 * Mon Nov 23 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-2
 - Actually include the patches we use
 
