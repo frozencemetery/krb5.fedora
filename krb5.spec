@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 11%{?dist}
+Release: 12%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -65,6 +65,7 @@ Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch148: krb5-disable_ofd_locks.patch
 Patch150: krb5-fix_interposer.patch
+Patch151: krb5-mechglue_inqure_attrs.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -246,6 +247,7 @@ ln NOTICE LICENSE
 %patch148 -p1 -b .disable_ofd_locks
 
 %patch150 -p1 -b .fix_interposer
+%patch151 -p1 -b .mechglue_inqure_attrs
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -816,6 +818,9 @@ exit 0
 
 
 %changelog
+* Wed Dec 16 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-12
+- Backport patch to fix mechglue for gss_inqure_attrs_for_mech()
+
 * Thu Dec 03 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-11
 - Backport interposer fix (#1284985)
 - Drop workaround pwsize initialization patch (gcc has been fixed)
