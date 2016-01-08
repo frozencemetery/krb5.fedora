@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 12%{?dist}
+Release: 13%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -66,6 +66,7 @@ Patch134: krb5-1.11-kpasswdtest.patch
 Patch148: krb5-disable_ofd_locks.patch
 Patch150: krb5-fix_interposer.patch
 Patch151: krb5-mechglue_inqure_attrs.patch
+Patch152: krb5-init_context_null_spnego.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -248,6 +249,7 @@ ln NOTICE LICENSE
 
 %patch150 -p1 -b .fix_interposer
 %patch151 -p1 -b .mechglue_inqure_attrs
+%patch152 -p1 -b .init_context_null_spnego
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -818,6 +820,10 @@ exit 0
 
 
 %changelog
+* Fri Jan 08 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-13
+- Backport fix for chrome crash in spnego_gss_inquire_context
+- Resolves: #1295893
+
 * Wed Dec 16 2015 Robbie Harwood <rharwood@redhat.com> - 1.14-12
 - Backport patch to fix mechglue for gss_inqure_attrs_for_mech()
 
