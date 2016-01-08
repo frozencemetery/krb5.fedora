@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.2
-Release: 10%{?dist}
+Release: 11%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -98,7 +98,7 @@ Patch150: krb5-CVE-2015-2695-SPNEGO_aliasing.patch
 Patch151: krb5-CVE-2015-2696-IAKERB_aliasing.patch
 Patch152: krb5-CVE-2015-2697-build_principal_memory.patch
 Patch153: krb5-CVE-2015-2698-fix_iakerb_spnego.patch
-
+Patch155: krb5-init_context_null_spnego.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -329,6 +329,8 @@ ln NOTICE LICENSE
 %patch152 -p1 -b .CVE-2015-2697-build_principal_memory
 %patch153 -p1 -b .CVE-2015-2698-fix_iakerb_spnego
 
+%patch155 -p1 -b .init_context_null_spnego
+
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
 
@@ -471,7 +473,7 @@ mkdir nss_wrapper
 # Set things up to use the test wrappers.
 export NSS_WRAPPER_HOSTNAME=test.example.com
 export NSS_WRAPPER_HOSTS="$PWD/nss_wrapper/fakehosts"
-printf '127.0.0.1 %s %s %s %s\n' "$NSS_WRAPPER_HOSTNAME" "$NSS_WRAPPER_HOSTNAME" 'localhost' 'localhost' >"$NSS_WRAPPER_HOSTS"
+echo "127.0.0.1 $NSS_WRAPPER_HOSTNAME localhost" > $NSS_WRAPPER_HOSTS
 export NOPORT='53,111'
 export SOCKET_WRAPPER_DIR="$PWD/sockets" ; mkdir -p $SOCKET_WRAPPER_DIR
 export LD_PRELOAD="$PWD/noport.so:libnss_wrapper.so:libsocket_wrapper.so"
@@ -992,6 +994,11 @@ exit 0
 
 
 %changelog
+* Fri Jan 08 2016 Robbie Harwood <rharwood@redhat.com> - 1.13.2-11
+- Backport fix for Chrome crash in spnego_gss_inquire_context()
+- Update build process for new nss_wrapper version
+- Resolves: #1295893
+
 * Wed Nov 04 2015 Robbie Harwood <rharwood@redhat.com> - 1.13.2-10
 - Patch CVE-2015-2698
 
