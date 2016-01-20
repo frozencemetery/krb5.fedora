@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 14%{?dist}
+Release: 15%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -562,30 +562,15 @@ fi
 %post server
 # Remove the init script for older servers.
 [ -x /etc/rc.d/init.d/krb5server ] && /sbin/chkconfig --del krb5server
-if (( $1 == 1 )) ; then
-    # Initial installation
-    /bin/systemctl daemon-reload >/dev/null 2>&1 || :
-fi
+%systemd_post krb5kdc.service kadmin.service kprop.service
 exit 0
 
 %preun server
-if (( "$1" == 0 )) ; then
-	/bin/systemctl --no-reload disable krb5kdc.service > /dev/null 2>&1 || :
-	/bin/systemctl --no-reload disable kadmin.service > /dev/null 2>&1 || :
-	/bin/systemctl --no-reload disable kprop.service > /dev/null 2>&1 || :
-	/bin/systemctl stop krb5kdc.service > /dev/null 2>&1 || :
-	/bin/systemctl stop kadmin.service > /dev/null 2>&1 || :
-	/bin/systemctl stop kprop.service > /dev/null 2>&1 || :
-fi
+%systemd_preun krb5kdc.service kadmin.service kprop.service
 exit 0
 
 %postun server
-/bin/systemctl daemon-reload >/dev/null 2>&1 || :
-if (( $1 >= 1 )) ; then
-	/bin/systemctl try-restart krb5kdc.service >/dev/null 2>&1 || :
-	/bin/systemctl try-restart kadmin.service >/dev/null 2>&1 || :
-	/bin/systemctl try-restart kprop.service >/dev/null 2>&1 || :
-fi
+%systemd_postun_with_restart krb5kdc.service kadmin.service kprop.service
 exit 0
 
 %triggerun server -- krb5-server < 1.6.3-100
@@ -781,6 +766,10 @@ exit 0
 
 
 %changelog
+* Wed Jan 20 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-15
+- Use "new" systemd macros for service handling.  (Thanks vpavlin!)
+- Resolves: #850399
+
 * Wed Jan 20 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-14
 - Remove WITH_NSS macro (always false)
 - Remove WITH_SYSTEMD macro (always true)
