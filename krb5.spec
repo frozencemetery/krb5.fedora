@@ -1,11 +1,4 @@
-%global WITH_LDAP 1
 %global WITH_DIRSRV 1
-
-# These next two *will* change.
-%global WITH_OPENSSL 1
-%global WITH_NSS 0
-
-%global WITH_SYSTEMD 1
 
 # Set this so that find-lang.sh will recognize the .po files.
 %global gettext_domain mit-krb5
@@ -20,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 13%{?dist}
+Release: 14%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -108,18 +101,11 @@ BuildRequires: hostname
 BuildRequires: iproute
 BuildRequires: python-pyrad
 BuildRequires: libverto-devel
+BuildRequires: openldap-devel
+BuildRequires: openssl-devel >= 0.9.8
+
 %ifarch %{ix86} x86_64
 BuildRequires: yasm
-%endif
-
-%if %{WITH_LDAP}
-BuildRequires: openldap-devel
-%endif
-%if %{WITH_OPENSSL} || %{WITH_NSS}
-BuildRequires: openssl-devel >= 0.9.8
-%endif
-%if %{WITH_NSS}
-BuildRequires: nss-devel >= 3.13
 %endif
 
 BuildRequires: nss_wrapper
@@ -320,25 +306,13 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--with-netlib=-lresolv \
 	--with-tcl \
 	--enable-dns-for-realm \
-%if %{WITH_LDAP}
 	--with-ldap \
 %if %{WITH_DIRSRV}
 	--with-dirsrv-account-locking \
 %endif
-%endif
-%if %{WITH_OPENSSL} || %{WITH_NSS}
 	--enable-pkinit \
-%else
-	--disable-pkinit \
-%endif
-%if %{WITH_OPENSSL}
 	--with-pkinit-crypto-impl=openssl \
 	--with-tls-impl=openssl \
-%endif
-%if %{WITH_NSS}
-	--with-crypto-impl=nss \
-	--without-tls-impl \
-%endif
 	--with-system-verto \
 	--with-pam \
 	--with-selinux
@@ -367,7 +341,6 @@ for pdf in admin appdev basic build plugindev user ; do
 done
 # new krb5-%{version}-pdf
 tar -cf "krb5-%{version}-pdfs.tar.new" build-pdf/*.pdf
-# false
 
 # We need to cut off any access to locally-running nameservers, too.
 %{__cc} -fPIC -shared -o noport.so -Wall -Wextra $RPM_SOURCE_DIR/noport.c
@@ -663,19 +636,11 @@ exit 0
 %docdir %{_mandir}
 %doc build-pdf/admin.pdf build-pdf/build.pdf
 %doc src/config-files/kdc.conf
-%if %{WITH_SYSTEMD}
 %{_unitdir}/krb5kdc.service
 %{_unitdir}/kadmin.service
 %{_unitdir}/kprop.service
 %{_tmpfilesdir}/krb5-krb5kdc.conf
 %dir %{_localstatedir}/run/krb5kdc
-%else
-/etc/rc.d/init.d/krb5kdc
-/etc/rc.d/init.d/kadmin
-/etc/rc.d/init.d/kprop
-%config(noreplace) /etc/portreserve/kerberos-adm
-%config(noreplace) /etc/portreserve/krb5_prop
-%endif
 %config(noreplace) /etc/sysconfig/krb5kdc
 %config(noreplace) /etc/sysconfig/kadmin
 %config(noreplace) /etc/logrotate.d/krb5kdc
@@ -720,7 +685,6 @@ exit 0
 %{_sbindir}/sserver
 %{_mandir}/man8/sserver.8*
 
-%if %{WITH_LDAP}
 %files server-ldap
 %defattr(-,root,root,-)
 %docdir %{_mandir}
@@ -735,7 +699,6 @@ exit 0
 %{_libdir}/libkdb_ldap.so.*
 %{_mandir}/man8/kdb5_ldap_util.8.gz
 %{_sbindir}/kdb5_ldap_util
-%endif
 
 %files libs -f %{gettext_domain}.lang
 %defattr(-,root,root,-)
@@ -767,9 +730,7 @@ exit 0
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/*
 %{_libdir}/krb5/plugins/kdb/db2.so
-%if %{WITH_OPENSSL}
 %{_libdir}/krb5/plugins/tls/k5tls.so
-%endif
 %dir %{_var}/kerberos
 %dir %{_var}/kerberos/krb5
 %dir %{_var}/kerberos/krb5/user
@@ -820,6 +781,12 @@ exit 0
 
 
 %changelog
+* Wed Jan 20 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-14
+- Remove WITH_NSS macro (always false)
+- Remove WITH_SYSTEMD macro (always true)
+- Remove WITH_LDAP macro (always true)
+- Remove WITH_OPENSSL macro (always true)
+
 * Fri Jan 08 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-13
 - Backport fix for chrome crash in spnego_gss_inquire_context
 - Resolves: #1295893
