@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 15%{?dist}
+Release: 16%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -695,7 +695,7 @@ exit 0
 %dir /etc/gss
 %dir /etc/gss/mech.d
 %dir /etc/krb5.conf.d
-%verify(not md5 size mtime) %config(noreplace) /etc/krb5.conf
+%config(noreplace) /etc/krb5.conf
 %config(noreplace) /etc/krb5.conf.d/crypto-policies
 /%{_mandir}/man5/.k5identity.5*
 /%{_mandir}/man5/.k5login.5*
@@ -766,6 +766,9 @@ exit 0
 
 
 %changelog
+* Thu Jan 21 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-16
+- Allow verification of attributes on krb5.conf
+
 * Wed Jan 20 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-15
 - Use "new" systemd macros for service handling.  (Thanks vpavlin!)
 - Resolves: #850399
