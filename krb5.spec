@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 16%{?dist}
+Release: 17%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -60,6 +60,7 @@ Patch148: krb5-disable_ofd_locks.patch
 Patch150: krb5-fix_interposer.patch
 Patch151: krb5-mechglue_inqure_attrs.patch
 Patch152: krb5-init_context_null_spnego.patch
+Patch153: krb5-1.14.1-log_file_permissions.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -236,6 +237,7 @@ ln NOTICE LICENSE
 %patch150 -p1 -b .fix_interposer
 %patch151 -p1 -b .mechglue_inqure_attrs
 %patch152 -p1 -b .init_context_null_spnego
+%patch153 -p1 -b .log_file_permissions
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -766,6 +768,10 @@ exit 0
 
 
 %changelog
+* Thu Jan 21 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-17
+- Make krb5kdc.log not world-readable by default
+- Resolves: #1276484
+
 * Thu Jan 21 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-16
 - Allow verification of attributes on krb5.conf
 
