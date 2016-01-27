@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 17%{?dist}
+Release: 18%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -61,6 +61,9 @@ Patch150: krb5-fix_interposer.patch
 Patch151: krb5-mechglue_inqure_attrs.patch
 Patch152: krb5-init_context_null_spnego.patch
 Patch153: krb5-1.14.1-log_file_permissions.patch
+Patch154: krb5-CVE-2015-8629.patch
+Patch155: krb5-CVE-2015-8630.patch
+Patch156: krb5-CVE-2015-8631.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -238,6 +241,10 @@ ln NOTICE LICENSE
 %patch151 -p1 -b .mechglue_inqure_attrs
 %patch152 -p1 -b .init_context_null_spnego
 %patch153 -p1 -b .log_file_permissions
+
+%patch154 -p1 -b .CVE-2015-8629
+%patch155 -p1 -b .CVE-2015-8630
+%patch156 -p1 -b .CVE-2015-8631
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -768,6 +775,9 @@ exit 0
 
 
 %changelog
+* Wed Jan 27 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-18
+- Fix CVE-2015-8629, CVE-2015-8630, CVE-2015-8631
+
 * Thu Jan 21 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-17
 - Make krb5kdc.log not world-readable by default
 - Resolves: #1276484
