@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.2
-Release: 11%{?dist}
+Release: 12%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -99,6 +99,9 @@ Patch151: krb5-CVE-2015-2696-IAKERB_aliasing.patch
 Patch152: krb5-CVE-2015-2697-build_principal_memory.patch
 Patch153: krb5-CVE-2015-2698-fix_iakerb_spnego.patch
 Patch155: krb5-init_context_null_spnego.patch
+Patch156: krb5-CVE-2015-8629.patch
+Patch157: krb5-CVE-2015-8630.patch
+Patch158: krb5-CVE-2015-8631.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -330,6 +333,10 @@ ln NOTICE LICENSE
 %patch153 -p1 -b .CVE-2015-2698-fix_iakerb_spnego
 
 %patch155 -p1 -b .init_context_null_spnego
+
+%patch156 -p1 -b .CVE-2015-8629
+%patch157 -p1 -b .CVE-2015-8630
+%patch158 -p1 -b .CVE-2015-8631
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -635,6 +642,14 @@ done
 # since we don't have a man page for it, just drop it.
 rm -- "$RPM_BUILD_ROOT/%{_sbindir}/krb5-send-pr"
 
+# These files are already packaged elsewhere
+rm -- "$RPM_BUILD_ROOT/%{_docdir}/krb5-libs/examples/kdc.conf"
+rm -- "$RPM_BUILD_ROOT/%{_docdir}/krb5-libs/examples/krb5.conf"
+rm -- "$RPM_BUILD_ROOT/%{_docdir}/krb5-libs/examples/services.append"
+
+# This is only needed for tests
+rm -- "$RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/preauth/test.so"
+
 %find_lang %{gettext_domain}
 
 %clean
@@ -767,14 +782,6 @@ exit 0
 /bin/systemctl try-restart kadmin.service >/dev/null 2>&1 || :
 /bin/systemctl try-restart kprop.service >/dev/null 2>&1 || :
 %endif
-
-%triggerun server -- krb5-server < 1.6.3-100
-if (( $2 == 0 )) ; then
-	/sbin/install-info --delete %{_infodir}/krb425.info.gz %{_infodir}/dir
-	/sbin/service krb524 stop > /dev/null 2>&1 || :
-	/sbin/chkconfig --del krb524 > /dev/null 2>&1 || :
-fi
-exit 0
 
 %files workstation
 %defattr(-,root,root,-)
@@ -994,6 +1001,10 @@ exit 0
 
 
 %changelog
+* Wed Jan 27 2016 Robbie Harwood <rharwood@redhat.com> - 1.13.2-12
+- Fix CVE-2015-8629, CVE-2015-8630, CVE-2015-8631
+- Fix package to build with newer versions of rpmbuild
+
 * Fri Jan 08 2016 Robbie Harwood <rharwood@redhat.com> - 1.13.2-11
 - Backport fix for Chrome crash in spnego_gss_inquire_context()
 - Update build process for new nss_wrapper version
