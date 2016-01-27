@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.2
-Release: 12%{?dist}
+Release: 13%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -647,9 +647,6 @@ rm -- "$RPM_BUILD_ROOT/%{_docdir}/krb5-libs/examples/kdc.conf"
 rm -- "$RPM_BUILD_ROOT/%{_docdir}/krb5-libs/examples/krb5.conf"
 rm -- "$RPM_BUILD_ROOT/%{_docdir}/krb5-libs/examples/services.append"
 
-# This is only needed for tests
-rm -- "$RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/preauth/test.so"
-
 %find_lang %{gettext_domain}
 
 %clean
@@ -1001,6 +998,9 @@ exit 0
 
 
 %changelog
+* Wed Jan 27 2016 Robbie Harwood <rharwood@redhat.com> - 1.13.2-13
+- Do not be as zealous in deleting things
+
 * Wed Jan 27 2016 Robbie Harwood <rharwood@redhat.com> - 1.13.2-12
 - Fix CVE-2015-8629, CVE-2015-8630, CVE-2015-8631
 - Fix package to build with newer versions of rpmbuild
