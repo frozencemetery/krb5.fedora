@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 18%{?dist}
+Release: 19%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -26,8 +26,8 @@ Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
 Source6: krb5.conf
-Source7: _kpropd
-Source8: _kadmind
+#Source7: _kpropd
+#Source8: _kadmind
 Source10: kdc.conf
 Source11: kadm5.acl
 Source19: krb5kdc.sysconfig
@@ -37,9 +37,9 @@ Source31: kerberos-adm.portreserve
 Source32: krb5_prop.portreserve
 Source33: krb5kdc.logrotate
 Source34: kadmind.logrotate
-Source36: kpropd.init
-Source37: kadmind.init
-Source38: krb5kdc.init
+#Source36: kpropd.init
+#Source37: kadmind.init
+#Source38: krb5kdc.init
 Source39: krb5-krb5kdc.conf
 
 # Carry this locally until it's available in a packaged form.
@@ -432,12 +432,6 @@ for unit in \
 	# is an upgrade-time problem I'm in no hurry to deal with.
 	install -pm 644 ${unit} $RPM_BUILD_ROOT%{_unitdir}
 done
-mkdir -p $RPM_BUILD_ROOT%{_sbindir}
-for wrapper in \
-	%{SOURCE7} \
-	%{SOURCE8} ; do
-	install -pm 755 ${wrapper} $RPM_BUILD_ROOT%{_sbindir}/
-done
 mkdir -p $RPM_BUILD_ROOT/%{_tmpfilesdir}
 install -pm 644 %{SOURCE39} $RPM_BUILD_ROOT/%{_tmpfilesdir}/
 mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/run/krb5kdc
@@ -658,14 +652,12 @@ exit 0
 %{_sbindir}/kadmin.local
 %{_mandir}/man8/kadmin.local.8*
 %{_sbindir}/kadmind
-%{_sbindir}/_kadmind
 %{_mandir}/man8/kadmind.8*
 %{_sbindir}/kdb5_util
 %{_mandir}/man8/kdb5_util.8*
 %{_sbindir}/kprop
 %{_mandir}/man8/kprop.8*
 %{_sbindir}/kpropd
-%{_sbindir}/_kpropd
 %{_mandir}/man8/kpropd.8*
 %{_sbindir}/kproplog
 %{_mandir}/man8/kproplog.8*
@@ -775,6 +767,11 @@ exit 0
 
 
 %changelog
+* Thu Jan 28 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-19
+- Replace _kadmin/_kprop with systemd macros
+- Remove traces of upstart from fedora package per policy
+- Resolves: #1290185
+
 * Wed Jan 27 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-18
 - Fix CVE-2015-8629, CVE-2015-8630, CVE-2015-8631
 
