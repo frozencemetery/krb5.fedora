@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 19%{?dist}
+Release: 20%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -767,6 +767,9 @@ exit 0
 
 
 %changelog
+* Thu Feb 04 2016 Fedora Release Engineering <releng@fedoraproject.org> - 1.14-20
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
+
 * Thu Jan 28 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-19
 - Replace _kadmin/_kprop with systemd macros
 - Remove traces of upstart from fedora package per policy
