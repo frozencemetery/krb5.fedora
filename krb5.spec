@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 20%{?dist}
+Release: 21%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -139,7 +139,7 @@ Summary: The shared libraries used by Kerberos 5
 Group: System Environment/Libraries
 Requires: coreutils, gawk, grep, sed
 Requires: keyutils-libs >= 1.5.8
-Requires: crypto-policies
+Requires: /etc/crypto-policies/back-ends/krb5.config
 
 %description libs
 Kerberos is a network authentication system. The krb5-libs package
@@ -767,6 +767,12 @@ exit 0
 
 
 %changelog
+=======
+* Tue Feb 16 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-21
+- Adjust dependency on crypto-polices to be just the file we want
+- Patch courtesy of lslebodn
+- Resolves: #1308984
+
 * Thu Feb 04 2016 Fedora Release Engineering <releng@fedoraproject.org> - 1.14-20
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
 
