@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 7%{?dist}
+Release: 8%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -153,7 +153,7 @@ Summary: The shared libraries used by Kerberos 5
 Group: System Environment/Libraries
 Requires: coreutils, gawk, grep, sed
 Requires: keyutils-libs >= 1.5.8
-Requires: crypto-policies
+Requires: /etc/crypto-policies/back-ends/krb5.config
 
 %description libs
 Kerberos is a network authentication system. The krb5-libs package
@@ -828,6 +828,11 @@ exit 0
 
 
 %changelog
+* Tue Feb 16 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-8
+- Only depend on the part of crypto-policies we care about
+- Patch courtesy of lslebodn
+- Resolves: #1308984
+
 * Wed Jan 27 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-7
 - Fix CVE-2015-8629, CVE-2015-8630, CVE-2015-8631
 
