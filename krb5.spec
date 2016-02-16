@@ -767,7 +767,6 @@ exit 0
 
 
 %changelog
-=======
 * Tue Feb 16 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-21
 - Adjust dependency on crypto-polices to be just the file we want
 - Patch courtesy of lslebodn
