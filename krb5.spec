@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 21%{?dist}
+Release: 22%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -58,12 +58,17 @@ Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
 Patch148: krb5-disable_ofd_locks.patch
 Patch150: krb5-fix_interposer.patch
-Patch151: krb5-mechglue_inqure_attrs.patch
 Patch152: krb5-init_context_null_spnego.patch
 Patch153: krb5-1.14.1-log_file_permissions.patch
 Patch154: krb5-CVE-2015-8629.patch
 Patch155: krb5-CVE-2015-8630.patch
 Patch156: krb5-CVE-2015-8631.patch
+
+Patch157: krb5-1.14.1-interpose-accept_sec_context.patch
+Patch158: krb5-1.14.1-interpose-enable-inquire_attrs_for_mech.patch
+Patch159: krb5-1.14.1-interpose-fix-inquire_attrs_for_mech.patch
+Patch160: krb5-1.14.1-interpose-inquire_saslname_for_mech.patch
+Patch161: krb5-1.14.1-interpose-public_oid_fixups.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -238,13 +243,18 @@ ln NOTICE LICENSE
 %patch148 -p1 -b .disable_ofd_locks
 
 %patch150 -p1 -b .fix_interposer
-%patch151 -p1 -b .mechglue_inqure_attrs
 %patch152 -p1 -b .init_context_null_spnego
 %patch153 -p1 -b .log_file_permissions
 
 %patch154 -p1 -b .CVE-2015-8629
 %patch155 -p1 -b .CVE-2015-8630
 %patch156 -p1 -b .CVE-2015-8631
+
+%patch157 -p1 -b .interpose-accept_sec_context
+%patch158 -p1 -b .interpose-enable-inquire_attrs_for_mech
+%patch159 -p1 -b .interpose-fix-inquire_attrs_for_mech
+%patch160 -p1 -b .interpose-inquire_saslname_for_mech
+%patch161 -p1 -b .interpose-public_oid_fixups
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -767,6 +777,10 @@ exit 0
 
 
 %changelog
+* Fri Feb 19 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-22
+- Backport my interposer fixes from upstream
+  - Supersedes krb5-mechglue_inqure_attrs.patch
+
 * Tue Feb 16 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-21
 - Adjust dependency on crypto-polices to be just the file we want
 - Patch courtesy of lslebodn
