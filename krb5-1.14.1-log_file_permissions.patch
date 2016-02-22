@@ -10,7 +10,7 @@ allows them.
 
 [ghudson@mit.edu: wrote commit message, de-indented post-open setup
 code]
-[rharwood@redhat.com: backport not clean for some reason?]
+[rharwood@redhat.com: backport not clean due to SELinux patching]
 
 ticket: 8344 (new)
 ---
@@ -45,7 +45,7 @@ index 19c4355..f4a9387 100644
 -                        } else {
 +                    append = (cp[4] == ':') ? O_APPEND : 0;
 +                    if (append || cp[4] == '=') {
-+                        fd = open(&cp[5], O_CREAT | O_WRONLY | append,
++                        fd = THREEPARAMOPEN(&cp[5], O_CREAT | O_WRONLY | append,
 +                                  S_IRUSR | S_IWUSR | S_IRGRP);
 +                        if (fd != -1)
 +                            f = fdopen(fd, append ? "a" : "w");
