@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14
-Release: 22%{?dist}
+Release: 23%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -777,6 +777,10 @@ exit 0
 
 
 %changelog
+* Mon Feb 22 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-23
+- Fix log file permissions patch with our selinux
+- Resolves: #1309421
+
 * Fri Feb 19 2016 Robbie Harwood <rharwood@redhat.com> - 1.14-22
 - Backport my interposer fixes from upstream
   - Supersedes krb5-mechglue_inqure_attrs.patch
