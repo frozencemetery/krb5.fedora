@@ -43,7 +43,7 @@ index 0dd4f87..9eab25e 100644
 +    mech = gssint_get_mechanism(selected_mech);
      if (!mech)
  	return GSS_S_BAD_MECH;
-     else if (!mech->gss_acquire_cred)
+     else if (!mech->gss_acquire_cred_impersonate_name)
 @@ -367,27 +374,26 @@ gss_add_cred_impersonate_name(OM_uint32 *minor_status,
  	internal_name = GSS_C_NO_NAME;
      } else {
