@@ -1,0 +1,39 @@
+From 89683d1f135765e91041f3a239af865b11aaf86b Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Tue, 15 Mar 2016 17:45:26 -0400
+Subject: [PATCH] Revisit inquire_attrs_for_mech on old mechs
+
+In gss_inquire_attrs_for_mech(), if the mech does not implement RFC
+5587, return success with empty mech_attrs and known_mech_attrs sets
+to indicate a lack of knowledge for all attributes.  The previous
+behavior of returning an error caused gss_indicate_mechs_by_attr() to
+fail out in the presence of an old mechanism, in turn causing
+gss_acquire_cred() and SPNEGO to break.
+
+ticket: 8358
+---
+ src/lib/gssapi/mechglue/g_mechattr.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/src/lib/gssapi/mechglue/g_mechattr.c b/src/lib/gssapi/mechglue/g_mechattr.c
+index 08a6008..e49651e 100644
+--- a/src/lib/gssapi/mechglue/g_mechattr.c
++++ b/src/lib/gssapi/mechglue/g_mechattr.c
+@@ -181,8 +181,12 @@ gss_inquire_attrs_for_mech(
+     mech = gssint_get_mechanism(selected_mech);
+     if (mech == NULL)
+         return GSS_S_BAD_MECH;
+-    else if (mech->gss_inquire_attrs_for_mech == NULL)
+-        return GSS_S_UNAVAILABLE;
++
++    /* If the mech does not implement RFC 5587, return success with an empty
++     * mech_attrs and known_mech_attrs. */
++    if (mech->gss_inquire_attrs_for_mech == NULL)
++        return GSS_S_COMPLETE;
++
+     public_mech = gssint_get_public_oid(selected_mech);
+     status = mech->gss_inquire_attrs_for_mech(minor, public_mech, mech_attrs,
+                                               known_mech_attrs);
+-- 
+2.7.0
+

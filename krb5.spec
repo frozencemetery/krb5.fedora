@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -71,6 +71,7 @@ Patch158: krb5-1.14.1-interpose-enable-inquire_attrs_for_mech.patch
 Patch159: krb5-1.14.1-interpose-fix-inquire_attrs_for_mech.patch
 Patch160: krb5-1.14.1-interpose-inquire_saslname_for_mech.patch
 Patch161: krb5-1.14.1-interpose-public_oid_fixups.patch
+Patch162: krb5-1.14.2-Revisit-inquire_attrs_for_mech-on-old-mechs.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -258,6 +259,7 @@ ln NOTICE LICENSE
 %patch159 -p1 -b .interpose-fix-inquire_attrs_for_mech
 %patch160 -p1 -b .interpose-inquire_saslname_for_mech
 %patch161 -p1 -b .interpose-public_oid_fixups
+%patch162 -p1 -b .inquire_attrs_for_mech-on-old-mechs
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -828,6 +830,10 @@ exit 0
 
 
 %changelog
+* Thu Mar 17 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.1-2
+- Backport OID mech fix
+- Resolves: #1317609
+
 * Mon Feb 29 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.1-1
 - New upstream version
 - Sync patch state with f24
