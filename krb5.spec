@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -72,6 +72,8 @@ Patch159: krb5-1.14.1-interpose-fix-inquire_attrs_for_mech.patch
 Patch160: krb5-1.14.1-interpose-inquire_saslname_for_mech.patch
 Patch161: krb5-1.14.1-interpose-public_oid_fixups.patch
 Patch162: krb5-1.14.2-Revisit-inquire_attrs_for_mech-on-old-mechs.patch
+
+Patch163: krb5-CVE-2016-3119.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -260,6 +262,8 @@ ln NOTICE LICENSE
 %patch160 -p1 -b .interpose-inquire_saslname_for_mech
 %patch161 -p1 -b .interpose-public_oid_fixups
 %patch162 -p1 -b .inquire_attrs_for_mech-on-old-mechs
+
+%patch163 -p1 -b .CVE-2016-3119
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -830,6 +834,9 @@ exit 0
 
 
 %changelog
+* Fri Mar 18 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.1-3
+- Fix CVE-2016-3119 (NULL deref in LDAP module)
+
 * Thu Mar 17 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.1-2
 - Backport OID mech fix
 - Resolves: #1317609
