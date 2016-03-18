@@ -43,7 +43,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.13.2
-Release: 13%{?dist}
+Release: 14%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -102,6 +102,7 @@ Patch155: krb5-init_context_null_spnego.patch
 Patch156: krb5-CVE-2015-8629.patch
 Patch157: krb5-CVE-2015-8630.patch
 Patch158: krb5-CVE-2015-8631.patch
+Patch159: krb5-CVE-2016-3119.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -337,6 +338,8 @@ ln NOTICE LICENSE
 %patch156 -p1 -b .CVE-2015-8629
 %patch157 -p1 -b .CVE-2015-8630
 %patch158 -p1 -b .CVE-2015-8631
+
+%patch159 -p1 -b .CVE-2016-3119
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -998,6 +1001,9 @@ exit 0
 
 
 %changelog
+* Fri Mar 18 2016 Robbie Harwood <rharwood@redhat.com> - 1.13.2-14
+- Fix CVE-2016-3119 (NULL deref in LDAP module)
+
 * Wed Jan 27 2016 Robbie Harwood <rharwood@redhat.com> - 1.13.2-13
 - Do not be as zealous in deleting things
 
