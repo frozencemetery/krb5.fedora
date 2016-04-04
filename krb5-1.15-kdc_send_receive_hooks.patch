@@ -1,0 +1,314 @@
+From fb4d426ddeb9d4802a53dfbd74189ef8eacbe65e Mon Sep 17 00:00:00 2001
+From: Andreas Schneider <asn@samba.org>
+Date: Thu, 3 Mar 2016 18:53:31 +0100
+Subject: [PATCH] Add KDC pre-send and post-receive KDC hooks
+
+Add two new APIs, krb5_set_kdc_send_hook() and
+krb5_set_kdc_recv_hook(), which can be used to inspect and override
+messages sent to KDCs.
+
+[ghudson@mit.edu: style and documentation changes]
+
+ticket: 8386 (new)
+---
+ doc/appdev/refs/api/index.rst   |   2 +
+ doc/appdev/refs/types/index.rst |   2 +
+ src/include/k5-int.h            |   6 +++
+ src/include/krb5/krb5.hin       | 104 ++++++++++++++++++++++++++++++++++++++++
+ src/lib/krb5/libkrb5.exports    |   2 +
+ src/lib/krb5/os/sendto_kdc.c    |  56 +++++++++++++++++++++-
+ src/lib/krb5_32.def             |   4 ++
+ 7 files changed, 174 insertions(+), 2 deletions(-)
+
+diff --git a/doc/appdev/refs/api/index.rst b/doc/appdev/refs/api/index.rst
+index 8df351d..e97cbca 100644
+--- a/doc/appdev/refs/api/index.rst
++++ b/doc/appdev/refs/api/index.rst
+@@ -268,6 +268,8 @@ Rarely used public interfaces
+    krb5_server_decrypt_ticket_keytab.rst
+    krb5_set_default_tgs_enctypes.rst
+    krb5_set_error_message.rst
++   krb5_set_kdc_recv_hook.rst
++   krb5_set_kdc_send_hook.rst
+    krb5_set_real_time.rst
+    krb5_string_to_cksumtype.rst
+    krb5_string_to_deltat.rst
+diff --git a/doc/appdev/refs/types/index.rst b/doc/appdev/refs/types/index.rst
+index 51c4093..dc414cf 100644
+--- a/doc/appdev/refs/types/index.rst
++++ b/doc/appdev/refs/types/index.rst
+@@ -57,6 +57,8 @@ Public
+    krb5_pa_svr_referral_data.rst
+    krb5_pa_data.rst
+    krb5_pointer.rst
++   krb5_post_recv_fn.rst
++   krb5_pre_send_fn.rst
+    krb5_preauthtype.rst
+    krb5_principal.rst
+    krb5_principal_data.rst
+diff --git a/src/include/k5-int.h b/src/include/k5-int.h
+index 6b36e9d..d0216d6 100644
+--- a/src/include/k5-int.h
++++ b/src/include/k5-int.h
+@@ -1242,6 +1242,12 @@ struct _krb5_context {
+     krb5_trace_callback trace_callback;
+     void *trace_callback_data;
+ 
++    krb5_pre_send_fn kdc_send_hook;
++    void *kdc_send_hook_data;
++
++    krb5_post_recv_fn kdc_recv_hook;
++    void *kdc_recv_hook_data;
++
+     struct plugin_interface plugins[PLUGIN_NUM_INTERFACES];
+     char *plugin_base_dir;
+ };
+diff --git a/src/include/krb5/krb5.hin b/src/include/krb5/krb5.hin
+index 0a0d272..9e91a60 100644
+--- a/src/include/krb5/krb5.hin
++++ b/src/include/krb5/krb5.hin
+@@ -8292,6 +8292,110 @@ krb5_set_trace_callback(krb5_context context, krb5_trace_callback fn,
+ krb5_error_code KRB5_CALLCONV
+ krb5_set_trace_filename(krb5_context context, const char *filename);
+ 
++
++/**
++ * Hook function for inspecting or modifying messages sent to KDCs.
++ *
++ * If the hook function returns an error code, the KDC communication will be
++ * aborted and the error code will be returned to the library operation which
++ * initiated the communication.
++ *
++ * If the hook function sets @a reply_out, @a message will not be sent to the
++ * KDC, and the given reply will used instead.
++ *
++ * If the hook function sets @a new_message_out, the given message will be sent
++ * to the KDC in place of @a message.
++ *
++ * If the hook function returns successfully without setting either output,
++ * @a message will be sent to the KDC normally.
++ *
++ * The hook function should use krb5_copy_data() to construct the value for
++ * @a new_message_out or @a reply_out, to ensure that it can be freed correctly
++ * by the library.
++ *
++ * @param [in]  context         Library context
++ * @param [in]  data            Callback data
++ * @param [in]  realm           The realm the message will be sent to
++ * @param [in]  message         The original message to be sent to the KDC
++ * @param [out] new_message_out Optional replacement message to be sent
++ * @param [out] reply_out       Optional synthetic reply
++ *
++ * @retval 0 Success
++ * @return A Kerberos error code
++ */
++typedef krb5_error_code
++(KRB5_CALLCONV *krb5_pre_send_fn)(krb5_context context, void *data,
++                                  const krb5_data *realm,
++                                  const krb5_data *message,
++                                  krb5_data **new_message_out,
++                                  krb5_data **new_reply_out);
++
++/**
++ * Hook function for inspecting or overriding KDC replies.
++ *
++ * If @a code is zero, @a reply contains the reply received from the KDC.  The
++ * hook function may return an error code to simulate an error, may synthesize
++ * a different reply by setting @a new_reply_out, or may simply return
++ * successfully to do nothing.
++ *
++ * If @a code is non-zero, KDC communication failed and @a reply should be
++ * ignored.  The hook function may return @a code or a different error code, or
++ * may synthesize a reply by setting @a new_reply_out and return successfully.
++ *
++ * The hook function should use krb5_copy_data() to construct the value for
++ * @a new_reply_out, to ensure that it can be freed correctly by the library.
++ *
++ * @param [in]  context         Library context
++ * @param [in]  data            Callback data
++ * @param [in]  code            Status of KDC communication
++ * @param [in]  realm           The realm the reply was received from
++ * @param [in]  message         The message sent to the realm's KDC
++ * @param [in]  reply           The reply received from the KDC
++ * @param [out] new_reply_out   Optional replacement reply
++ *
++ * @retval 0 Success
++ * @return A Kerberos error code
++ */
++typedef krb5_error_code
++(KRB5_CALLCONV *krb5_post_recv_fn)(krb5_context context, void *data,
++                                   krb5_error_code code,
++                                   const krb5_data *realm,
++                                   const krb5_data *message,
++                                   const krb5_data *reply,
++                                   krb5_data **new_reply_out);
++
++/**
++ * Set a KDC pre-send hook function.
++ *
++ * @a send_hook will be called before messages are sent to KDCs by library
++ * functions such as krb5_get_credentials().  The hook function may inspect,
++ * override, or synthesize its own reply to the message.
++ *
++ * @param [in] context          Library context
++ * @param [in] send_hook        Hook function (or NULL to disable the hook)
++ * @param [in] data             Callback data to be passed to @a send_hook
++ */
++void KRB5_CALLCONV
++krb5_set_kdc_send_hook(krb5_context context, krb5_pre_send_fn send_hook,
++                       void *data);
++
++/**
++ * Set a KDC post-receive hook function.
++ *
++ * @a recv_hook will be called after a reply is received from a KDC during a
++ * call to a library function such as krb5_get_credentials().  The hook
++ * function may inspect or override the reply.  This hook will not be executed
++ * if the pre-send hook returns a synthetic reply.
++ *
++ * @param [in] context          The library context.
++ * @param [in] recv_hook        Hook function (or NULL to disable the hook)
++ * @param [in] data             Callback data to be passed to @a recv_hook
++ */
++void KRB5_CALLCONV
++krb5_set_kdc_recv_hook(krb5_context context, krb5_post_recv_fn recv_hook,
++                       void *data);
++
++
+ #if TARGET_OS_MAC
+ #    pragma pack(pop)
+ #endif
+diff --git a/src/lib/krb5/libkrb5.exports b/src/lib/krb5/libkrb5.exports
+index c623409..ea6982d 100644
+--- a/src/lib/krb5/libkrb5.exports
++++ b/src/lib/krb5/libkrb5.exports
+@@ -581,6 +581,8 @@ krb5_set_password
+ krb5_set_password_using_ccache
+ krb5_set_principal_realm
+ krb5_set_real_time
++krb5_set_kdc_send_hook
++krb5_set_kdc_recv_hook
+ krb5_set_time_offsets
+ krb5_set_trace_callback
+ krb5_set_trace_filename
+diff --git a/src/lib/krb5/os/sendto_kdc.c b/src/lib/krb5/os/sendto_kdc.c
+index 3b3b438..a2bc591 100644
+--- a/src/lib/krb5/os/sendto_kdc.c
++++ b/src/lib/krb5/os/sendto_kdc.c
+@@ -399,6 +399,22 @@ check_for_svc_unavailable (krb5_context context,
+     return 1;
+ }
+ 
++void
++krb5_set_kdc_send_hook(krb5_context context, krb5_pre_send_fn send_hook,
++                       void *data)
++{
++    context->kdc_send_hook = send_hook;
++    context->kdc_send_hook_data = data;
++}
++
++void
++krb5_set_kdc_recv_hook(krb5_context context, krb5_post_recv_fn recv_hook,
++                       void *data)
++{
++    context->kdc_recv_hook = recv_hook;
++    context->kdc_recv_hook_data = data;
++}
++
+ /*
+  * send the formatted request 'message' to a KDC for realm 'realm' and
+  * return the response (if any) in 'reply'.
+@@ -412,13 +428,16 @@ check_for_svc_unavailable (krb5_context context,
+ 
+ krb5_error_code
+ krb5_sendto_kdc(krb5_context context, const krb5_data *message,
+-                const krb5_data *realm, krb5_data *reply, int *use_master,
++                const krb5_data *realm, krb5_data *reply_out, int *use_master,
+                 int no_udp)
+ {
+     krb5_error_code retval, err;
+     struct serverlist servers;
+     int server_used;
+     k5_transport_strategy strategy;
++    krb5_data reply = empty_data(), *hook_message = NULL, *hook_reply = NULL;
++
++    *reply_out = empty_data();
+ 
+     /*
+      * find KDC location(s) for realm
+@@ -463,9 +482,26 @@ krb5_sendto_kdc(krb5_context context, const krb5_data *message,
+     if (retval)
+         return retval;
+ 
++    if (context->kdc_send_hook != NULL) {
++        retval = context->kdc_send_hook(context, context->kdc_send_hook_data,
++                                        realm, message, &hook_message,
++                                        &hook_reply);
++        if (retval)
++            goto cleanup;
++
++        if (hook_reply != NULL) {
++            *reply_out = *hook_reply;
++            free(hook_reply);
++            goto cleanup;
++        }
++
++        if (hook_message != NULL)
++            message = hook_message;
++    }
++
+     err = 0;
+     retval = k5_sendto(context, message, realm, &servers, strategy, NULL,
+-                       reply, NULL, NULL, &server_used,
++                       &reply, NULL, NULL, &server_used,
+                        check_for_svc_unavailable, &err);
+     if (retval == KRB5_KDC_UNREACH) {
+         if (err == KDC_ERR_SVC_UNAVAILABLE) {
+@@ -476,9 +512,23 @@ krb5_sendto_kdc(krb5_context context, const krb5_data *message,
+                       realm->length, realm->data);
+         }
+     }
++
++    if (context->kdc_recv_hook != NULL) {
++        retval = context->kdc_recv_hook(context, context->kdc_recv_hook_data,
++                                        retval, realm, message, &reply,
++                                        &hook_reply);
++    }
+     if (retval)
+         goto cleanup;
+ 
++    if (hook_reply != NULL) {
++        *reply_out = *hook_reply;
++        free(hook_reply);
++    } else {
++        *reply_out = reply;
++        reply = empty_data();
++    }
++
+     /* Set use_master to 1 if we ended up talking to a master when we didn't
+      * explicitly request to. */
+     if (*use_master == 0) {
+@@ -488,6 +538,8 @@ krb5_sendto_kdc(krb5_context context, const krb5_data *message,
+     }
+ 
+ cleanup:
++    krb5_free_data(context, hook_message);
++    krb5_free_data_contents(context, &reply);
+     k5_free_serverlist(&servers);
+     return retval;
+ }
+diff --git a/src/lib/krb5_32.def b/src/lib/krb5_32.def
+index 3734e9b..8d58ea1 100644
+--- a/src/lib/krb5_32.def
++++ b/src/lib/krb5_32.def
+@@ -463,3 +463,7 @@ EXPORTS
+ 	krb5_vwrap_error_message			@430
+ 	krb5_c_prfplus					@431
+ 	krb5_c_derive_prfplus				@432
++
++; new in 1.15
++	krb5_set_kdc_send_hook				@433
++	krb5_set_kdc_recv_hook				@434
+-- 
+2.8.0.rc3
+
