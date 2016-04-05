@@ -1,7 +1,7 @@
-From fb4d426ddeb9d4802a53dfbd74189ef8eacbe65e Mon Sep 17 00:00:00 2001
+From 700f0921e891c5986e31e8394a9e7287a7c16524 Mon Sep 17 00:00:00 2001
 From: Andreas Schneider <asn@samba.org>
 Date: Thu, 3 Mar 2016 18:53:31 +0100
-Subject: [PATCH] Add KDC pre-send and post-receive KDC hooks
+Subject: [PATCH 1/2] Add KDC pre-send and post-receive KDC hooks
 
 Add two new APIs, krb5_set_kdc_send_hook() and
 krb5_set_kdc_recv_hook(), which can be used to inspect and override
@@ -47,10 +47,10 @@ index 51c4093..dc414cf 100644
     krb5_principal.rst
     krb5_principal_data.rst
 diff --git a/src/include/k5-int.h b/src/include/k5-int.h
-index 6b36e9d..d0216d6 100644
+index 41c3d1b..a4266d9 100644
 --- a/src/include/k5-int.h
 +++ b/src/include/k5-int.h
-@@ -1242,6 +1242,12 @@ struct _krb5_context {
+@@ -1237,6 +1237,12 @@ struct _krb5_context {
      krb5_trace_callback trace_callback;
      void *trace_callback_data;
  
@@ -64,10 +64,10 @@ index 6b36e9d..d0216d6 100644
      char *plugin_base_dir;
  };
 diff --git a/src/include/krb5/krb5.hin b/src/include/krb5/krb5.hin
-index 0a0d272..9e91a60 100644
+index 851cea3..59baf70 100644
 --- a/src/include/krb5/krb5.hin
 +++ b/src/include/krb5/krb5.hin
-@@ -8292,6 +8292,110 @@ krb5_set_trace_callback(krb5_context context, krb5_trace_callback fn,
+@@ -8288,6 +8288,110 @@ krb5_set_trace_callback(krb5_context context, krb5_trace_callback fn,
  krb5_error_code KRB5_CALLCONV
  krb5_set_trace_filename(krb5_context context, const char *filename);
  

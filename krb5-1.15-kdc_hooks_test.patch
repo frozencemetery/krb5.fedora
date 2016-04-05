@@ -1,52 +1,41 @@
-From 117f6e415238b507a42cbc3ccdb45ad8408bfdfd Mon Sep 17 00:00:00 2001
+From e60e5e0a8e8e98edae8c678e5c300b30368006fb Mon Sep 17 00:00:00 2001
 From: Andreas Schneider <asn@samba.org>
 Date: Mon, 7 Mar 2016 17:59:07 +0100
-Subject: [PATCH] Add tests for send and receive sendto_kdc hooks
+Subject: [PATCH 2/2] Add tests for send and receive sendto_kdc hooks
 
 [ghudson@mit.edu: style changes]
 
 ticket: 8386
+
+Conflicts:
+	src/tests/Makefile.in
+[rharwood@redhat.com: fix cherry-pick merge conflicts]
+[rharwood@redhat.com: remove references to .gitignore]
 ---
- .gitignore            |   1 +
- src/tests/Makefile.in |  18 ++--
+ src/tests/Makefile.in |  12 ++-
  src/tests/deps        |  10 ++
  src/tests/hooks.c     | 253 ++++++++++++++++++++++++++++++++++++++++++++++++++
  src/tests/t_hooks.py  |   9 ++
- 5 files changed, 284 insertions(+), 7 deletions(-)
+ 5 files changed, 281 insertions(+), 4 deletions(-)
  create mode 100644 src/tests/hooks.c
  create mode 100755 src/tests/t_hooks.py
 
-diff --git a/.gitignore b/.gitignore
-index d424019..fdc62f9 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -361,6 +361,7 @@ local.properties
- /src/tests/etinfo
- /src/tests/gcred
- /src/tests/hist
-+/src/tests/hooks
- /src/tests/hrealm
- /src/tests/icred
- /src/tests/kdbtest
 diff --git a/src/tests/Makefile.in b/src/tests/Makefile.in
-index 4ab8e6e..d060513 100644
+index b24e197..0fc0ea9 100644
 --- a/src/tests/Makefile.in
 +++ b/src/tests/Makefile.in
-@@ -6,10 +6,10 @@ SUBDIRS = resolve asn.1 create hammer verify gssapi dejagnu shlib \
+@@ -6,9 +6,9 @@ SUBDIRS = resolve asn.1 create hammer verify gssapi dejagnu shlib \
  RUN_DB_TEST = $(RUN_SETUP) KRB5_KDC_PROFILE=kdc.conf KRB5_CONFIG=krb5.conf \
  	LC_ALL=C $(VALGRIND)
  
--OBJS= adata.o etinfo.o gcred.o hist.o hrealm.o icred.o kdbtest.o localauth.o \
--	plugorder.o rdreq.o responder.o s2p.o s4u2proxy.o
--EXTRADEPSRCS= adata.c etinfo.c gcred.c hist.c hrealm.c icred.c kdbtest.c \
--	localauth.c plugorder.c rdreq.o responder.c s2p.c s4u2proxy.c
-+OBJS= adata.o etinfo.o gcred.o hist.o hooks.o hrealm.o icred.o kdbtest.o \
-+	localauth.o plugorder.o rdreq.o responder.o s2p.o s4u2proxy.o
-+EXTRADEPSRCS= adata.c etinfo.c gcred.c hist.c hooks.c hrealm.c icred.c \
-+	kdbtest.c localauth.c plugorder.c rdreq.o responder.c s2p.c s4u2proxy.c
+-OBJS= adata.o etinfo.o gcred.o hist.o hrealm.o kdbtest.o plugorder.o \
++OBJS= adata.o etinfo.o gcred.o hist.o hooks.o hrealm.o kdbtest.o plugorder.o \
+ 	t_init_creds.o t_localauth.o rdreq.o responder.o s2p.o s4u2proxy.o
+-EXTRADEPSRCS= adata.c etinfo.c gcred.c hist.c hrealm.c kdbtest.c plugorder.c \
++EXTRADEPSRCS= adata.c etinfo.c gcred.c hist.c hooks.c hrealm.c kdbtest.c plugorder.c \
+ 	t_init_creds.c t_localauth.c rdreq.o responder.c s2p.c s4u2proxy.c
  
  TEST_DB = ./testdb
- TEST_REALM = FOO.TEST.REALM
 @@ -33,6 +33,9 @@ gcred: gcred.o $(KRB5_BASE_DEPLIBS)
  hist: hist.o $(KDB5_DEPLIBS) $(KADMSRV_DEPLIBS) $(KRB5_BASE_DEPLIBS)
  	$(CC_LINK) -o $@ hist.o $(KDB5_LIBS) $(KADMSRV_LIBS) $(KRB5_BASE_LIBS)
@@ -61,26 +50,25 @@ index 4ab8e6e..d060513 100644
  	$(RUN_DB_TEST) ../kadmin/dbutil/kdb5_util $(KADMIN_OPTS) destroy -f
  	$(RM) $(TEST_DB)* stash_file
  
--check-pytests:: adata etinfo gcred hist hrealm icred kdbtest localauth
-+check-pytests:: adata etinfo gcred hist hooks hrealm icred kdbtest localauth
- check-pytests:: plugorder rdreq responder s2p s4u2proxy unlockiter
+-check-pytests:: adata etinfo gcred hist hrealm kdbtest plugorder rdreq
++check-pytests:: adata etinfo gcred hist hooks hrealm kdbtest plugorder rdreq
+ check-pytests:: responder s2p s4u2proxy t_init_creds t_localauth unlockiter
  	$(RUNPYTEST) $(srcdir)/t_general.py $(PYTESTFLAGS)
 +	$(RUNPYTEST) $(srcdir)/t_hooks.py $(PYTESTFLAGS)
  	$(RUNPYTEST) $(srcdir)/t_dump.py $(PYTESTFLAGS)
  	$(RUNPYTEST) $(srcdir)/t_iprop.py $(PYTESTFLAGS)
  	$(RUNPYTEST) $(srcdir)/t_kprop.py $(PYTESTFLAGS)
-@@ -159,7 +163,7 @@ check-pytests:: plugorder rdreq responder s2p s4u2proxy unlockiter
+@@ -159,7 +163,7 @@ check-pytests:: responder s2p s4u2proxy t_init_creds t_localauth unlockiter
  	$(RUNPYTEST) $(srcdir)/t_tabdump.py $(PYTESTFLAGS)
  
  clean::
--	$(RM) adata etinfo gcred hist hrealm icred kdbtest localauth plugorder
--	$(RM) rdreq responder s2p s4u2proxy krb5.conf kdc.conf
-+	$(RM) adata etinfo gcred hist hooks hrealm icred kdbtest localauth
-+	$(RM) plugorder rdreq responder s2p s4u2proxy krb5.conf kdc.conf
+-	$(RM) gcred hist hrealm kdbtest plugorder rdreq responder s2p
++	$(RM) gcred hist hooks hrealm kdbtest plugorder rdreq responder s2p
+ 	$(RM) adata etinfo gcred hist hrealm kdbtest plugorder rdreq responder
+ 	$(RM) s2p s4u2proxy t_init_creds t_localauth krb5.conf kdc.conf
  	$(RM) -rf kdc_realm/sandbox ldap
- 	$(RM) au.log
 diff --git a/src/tests/deps b/src/tests/deps
-index d280026..55df1a7 100644
+index de33c55..3634dc4 100644
 --- a/src/tests/deps
 +++ b/src/tests/deps
 @@ -50,6 +50,16 @@ $(OUTPRE)hist.$(OBJEXT): $(BUILDTOP)/include/autoconf.h \
