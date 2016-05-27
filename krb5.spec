@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14.1
-Release: 5%{?dist}
+Release: 6%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -77,6 +77,8 @@ Patch163: krb5-CVE-2016-3119.patch
 
 Patch164: krb5-1.15-kdc_send_receive_hooks.patch
 Patch165: krb5-1.15-kdc_hooks_test.patch
+
+Patch166: krb5-1.14.3-fix_otp_as_key.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -270,6 +272,8 @@ ln NOTICE LICENSE
 
 %patch164 -p1 -b .kdc_send_receive_hooks
 %patch165 -p1 -b .kdc_hooks_test
+
+%patch166 -p1 -b .fix_otp_as_key
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -840,7 +844,10 @@ exit 0
 
 
 %changelog
-* Mon Apr 05 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.1-5
+* Fri May 27 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.1-6
+- Fix setting of AS key in OTP preauth failure
+
+* Tue Apr 05 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.1-5
 - Use the correct patches this time.
 - Resolves: #1321135
 
