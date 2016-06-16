@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14.1
-Release: 6%{?dist}
+Release: 7%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -143,11 +143,12 @@ contains the header files and libraries needed for compiling Kerberos
 to install this package.
 
 %package libs
-Summary: The shared libraries used by Kerberos 5
+Summary: The non-admin shared libraries used by Kerberos 5
 Group: System Environment/Libraries
 Requires: coreutils, gawk, grep, sed
 Requires: keyutils-libs >= 1.5.8
 Requires: /etc/crypto-policies/back-ends/krb5.config
+Requires: libkadm5%{_isa} = %{version}-%{release}
 
 %description libs
 Kerberos is a network authentication system. The krb5-libs package
@@ -220,6 +221,16 @@ Kerberos is a network authentication system. The krb5-pkinit
 package contains the PKINIT plugin, which allows clients
 to obtain initial credentials from a KDC using a private key and a
 certificate.
+
+%package -n libkadm5
+Summary: Kerberos 5 Administrative libraries
+Group: System Environment/Base
+Requires: %{name}-libs%{_isa} = %{version}-%{release}
+
+%description -n libkadm5
+Kerberos is a network authentication system. The libkadm5 package
+contains only the libkadm5clnt and libkadm5serv shared objects. This
+interface is not considered stable.
 
 %prep
 %setup -q -n %{name}-%{version}%{prerelease} -a 3
@@ -581,6 +592,8 @@ fi
 # Remove the init script for older servers.
 [ -x /etc/rc.d/init.d/krb5server ] && /sbin/chkconfig --del krb5server
 %systemd_post krb5kdc.service kadmin.service kprop.service
+# assert sanity.  A cleaner solution probably exists but it is opaque
+/bin/systemctl daemon-reload
 exit 0
 
 %preun server
@@ -598,6 +611,10 @@ if (( $2 == 0 )) ; then
 	/sbin/chkconfig --del krb524 > /dev/null 2>&1 || :
 fi
 exit 0
+
+%post -n libkadm5 -p /sbin/ldconfig
+
+%postun -n libkadm5 -p /sbin/ldconfig
 
 %files workstation
 %defattr(-,root,root,-)
@@ -660,6 +677,7 @@ exit 0
 %dir %{_libdir}/krb5/plugins/preauth
 %dir %{_libdir}/krb5/plugins/authdata
 %{_libdir}/krb5/plugins/preauth/otp.so
+%{_libdir}/krb5/plugins/kdb/db2.so
 
 # KDC binaries and configuration.
 %{_mandir}/man5/kadm5.acl.5*
@@ -721,8 +739,6 @@ exit 0
 %{_libdir}/libgssapi_krb5.so.*
 %{_libdir}/libgssrpc.so.*
 %{_libdir}/libk5crypto.so.*
-%{_libdir}/libkadm5clnt_mit.so.*
-%{_libdir}/libkadm5srv_mit.so.*
 %{_libdir}/libkdb5.so.*
 %{_libdir}/libkrad.so.*
 %{_libdir}/libkrb5.so.*
@@ -730,7 +746,6 @@ exit 0
 %dir %{_libdir}/krb5
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/*
-%{_libdir}/krb5/plugins/kdb/db2.so
 %{_libdir}/krb5/plugins/tls/k5tls.so
 %dir %{_var}/kerberos
 %dir %{_var}/kerberos/krb5
@@ -753,10 +768,6 @@ exit 0
 %{_libdir}/libgssapi_krb5.so
 %{_libdir}/libgssrpc.so
 %{_libdir}/libk5crypto.so
-%{_libdir}/libkadm5clnt.so
-%{_libdir}/libkadm5clnt_mit.so
-%{_libdir}/libkadm5srv.so
-%{_libdir}/libkadm5srv_mit.so
 %{_libdir}/libkdb5.so
 %{_libdir}/libkrad.so
 %{_libdir}/libkrb5.so
@@ -780,8 +791,19 @@ exit 0
 %{_sbindir}/gss-server
 %{_sbindir}/uuserver
 
+%files -n libkadm5
+%defattr(-,root,root,-)
+%{_libdir}/libkadm5clnt.so
+%{_libdir}/libkadm5clnt_mit.so
+%{_libdir}/libkadm5srv.so
+%{_libdir}/libkadm5srv_mit.so
+%{_libdir}/libkadm5clnt_mit.so.*
+%{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Jun 16 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.1-7
+- Separate out the kadm5 libs
+
 * Fri May 27 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.1-6
 - Fix setting of AS key in OTP preauth failure
 
