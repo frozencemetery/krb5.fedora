@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14.1
-Release: 7%{?dist}
+Release: 8%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -72,6 +72,7 @@ Patch164: krb5-1.15-kdc_send_receive_hooks.patch
 Patch165: krb5-1.15-kdc_hooks_test.patch
 
 Patch166: krb5-1.14.3-fix_otp_as_key.patch
+Patch167: krb5-1.14.3-krad-recv.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -271,6 +272,7 @@ ln NOTICE LICENSE
 %patch165 -p1 -b .kdc_hooks_test
 
 %patch166 -p1 -b .fix_otp_as_key
+%patch167 -p1 -b .krad-recv
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -801,6 +803,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Jun 22 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.1-8
+- Fix incorrect recv() size calculation in libkrad
+
 * Thu Jun 16 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.1-7
 - Separate out the kadm5 libs
 

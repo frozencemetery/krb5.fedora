@@ -1,0 +1,44 @@
+From c969e8a37617e9c7743a28177dd3808f7d08cee9 Mon Sep 17 00:00:00 2001
+From: Nathaniel McCallum <npmccallum@redhat.com>
+Date: Tue, 21 Jun 2016 16:12:36 -0400
+Subject: [PATCH] Fix incorrect recv() size calculation in libkrad
+
+Before this patch libkrad would always subtract the existing buffer
+length from pktlen before passing it to recv().  In the case of stream
+sockets, this is incorrect since krad_packet_bytes_needed() already
+performs this calculation.  Subtracting the buffer length twice could
+cause integer underflow on the len parameter to recv().
+
+ticket: 8430 (new)
+target_version: 1.14-next
+target_version: 1.13-next
+tags: pullup
+---
+ src/lib/krad/remote.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/lib/krad/remote.c b/src/lib/krad/remote.c
+index aaabffd..df3de3a 100644
+--- a/src/lib/krad/remote.c
++++ b/src/lib/krad/remote.c
+@@ -315,7 +315,7 @@ on_io_read(krad_remote *rr)
+     request *tmp, *r;
+     int i;
+ 
+-    pktlen = sizeof(rr->buffer_);
++    pktlen = sizeof(rr->buffer_) - rr->buffer.length;
+     if (rr->info->ai_socktype == SOCK_STREAM) {
+         pktlen = krad_packet_bytes_needed(&rr->buffer);
+         if (pktlen < 0) {
+@@ -328,7 +328,7 @@ on_io_read(krad_remote *rr)
+ 
+     /* Read the packet. */
+     i = recv(verto_get_fd(rr->io), rr->buffer.data + rr->buffer.length,
+-             pktlen - rr->buffer.length, 0);
++             pktlen, 0);
+     if (i < 0) {
+         /* Should we try again? */
+         if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)
+-- 
+2.8.1
+
