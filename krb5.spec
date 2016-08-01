@@ -12,8 +12,8 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.14.1
-Release: 10%{?dist}
+Version: 1.14.3
+Release: 1%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -60,21 +60,8 @@ Patch148: krb5-disable_ofd_locks.patch
 Patch150: krb5-acquire_cred_interposer.patch
 Patch153: krb5-1.14.1-log_file_permissions.patch
 
-Patch158: krb5-1.14.1-interpose-enable-inquire_attrs_for_mech.patch
-Patch159: krb5-1.14.1-interpose-fix-inquire_attrs_for_mech.patch
-Patch160: krb5-1.14.1-interpose-inquire_saslname_for_mech.patch
-Patch161: krb5-1.14.1-interpose-public_oid_fixups.patch
-Patch162: krb5-1.14.2-Revisit-inquire_attrs_for_mech-on-old-mechs.patch
-
-Patch163: krb5-CVE-2016-3119.patch
-
 Patch164: krb5-1.15-kdc_send_receive_hooks.patch
 Patch165: krb5-1.15-kdc_hooks_test.patch
-
-Patch166: krb5-1.14.3-fix_otp_as_key.patch
-Patch167: krb5-1.14.3-krad-recv.patch
-Patch168: krb5-1.14.4-CVE-2016-3120.patch
-Patch169: krb5-1.14.4-SNI-HTTP-Host.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -84,9 +71,12 @@ BuildRequires: autoconf, bison, cmake, flex, gawk, gettext, pkgconfig, sed
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
 BuildRequires: gzip, ncurses-devel
 BuildRequires: python-sphinx, texlive-pdftex
-# Taken from \usepackage directives produced by sphinx:
+
+# Originally from \usepackage directives produced by sphinx:
 BuildRequires: tex(babel.sty)
 BuildRequires: tex(bookmark.sty)
+BuildRequires: tex(capt-of.sty)
+BuildRequires: tex(eqparbox.sty)
 BuildRequires: tex(fancybox.sty)
 BuildRequires: tex(fncychap.sty)
 BuildRequires: tex(fontenc.sty)
@@ -96,12 +86,13 @@ BuildRequires: tex(ifthen.sty)
 BuildRequires: tex(inputenc.sty)
 BuildRequires: tex(longtable.sty)
 BuildRequires: tex(multirow.sty)
+BuildRequires: tex(report.cls)
+BuildRequires: tex(threeparttable.sty)
 BuildRequires: tex(times.sty)
 BuildRequires: tex(titlesec.sty)
-BuildRequires: tex(threeparttable.sty)
-BuildRequires: tex(wrapfig.sty)
-BuildRequires: tex(report.cls)
 BuildRequires: tex(upquote.sty)
+BuildRequires: tex(wrapfig.sty)
+
 # Typical fonts, and the commands which we need to have present.
 BuildRequires: texlive, texlive-latex, texlive-texmf-fonts
 BuildRequires: /usr/bin/pdflatex /usr/bin/makeindex
@@ -109,6 +100,7 @@ BuildRequires: keyutils, keyutils-libs-devel >= 1.5.8
 BuildRequires: libselinux-devel
 BuildRequires: pam-devel
 BuildRequires: systemd-units
+
 # For the test framework.
 BuildRequires: perl, dejagnu, tcl-devel
 BuildRequires: net-tools, rpcbind
@@ -262,21 +254,8 @@ ln NOTICE LICENSE
 %patch150 -p1 -b .fix_interposer
 %patch153 -p1 -b .log_file_permissions
 
-%patch158 -p1 -b .interpose-enable-inquire_attrs_for_mech
-%patch159 -p1 -b .interpose-fix-inquire_attrs_for_mech
-%patch160 -p1 -b .interpose-inquire_saslname_for_mech
-%patch161 -p1 -b .interpose-public_oid_fixups
-%patch162 -p1 -b .inquire_attrs_for_mech-on-old-mechs
-
-%patch163 -p1 -b .CVE-2016-3119
-
 %patch164 -p1 -b .kdc_send_receive_hooks
 %patch165 -p1 -b .kdc_hooks_test
-
-%patch166 -p1 -b .fix_otp_as_key
-%patch167 -p1 -b .krad-recv
-%patch168 -p1 -b .CVE-2016-3120
-%patch169 -p1 -b .krb5-1.14.4-SNI-HTTP-Host.patch
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -807,6 +786,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Aug 10 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.3-1
+- New upstream version 1.14.3
+
 * Wed Aug 10 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.1-10
 - Separate out the kadm5 libs
 
