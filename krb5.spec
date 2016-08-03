@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -143,7 +143,6 @@ Group: System Environment/Libraries
 Requires: coreutils, gawk, grep, sed
 Requires: keyutils-libs >= 1.5.8
 Requires: /etc/crypto-policies/back-ends/krb5.config
-Requires: libkadm5%{_isa} = %{version}-%{release}
 
 %description libs
 Kerberos is a network authentication system. The krb5-libs package
@@ -154,24 +153,26 @@ Kerberos, you need to install this package.
 Group: System Environment/Daemons
 Summary: The KDC and related programs for Kerberos 5
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
-Requires(post): chkconfig
 Requires(post): systemd-units
 Requires(preun): systemd-units
 Requires(postun): systemd-units
-Requires(post): initscripts
-Requires(postun): initscripts
-# we need 'status -l' to work, and that option was added in 8.99
-Requires: initscripts >= 8.99-1
-# used by the triggers
-Requires: chkconfig
 # we drop files in its directory, but we don't want to own that directory
 Requires: logrotate
-Requires(preun): initscripts
 # we specify /usr/share/dict/words as the default dict_file in kdc.conf
 Requires: /usr/share/dict/words
 # for run-time, and for parts of the test suite
 BuildRequires: libverto-module-base
 Requires: libverto-module-base
+%ifarch x86_64
+Obsoletes: %{name}-server-%{version}-%{release}.i686
+%endif
+%ifarch ppc64
+Obsoletes: %{name}-server-%{version}-%{release}.ppc
+%endif
+%ifarch s390x
+Obsoletes: %{name}-server-%{version}-%{release}.s390
+%endif
+Requires: libkadm5%{?_isa} = %{version}-%{release}
 
 %description server
 Kerberos is a network authentication system. The krb5-server package
@@ -185,6 +186,16 @@ Group: System Environment/Daemons
 Summary: The LDAP storage plugin for the Kerberos 5 KDC
 Requires: %{name}-server%{?_isa} = %{version}-%{release}
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
+Requires: libkadm5%{?_isa} = %{version}-%{release}
+%ifarch x86_64
+Obsoletes: %{name}-server-ldap-%{version}-%{release}.i686
+%endif
+%ifarch ppc64
+Obsoletes: %{name}-server-ldap-%{version}-%{release}.ppc
+%endif
+%ifarch s390x
+Obsoletes: %{name}-server-ldap-%{version}-%{release}.s390
+%endif
 
 %description server-ldap
 Kerberos is a network authentication system. The krb5-server package
@@ -197,6 +208,7 @@ realm, you need to install this package.
 Summary: Kerberos 5 programs for use on workstations
 Group: System Environment/Base
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
+Requires: libkadm5%{?_isa} = %{version}-%{release}
 
 %description workstation
 Kerberos is a network authentication system. The krb5-workstation
@@ -220,7 +232,7 @@ certificate.
 %package -n libkadm5
 Summary: Kerberos 5 Administrative libraries
 Group: System Environment/Base
-Requires: %{name}-libs%{_isa} = %{version}-%{release}
+Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description -n libkadm5
 Kerberos is a network authentication system. The libkadm5 package
@@ -301,10 +313,7 @@ sed -i -e s,7778,`expr "$PORT" + 1`,g $cfg
 # Go ahead and supply tcl info, because configure doesn't know how to find it.
 source %{_libdir}/tclConfig.sh
 pushd src
-# Keep the old default if the package is built against older releases.
-%if 0%{?compile_default_ccache_name}
-export DEFCCNAME=%{compiled_default_ccache_name}
-%endif
+
 # Set this so that configure will have a value even if the current version of
 # autoconf doesn't set one.
 export runstatedir=%{_localstatedir}/run
@@ -485,10 +494,8 @@ make -C src DESTDIR=$RPM_BUILD_ROOT EXAMPLEDIR=%{libsdocdir}/examples install
 # list of link flags, and it helps prevent file conflicts on multilib systems.
 sed -r -i -e 's|^libdir=/usr/lib(64)?$|libdir=/usr/lib|g' $RPM_BUILD_ROOT%{_bindir}/krb5-config
 
-# FIXME: Temporay workaround for RH bug #1204646 ("krb5-config
-# returns wrong -specs path") so that development of krb5
-# dependicies gets unstuck.
-# This MUST be removed before rawhide becomes F23 ...
+# Temporay workaround for krb5-config reading too much from LDFLAGS.
+# Upstream: http://krbdev.mit.edu/rt/Ticket/Display.html?id=8159
 sed -r -i -e "s/-specs=\/.+?\/redhat-hardened-ld//g" $RPM_BUILD_ROOT%{_bindir}/krb5-config
 
 if [[ "$(< $RPM_BUILD_ROOT%{_bindir}/krb5-config )" == *redhat-hardened-ld* ]] ; then
@@ -521,52 +528,6 @@ rm -- "$RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/preauth/test.so"
 
 %post libs -p /sbin/ldconfig
 
-%if 0%{?configure_default_ccache_name}
-%triggerun libs -- krb5-libs < 1.11.3-16
-# Triggered roughly on the version where this logic was introduced.
-# Try to add a default_ccache_name to /etc/krb5.conf, removing the previous
-# default which we configured, if we find it.
-export DEFCCNAME="%{configured_default_ccache_name}"
-tmpfile="$(mktemp /etc/krb5.conf.XXXXXX)"
-if test -z "$tmpfile" ; then
-	# Give up.
-	exit 0
-fi
-# Remove the default value we previously set.  Be very exact about it.
-if grep -q default_ccache_name /etc/krb5.conf ; then
-	sed -r '/^ default_ccache_name = DIR:\/run\/user\/%%\{uid\}\/krb5cc$/d' /etc/krb5.conf > "$tmpfile"
-	if test -s "$tmpfile" ; then
-		if touch -r /etc/krb5.conf "$tmpfile" ; then
-			cat "$tmpfile" > /etc/krb5.conf
-			touch -r "$tmpfile" /etc/krb5.conf
-		fi
-	fi
-fi
-# Add the new default value, unless there's one set.  Don't be too particular
-# about it.
-if ! grep -q default_ccache_name /etc/krb5.conf ; then
-	awk '
-	/^\[.*\]$/ {
-		if (libdefaults) {
-			print " default_ccache_name =", ENVIRON["DEFCCNAME"]
-			print ""
-		}
-		libdefaults=0;
-	}
-	/^\[libdefaults\]$/ { libdefaults=1; }
-	{ print }' /etc/krb5.conf > "$tmpfile"
-	if test -s "$tmpfile" ; then
-		if touch -r /etc/krb5.conf "$tmpfile" ; then
-			cat "$tmpfile" > /etc/krb5.conf
-			touch -r "$tmpfile" /etc/krb5.conf
-		fi
-	fi
-fi
-if test -n "$tmpfile" ; then
-	rm -f -- "$tmpfile"
-fi
-%endif
-
 %postun libs -p /sbin/ldconfig
 
 %post server-ldap -p /sbin/ldconfig
@@ -574,8 +535,6 @@ fi
 %postun server-ldap -p /sbin/ldconfig
 
 %post server
-# Remove the init script for older servers.
-[ -x /etc/rc.d/init.d/krb5server ] && /sbin/chkconfig --del krb5server
 %systemd_post krb5kdc.service kadmin.service kprop.service
 # assert sanity.  A cleaner solution probably exists but it is opaque
 /bin/systemctl daemon-reload
@@ -587,14 +546,6 @@ exit 0
 
 %postun server
 %systemd_postun_with_restart krb5kdc.service kadmin.service kprop.service
-exit 0
-
-%triggerun server -- krb5-server < 1.6.3-100
-if (( $2 == 0 )) ; then
-	/sbin/install-info --delete %{_infodir}/krb425.info.gz %{_infodir}/dir
-	/sbin/service krb524 stop > /dev/null 2>&1 || :
-	/sbin/chkconfig --del krb524 > /dev/null 2>&1 || :
-fi
 exit 0
 
 %post -n libkadm5 -p /sbin/ldconfig
@@ -786,6 +737,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Aug 03 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.3-2
+- Up-port a bunch of stuff from the el-7.3 cycle
+- Resolves: #1255450, #1314989
+
 * Mon Aug 01 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.3-1
 - New upstream version 1.14.3
 
