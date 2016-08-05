@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14.3
-Release: 2%{?dist}
+Release: 3%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -127,6 +127,7 @@ practice of sending passwords over the network in unencrypted form.
 Summary: Development files needed to compile Kerberos 5 programs
 Group: Development/Libraries
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
+Requires: libkadm5%{?_isa} = %{version}-%{release}
 Requires: libcom_err-devel
 Requires: keyutils-libs-devel, libselinux-devel
 Requires: libverto-devel
@@ -737,6 +738,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Aug 05 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.3-3
+- Make krb5-devel depend on libkadm5
+- Resolves: #1364487
+
 * Wed Aug 03 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.3-2
 - Up-port a bunch of stuff from the el-7.3 cycle
 - Resolves: #1255450, #1314989
