@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14.1
-Release: 8%{?dist}
+Release: 9%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -81,6 +81,7 @@ Patch165: krb5-1.15-kdc_hooks_test.patch
 Patch166: krb5-1.14.3-fix_otp_as_key.patch
 Patch167: krb5-1.14.3-krad-recv.patch
 Patch168: krb5-1.14.4-CVE-2016-3120.patch
+Patch169: krb5-1.14.4-SNI-HTTP-Host.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -278,6 +279,7 @@ ln NOTICE LICENSE
 %patch166 -p1 -b .fix_otp_as_key
 %patch167 -p1 -b .krad-recv
 %patch168 -p1 -b .CVE-2016-3120
+%patch169 -p1 -b .krb5-1.14.4-SNI-HTTP-Host.patch
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -848,6 +850,10 @@ exit 0
 
 
 %changelog
+* Wed Aug 10 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.1-9
+- Fix use of KKDCPP with SNI
+- Resolves: #1365029
+
 * Thu Jul 28 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.1-8
 - Fix CVE-2016-3120
 - Resolves: #1361051
