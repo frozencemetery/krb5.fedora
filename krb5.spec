@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14.3
-Release: 4%{?dist}
+Release: 5%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -56,7 +56,7 @@ Patch71: krb5-1.13-dirsrv-accountlock.patch
 Patch86: krb5-1.9-debuginfo.patch
 Patch129: krb5-1.11-run_user_0.patch
 Patch134: krb5-1.11-kpasswdtest.patch
-Patch148: krb5-disable_ofd_locks.patch
+Patch148: krb5-1.14.4-ofd-lock-workaround.patch
 Patch150: krb5-acquire_cred_interposer.patch
 Patch153: krb5-1.14.1-log_file_permissions.patch
 
@@ -264,7 +264,7 @@ ln NOTICE LICENSE
 
 %patch134 -p1 -b .kpasswdtest
 
-%patch148 -p1 -b .disable_ofd_locks
+%patch148 -p1 -b .ofd-lock-workaround
 
 %patch150 -p1 -b .fix_interposer
 %patch153 -p1 -b .log_file_permissions
@@ -742,6 +742,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Aug 15 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.3-5
+- Turn OFD locks back on with glibc workaround
+- Resolves: #1274922
+
 * Wed Aug 10 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.3-4
 - Fix use of KKDCPP with SNI
 - Resolves: #1365028
