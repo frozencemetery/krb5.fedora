@@ -1,0 +1,68 @@
+From 7b072ef4135e776982a61fae62cda9a5f0fe001b Mon Sep 17 00:00:00 2001
+From: Andreas Schneider <asn@samba.org>
+Date: Mon, 8 Aug 2016 18:03:55 +0200
+Subject: [PATCH 3/3] Change KDC error for encrypted timestamp preauth
+
+When encrypted timestamp pre-authentication fails, respond with error
+code KDC_ERR_PREAUTH_FAILED, rather than KRB_AP_ERR_BAD_INTEGRITY, for
+consistency with other Kerberos implementations.
+
+[ghudson@mit.edu: clarified commit message and comment]
+
+ticket: 8471 (new)
+(cherry picked from commit 2653d69e0705a925597dff10083a24a77e2a20af)
+---
+ src/kdc/kdc_preauth_encts.c | 16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
+
+diff --git a/src/kdc/kdc_preauth_encts.c b/src/kdc/kdc_preauth_encts.c
+index 65f7c36..e80dc12 100644
+--- a/src/kdc/kdc_preauth_encts.c
++++ b/src/kdc/kdc_preauth_encts.c
+@@ -59,7 +59,6 @@ enc_ts_verify(krb5_context context, krb5_data *req_pkt, krb5_kdc_req *request,
+     krb5_key_data *             client_key;
+     krb5_int32                  start;
+     krb5_timestamp              timenow;
+-    krb5_error_code             decrypt_err = 0;
+ 
+     scratch.data = (char *)pa->contents;
+     scratch.length = pa->length;
+@@ -74,7 +73,6 @@ enc_ts_verify(krb5_context context, krb5_data *req_pkt, krb5_kdc_req *request,
+         goto cleanup;
+ 
+     start = 0;
+-    decrypt_err = 0;
+     while (1) {
+         if ((retval = krb5_dbe_search_enctype(context, rock->client,
+                                               &start, enc_data->enctype,
+@@ -92,8 +90,6 @@ enc_ts_verify(krb5_context context, krb5_data *req_pkt, krb5_kdc_req *request,
+         krb5_free_keyblock_contents(context, &key);
+         if (retval == 0)
+             break;
+-        else
+-            decrypt_err = retval;
+     }
+ 
+     if ((retval = decode_krb5_pa_enc_ts(&enc_ts_data, &pa_enc)) != 0)
+@@ -119,14 +115,10 @@ cleanup:
+     krb5_free_data_contents(context, &enc_ts_data);
+     if (pa_enc)
+         free(pa_enc);
+-    /*
+-     * If we get NO_MATCHING_KEY and decryption previously failed, and
+-     * we failed to find any other keys of the correct enctype after
+-     * that failed decryption, it probably means that the password was
+-     * incorrect.
+-     */
+-    if (retval == KRB5_KDB_NO_MATCHING_KEY && decrypt_err != 0)
+-        retval = decrypt_err;
++    /* If we get NO_MATCHING_KEY, it probably means that the password was
++     * incorrect. */
++    if (retval == KRB5_KDB_NO_MATCHING_KEY)
++        retval = KRB5KDC_ERR_PREAUTH_FAILED;
+ 
+     (*respond)(arg, retval, NULL, NULL, NULL);
+ }
+-- 
+2.9.3
+
