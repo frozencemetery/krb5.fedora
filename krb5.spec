@@ -20,7 +20,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14.3
-Release: 6%{?dist}
+Release: 7%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -75,6 +75,7 @@ Patch166: krb5-1.14.4-SNI-HTTP-Host.patch
 Patch167: krb5-1.15-otp-preauth-prompt-type.patch
 Patch168: krb5-1.15-improve-bad-password-inference.patch
 Patch169: krb5-1.15-kdc-error-encrypted-timestamp.patch
+Patch170: krb5-1.14.4-samba-client-mutual-flag.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -272,6 +273,7 @@ ln NOTICE LICENSE
 %patch167 -p1 -b .otp-preauth-prompt-type
 %patch168 -p1 -b .improve-bad-password-inference
 %patch169 -p1 -b .kdc-error-encrypted-timestamp
+%patch170 -p1 -b .samba-client-mutual-flag
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -842,6 +844,10 @@ exit 0
 
 
 %changelog
+* Mon Aug 29 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.3-7
+- Guess Samba client mutual flag using ap_option
+- Resolves: #1370980
+
 * Thu Aug 25 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.3-6
 - Fix KDC return code and set prompt types for OTP client preauth
 - Resolves: #1370072
