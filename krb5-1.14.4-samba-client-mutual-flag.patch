@@ -1,0 +1,37 @@
+From dcb523a4201dc882b2c466824ee1913eaed2e30d Mon Sep 17 00:00:00 2001
+From: Andreas Schneider <asn@cryptomilk.org>
+Date: Thu, 25 Aug 2016 10:41:33 +0200
+Subject: [PATCH] Guess Samba client mutual flag using ap_options
+
+To work correctly with older Samba clients, we should guess the mutual
+flag based on the ap_options from the AP-REQ and not set it
+unconditionally.  Found by the Samba torture testsuite.
+
+[ghudson@mit.edu: edited comments and commit message]
+
+ticket: 8486 (new)
+target_version: 1.14-next
+tags: pullup
+---
+ src/lib/gssapi/krb5/accept_sec_context.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/lib/gssapi/krb5/accept_sec_context.c b/src/lib/gssapi/krb5/accept_sec_context.c
+index b7fffeb..580d08c 100644
+--- a/src/lib/gssapi/krb5/accept_sec_context.c
++++ b/src/lib/gssapi/krb5/accept_sec_context.c
+@@ -699,7 +699,10 @@ kg_accept_krb5(minor_status, context_handle,
+             goto fail;
+         }
+ 
+-        gss_flags = GSS_C_MUTUAL_FLAG | GSS_C_REPLAY_FLAG | GSS_C_SEQUENCE_FLAG;
++        /* Use ap_options from the request to guess the mutual flag. */
++        gss_flags = GSS_C_REPLAY_FLAG | GSS_C_SEQUENCE_FLAG;
++        if (ap_req_options & AP_OPTS_MUTUAL_REQUIRED)
++            gss_flags |= GSS_C_MUTUAL_FLAG;
+     } else {
+         /* gss krb5 v1 */
+ 
+-- 
+2.9.3
+
