@@ -1,7 +1,7 @@
-From 7b072ef4135e776982a61fae62cda9a5f0fe001b Mon Sep 17 00:00:00 2001
+From ad1af1b23bd716fc3129de16e3fbf7edca0daa6b Mon Sep 17 00:00:00 2001
 From: Andreas Schneider <asn@samba.org>
 Date: Mon, 8 Aug 2016 18:03:55 +0200
-Subject: [PATCH 3/3] Change KDC error for encrypted timestamp preauth
+Subject: [PATCH 18/19] Change KDC error for encrypted timestamp preauth
 
 When encrypted timestamp pre-authentication fails, respond with error
 code KDC_ERR_PREAUTH_FAILED, rather than KRB_AP_ERR_BAD_INTEGRITY, for

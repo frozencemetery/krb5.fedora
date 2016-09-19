@@ -1,7 +1,7 @@
-From 700f0921e891c5986e31e8394a9e7287a7c16524 Mon Sep 17 00:00:00 2001
+From 21330cb3db69fc5a004844a1e4dec8998eb50068 Mon Sep 17 00:00:00 2001
 From: Andreas Schneider <asn@samba.org>
 Date: Thu, 3 Mar 2016 18:53:31 +0100
-Subject: [PATCH 1/2] Add KDC pre-send and post-receive KDC hooks
+Subject: [PATCH 14/19] Add KDC pre-send and post-receive KDC hooks
 
 Add two new APIs, krb5_set_kdc_send_hook() and
 krb5_set_kdc_recv_hook(), which can be used to inspect and override
@@ -47,10 +47,10 @@ index 51c4093..dc414cf 100644
     krb5_principal.rst
     krb5_principal_data.rst
 diff --git a/src/include/k5-int.h b/src/include/k5-int.h
-index 41c3d1b..a4266d9 100644
+index 6b7b2e3..045abfc 100644
 --- a/src/include/k5-int.h
 +++ b/src/include/k5-int.h
-@@ -1237,6 +1237,12 @@ struct _krb5_context {
+@@ -1238,6 +1238,12 @@ struct _krb5_context {
      krb5_trace_callback trace_callback;
      void *trace_callback_data;
  
@@ -64,10 +64,10 @@ index 41c3d1b..a4266d9 100644
      char *plugin_base_dir;
  };
 diff --git a/src/include/krb5/krb5.hin b/src/include/krb5/krb5.hin
-index 851cea3..59baf70 100644
+index c93a0f2..2b0d59e 100644
 --- a/src/include/krb5/krb5.hin
 +++ b/src/include/krb5/krb5.hin
-@@ -8288,6 +8288,110 @@ krb5_set_trace_callback(krb5_context context, krb5_trace_callback fn,
+@@ -8300,6 +8300,110 @@ krb5_set_trace_callback(krb5_context context, krb5_trace_callback fn,
  krb5_error_code KRB5_CALLCONV
  krb5_set_trace_filename(krb5_context context, const char *filename);
  
@@ -192,10 +192,10 @@ index c623409..ea6982d 100644
  krb5_set_trace_callback
  krb5_set_trace_filename
 diff --git a/src/lib/krb5/os/sendto_kdc.c b/src/lib/krb5/os/sendto_kdc.c
-index 3b3b438..a2bc591 100644
+index 6231de2..be00b8f 100644
 --- a/src/lib/krb5/os/sendto_kdc.c
 +++ b/src/lib/krb5/os/sendto_kdc.c
-@@ -399,6 +399,22 @@ check_for_svc_unavailable (krb5_context context,
+@@ -403,6 +403,22 @@ check_for_svc_unavailable (krb5_context context,
      return 1;
  }
  
@@ -218,7 +218,7 @@ index 3b3b438..a2bc591 100644
  /*
   * send the formatted request 'message' to a KDC for realm 'realm' and
   * return the response (if any) in 'reply'.
-@@ -412,13 +428,16 @@ check_for_svc_unavailable (krb5_context context,
+@@ -416,13 +432,16 @@ check_for_svc_unavailable (krb5_context context,
  
  krb5_error_code
  krb5_sendto_kdc(krb5_context context, const krb5_data *message,
@@ -236,7 +236,7 @@ index 3b3b438..a2bc591 100644
  
      /*
       * find KDC location(s) for realm
-@@ -463,9 +482,26 @@ krb5_sendto_kdc(krb5_context context, const krb5_data *message,
+@@ -467,9 +486,26 @@ krb5_sendto_kdc(krb5_context context, const krb5_data *message,
      if (retval)
          return retval;
  
@@ -264,7 +264,7 @@ index 3b3b438..a2bc591 100644
                         check_for_svc_unavailable, &err);
      if (retval == KRB5_KDC_UNREACH) {
          if (err == KDC_ERR_SVC_UNAVAILABLE) {
-@@ -476,9 +512,23 @@ krb5_sendto_kdc(krb5_context context, const krb5_data *message,
+@@ -480,9 +516,23 @@ krb5_sendto_kdc(krb5_context context, const krb5_data *message,
                        realm->length, realm->data);
          }
      }
@@ -288,7 +288,7 @@ index 3b3b438..a2bc591 100644
      /* Set use_master to 1 if we ended up talking to a master when we didn't
       * explicitly request to. */
      if (*use_master == 0) {
-@@ -488,6 +538,8 @@ krb5_sendto_kdc(krb5_context context, const krb5_data *message,
+@@ -492,6 +542,8 @@ krb5_sendto_kdc(krb5_context context, const krb5_data *message,
      }
  
  cleanup:
@@ -310,5 +310,5 @@ index 3734e9b..8d58ea1 100644
 +	krb5_set_kdc_send_hook				@433
 +	krb5_set_kdc_recv_hook				@434
 -- 
-2.8.0.rc3
+2.9.3
 

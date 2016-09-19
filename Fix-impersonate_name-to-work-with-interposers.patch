@@ -1,7 +1,7 @@
-From b3901af6970fb7bde88eb16d51c8d05db6f37746 Mon Sep 17 00:00:00 2001
+From 748617c1b8d1550284157a79bc7aeb6295a27bf4 Mon Sep 17 00:00:00 2001
 From: Simo Sorce <simo@redhat.com>
 Date: Fri, 13 Nov 2015 14:54:11 -0500
-Subject: [PATCH] Fix impersonate_name to work with interposers
+Subject: [PATCH 12/19] Fix impersonate_name to work with interposers
 
 This follows the same modifications applied to
 gss_acquire_cred_with_password() when interposer plugins were
@@ -154,10 +154,10 @@ index 0dd4f87..9eab25e 100644
      if (input_cred_handle == GSS_C_NO_CREDENTIAL && union_cred)
  	free(union_cred);
 diff --git a/src/lib/gssapi/spnego/spnego_mech.c b/src/lib/gssapi/spnego/spnego_mech.c
-index e6703eb..28fb9b1 100644
+index 07435d8..99e374f 100644
 --- a/src/lib/gssapi/spnego/spnego_mech.c
 +++ b/src/lib/gssapi/spnego/spnego_mech.c
-@@ -2619,10 +2619,10 @@ spnego_gss_acquire_cred_impersonate_name(OM_uint32 *minor_status,
+@@ -2620,10 +2620,10 @@ spnego_gss_acquire_cred_impersonate_name(OM_uint32 *minor_status,
  					 gss_OID_set *actual_mechs,
  					 OM_uint32 *time_rec)
  {
@@ -170,7 +170,7 @@ index e6703eb..28fb9b1 100644
  
  	dsyslog("Entering spnego_gss_acquire_cred_impersonate_name\n");
  
-@@ -2634,31 +2634,30 @@ spnego_gss_acquire_cred_impersonate_name(OM_uint32 *minor_status,
+@@ -2635,31 +2635,30 @@ spnego_gss_acquire_cred_impersonate_name(OM_uint32 *minor_status,
  
  	imp_spcred = (spnego_gss_cred_id_t)impersonator_cred_handle;
  	imp_mcred = imp_spcred ? imp_spcred->mcred : GSS_C_NO_CREDENTIAL;
@@ -218,5 +218,5 @@ index e6703eb..28fb9b1 100644
  	return (status);
  }
 -- 
-2.6.2
+2.9.3
 

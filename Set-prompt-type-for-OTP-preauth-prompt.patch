@@ -1,7 +1,7 @@
-From 4885a9b10ddf457f290ff5e9ce4a9a99765cfd1d Mon Sep 17 00:00:00 2001
+From dc032c01a5c23eb199a267d9ab650eef02c2dd01 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Mon, 25 Jul 2016 13:23:31 -0400
-Subject: [PATCH 1/3] Set prompt type for OTP preauth prompt
+Subject: [PATCH 16/19] Set prompt type for OTP preauth prompt
 
 Add k5_set_prompt_type() calls around the prompter invocation in
 preauth_otp.c, and add the comment we conventionally put before
@@ -14,7 +14,7 @@ ticket: 8464 (new)
  1 file changed, 5 insertions(+)
 
 diff --git a/src/lib/krb5/krb/preauth_otp.c b/src/lib/krb5/krb/preauth_otp.c
-index 3de528b..01c48b4 100644
+index 37f98b2..48fcbb5 100644
 --- a/src/lib/krb5/krb/preauth_otp.c
 +++ b/src/lib/krb5/krb/preauth_otp.c
 @@ -31,6 +31,7 @@
