@@ -1,33 +1,24 @@
+From 1df0a74f88f044f1e538e3d4fda13bbceb76e68b Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Tue, 23 Aug 2016 16:45:26 -0400
+Subject: [PATCH 05/19] krb5-1.12-buildconf.patch
+
 Build binaries in this package as RELRO PIEs, libraries as partial RELRO,
 and install shared libraries with the execute bit set on them.  Prune out
 the -L/usr/lib* and PIE flags where they might leak out and affect
 apps which just want to link with the libraries. FIXME: needs to check and
 not just assume that the compiler supports using these flags.
+---
+ src/build-tools/krb5-config.in | 7 +++++++
+ src/config/pre.in              | 2 +-
+ src/config/shlib.conf          | 5 +++--
+ 3 files changed, 11 insertions(+), 3 deletions(-)
 
---- krb5/src/config/shlib.conf
-+++ krb5/src/config/shlib.conf
-@@ -419,7 +419,7 @@ mips-*-netbsd*)
- 	SHLIBEXT=.so
- 	# Linux ld doesn't default to stuffing the SONAME field...
- 	# Use objdump -x to examine the fields of the library
--	LDCOMBINE='$(CC) -shared -fPIC -Wl,-h,$(LIBPREFIX)$(LIBBASE)$(SHLIBSEXT),--no-undefined'
-+	LDCOMBINE='$(CC) -shared -fPIC -Wl,-h,$(LIBPREFIX)$(LIBBASE)$(SHLIBSEXT),--no-undefined -Wl,-z,relro -Wl,--warn-shared-textrel'
- 	# 
- 	LDCOMBINE_TAIL='-Wl,--version-script binutils.versions && $(PERL) -w $(top_srcdir)/util/export-check.pl $(SHLIB_EXPORT_FILE) $@'
- 	SHLIB_EXPORT_FILE_DEP=binutils.versions
-@@ -430,7 +430,8 @@
- 	SHLIB_EXPFLAGS='$(SHLIB_RPATH_FLAGS) $(SHLIB_DIRS) $(SHLIB_EXPLIBS)'
- 	PROFFLAGS=-pg
- 	PROG_RPATH_FLAGS='$(RPATH_FLAG)$(PROG_RPATH)'
--	CC_LINK_SHARED='$(CC) $(PROG_LIBPATH) $(PROG_RPATH_FLAGS) $(CFLAGS) $(LDFLAGS)'
-+	CC_LINK_SHARED='$(CC) $(PROG_LIBPATH) $(PROG_RPATH_FLAGS) $(CFLAGS) -pie -Wl,-z,relro -Wl,-z,now $(LDFLAGS)'
-+	INSTALL_SHLIB='${INSTALL} -m755'
- 	CC_LINK_STATIC='$(CC) $(PROG_LIBPATH) $(CFLAGS) $(LDFLAGS)'
- 	CXX_LINK_SHARED='$(CXX) $(PROG_LIBPATH) $(PROG_RPATH_FLAGS) $(CXXFLAGS) $(LDFLAGS)'
- 	CXX_LINK_STATIC='$(CXX) $(PROG_LIBPATH) $(CXXFLAGS) $(LDFLAGS)'
---- krb5/src/build-tools/krb5-config.in
-+++ krb5/src/build-tools/krb5-config.in
-@@ -189,6 +189,13 @@ if test -n "$do_libs"; then
+diff --git a/src/build-tools/krb5-config.in b/src/build-tools/krb5-config.in
+index c17cb5e..1891dea 100755
+--- a/src/build-tools/krb5-config.in
++++ b/src/build-tools/krb5-config.in
+@@ -226,6 +226,13 @@ if test -n "$do_libs"; then
  	    -e 's#\$(PTHREAD_CFLAGS)#'"$PTHREAD_CFLAGS"'#' \
  	    -e 's#\$(CFLAGS)##'`
  
@@ -41,9 +32,11 @@ not just assume that the compiler supports using these flags.
      if test $library = 'kdb'; then
  	lib_flags="$lib_flags -lkdb5 $KDB5_DB_LIB"
  	library=krb5
---- krb5/src/config/pre.in
-+++ krb5/src/config/pre.in
-@@ -188,7 +188,7 @@
+diff --git a/src/config/pre.in b/src/config/pre.in
+index 63271e7..c100fef 100644
+--- a/src/config/pre.in
++++ b/src/config/pre.in
+@@ -182,7 +182,7 @@ INSTALL_PROGRAM=@INSTALL_PROGRAM@ $(INSTALL_STRIP)
  INSTALL_SCRIPT=@INSTALL_PROGRAM@
  INSTALL_DATA=@INSTALL_DATA@
  INSTALL_SHLIB=@INSTALL_SHLIB@
@@ -52,3 +45,29 @@ not just assume that the compiler supports using these flags.
  ## This is needed because autoconf will sometimes define @exec_prefix@ to be
  ## ${prefix}.
  prefix=@prefix@
+diff --git a/src/config/shlib.conf b/src/config/shlib.conf
+index 55f16be..f4a762c 100644
+--- a/src/config/shlib.conf
++++ b/src/config/shlib.conf
+@@ -422,7 +422,7 @@ mips-*-netbsd*)
+ 	SHLIBEXT=.so
+ 	# Linux ld doesn't default to stuffing the SONAME field...
+ 	# Use objdump -x to examine the fields of the library
+-	LDCOMBINE='$(CC) -shared -fPIC -Wl,-h,$(LIBPREFIX)$(LIBBASE)$(SHLIBSEXT),--no-undefined'
++	LDCOMBINE='$(CC) -shared -fPIC -Wl,-h,$(LIBPREFIX)$(LIBBASE)$(SHLIBSEXT),--no-undefined -Wl,-z,relro -Wl,--warn-shared-textrel'
+ 	# 
+ 	LDCOMBINE_TAIL='-Wl,--version-script binutils.versions && $(PERL) -w $(top_srcdir)/util/export-check.pl $(SHLIB_EXPORT_FILE) $@'
+ 	SHLIB_EXPORT_FILE_DEP=binutils.versions
+@@ -433,7 +433,8 @@ mips-*-netbsd*)
+ 	SHLIB_EXPFLAGS='$(SHLIB_RPATH_FLAGS) $(SHLIB_DIRS) $(SHLIB_EXPLIBS)'
+ 	PROFFLAGS=-pg
+ 	PROG_RPATH_FLAGS='$(RPATH_FLAG)$(PROG_RPATH)'
+-	CC_LINK_SHARED='$(CC) $(PROG_LIBPATH) $(PROG_RPATH_FLAGS) $(CFLAGS) $(LDFLAGS)'
++	CC_LINK_SHARED='$(CC) $(PROG_LIBPATH) $(PROG_RPATH_FLAGS) $(CFLAGS) -pie -Wl,-z,relro -Wl,-z,now $(LDFLAGS)'
++	INSTALL_SHLIB='${INSTALL} -m755'
+ 	CC_LINK_STATIC='$(CC) $(PROG_LIBPATH) $(CFLAGS) $(LDFLAGS)'
+ 	CXX_LINK_SHARED='$(CXX) $(PROG_LIBPATH) $(PROG_RPATH_FLAGS) $(CXXFLAGS) $(LDFLAGS)'
+ 	CXX_LINK_STATIC='$(CXX) $(PROG_LIBPATH) $(CXXFLAGS) $(LDFLAGS)'
+-- 
+2.9.3
+

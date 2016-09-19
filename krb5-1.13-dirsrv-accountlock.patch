@@ -1,10 +1,21 @@
+From f7538a0621d6b593e31f2031570a6f4678940241 Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Tue, 23 Aug 2016 16:47:44 -0400
+Subject: [PATCH 08/19] krb5-1.13-dirsrv-accountlock.patch
+
 Treat 'nsAccountLock: true' the same as 'loginDisabled: true'.  Updated from
 original version filed as RT#5891.
+---
+ src/aclocal.m4                                    |  9 +++++++++
+ src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c      | 17 +++++++++++++++++
+ src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c |  3 +++
+ 3 files changed, 29 insertions(+)
 
-diff -up krb5-1.8/src/aclocal.m4.dirsrv-accountlock krb5-1.8/src/aclocal.m4
---- krb5-1.8/src/aclocal.m4.dirsrv-accountlock	2010-03-05 11:03:09.000000000 -0500
-+++ krb5-1.8/src/aclocal.m4	2010-03-05 11:03:10.000000000 -0500
-@@ -1656,6 +1656,15 @@ if test $with_ldap = yes; then
+diff --git a/src/aclocal.m4 b/src/aclocal.m4
+index ed343c5..f67eef7 100644
+--- a/src/aclocal.m4
++++ b/src/aclocal.m4
+@@ -1653,6 +1653,15 @@ if test "$with_ldap" = yes; then
    AC_MSG_NOTICE(enabling OpenLDAP database backend module support)
    OPENLDAP_PLUGIN=yes
  fi
@@ -20,10 +31,11 @@ diff -up krb5-1.8/src/aclocal.m4.dirsrv-accountlock krb5-1.8/src/aclocal.m4
  ])dnl
  dnl
  dnl If libkeyutils exists (on Linux) include it and use keyring ccache
-diff -up krb5-1.8/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c.dirsrv-accountlock krb5-1.8/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c
---- krb5-1.8/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c.dirsrv-accountlock	2009-11-24 18:52:25.000000000 -0500
-+++ krb5-1.8/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c	2010-03-05 11:03:10.000000000 -0500
-@@ -1546,6 +1546,23 @@ populate_krb5_db_entry(krb5_context cont
+diff --git a/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c b/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c
+index aca8f31..0a0968c 100644
+--- a/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c
++++ b/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c
+@@ -1545,6 +1545,23 @@ populate_krb5_db_entry(krb5_context context, krb5_ldap_context *ldap_context,
      ret = krb5_dbe_update_tl_data(context, entry, &userinfo_tl_data);
      if (ret)
          goto cleanup;
@@ -47,11 +59,11 @@ diff -up krb5-1.8/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c.dirsrv-accountloc
  
      ret = krb5_read_tkt_policy(context, ldap_context, entry, tktpolname);
      if (ret)
-         goto cleanup;
-diff -up krb5-1.8/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c.dirsrv-accountlock krb5-1.8/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c
---- krb5-1.8/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c.dirsrv-accountlock	2009-11-24 18:52:25.000000000 -0500
-+++ krb5-1.8/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c	2010-03-05 11:03:10.000000000 -0500
-@@ -59,6 +59,9 @@ char     *principal_attributes[] = { "kr
+diff --git a/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c b/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c
+index 6a06f55..1f87e21 100644
+--- a/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c
++++ b/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c
+@@ -54,6 +54,9 @@ char     *principal_attributes[] = { "krbprincipalname",
                                       "krbLastFailedAuth",
                                       "krbLoginFailedCount",
                                       "krbLastSuccessfulAuth",
@@ -61,3 +73,6 @@ diff -up krb5-1.8/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c.dirsrv-accou
                                       "krbLastPwdChange",
                                       "krbLastAdminUnlock",
                                       "krbExtraData",
+-- 
+2.9.3
+

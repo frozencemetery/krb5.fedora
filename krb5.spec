@@ -12,8 +12,8 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.14.3
-Release: 9%{?dist}
+Version: 1.14.4
+Release: 1%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -45,33 +45,25 @@ Source39: krb5-krb5kdc.conf
 # Carry this locally until it's available in a packaged form.
 Source100: noport.c
 
-Patch6: krb5-1.12-ksu-path.patch
-Patch12: krb5-1.12-ktany.patch
-Patch16: krb5-1.12-buildconf.patch
-Patch23: krb5-1.3.1-dns.patch
-Patch39: krb5-1.12-api.patch
-Patch60: krb5-1.12.1-pam.patch
-Patch63: krb5-1.13-selinux-label.patch
-Patch71: krb5-1.13-dirsrv-accountlock.patch
-Patch86: krb5-1.9-debuginfo.patch
-Patch129: krb5-1.11-run_user_0.patch
-Patch134: krb5-1.11-kpasswdtest.patch
-Patch148: krb5-1.14.4-ofd-lock-workaround.patch
-Patch150: krb5-acquire_cred_interposer.patch
-Patch153: krb5-1.14.1-log_file_permissions.patch
-
-Patch164: krb5-1.15-kdc_send_receive_hooks.patch
-Patch165: krb5-1.15-kdc_hooks_test.patch
-
-Patch166: krb5-1.14.4-SNI-HTTP-Host.patch
-
-Patch167: krb5-1.15-otp-preauth-prompt-type.patch
-Patch168: krb5-1.15-improve-bad-password-inference.patch
-Patch169: krb5-1.15-kdc-error-encrypted-timestamp.patch
-Patch170: krb5-1.14.4-samba-client-mutual-flag.patch
-
-Patch171: krb5-1.14.4-responder-non-preauth.patch
-Patch172: krb5-1.15-krb5_db_register_keytab.patch
+Patch1: krb5-1.12.1-pam.patch
+Patch2: krb5-1.13-selinux-label.patch
+Patch3: krb5-1.12-ksu-path.patch
+Patch4: krb5-1.12-ktany.patch
+Patch5: krb5-1.12-buildconf.patch
+Patch6: krb5-1.3.1-dns.patch
+Patch7: krb5-1.12-api.patch
+Patch8: krb5-1.13-dirsrv-accountlock.patch
+Patch9: krb5-1.9-debuginfo.patch
+Patch10: krb5-1.11-run_user_0.patch
+Patch11: krb5-1.11-kpasswdtest.patch
+Patch12: Fix-impersonate_name-to-work-with-interposers.patch
+Patch13: Create-KDC-and-kadmind-log-files-with-mode-0640.patch
+Patch14: Add-KDC-pre-send-and-post-receive-KDC-hooks.patch
+Patch15: Add-tests-for-send-and-receive-sendto_kdc-hooks.patch
+Patch16: Set-prompt-type-for-OTP-preauth-prompt.patch
+Patch17: Improve-bad-password-inference-in-kinit.patch
+Patch18: Change-KDC-error-for-encrypted-timestamp-preauth.patch
+Patch19: Add-krb5_db_register_keytab.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -254,41 +246,25 @@ interface is not considered stable.
 %setup -q -n %{name}-%{version}%{prerelease} -a 3
 ln NOTICE LICENSE
 
-%patch60 -p1 -b .pam
-
-%patch63 -p1 -b .selinux-label
-
-%patch6  -p1 -b .ksu-path
-%patch12 -p1 -b .ktany
-%patch16 -p1 -b .buildconf %{?_rawbuild}
-%patch23 -p1 -b .dns %{?_rawbuild}
-%patch39 -p1 -b .api
-%patch71 -p1 -b .dirsrv-accountlock %{?_rawbuild}
-%patch86 -p0 -b .debuginfo
-
-# Apply when the hard-wired or configured default location is
-# DIR:/run/user/%%{uid}/krb5cc.
-%patch129 -p1 -b .run_user_0
-
-%patch134 -p1 -b .kpasswdtest
-
-%patch148 -p1 -b .ofd-lock-workaround
-
-%patch150 -p1 -b .fix_interposer
-%patch153 -p1 -b .log_file_permissions
-
-%patch164 -p1 -b .kdc_send_receive_hooks
-%patch165 -p1 -b .kdc_hooks_test
-
-%patch166 -p1 -b .SNI-HTTP-Host
-
-%patch167 -p1 -b .otp-preauth-prompt-type
-%patch168 -p1 -b .improve-bad-password-inference
-%patch169 -p1 -b .kdc-error-encrypted-timestamp
-%patch170 -p1 -b .samba-client-mutual-flag
-
-%patch171 -p1 -b .responder-non-preauth
-%patch172 -p1 -b .krb5_db_register_keytab
+%patch1 -p1 -b .krb5-1.12.1-pam
+%patch2 -p1 -b .krb5-1.13-selinux-label
+%patch3 -p1 -b .krb5-1.12-ksu-path
+%patch4 -p1 -b .krb5-1.12-ktany
+%patch5 -p1 -b .krb5-1.12-buildconf
+%patch6 -p1 -b .krb5-1.3.1-dns
+%patch7 -p1 -b .krb5-1.12-api
+%patch8 -p1 -b .krb5-1.13-dirsrv-accountlock
+%patch9 -p1 -b .krb5-1.9-debuginfo
+%patch10 -p1 -b .krb5-1.11-run_user_0
+%patch11 -p1 -b .krb5-1.11-kpasswdtest
+%patch12 -p1 -b .Fix-impersonate_name-to-work-with-interposers
+%patch13 -p1 -b .Create-KDC-and-kadmind-log-files-with-mode-0640
+%patch14 -p1 -b .Add-KDC-pre-send-and-post-receive-KDC-hooks
+%patch15 -p1 -b .Add-tests-for-send-and-receive-sendto_kdc-hooks
+%patch16 -p1 -b .Set-prompt-type-for-OTP-preauth-prompt
+%patch17 -p1 -b .Improve-bad-password-inference-in-kinit
+%patch18 -p1 -b .Change-KDC-error-for-encrypted-timestamp-preauth
+%patch19 -p1 -b .Add-krb5_db_register_keytab
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -758,6 +734,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Sep 19 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.4-1
+- New upstream release
+- Update names and numbers to match external git
+
 * Mon Sep 19 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.3-9
 - Add krb5_db_register_keytab
 - Resolves: #1376812
