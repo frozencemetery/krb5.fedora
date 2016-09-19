@@ -1,7 +1,7 @@
-From 9914b93516bbce9b1123ed5f9f796b7028944892 Mon Sep 17 00:00:00 2001
+From 6b126bfc40ba416746e4d30edb0b6b72c21c8b10 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
-Date: Thu, 17 Dec 2015 13:31:39 -0500
-Subject: [PATCH] Create KDC and kadmind log files with mode 0640
+Date: Tue, 23 Aug 2016 16:58:44 -0400
+Subject: [PATCH 13/19] Create KDC and kadmind log files with mode 0640
 
 In krb5_klog_init(), use open() and fdopen() to open log files so that
 we can specify a mode.  Specify a mode which doesn't include the
@@ -18,11 +18,10 @@ ticket: 8344 (new)
  1 file changed, 12 insertions(+), 9 deletions(-)
 
 diff --git a/src/lib/kadm5/logger.c b/src/lib/kadm5/logger.c
-index 19c4355..f4a9387 100644
-
---- a/src/lib/kadm5/logger.c	2016-01-21 18:52:52.529544902 +0000
-+++ b/src/lib/kadm5/logger.c	2016-01-21 18:57:22.923972419 +0000
-@@ -354,7 +354,7 @@
+index 64f9641..0517efe 100644
+--- a/src/lib/kadm5/logger.c
++++ b/src/lib/kadm5/logger.c
+@@ -354,7 +354,7 @@ krb5_klog_init(krb5_context kcontext, char *ename, char *whoami, krb5_boolean do
      const char  *logging_profent[3];
      const char  *logging_defent[3];
      char        **logging_specs;
@@ -31,7 +30,7 @@ index 19c4355..f4a9387 100644
      char        *cp, *cp2;
      char        savec = '\0';
      int         error;
-@@ -422,18 +422,21 @@
+@@ -422,18 +422,21 @@ krb5_klog_init(krb5_context kcontext, char *ename, char *whoami, krb5_boolean do
                      /*
                       * Check for append/overwrite, then open the file.
                       */
@@ -61,3 +60,6 @@ index 19c4355..f4a9387 100644
                      }
                  }
  #ifdef  HAVE_SYSLOG
+-- 
+2.9.3
+
