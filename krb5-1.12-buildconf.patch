@@ -1,7 +1,7 @@
 From 1df0a74f88f044f1e538e3d4fda13bbceb76e68b Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:45:26 -0400
-Subject: [PATCH 05/19] krb5-1.12-buildconf.patch
+Subject: [PATCH] krb5-1.12-buildconf.patch
 
 Build binaries in this package as RELRO PIEs, libraries as partial RELRO,
 and install shared libraries with the execute bit set on them.  Prune out

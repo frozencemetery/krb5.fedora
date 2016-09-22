@@ -1,7 +1,7 @@
-From b54a8377972db8cfc5f74c42831f61445c6f82d9 Mon Sep 17 00:00:00 2001
+From db601cd51030a1e48f38078dd706e95db069ead7 Mon Sep 17 00:00:00 2001
 From: Andreas Schneider <asn@samba.org>
 Date: Mon, 7 Mar 2016 17:59:07 +0100
-Subject: [PATCH 15/19] Add tests for send and receive sendto_kdc hooks
+Subject: [PATCH] Add tests for send and receive sendto_kdc hooks
 
 [ghudson@mit.edu: style changes]
 
@@ -10,13 +10,13 @@ ticket: 8386
 Conflicts:
 	src/tests/Makefile.in
 [rharwood@redhat.com: fix cherry-pick merge conflicts]
-[rharwood@redhat.com: locally remove gitignore]
+[rharwood@redhat.com: delete .gitignore]
 ---
  src/tests/Makefile.in |  12 ++-
  src/tests/deps        |  10 ++
  src/tests/hooks.c     | 253 ++++++++++++++++++++++++++++++++++++++++++++++++++
  src/tests/t_hooks.py  |   9 ++
- 5 files changed, 281 insertions(+), 4 deletions(-)
+ 4 files changed, 280 insertions(+), 4 deletions(-)
  create mode 100644 src/tests/hooks.c
  create mode 100755 src/tests/t_hooks.py
 

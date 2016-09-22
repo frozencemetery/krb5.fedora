@@ -1,7 +1,7 @@
 From 74b07bf5a3c73f2d46ddfa4a03baa76b19ee1681 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:29:58 -0400
-Subject: [PATCH 01/19] krb5-1.12.1-pam.patch
+Subject: [PATCH] krb5-1.12.1-pam.patch
 
 Modify ksu so that it performs account and session management on behalf of
 the target user account, mimicking the action of regular su.  The default

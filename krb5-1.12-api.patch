@@ -1,7 +1,7 @@
 From 9ca4f0e1081e667ebc9150097559f5fe85595e33 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:47:00 -0400
-Subject: [PATCH 07/19] krb5-1.12-api.patch
+Subject: [PATCH] krb5-1.12-api.patch
 
 Reference docs don't define what happens if you call krb5_realm_compare() with
 malformed krb5_principal structures.  Define a behavior which keeps it from
