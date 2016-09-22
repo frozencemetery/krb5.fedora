@@ -1,7 +1,7 @@
 From 6b126bfc40ba416746e4d30edb0b6b72c21c8b10 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:58:44 -0400
-Subject: [PATCH 13/19] Create KDC and kadmind log files with mode 0640
+Subject: [PATCH] Create KDC and kadmind log files with mode 0640
 
 In krb5_klog_init(), use open() and fdopen() to open log files so that
 we can specify a mode.  Specify a mode which doesn't include the

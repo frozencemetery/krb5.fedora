@@ -1,7 +1,7 @@
-From 2047b7b227a4e2a07b5e2ef149fd968406c8f750 Mon Sep 17 00:00:00 2001
+From 4514bc6f0b32471d1a9081ee3677d41eb373d3ff Mon Sep 17 00:00:00 2001
 From: Andreas Schneider <asn@samba.org>
 Date: Wed, 7 Sep 2016 18:33:43 +0200
-Subject: [PATCH 19/19] Add krb5_db_register_keytab()
+Subject: [PATCH] Add krb5_db_register_keytab()
 
 Add a public libkdb5 function to register the KDB keytab type.  This
 functionality is needed for out-of-tree KDC servers such as the Samba

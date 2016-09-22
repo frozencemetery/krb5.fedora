@@ -1,7 +1,7 @@
 From 61389fb098b36c1927ad01e4efa51f38da39176a Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:52:01 -0400
-Subject: [PATCH 11/19] krb5-1.11-kpasswdtest.patch
+Subject: [PATCH] krb5-1.11-kpasswdtest.patch
 
 ---
  src/kadmin/testing/proto/krb5.conf.proto | 1 +

@@ -1,7 +1,7 @@
 From 748617c1b8d1550284157a79bc7aeb6295a27bf4 Mon Sep 17 00:00:00 2001
 From: Simo Sorce <simo@redhat.com>
 Date: Fri, 13 Nov 2015 14:54:11 -0500
-Subject: [PATCH 12/19] Fix impersonate_name to work with interposers
+Subject: [PATCH] Fix impersonate_name to work with interposers
 
 This follows the same modifications applied to
 gss_acquire_cred_with_password() when interposer plugins were

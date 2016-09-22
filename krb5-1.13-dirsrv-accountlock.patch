@@ -1,7 +1,7 @@
 From f7538a0621d6b593e31f2031570a6f4678940241 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:47:44 -0400
-Subject: [PATCH 08/19] krb5-1.13-dirsrv-accountlock.patch
+Subject: [PATCH] krb5-1.13-dirsrv-accountlock.patch
 
 Treat 'nsAccountLock: true' the same as 'loginDisabled: true'.  Updated from
 original version filed as RT#5891.
