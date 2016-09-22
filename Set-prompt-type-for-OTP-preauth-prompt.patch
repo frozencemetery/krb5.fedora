@@ -1,7 +1,7 @@
-From dc032c01a5c23eb199a267d9ab650eef02c2dd01 Mon Sep 17 00:00:00 2001
+From 59ffbc2016ae2e164a0da7bacc5449bd9898337c Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Mon, 25 Jul 2016 13:23:31 -0400
-Subject: [PATCH 16/19] Set prompt type for OTP preauth prompt
+Subject: [PATCH] Set prompt type for OTP preauth prompt
 
 Add k5_set_prompt_type() calls around the prompter invocation in
 preauth_otp.c, and add the comment we conventionally put before

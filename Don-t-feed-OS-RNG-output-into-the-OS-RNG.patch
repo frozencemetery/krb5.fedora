@@ -1,0 +1,187 @@
+From dd0c141bfc858caa8470271205220a968db7ab51 Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Mon, 12 Sep 2016 12:25:05 -0400
+Subject: [PATCH] Don't feed OS RNG output into the OS RNG
+
+krb5_c_random_os_entropy() now must be provided by PRNG modules.
+
+ticket: 8499
+(cherry picked from commit 0bbbc2bd3a42cfbd9e6eb34c273da8aaa077c29f)
+---
+ src/lib/crypto/krb/crypto_int.h   |  3 +-
+ src/lib/crypto/krb/prng.c         | 60 +++++----------------------------------
+ src/lib/crypto/krb/prng_fortuna.c | 26 ++++++++++++++++-
+ src/lib/crypto/krb/prng_os.c      |  6 ++++
+ 4 files changed, 40 insertions(+), 55 deletions(-)
+
+diff --git a/src/lib/crypto/krb/crypto_int.h b/src/lib/crypto/krb/crypto_int.h
+index c054144..a205e3f 100644
+--- a/src/lib/crypto/krb/crypto_int.h
++++ b/src/lib/crypto/krb/crypto_int.h
+@@ -508,6 +508,7 @@ void krb5int_crypto_impl_cleanup(void);
+  * PRNG modules must implement the following APIs from krb5.h:
+  *   krb5_c_random_add_entropy
+  *   krb5_c_random_make_octets
++ *   krb5_c_random_os_entropy
+  *
+  * PRNG modules should implement these functions.  They are called from the
+  * crypto library init and cleanup functions, and can be used to setup and tear
+@@ -517,7 +518,7 @@ int k5_prng_init(void);
+ void k5_prng_cleanup(void);
+ 
+ /* Used by PRNG modules to gather OS entropy.  Returns true on success. */
+-krb5_boolean k5_get_os_entropy(unsigned char *buf, size_t len);
++krb5_boolean k5_get_os_entropy(unsigned char *buf, size_t len, int strong);
+ 
+ /*** Inline helper functions ***/
+ 
+diff --git a/src/lib/crypto/krb/prng.c b/src/lib/crypto/krb/prng.c
+index e478b19..9ad24c1 100644
+--- a/src/lib/crypto/krb/prng.c
++++ b/src/lib/crypto/krb/prng.c
+@@ -36,11 +36,13 @@ krb5_c_random_seed(krb5_context context, krb5_data *data)
+ #if defined(_WIN32)
+ 
+ krb5_boolean
+-k5_get_os_entropy(unsigned char *buf, size_t len)
++k5_get_os_entropy(unsigned char *buf, size_t len, int strong)
+ {
+     krb5_boolean result;
+     HCRYPTPROV provider;
+ 
++    /* CryptGenRandom is always considered strong. */
++
+     if (!CryptAcquireContext(&provider, NULL, NULL, PROV_RSA_FULL,
+                              CRYPT_VERIFYCONTEXT))
+         return FALSE;
+@@ -49,22 +51,6 @@ k5_get_os_entropy(unsigned char *buf, size_t len)
+     return result;
+ }
+ 
+-krb5_error_code KRB5_CALLCONV
+-krb5_c_random_os_entropy(krb5_context context, int strong, int *success)
+-{
+-    int oursuccess = 0;
+-    char buf[1024];
+-    krb5_data data = make_data(buf, sizeof(buf));
+-
+-    if (k5_get_os_entropy(buf, sizeof(buf)) &&
+-        krb5_c_random_add_entropy(context, KRB5_C_RANDSOURCE_OSRAND,
+-                                  &data) == 0)
+-        oursuccess = 1;
+-    if (success != NULL)
+-        *success = oursuccess;
+-    return 0;
+-}
+-
+ #else /* not Windows */
+ #ifdef HAVE_UNISTD_H
+ #include <unistd.h>
+@@ -107,44 +93,12 @@ cleanup:
+ }
+ 
+ krb5_boolean
+-k5_get_os_entropy(unsigned char *buf, size_t len)
++k5_get_os_entropy(unsigned char *buf, size_t len, int strong)
+ {
+-    return read_entropy_from_device("/dev/urandom", buf, len);
+-}
++    const char *device;
+ 
+-/* Read entropy from device and contribute it to the PRNG.  Returns true on
+- * success. */
+-static krb5_boolean
+-add_entropy_from_device(krb5_context context, const char *device)
+-{
+-    krb5_data data;
+-    unsigned char buf[64];
+-
+-    if (!read_entropy_from_device(device, buf, sizeof(buf)))
+-        return FALSE;
+-    data = make_data(buf, sizeof(buf));
+-    return (krb5_c_random_add_entropy(context, KRB5_C_RANDSOURCE_OSRAND,
+-                                      &data) == 0);
+-}
+-
+-krb5_error_code KRB5_CALLCONV
+-krb5_c_random_os_entropy(krb5_context context, int strong, int *success)
+-{
+-    int unused;
+-    int *oursuccess = (success != NULL) ? success : &unused;
+-
+-    *oursuccess = 0;
+-    /* If we are getting strong data then try that first.  We are
+-       guaranteed to cause a reseed of some kind if strong is true and
+-       we have both /dev/random and /dev/urandom.  We want the strong
+-       data included in the reseed so we get it first.*/
+-    if (strong) {
+-        if (add_entropy_from_device(context, "/dev/random"))
+-            *oursuccess = 1;
+-    }
+-    if (add_entropy_from_device(context, "/dev/urandom"))
+-        *oursuccess = 1;
+-    return 0;
++    device = strong ? "/dev/random" : "/dev/urandom";
++    return read_entropy_from_device(device, buf, len);
+ }
+ 
+ #endif /* not Windows */
+diff --git a/src/lib/crypto/krb/prng_fortuna.c b/src/lib/crypto/krb/prng_fortuna.c
+index e70ffa3..017a119 100644
+--- a/src/lib/crypto/krb/prng_fortuna.c
++++ b/src/lib/crypto/krb/prng_fortuna.c
+@@ -366,7 +366,7 @@ k5_prng_init(void)
+ #else
+     last_pid = getpid();
+ #endif
+-    if (k5_get_os_entropy(osbuf, sizeof(osbuf))) {
++    if (k5_get_os_entropy(osbuf, sizeof(osbuf), 0)) {
+         generator_reseed(&main_state, osbuf, sizeof(osbuf));
+         have_entropy = TRUE;
+     }
+@@ -443,4 +443,28 @@ krb5_c_random_make_octets(krb5_context context, krb5_data *outdata)
+     return 0;
+ }
+ 
++krb5_error_code KRB5_CALLCONV
++krb5_c_random_os_entropy(krb5_context context, int strong, int *success)
++{
++    krb5_error_code ret;
++    krb5_data data;
++    uint8_t buf[64];
++    int status = 0;
++
++    if (!k5_get_os_entropy(buf, sizeof(buf), strong))
++        goto done;
++
++    data = make_data(buf, sizeof(buf));
++    ret = krb5_c_random_add_entropy(context, KRB5_C_RANDSOURCE_OSRAND, &data);
++    if (ret)
++        goto done;
++
++    status = 1;
++
++done:
++    if (success != NULL)
++        *success = status;
++    return 0;
++}
++
+ #endif /* not TEST */
+diff --git a/src/lib/crypto/krb/prng_os.c b/src/lib/crypto/krb/prng_os.c
+index 730ed2e..ecfe351 100644
+--- a/src/lib/crypto/krb/prng_os.c
++++ b/src/lib/crypto/krb/prng_os.c
+@@ -91,3 +91,9 @@ krb5_c_random_make_octets(krb5_context context, krb5_data *outdata)
+     }
+     return 0;
+ }
++
++krb5_error_code KRB5_CALLCONV
++krb5_c_random_os_entropy(krb5_context context, int strong, int *success)
++{
++    return 0;
++}
+-- 
+2.9.3
+

@@ -1,7 +1,7 @@
 From f02d4a098b5e94df15ae39e9fad79e861e6c6483 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:33:53 -0400
-Subject: [PATCH 04/19] krb5-1.12-ktany.patch
+Subject: [PATCH] krb5-1.12-ktany.patch
 
 Adds an "ANY" keytab type which is a list of other keytab locations to search
 when searching for a specific entry.  When iterated through, it only presents

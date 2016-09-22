@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14.4
-Release: 1%{?dist}
+Release: 2%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -64,6 +64,10 @@ Patch16: Set-prompt-type-for-OTP-preauth-prompt.patch
 Patch17: Improve-bad-password-inference-in-kinit.patch
 Patch18: Change-KDC-error-for-encrypted-timestamp-preauth.patch
 Patch19: Add-krb5_db_register_keytab.patch
+Patch20: Don-t-feed-OS-RNG-output-into-the-OS-RNG.patch
+Patch21: Rename-prng_os.c-to-prng_device.c.patch
+Patch22: Add-getrandom-to-k5_get_os_entropy-using-syscall.patch
+Patch23: Add-OS-prng-intended-for-use-with-getrandom.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -265,6 +269,10 @@ ln NOTICE LICENSE
 %patch17 -p1 -b .Improve-bad-password-inference-in-kinit
 %patch18 -p1 -b .Change-KDC-error-for-encrypted-timestamp-preauth
 %patch19 -p1 -b .Add-krb5_db_register_keytab
+%patch20 -p1 -b .Don-t-feed-OS-RNG-output-into-the-OS-RNG
+%patch21 -p1 -b .Rename-prng_os.c-to-prng_device.c
+%patch22 -p1 -b .Add-getrandom-to-k5_get_os_entropy-using-syscall
+%patch23 -p1 -b .Add-OS-prng-intended-for-use-with-getrandom
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -341,7 +349,8 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--with-tls-impl=openssl \
 	--with-system-verto \
 	--with-pam \
-	--with-selinux
+	--with-selinux \
+	--with-prng-alg=os
 # Now build it.
 make
 popd
@@ -734,6 +743,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Sep 22 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.4-2
+- Backport getrandom() support
+- Remove patch numbering
+
 * Mon Sep 19 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.4-1
 - New upstream release
 - Update names and numbers to match external git

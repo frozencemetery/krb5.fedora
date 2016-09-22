@@ -1,7 +1,7 @@
 From 21330cb3db69fc5a004844a1e4dec8998eb50068 Mon Sep 17 00:00:00 2001
 From: Andreas Schneider <asn@samba.org>
 Date: Thu, 3 Mar 2016 18:53:31 +0100
-Subject: [PATCH 14/19] Add KDC pre-send and post-receive KDC hooks
+Subject: [PATCH] Add KDC pre-send and post-receive KDC hooks
 
 Add two new APIs, krb5_set_kdc_send_hook() and
 krb5_set_kdc_recv_hook(), which can be used to inspect and override

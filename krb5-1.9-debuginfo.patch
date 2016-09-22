@@ -1,7 +1,7 @@
 From 3743c3636fd23e62f996b119a1536ecd882a5e80 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:49:25 -0400
-Subject: [PATCH 09/19] krb5-1.9-debuginfo.patch
+Subject: [PATCH] krb5-1.9-debuginfo.patch
 
 We want to keep these y.tab.c files around because the debuginfo points to
 them.  It would be more elegant at the end to use symbolic links, but that

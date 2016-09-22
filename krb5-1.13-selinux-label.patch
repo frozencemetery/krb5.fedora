@@ -1,7 +1,7 @@
 From 2af05336edb5a2f86db22ee2937626a219f090f6 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:30:53 -0400
-Subject: [PATCH 02/19] krb5-1.13-selinux-label.patch
+Subject: [PATCH] krb5-1.13-selinux-label.patch
 
 SELinux bases access to files on the domain of the requesting process,
 the operation being performed, and the context applied to the file.
