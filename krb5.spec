@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14.4
-Release: 2%{?dist}
+Release: 3%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -77,6 +77,9 @@ BuildRequires: autoconf, bison, cmake, flex, gawk, gettext, pkgconfig, sed
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
 BuildRequires: gzip, ncurses-devel
 BuildRequires: python-sphinx, texlive-pdftex
+
+# For autosetup
+BuildRequires: git
 
 # Originally from \usepackage directives produced by sphinx:
 BuildRequires: tex(babel.sty)
@@ -247,32 +250,8 @@ contains only the libkadm5clnt and libkadm5serv shared objects. This
 interface is not considered stable.
 
 %prep
-%setup -q -n %{name}-%{version}%{prerelease} -a 3
+%autosetup -S git -n %{name}-%{version}%{prerelease} -a 3
 ln NOTICE LICENSE
-
-%patch1 -p1 -b .krb5-1.12.1-pam
-%patch2 -p1 -b .krb5-1.13-selinux-label
-%patch3 -p1 -b .krb5-1.12-ksu-path
-%patch4 -p1 -b .krb5-1.12-ktany
-%patch5 -p1 -b .krb5-1.12-buildconf
-%patch6 -p1 -b .krb5-1.3.1-dns
-%patch7 -p1 -b .krb5-1.12-api
-%patch8 -p1 -b .krb5-1.13-dirsrv-accountlock
-%patch9 -p1 -b .krb5-1.9-debuginfo
-%patch10 -p1 -b .krb5-1.11-run_user_0
-%patch11 -p1 -b .krb5-1.11-kpasswdtest
-%patch12 -p1 -b .Fix-impersonate_name-to-work-with-interposers
-%patch13 -p1 -b .Create-KDC-and-kadmind-log-files-with-mode-0640
-%patch14 -p1 -b .Add-KDC-pre-send-and-post-receive-KDC-hooks
-%patch15 -p1 -b .Add-tests-for-send-and-receive-sendto_kdc-hooks
-%patch16 -p1 -b .Set-prompt-type-for-OTP-preauth-prompt
-%patch17 -p1 -b .Improve-bad-password-inference-in-kinit
-%patch18 -p1 -b .Change-KDC-error-for-encrypted-timestamp-preauth
-%patch19 -p1 -b .Add-krb5_db_register_keytab
-%patch20 -p1 -b .Don-t-feed-OS-RNG-output-into-the-OS-RNG
-%patch21 -p1 -b .Rename-prng_os.c-to-prng_device.c
-%patch22 -p1 -b .Add-getrandom-to-k5_get_os_entropy-using-syscall
-%patch23 -p1 -b .Add-OS-prng-intended-for-use-with-getrandom
 
 # Take the execute bit off of documentation.
 chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
@@ -743,6 +722,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Sep 30 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.4-3
+- Switch to using autosetup macro.
+  - Patches come from git, so it is easiest to just make a git repo
+
 * Thu Sep 22 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.4-2
 - Backport getrandom() support
 - Remove patch numbering
