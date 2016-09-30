@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14.4
-Release: 3%{?dist}
+Release: 4%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -722,6 +722,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Sep 30 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.4-4
+- Fix backward check in kprop.service
+
 * Fri Sep 30 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.4-3
 - Switch to using autosetup macro.
   - Patches come from git, so it is easiest to just make a git repo
