@@ -1,7 +1,7 @@
 [Unit]
 Description=Kerberos 5 Propagation
 After=syslog.target network.target
-AssertPathExists=!/var/kerberos/krb5kdc/kpropd.acl
+AssertPathExists=/var/kerberos/krb5kdc/kpropd.acl
 
 [Service]
 Type=forking
