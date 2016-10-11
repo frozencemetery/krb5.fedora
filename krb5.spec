@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14.4
-Release: 5%{?dist}
+Release: 6%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -69,6 +69,7 @@ Patch21: Rename-prng_os.c-to-prng_device.c.patch
 Patch22: Add-getrandom-to-k5_get_os_entropy-using-syscall.patch
 Patch23: Add-OS-prng-intended-for-use-with-getrandom.patch
 Patch24: Properly-handle-EOF-condition-on-libkrad-sockets.patch
+Patch25: krb5-1.14.4-openssl11.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -723,6 +724,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Oct 11 2016 Tomáš Mráz <tmraz@redhat.com> - 1.14.4-6
+- rebuild with OpenSSL 1.1.0, added backported upstream patch
+
 * Fri Sep 30 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.4-5
 - Properly close krad sockets
 - Resolves: #1380836
