@@ -1,4 +1,4 @@
-From 3743c3636fd23e62f996b119a1536ecd882a5e80 Mon Sep 17 00:00:00 2001
+From e2f0b0317c6a251c202500f409976dda3a6a82e7 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:49:25 -0400
 Subject: [PATCH] krb5-1.9-debuginfo.patch
@@ -12,7 +12,7 @@ could mess up people working in the tree on other things.
  2 files changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/src/kadmin/cli/Makefile.in b/src/kadmin/cli/Makefile.in
-index 789c597..7e7a148 100644
+index adfea6e..d1327e4 100644
 --- a/src/kadmin/cli/Makefile.in
 +++ b/src/kadmin/cli/Makefile.in
 @@ -37,3 +37,8 @@ clean-unix::
@@ -25,7 +25,7 @@ index 789c597..7e7a148 100644
 +	$(YACC.y) $< 
 +	$(CP) y.tab.c $@
 diff --git a/src/plugins/kdb/ldap/ldap_util/Makefile.in b/src/plugins/kdb/ldap/ldap_util/Makefile.in
-index b9ea339..060f500 100644
+index 8669c24..a22f23c 100644
 --- a/src/plugins/kdb/ldap/ldap_util/Makefile.in
 +++ b/src/plugins/kdb/ldap/ldap_util/Makefile.in
 @@ -20,7 +20,7 @@ $(PROG): $(OBJS) $(KADMSRV_DEPLIBS) $(KRB5_BASE_DEPLIB) $(GETDATE)
@@ -35,7 +35,7 @@ index b9ea339..060f500 100644
 -	$(MV) y.tab.c getdate.c
 +	$(CP) y.tab.c getdate.c
  
- install::
+ install:
  	$(INSTALL_PROGRAM) $(PROG) ${DESTDIR}$(ADMIN_BINDIR)/$(PROG)
 -- 
 2.9.3

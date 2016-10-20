@@ -1,4 +1,4 @@
-From 74b07bf5a3c73f2d46ddfa4a03baa76b19ee1681 Mon Sep 17 00:00:00 2001
+From 551bd300005a8c45bad3a26f813ae99f31f4a641 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:29:58 -0400
 Subject: [PATCH] krb5-1.12.1-pam.patch
@@ -28,10 +28,10 @@ changes we're proposing for how it handles cache collections.
  create mode 100644 src/clients/ksu/pam.h
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
-index dbb7db2..ce045ab 100644
+index bd2eb48..5fc7f3e 100644
 --- a/src/aclocal.m4
 +++ b/src/aclocal.m4
-@@ -1672,3 +1672,70 @@ AC_DEFUN(KRB5_AC_PERSISTENT_KEYRING,[
+@@ -1673,3 +1673,70 @@ AC_DEFUN(KRB5_AC_PERSISTENT_KEYRING,[
        ]))
  ])dnl
  dnl
@@ -103,7 +103,7 @@ index dbb7db2..ce045ab 100644
 +AC_SUBST(NON_PAM_MAN)
 +])dnl
 diff --git a/src/clients/ksu/Makefile.in b/src/clients/ksu/Makefile.in
-index c705fda..ad2406a 100644
+index b2fcbf2..5755bb5 100644
 --- a/src/clients/ksu/Makefile.in
 +++ b/src/clients/ksu/Makefile.in
 @@ -3,12 +3,14 @@ BUILDTOP=$(REL)..$(S)..
@@ -129,7 +129,7 @@ index c705fda..ad2406a 100644
  	heuristic.o \
  	xmalloc.o @SETENVOBJ@
  
- all:: ksu
+ all: ksu
  
  ksu: $(OBJS) $(KRB5_BASE_DEPLIBS)
 -	$(CC_LINK) -o $@ $(OBJS) $(KRB5_BASE_LIBS) $(KSU_LIBS)
@@ -138,10 +138,10 @@ index c705fda..ad2406a 100644
 +pam.o: pam.c
 +	$(CC) $(ALL_CFLAGS) -c $<
  
- clean::
+ clean:
  	$(RM) ksu
 diff --git a/src/clients/ksu/main.c b/src/clients/ksu/main.c
-index 2f8d8e1..1b2ca83 100644
+index 28342c2..cab0c18 100644
 --- a/src/clients/ksu/main.c
 +++ b/src/clients/ksu/main.c
 @@ -26,6 +26,7 @@
@@ -171,7 +171,7 @@ index 2f8d8e1..1b2ca83 100644
  /***********/
  
  #define KS_TEMPORARY_CACHE "MEMORY:_ksu"
-@@ -514,6 +520,23 @@ main (argc, argv)
+@@ -515,6 +521,23 @@ main (argc, argv)
                 prog_name,target_user,client_name,
                 source_user,ontty());
  
@@ -195,7 +195,7 @@ index 2f8d8e1..1b2ca83 100644
          /* Run authorization as target.*/
          if (krb5_seteuid(target_uid)) {
              com_err(prog_name, errno, _("while switching to target for "
-@@ -574,6 +597,24 @@ main (argc, argv)
+@@ -575,6 +598,24 @@ main (argc, argv)
  
              exit(1);
          }
@@ -220,7 +220,7 @@ index 2f8d8e1..1b2ca83 100644
      }
  
      if( some_rest_copy){
-@@ -631,6 +672,30 @@ main (argc, argv)
+@@ -632,6 +673,30 @@ main (argc, argv)
          exit(1);
      }
  
@@ -251,7 +251,7 @@ index 2f8d8e1..1b2ca83 100644
      /* set permissions */
      if (setgid(target_pwd->pw_gid) < 0) {
          perror("ksu: setgid");
-@@ -728,7 +793,7 @@ main (argc, argv)
+@@ -729,7 +794,7 @@ main (argc, argv)
          fprintf(stderr, "program to be execed %s\n",params[0]);
      }
  
@@ -260,7 +260,7 @@ index 2f8d8e1..1b2ca83 100644
          execv(params[0], params);
          com_err(prog_name, errno, _("while trying to execv %s"), params[0]);
          sweep_up(ksu_context, cc_target);
-@@ -758,16 +823,35 @@ main (argc, argv)
+@@ -759,16 +824,35 @@ main (argc, argv)
              if (ret_pid == -1) {
                  com_err(prog_name, errno, _("while calling waitpid"));
              }
@@ -756,10 +756,10 @@ index 0000000..0ab7656
 +void appl_pam_cleanup(void);
 +#endif
 diff --git a/src/configure.in b/src/configure.in
-index b2a8675..8846ca0 100644
+index fde09a1..79c0fe2 100644
 --- a/src/configure.in
 +++ b/src/configure.in
-@@ -1327,6 +1327,8 @@ AC_SUBST([VERTO_VERSION])
+@@ -1336,6 +1336,8 @@ AC_SUBST([VERTO_VERSION])
  
  AC_PATH_PROG(GROFF, groff)
  

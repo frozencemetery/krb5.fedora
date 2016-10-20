@@ -1,4 +1,4 @@
-From 95b7e75522dd905eea23e853f062d89749a17799 Mon Sep 17 00:00:00 2001
+From e84b0d40e31cdb98a9a87bd1c4925802d963a479 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:46:21 -0400
 Subject: [PATCH] krb5-1.3.1-dns.patch
@@ -9,7 +9,7 @@ We want to be able to use --with-netlib and --enable-dns at the same time.
  1 file changed, 1 insertion(+)
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
-index 311f099..ed343c5 100644
+index 5b02b40..d49b7c1 100644
 --- a/src/aclocal.m4
 +++ b/src/aclocal.m4
 @@ -701,6 +701,7 @@ AC_HELP_STRING([--with-netlib=LIBS], use user defined resolver library),

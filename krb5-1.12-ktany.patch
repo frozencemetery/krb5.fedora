@@ -1,4 +1,4 @@
-From f02d4a098b5e94df15ae39e9fad79e861e6c6483 Mon Sep 17 00:00:00 2001
+From 813d3e2617057252ad1f9ffa30624f36629903b7 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:33:53 -0400
 Subject: [PATCH] krb5-1.12-ktany.patch
@@ -14,7 +14,7 @@ the contents of the first keytab.
  create mode 100644 src/lib/krb5/keytab/kt_any.c
 
 diff --git a/src/lib/krb5/keytab/Makefile.in b/src/lib/krb5/keytab/Makefile.in
-index 28485d5..c17ab82 100644
+index 2a8fceb..ffd179f 100644
 --- a/src/lib/krb5/keytab/Makefile.in
 +++ b/src/lib/krb5/keytab/Makefile.in
 @@ -12,6 +12,7 @@ STLIBOBJS= \

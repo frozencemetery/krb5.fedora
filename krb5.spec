@@ -8,12 +8,12 @@
 %global configure_default_ccache_name 1
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 
-%global prerelease %{nil}
+%global prerelease -beta1
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.14.4
-Release: 6%{?dist}
+Version: 1.15
+Release: 1%{?dist}.beta1.0
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -46,30 +46,16 @@ Source39: krb5-krb5kdc.conf
 Source100: noport.c
 
 Patch1: krb5-1.12.1-pam.patch
-Patch2: krb5-1.13-selinux-label.patch
+Patch2: krb5-1.15-beta1-selinux-label.patch
 Patch3: krb5-1.12-ksu-path.patch
 Patch4: krb5-1.12-ktany.patch
-Patch5: krb5-1.12-buildconf.patch
+Patch5: krb5-1.15-beta1-buildconf.patch
 Patch6: krb5-1.3.1-dns.patch
 Patch7: krb5-1.12-api.patch
 Patch8: krb5-1.13-dirsrv-accountlock.patch
 Patch9: krb5-1.9-debuginfo.patch
 Patch10: krb5-1.11-run_user_0.patch
 Patch11: krb5-1.11-kpasswdtest.patch
-Patch12: Fix-impersonate_name-to-work-with-interposers.patch
-Patch13: Create-KDC-and-kadmind-log-files-with-mode-0640.patch
-Patch14: Add-KDC-pre-send-and-post-receive-KDC-hooks.patch
-Patch15: Add-tests-for-send-and-receive-sendto_kdc-hooks.patch
-Patch16: Set-prompt-type-for-OTP-preauth-prompt.patch
-Patch17: Improve-bad-password-inference-in-kinit.patch
-Patch18: Change-KDC-error-for-encrypted-timestamp-preauth.patch
-Patch19: Add-krb5_db_register_keytab.patch
-Patch20: Don-t-feed-OS-RNG-output-into-the-OS-RNG.patch
-Patch21: Rename-prng_os.c-to-prng_device.c.patch
-Patch22: Add-getrandom-to-k5_get_os_entropy-using-syscall.patch
-Patch23: Add-OS-prng-intended-for-use-with-getrandom.patch
-Patch24: Properly-handle-EOF-condition-on-libkrad-sockets.patch
-Patch25: krb5-1.14.4-openssl11.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -256,7 +242,7 @@ interface is not considered stable.
 ln NOTICE LICENSE
 
 # Take the execute bit off of documentation.
-chmod -x doc/krb5-protocol/*.txt doc/ccapi/*.html
+chmod -x doc/ccapi/*.html
 
 # Generate an FDS-compatible LDIF file.
 inldif=src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
@@ -271,7 +257,7 @@ touch -r $inldif 60kerberos.ldif
 
 # Rebuild the configure scripts.
 pushd src
-./util/reconf --verbose
+autoreconf -fiv
 popd
 
 # Mess with some of the default ports that we use for testing, so that multiple
@@ -684,7 +670,6 @@ exit 0
 %files devel
 %defattr(-,root,root,-)
 %docdir %{_mandir}
-%doc doc/krb5-protocol
 %doc build-pdf/appdev.pdf build-pdf/plugindev.pdf
 
 %{_includedir}/*
@@ -724,6 +709,11 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Oct 20 2016 Robbie Harwood <rharwood@redhat.com> - 1.15-beta1-1
+- New upstream release
+- Update selinux with RHEL hygene
+- Resolves: #1314096
+
 * Tue Oct 11 2016 Tomáš Mráz <tmraz@redhat.com> - 1.14.4-6
 - rebuild with OpenSSL 1.1.0, added backported upstream patch
 

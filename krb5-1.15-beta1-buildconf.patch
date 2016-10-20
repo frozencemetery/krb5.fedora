@@ -1,7 +1,7 @@
-From 1df0a74f88f044f1e538e3d4fda13bbceb76e68b Mon Sep 17 00:00:00 2001
+From e7cea9ceea5a97248384a3bb0cc2bb2d58cce326 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:45:26 -0400
-Subject: [PATCH] krb5-1.12-buildconf.patch
+Subject: [PATCH] krb5-1.15-beta1-buildconf.patch
 
 Build binaries in this package as RELRO PIEs, libraries as partial RELRO,
 and install shared libraries with the execute bit set on them.  Prune out
@@ -33,10 +33,10 @@ index c17cb5e..1891dea 100755
  	lib_flags="$lib_flags -lkdb5 $KDB5_DB_LIB"
  	library=krb5
 diff --git a/src/config/pre.in b/src/config/pre.in
-index 63271e7..c100fef 100644
+index fcea229..d961b56 100644
 --- a/src/config/pre.in
 +++ b/src/config/pre.in
-@@ -182,7 +182,7 @@ INSTALL_PROGRAM=@INSTALL_PROGRAM@ $(INSTALL_STRIP)
+@@ -185,7 +185,7 @@ INSTALL_PROGRAM=@INSTALL_PROGRAM@ $(INSTALL_STRIP)
  INSTALL_SCRIPT=@INSTALL_PROGRAM@
  INSTALL_DATA=@INSTALL_DATA@
  INSTALL_SHLIB=@INSTALL_SHLIB@
@@ -46,19 +46,19 @@ index 63271e7..c100fef 100644
  ## ${prefix}.
  prefix=@prefix@
 diff --git a/src/config/shlib.conf b/src/config/shlib.conf
-index 55f16be..f4a762c 100644
+index 3e4af6c..2b20c3f 100644
 --- a/src/config/shlib.conf
 +++ b/src/config/shlib.conf
-@@ -422,7 +422,7 @@ mips-*-netbsd*)
- 	SHLIBEXT=.so
+@@ -423,7 +423,7 @@ mips-*-netbsd*)
  	# Linux ld doesn't default to stuffing the SONAME field...
  	# Use objdump -x to examine the fields of the library
--	LDCOMBINE='$(CC) -shared -fPIC -Wl,-h,$(LIBPREFIX)$(LIBBASE)$(SHLIBSEXT),--no-undefined'
-+	LDCOMBINE='$(CC) -shared -fPIC -Wl,-h,$(LIBPREFIX)$(LIBBASE)$(SHLIBSEXT),--no-undefined -Wl,-z,relro -Wl,--warn-shared-textrel'
- 	# 
- 	LDCOMBINE_TAIL='-Wl,--version-script binutils.versions && $(PERL) -w $(top_srcdir)/util/export-check.pl $(SHLIB_EXPORT_FILE) $@'
- 	SHLIB_EXPORT_FILE_DEP=binutils.versions
-@@ -433,7 +433,8 @@ mips-*-netbsd*)
+ 	# UNDEF_CHECK is suppressed by --enable-asan
+-	LDCOMBINE='$(CC) -shared -fPIC -Wl,-h,$(LIBPREFIX)$(LIBBASE)$(SHLIBSEXT) $(UNDEF_CHECK)'
++	LDCOMBINE='$(CC) -shared -fPIC -Wl,-h,$(LIBPREFIX)$(LIBBASE)$(SHLIBSEXT) $(UNDEF_CHECK)  -Wl,-z,relro -Wl,--warn-shared-textrel'
+ 	UNDEF_CHECK='-Wl,--no-undefined'
+ 	# $(EXPORT_CHECK) runs export-check.pl when in maintainer mode.
+ 	LDCOMBINE_TAIL='-Wl,--version-script binutils.versions $(EXPORT_CHECK)'
+@@ -435,7 +435,8 @@ mips-*-netbsd*)
  	SHLIB_EXPFLAGS='$(SHLIB_RPATH_FLAGS) $(SHLIB_DIRS) $(SHLIB_EXPLIBS)'
  	PROFFLAGS=-pg
  	PROG_RPATH_FLAGS='$(RPATH_FLAG)$(PROG_RPATH)'

@@ -1,4 +1,4 @@
-From f7538a0621d6b593e31f2031570a6f4678940241 Mon Sep 17 00:00:00 2001
+From 71c4e4b129b33d8b71262c5f2eea55267b6b33cb Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:47:44 -0400
 Subject: [PATCH] krb5-1.13-dirsrv-accountlock.patch
@@ -12,10 +12,10 @@ original version filed as RT#5891.
  3 files changed, 29 insertions(+)
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
-index ed343c5..f67eef7 100644
+index d49b7c1..9076016 100644
 --- a/src/aclocal.m4
 +++ b/src/aclocal.m4
-@@ -1653,6 +1653,15 @@ if test "$with_ldap" = yes; then
+@@ -1654,6 +1654,15 @@ if test "$with_ldap" = yes; then
    AC_MSG_NOTICE(enabling OpenLDAP database backend module support)
    OPENLDAP_PLUGIN=yes
  fi
@@ -32,10 +32,10 @@ index ed343c5..f67eef7 100644
  dnl
  dnl If libkeyutils exists (on Linux) include it and use keyring ccache
 diff --git a/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c b/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c
-index aca8f31..0a0968c 100644
+index 32efc4f..af8b2db 100644
 --- a/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c
 +++ b/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c
-@@ -1545,6 +1545,23 @@ populate_krb5_db_entry(krb5_context context, krb5_ldap_context *ldap_context,
+@@ -1674,6 +1674,23 @@ populate_krb5_db_entry(krb5_context context, krb5_ldap_context *ldap_context,
      ret = krb5_dbe_update_tl_data(context, entry, &userinfo_tl_data);
      if (ret)
          goto cleanup;
@@ -60,7 +60,7 @@ index aca8f31..0a0968c 100644
      ret = krb5_read_tkt_policy(context, ldap_context, entry, tktpolname);
      if (ret)
 diff --git a/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c b/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c
-index 6a06f55..1f87e21 100644
+index d722dbf..5e8e9a8 100644
 --- a/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c
 +++ b/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c
 @@ -54,6 +54,9 @@ char     *principal_attributes[] = { "krbprincipalname",
@@ -72,7 +72,7 @@ index 6a06f55..1f87e21 100644
 +#endif
                                       "krbLastPwdChange",
                                       "krbLastAdminUnlock",
-                                      "krbExtraData",
+                                      "krbPrincipalAuthInd",
 -- 
 2.9.3
 
