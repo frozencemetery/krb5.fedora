@@ -768,6 +768,3 @@ index fde09a1..79c0fe2 100644
  # Make localedir work in autoconf 2.5x.
  if test "${localedir+set}" != set; then
      localedir='$(datadir)/locale'
--- 
-2.9.3
-

@@ -42,6 +42,3 @@ index 73f0fe6..4850c0d 100644
  #ifdef USE_SELINUX
              selabel = krb5int_push_fscreatecon_for(dirname);
  #endif
--- 
-2.9.3
-

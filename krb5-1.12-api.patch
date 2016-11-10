@@ -35,6 +35,3 @@ index a693610..0ed7883 100644
      if (flags & KRB5_PRINCIPAL_COMPARE_ENTERPRISE) {
          /* Treat UPNs as if they were real principals */
          if (princ1->type == KRB5_NT_ENTERPRISE_PRINCIPAL) {
--- 
-2.9.3
-

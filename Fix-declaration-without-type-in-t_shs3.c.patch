@@ -1,0 +1,22 @@
+From fcb8dd8c2c40994851c40fc64fa3dcf81a025d25 Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Thu, 10 Nov 2016 12:57:19 -0500
+Subject: [PATCH] Fix declaration without type in t_shs3.c
+
+(cherry picked from commit 2adf66302ecfff350def3e81b58fa56f5ec9efcd)
+---
+ src/lib/crypto/builtin/sha1/t_shs3.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/lib/crypto/builtin/sha1/t_shs3.c b/src/lib/crypto/builtin/sha1/t_shs3.c
+index ca985fb..f7932ef 100644
+--- a/src/lib/crypto/builtin/sha1/t_shs3.c
++++ b/src/lib/crypto/builtin/sha1/t_shs3.c
+@@ -56,6 +56,7 @@ int Dflag;
+ 
+ int
+ main(argc,argv)
++    int argc;
+     char **argv;
+ {
+     char *argp;

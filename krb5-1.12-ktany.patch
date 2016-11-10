@@ -364,6 +364,3 @@ index 0d39b29..6534d7c 100644
  };
  const static struct krb5_kt_typelist krb5_kt_typelist_memory = {
      &krb5_mkt_ops,
--- 
-2.9.3
-

@@ -20,6 +20,3 @@ index 5755bb5..9d58f29 100644
  
  KSU_LIBS=@KSU_LIBS@
  PAM_LIBS=@PAM_LIBS@
--- 
-2.9.3
-
