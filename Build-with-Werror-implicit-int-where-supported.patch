@@ -1,4 +1,4 @@
-From a4486f53b0477fd4c9e79e03450a7805110eb842 Mon Sep 17 00:00:00 2001
+From f6e8de78c74b837878a07c0d9f14d69a80df83ce Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 10 Nov 2016 13:20:49 -0500
 Subject: [PATCH] Build with -Werror-implicit-int where supported
@@ -9,10 +9,10 @@ Subject: [PATCH] Build with -Werror-implicit-int where supported
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
-index 9076016..9a2f873 100644
+index 2bfb994..da1d6d8 100644
 --- a/src/aclocal.m4
 +++ b/src/aclocal.m4
-@@ -527,7 +527,7 @@ if test "$GCC" = yes ; then
+@@ -529,7 +529,7 @@ if test "$GCC" = yes ; then
      TRY_WARN_CC_FLAG(-Wno-format-zero-length)
      # Other flags here may not be supported on some versions of
      # gcc that people want to use.

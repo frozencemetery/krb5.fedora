@@ -8,12 +8,12 @@
 %global configure_default_ccache_name 1
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 
-%global prerelease -beta1
+%global prerelease -beta2
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15
-Release: 2%{?dist}.beta1.0
+Release: 3%{?dist}.beta2.0
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -56,8 +56,7 @@ Patch8: krb5-1.13-dirsrv-accountlock.patch
 Patch9: krb5-1.9-debuginfo.patch
 Patch10: krb5-1.11-run_user_0.patch
 Patch11: krb5-1.11-kpasswdtest.patch
-Patch12: Fix-declaration-without-type-in-t_shs3.c.patch
-Patch13: Build-with-Werror-implicit-int-where-supported.patch
+Patch12: Build-with-Werror-implicit-int-where-supported.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -711,6 +710,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Nov 16 2016 Robbie Harwood <rharwood@redhat.com> - 1.15-beta2-3
+- New upstream release
+
 * Thu Nov 10 2016 Robbie Harwood <rharwood@redhat.com> - 1.15-beta1-2
 - Ensure we can build with the new CFLAGS
 - Remove the git versioning in patches

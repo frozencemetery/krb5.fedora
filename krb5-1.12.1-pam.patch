@@ -1,4 +1,4 @@
-From 551bd300005a8c45bad3a26f813ae99f31f4a641 Mon Sep 17 00:00:00 2001
+From 98014c7e0b131da4fa157289aa3d0cf037095cec Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:29:58 -0400
 Subject: [PATCH] krb5-1.12.1-pam.patch
@@ -28,10 +28,10 @@ changes we're proposing for how it handles cache collections.
  create mode 100644 src/clients/ksu/pam.h
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
-index bd2eb48..5fc7f3e 100644
+index 9c46da4..508e5fe 100644
 --- a/src/aclocal.m4
 +++ b/src/aclocal.m4
-@@ -1673,3 +1673,70 @@ AC_DEFUN(KRB5_AC_PERSISTENT_KEYRING,[
+@@ -1675,3 +1675,70 @@ AC_DEFUN(KRB5_AC_PERSISTENT_KEYRING,[
        ]))
  ])dnl
  dnl
@@ -756,7 +756,7 @@ index 0000000..0ab7656
 +void appl_pam_cleanup(void);
 +#endif
 diff --git a/src/configure.in b/src/configure.in
-index fde09a1..79c0fe2 100644
+index 037c9f3..daabd12 100644
 --- a/src/configure.in
 +++ b/src/configure.in
 @@ -1336,6 +1336,8 @@ AC_SUBST([VERTO_VERSION])
