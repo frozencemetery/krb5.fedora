@@ -8,11 +8,13 @@
 %global configure_default_ccache_name 1
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 
+# leave empty or set to e.g., -beta2
 %global prerelease -beta2
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15
+# for prerelease, should be e.g., 0.3.beta2%{?dist}
 Release: 3%{?dist}.beta2.0
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
