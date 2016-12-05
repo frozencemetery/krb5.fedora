@@ -9,13 +9,13 @@
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 
 # leave empty or set to e.g., -beta2
-%global prerelease -beta2
+%global prerelease %{nil}
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15
 # for prerelease, should be e.g., 0.3.beta2%{?dist}
-Release: 3%{?dist}.beta2.0
+Release: 4%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -712,6 +712,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Dec 05 2016 Robbie Harwood <rharwood@redhat.com> - 1.15-4
+- New upstream release
+
 * Wed Nov 16 2016 Robbie Harwood <rharwood@redhat.com> - 1.15-beta2-3
 - New upstream release
 

@@ -1,4 +1,4 @@
-From 553dc7a7d80af607026f4243ca1cc9078a4ef1a3 Mon Sep 17 00:00:00 2001
+From 0fb88f451f25c4bf923248c9e13dd79f658c743a Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:52:01 -0400
 Subject: [PATCH] krb5-1.11-kpasswdtest.patch

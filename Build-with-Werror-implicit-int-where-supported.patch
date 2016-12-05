@@ -1,4 +1,4 @@
-From f6e8de78c74b837878a07c0d9f14d69a80df83ce Mon Sep 17 00:00:00 2001
+From 6c5c66b807cabaf71a56d1a630ea3b47344f81b4 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 10 Nov 2016 13:20:49 -0500
 Subject: [PATCH] Build with -Werror-implicit-int where supported
