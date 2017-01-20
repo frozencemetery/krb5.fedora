@@ -14,7 +14,7 @@ the contents of the first keytab.
  create mode 100644 src/lib/krb5/keytab/kt_any.c
 
 diff --git a/src/lib/krb5/keytab/Makefile.in b/src/lib/krb5/keytab/Makefile.in
-index 2a8fceb..ffd179f 100644
+index 2a8fceb00..ffd179fb2 100644
 --- a/src/lib/krb5/keytab/Makefile.in
 +++ b/src/lib/krb5/keytab/Makefile.in
 @@ -12,6 +12,7 @@ STLIBOBJS= \
@@ -43,7 +43,7 @@ index 2a8fceb..ffd179f 100644
  	$(srcdir)/kt_srvtab.c	\
 diff --git a/src/lib/krb5/keytab/kt_any.c b/src/lib/krb5/keytab/kt_any.c
 new file mode 100644
-index 0000000..1b9b776
+index 000000000..1b9b7765b
 --- /dev/null
 +++ b/src/lib/krb5/keytab/kt_any.c
 @@ -0,0 +1,292 @@
@@ -340,7 +340,7 @@ index 0000000..1b9b776
 +    free(data);
 +}
 diff --git a/src/lib/krb5/keytab/ktbase.c b/src/lib/krb5/keytab/ktbase.c
-index 0d39b29..6534d7c 100644
+index 0d39b2940..6534d7c52 100644
 --- a/src/lib/krb5/keytab/ktbase.c
 +++ b/src/lib/krb5/keytab/ktbase.c
 @@ -57,14 +57,19 @@ extern const krb5_kt_ops krb5_ktf_ops;

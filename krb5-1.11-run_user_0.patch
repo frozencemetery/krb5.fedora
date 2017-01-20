@@ -11,7 +11,7 @@ it, too.
  1 file changed, 14 insertions(+)
 
 diff --git a/src/lib/krb5/ccache/cc_dir.c b/src/lib/krb5/ccache/cc_dir.c
-index 73f0fe6..4850c0d 100644
+index 73f0fe62d..4850c0d07 100644
 --- a/src/lib/krb5/ccache/cc_dir.c
 +++ b/src/lib/krb5/ccache/cc_dir.c
 @@ -61,6 +61,8 @@

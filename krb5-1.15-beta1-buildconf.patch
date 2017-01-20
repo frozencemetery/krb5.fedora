@@ -15,7 +15,7 @@ not just assume that the compiler supports using these flags.
  3 files changed, 11 insertions(+), 3 deletions(-)
 
 diff --git a/src/build-tools/krb5-config.in b/src/build-tools/krb5-config.in
-index c17cb5e..1891dea 100755
+index c17cb5eb5..1891dea99 100755
 --- a/src/build-tools/krb5-config.in
 +++ b/src/build-tools/krb5-config.in
 @@ -226,6 +226,13 @@ if test -n "$do_libs"; then
@@ -33,7 +33,7 @@ index c17cb5e..1891dea 100755
  	lib_flags="$lib_flags -lkdb5 $KDB5_DB_LIB"
  	library=krb5
 diff --git a/src/config/pre.in b/src/config/pre.in
-index fcea229..d961b56 100644
+index fcea229bd..d961b5621 100644
 --- a/src/config/pre.in
 +++ b/src/config/pre.in
 @@ -185,7 +185,7 @@ INSTALL_PROGRAM=@INSTALL_PROGRAM@ $(INSTALL_STRIP)
@@ -46,7 +46,7 @@ index fcea229..d961b56 100644
  ## ${prefix}.
  prefix=@prefix@
 diff --git a/src/config/shlib.conf b/src/config/shlib.conf
-index 3e4af6c..2b20c3f 100644
+index 3e4af6c02..2b20c3fda 100644
 --- a/src/config/shlib.conf
 +++ b/src/config/shlib.conf
 @@ -423,7 +423,7 @@ mips-*-netbsd*)

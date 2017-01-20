@@ -9,7 +9,7 @@ We want to be able to use --with-netlib and --enable-dns at the same time.
  1 file changed, 1 insertion(+)
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
-index 607859f..f5667c3 100644
+index 607859f17..f5667c35f 100644
 --- a/src/aclocal.m4
 +++ b/src/aclocal.m4
 @@ -703,6 +703,7 @@ AC_HELP_STRING([--with-netlib=LIBS], use user defined resolver library),

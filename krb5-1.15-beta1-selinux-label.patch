@@ -66,7 +66,7 @@ which we used earlier, is some improvement.
  create mode 100644 src/util/support/selinux.c
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
-index 508e5fe..607859f 100644
+index 508e5fe90..607859f17 100644
 --- a/src/aclocal.m4
 +++ b/src/aclocal.m4
 @@ -89,6 +89,7 @@ AC_SUBST_FILE(libnodeps_frag)
@@ -130,7 +130,7 @@ index 508e5fe..607859f 100644
 +AC_SUBST(SELINUX_LIBS)
 +])dnl
 diff --git a/src/build-tools/krb5-config.in b/src/build-tools/krb5-config.in
-index f6184da..c17cb5e 100755
+index f6184da3f..c17cb5eb5 100755
 --- a/src/build-tools/krb5-config.in
 +++ b/src/build-tools/krb5-config.in
 @@ -41,6 +41,7 @@ DL_LIB='@DL_LIB@'
@@ -151,7 +151,7 @@ index f6184da..c17cb5e 100755
  
      echo $lib_flags
 diff --git a/src/config/pre.in b/src/config/pre.in
-index e062632..fcea229 100644
+index e0626320c..fcea229bd 100644
 --- a/src/config/pre.in
 +++ b/src/config/pre.in
 @@ -177,6 +177,7 @@ LD = $(PURE) @LD@
@@ -172,7 +172,7 @@ index e062632..fcea229 100644
  GSS_LIBS	= $(GSS_KRB5_LIB)
  # needs fixing if ever used on Mac OS X!
 diff --git a/src/configure.in b/src/configure.in
-index daabd12..acf3a45 100644
+index daabd12c8..acf3a458b 100644
 --- a/src/configure.in
 +++ b/src/configure.in
 @@ -1338,6 +1338,8 @@ AC_PATH_PROG(GROFF, groff)
@@ -185,7 +185,7 @@ index daabd12..acf3a45 100644
  if test "${localedir+set}" != set; then
      localedir='$(datadir)/locale'
 diff --git a/src/include/k5-int.h b/src/include/k5-int.h
-index 6499173..173cb02 100644
+index 64991738a..173cb0264 100644
 --- a/src/include/k5-int.h
 +++ b/src/include/k5-int.h
 @@ -128,6 +128,7 @@ typedef unsigned char   u_char;
@@ -198,7 +198,7 @@ index 6499173..173cb02 100644
  #define KRB5_KDB_MAX_RLIFE      (60*60*24*7) /* one week */
 diff --git a/src/include/k5-label.h b/src/include/k5-label.h
 new file mode 100644
-index 0000000..dfaaa84
+index 000000000..dfaaa847c
 --- /dev/null
 +++ b/src/include/k5-label.h
 @@ -0,0 +1,32 @@
@@ -235,7 +235,7 @@ index 0000000..dfaaa84
 +#endif
 +#endif
 diff --git a/src/include/krb5/krb5.hin b/src/include/krb5/krb5.hin
-index ac22f4c..cf60d6c 100644
+index ac22f4c55..cf60d6c41 100644
 --- a/src/include/krb5/krb5.hin
 +++ b/src/include/krb5/krb5.hin
 @@ -87,6 +87,12 @@
@@ -252,7 +252,7 @@ index ac22f4c..cf60d6c 100644
  
  #include <stdlib.h>
 diff --git a/src/kadmin/dbutil/dump.c b/src/kadmin/dbutil/dump.c
-index f7889bd..cad53cf 100644
+index f7889bd23..cad53cfbf 100644
 --- a/src/kadmin/dbutil/dump.c
 +++ b/src/kadmin/dbutil/dump.c
 @@ -148,12 +148,21 @@ create_ofile(char *ofile, char **tmpname)
@@ -287,7 +287,7 @@ index f7889bd..cad53cf 100644
          com_err(progname, errno, _("while creating 'ok' file, '%s'"), file_ok);
          exit_status++;
 diff --git a/src/kdc/main.c b/src/kdc/main.c
-index ebc852b..a4dffb2 100644
+index ebc852bba..a4dffb29a 100644
 --- a/src/kdc/main.c
 +++ b/src/kdc/main.c
 @@ -872,7 +872,7 @@ write_pid_file(const char *path)
@@ -300,7 +300,7 @@ index ebc852b..a4dffb2 100644
          return errno;
      pid = (unsigned long) getpid();
 diff --git a/src/lib/kadm5/logger.c b/src/lib/kadm5/logger.c
-index ce79fab..c53a574 100644
+index ce79fabf7..c53a5743f 100644
 --- a/src/lib/kadm5/logger.c
 +++ b/src/lib/kadm5/logger.c
 @@ -414,7 +414,7 @@ krb5_klog_init(krb5_context kcontext, char *ename, char *whoami, krb5_boolean do
@@ -322,7 +322,7 @@ index ce79fab..c53a574 100644
                  set_cloexec_file(f);
                  log_control.log_entries[lindex].lfu_filep = f;
 diff --git a/src/lib/kdb/kdb_log.c b/src/lib/kdb/kdb_log.c
-index 766d300..6466417 100644
+index 766d3002a..6466417b7 100644
 --- a/src/lib/kdb/kdb_log.c
 +++ b/src/lib/kdb/kdb_log.c
 @@ -476,7 +476,7 @@ ulog_map(krb5_context context, const char *logname, uint32_t ulogentries)
@@ -335,7 +335,7 @@ index 766d300..6466417 100644
              return errno;
  
 diff --git a/src/lib/krb5/ccache/cc_dir.c b/src/lib/krb5/ccache/cc_dir.c
-index bba64e5..73f0fe6 100644
+index bba64e516..73f0fe62d 100644
 --- a/src/lib/krb5/ccache/cc_dir.c
 +++ b/src/lib/krb5/ccache/cc_dir.c
 @@ -183,10 +183,19 @@ write_primary_file(const char *primary_path, const char *contents)
@@ -385,7 +385,7 @@ index bba64e5..73f0fe6 100644
                    _("Credential cache directory %s does not exist"),
                    dirname);
 diff --git a/src/lib/krb5/keytab/kt_file.c b/src/lib/krb5/keytab/kt_file.c
-index 6a42f26..674d88b 100644
+index 6a42f267d..674d88bab 100644
 --- a/src/lib/krb5/keytab/kt_file.c
 +++ b/src/lib/krb5/keytab/kt_file.c
 @@ -1022,14 +1022,14 @@ krb5_ktfileint_open(krb5_context context, krb5_keytab id, int mode)
@@ -406,7 +406,7 @@ index 6a42f26..674d88b 100644
                  goto report_errno;
              writevno = 1;
 diff --git a/src/lib/krb5/os/trace.c b/src/lib/krb5/os/trace.c
-index 83c8d4d..a192461 100644
+index 83c8d4db8..a19246128 100644
 --- a/src/lib/krb5/os/trace.c
 +++ b/src/lib/krb5/os/trace.c
 @@ -397,7 +397,7 @@ krb5_set_trace_filename(krb5_context context, const char *filename)
@@ -419,7 +419,7 @@ index 83c8d4d..a192461 100644
          free(fd);
          return errno;
 diff --git a/src/lib/krb5/rcache/rc_dfl.c b/src/lib/krb5/rcache/rc_dfl.c
-index c4d2c74..c0f12ed 100644
+index c4d2c744d..c0f12ed9d 100644
 --- a/src/lib/krb5/rcache/rc_dfl.c
 +++ b/src/lib/krb5/rcache/rc_dfl.c
 @@ -794,6 +794,9 @@ krb5_rc_dfl_expunge_locked(krb5_context context, krb5_rcache id)
@@ -451,7 +451,7 @@ index c4d2c74..c0f12ed 100644
          goto cleanup;
      for (q = t->a; q; q = q->na) {
 diff --git a/src/plugins/kdb/db2/adb_openclose.c b/src/plugins/kdb/db2/adb_openclose.c
-index 7db30a3..2b9d019 100644
+index 7db30a33b..2b9d01921 100644
 --- a/src/plugins/kdb/db2/adb_openclose.c
 +++ b/src/plugins/kdb/db2/adb_openclose.c
 @@ -152,7 +152,7 @@ osa_adb_init_db(osa_adb_db_t *dbp, char *filename, char *lockfilename,
@@ -464,7 +464,7 @@ index 7db30a3..2b9d019 100644
               * maybe someone took away write permission so we could only
               * get shared locks?
 diff --git a/src/plugins/kdb/db2/kdb_db2.c b/src/plugins/kdb/db2/kdb_db2.c
-index 4c4036e..d90bdea 100644
+index 4c4036eb4..d90bdeaba 100644
 --- a/src/plugins/kdb/db2/kdb_db2.c
 +++ b/src/plugins/kdb/db2/kdb_db2.c
 @@ -694,8 +694,8 @@ ctx_create_db(krb5_context context, krb5_db2_context *dbc)
@@ -479,7 +479,7 @@ index 4c4036e..d90bdea 100644
          retval = errno;
          goto cleanup;
 diff --git a/src/plugins/kdb/db2/libdb2/btree/bt_open.c b/src/plugins/kdb/db2/libdb2/btree/bt_open.c
-index 2977b17..d5809a5 100644
+index 2977b17f3..d5809a5a9 100644
 --- a/src/plugins/kdb/db2/libdb2/btree/bt_open.c
 +++ b/src/plugins/kdb/db2/libdb2/btree/bt_open.c
 @@ -60,6 +60,7 @@ static char sccsid[] = "@(#)bt_open.c	8.11 (Berkeley) 11/2/95";
@@ -500,7 +500,7 @@ index 2977b17..d5809a5 100644
  
  	} else {
 diff --git a/src/plugins/kdb/db2/libdb2/hash/hash.c b/src/plugins/kdb/db2/libdb2/hash/hash.c
-index 76f5d47..1fa8b83 100644
+index 76f5d4709..1fa8b8389 100644
 --- a/src/plugins/kdb/db2/libdb2/hash/hash.c
 +++ b/src/plugins/kdb/db2/libdb2/hash/hash.c
 @@ -51,6 +51,7 @@ static char sccsid[] = "@(#)hash.c	8.12 (Berkeley) 11/7/95";
@@ -521,7 +521,7 @@ index 76f5d47..1fa8b83 100644
  		(void)fcntl(hashp->fp, F_SETFD, 1);
  	}
 diff --git a/src/plugins/kdb/db2/libdb2/recno/rec_open.c b/src/plugins/kdb/db2/libdb2/recno/rec_open.c
-index d8b26e7..b0daa7c 100644
+index d8b26e701..b0daa7c02 100644
 --- a/src/plugins/kdb/db2/libdb2/recno/rec_open.c
 +++ b/src/plugins/kdb/db2/libdb2/recno/rec_open.c
 @@ -51,6 +51,7 @@ static char sccsid[] = "@(#)rec_open.c	8.12 (Berkeley) 11/18/94";
@@ -543,7 +543,7 @@ index d8b26e7..b0daa7c 100644
  
  	if (fname != NULL && fcntl(rfd, F_SETFD, 1) == -1) {
 diff --git a/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c b/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c
-index 022156a..3d6994c 100644
+index 022156a5e..3d6994c67 100644
 --- a/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c
 +++ b/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c
 @@ -203,7 +203,7 @@ kdb5_ldap_stash_service_password(int argc, char **argv)
@@ -580,7 +580,7 @@ index 022156a..3d6994c 100644
          if (newfile == NULL) {
              com_err(me, errno, _("Error creating file %s"), tmp_file);
 diff --git a/src/slave/kpropd.c b/src/slave/kpropd.c
-index 056c31a..b78c3d9 100644
+index 056c31a42..b78c3d9e5 100644
 --- a/src/slave/kpropd.c
 +++ b/src/slave/kpropd.c
 @@ -464,6 +464,9 @@ doit(int fd)
@@ -610,7 +610,7 @@ index 056c31a..b78c3d9 100644
                              KRB5_LOCKMODE_EXCLUSIVE | KRB5_LOCKMODE_DONTBLOCK);
      if (retval) {
 diff --git a/src/util/profile/prof_file.c b/src/util/profile/prof_file.c
-index 907c119..0f5462a 100644
+index 907c119bb..0f5462aea 100644
 --- a/src/util/profile/prof_file.c
 +++ b/src/util/profile/prof_file.c
 @@ -33,6 +33,7 @@
@@ -631,7 +631,7 @@ index 907c119..0f5462a 100644
          retval = errno;
          if (retval == 0)
 diff --git a/src/util/support/Makefile.in b/src/util/support/Makefile.in
-index 6239e41..17bcd2a 100644
+index 6239e4176..17bcd2a67 100644
 --- a/src/util/support/Makefile.in
 +++ b/src/util/support/Makefile.in
 @@ -69,6 +69,7 @@ IPC_SYMS= \
@@ -653,7 +653,7 @@ index 6239e41..17bcd2a 100644
  
 diff --git a/src/util/support/selinux.c b/src/util/support/selinux.c
 new file mode 100644
-index 0000000..2302634
+index 000000000..230263421
 --- /dev/null
 +++ b/src/util/support/selinux.c
 @@ -0,0 +1,406 @@

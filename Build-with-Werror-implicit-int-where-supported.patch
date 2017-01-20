@@ -9,7 +9,7 @@ Subject: [PATCH] Build with -Werror-implicit-int where supported
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
-index 2bfb994..da1d6d8 100644
+index 2bfb99496..da1d6d8b4 100644
 --- a/src/aclocal.m4
 +++ b/src/aclocal.m4
 @@ -529,7 +529,7 @@ if test "$GCC" = yes ; then

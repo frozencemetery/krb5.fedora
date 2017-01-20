@@ -28,7 +28,7 @@ changes we're proposing for how it handles cache collections.
  create mode 100644 src/clients/ksu/pam.h
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
-index 9c46da4..508e5fe 100644
+index 9c46da4b5..508e5fe90 100644
 --- a/src/aclocal.m4
 +++ b/src/aclocal.m4
 @@ -1675,3 +1675,70 @@ AC_DEFUN(KRB5_AC_PERSISTENT_KEYRING,[
@@ -103,7 +103,7 @@ index 9c46da4..508e5fe 100644
 +AC_SUBST(NON_PAM_MAN)
 +])dnl
 diff --git a/src/clients/ksu/Makefile.in b/src/clients/ksu/Makefile.in
-index b2fcbf2..5755bb5 100644
+index b2fcbf240..5755bb58a 100644
 --- a/src/clients/ksu/Makefile.in
 +++ b/src/clients/ksu/Makefile.in
 @@ -3,12 +3,14 @@ BUILDTOP=$(REL)..$(S)..
@@ -141,7 +141,7 @@ index b2fcbf2..5755bb5 100644
  clean:
  	$(RM) ksu
 diff --git a/src/clients/ksu/main.c b/src/clients/ksu/main.c
-index 28342c2..cab0c18 100644
+index 28342c2d7..cab0c1806 100644
 --- a/src/clients/ksu/main.c
 +++ b/src/clients/ksu/main.c
 @@ -26,6 +26,7 @@
@@ -299,7 +299,7 @@ index 28342c2..cab0c18 100644
      }
 diff --git a/src/clients/ksu/pam.c b/src/clients/ksu/pam.c
 new file mode 100644
-index 0000000..cbfe487
+index 000000000..cbfe48704
 --- /dev/null
 +++ b/src/clients/ksu/pam.c
 @@ -0,0 +1,389 @@
@@ -694,7 +694,7 @@ index 0000000..cbfe487
 +#endif
 diff --git a/src/clients/ksu/pam.h b/src/clients/ksu/pam.h
 new file mode 100644
-index 0000000..0ab7656
+index 000000000..0ab76569c
 --- /dev/null
 +++ b/src/clients/ksu/pam.h
 @@ -0,0 +1,57 @@
@@ -756,7 +756,7 @@ index 0000000..0ab7656
 +void appl_pam_cleanup(void);
 +#endif
 diff --git a/src/configure.in b/src/configure.in
-index 037c9f3..daabd12 100644
+index 037c9f316..daabd12c8 100644
 --- a/src/configure.in
 +++ b/src/configure.in
 @@ -1336,6 +1336,8 @@ AC_SUBST([VERTO_VERSION])

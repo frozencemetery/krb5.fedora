@@ -11,7 +11,7 @@ crashing if applications don't check ahead of time.
  1 file changed, 7 insertions(+)
 
 diff --git a/src/lib/krb5/krb/princ_comp.c b/src/lib/krb5/krb/princ_comp.c
-index a693610..0ed7883 100644
+index a6936107d..0ed78833b 100644
 --- a/src/lib/krb5/krb/princ_comp.c
 +++ b/src/lib/krb5/krb/princ_comp.c
 @@ -36,6 +36,10 @@ realm_compare_flags(krb5_context context,

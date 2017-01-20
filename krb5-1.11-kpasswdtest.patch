@@ -8,7 +8,7 @@ Subject: [PATCH] krb5-1.11-kpasswdtest.patch
  1 file changed, 1 insertion(+)
 
 diff --git a/src/kadmin/testing/proto/krb5.conf.proto b/src/kadmin/testing/proto/krb5.conf.proto
-index 00c4429..9c4bc1d 100644
+index 00c442978..9c4bc1de7 100644
 --- a/src/kadmin/testing/proto/krb5.conf.proto
 +++ b/src/kadmin/testing/proto/krb5.conf.proto
 @@ -9,6 +9,7 @@
