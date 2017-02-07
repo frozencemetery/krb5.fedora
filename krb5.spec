@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15
 # for prerelease, should be e.g., 0.3.beta2%{?dist}
-Release: 5%{?dist}
+Release: 6%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -136,6 +136,7 @@ Requires: libkadm5%{?_isa} = %{version}-%{release}
 Requires: libcom_err-devel
 Requires: keyutils-libs-devel, libselinux-devel
 Requires: libverto-devel
+Provides: krb5-kdb-version = %{kdbversion}
 
 %description devel
 Kerberos is a network authentication system. The krb5-devel package
@@ -149,7 +150,6 @@ Group: System Environment/Libraries
 Requires: coreutils, gawk, grep, sed
 Requires: keyutils-libs >= 1.5.8
 Requires: /etc/crypto-policies/back-ends/krb5.config
-Provides: krb5-kdb-version = %{kdbversion}
 
 %description libs
 Kerberos is a network authentication system. The krb5-libs package
@@ -718,6 +718,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Feb 07 2017 Robbie Harwood <rharwood@redhat.com> - 1.15-6
+- Move krb5-kdb-version provides from -libs to -devel
+
 * Fri Jan 20 2017 Robbie Harwood <rharwood@redhat.com> - 1.15-5
 - Add free hook to KDB; increments KDB version
 - Add KDB version flag
