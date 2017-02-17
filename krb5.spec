@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15
 # for prerelease, should be e.g., 0.3.beta2%{?dist}
-Release: 7%{?dist}
+Release: 8%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -719,6 +719,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Feb 17 2017 Robbie Harwood <rharwood@redhat.com> - 1.15-8
+- Hammer refresh around transient rawhide issue
+
 * Fri Feb 17 2017 Robbie Harwood <rharwood@redhat.com> - 1.15-7
 - Backport fix for GSSAPI fallback realm
 
