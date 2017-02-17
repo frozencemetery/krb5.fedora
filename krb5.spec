@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14.4
-Release: 4%{?dist}
+Release: 5%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -56,18 +56,7 @@ Patch8: krb5-1.13-dirsrv-accountlock.patch
 Patch9: krb5-1.9-debuginfo.patch
 Patch10: krb5-1.11-run_user_0.patch
 Patch11: krb5-1.11-kpasswdtest.patch
-Patch12: Fix-impersonate_name-to-work-with-interposers.patch
-Patch13: Create-KDC-and-kadmind-log-files-with-mode-0640.patch
-Patch14: Add-KDC-pre-send-and-post-receive-KDC-hooks.patch
-Patch15: Add-tests-for-send-and-receive-sendto_kdc-hooks.patch
-Patch16: Set-prompt-type-for-OTP-preauth-prompt.patch
-Patch17: Improve-bad-password-inference-in-kinit.patch
-Patch18: Change-KDC-error-for-encrypted-timestamp-preauth.patch
-Patch19: Add-krb5_db_register_keytab.patch
-Patch20: Don-t-feed-OS-RNG-output-into-the-OS-RNG.patch
-Patch21: Rename-prng_os.c-to-prng_device.c.patch
-Patch22: Add-getrandom-to-k5_get_os_entropy-using-syscall.patch
-Patch23: Add-OS-prng-intended-for-use-with-getrandom.patch
+Patch15: Use-fallback-realm-for-GSSAPI-ccache-selection.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -722,6 +711,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Feb 17 2017 Robbie Harwood <rharwood@redhat.com> - 1.14.4-5
+- Backport fix for GSSAPI fallback realm
+
 * Fri Sep 30 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.4-4
 - Fix backward check in kprop.service
 
