@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15
 # for prerelease, should be e.g., 0.3.beta2%{?dist}
-Release: 6%{?dist}
+Release: 7%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -64,6 +64,7 @@ Patch11: krb5-1.11-kpasswdtest.patch
 Patch12: Build-with-Werror-implicit-int-where-supported.patch
 Patch13: Explicitly-copy-KDB-vtable-fields.patch
 Patch14: Add-free_principal_e_data-KDB-method.patch
+Patch15: Use-fallback-realm-for-GSSAPI-ccache-selection.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -718,6 +719,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Feb 17 2017 Robbie Harwood <rharwood@redhat.com> - 1.15-7
+- Backport fix for GSSAPI fallback realm
+
 * Tue Feb 07 2017 Robbie Harwood <rharwood@redhat.com> - 1.15-6
 - Move krb5-kdb-version provides from -libs to -devel
 
