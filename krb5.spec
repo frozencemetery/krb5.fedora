@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15.1
 # for prerelease, should be e.g., 0.3.beta2%{?dist}
-Release: 1%{?dist}
+Release: 2%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -615,8 +615,8 @@ exit 0
 %{_sbindir}/krb5kdc
 %{_mandir}/man8/krb5kdc.8*
 
-# This is here for people who want to test their server, and also
-# included in devel package for similar reasons.
+# This is here for people who want to test their server.  It was formerly also
+# included in -devel.
 %{_bindir}/sclient
 %{_mandir}/man1/sclient.1*
 %{_sbindir}/sserver
@@ -692,11 +692,7 @@ exit 0
 %{_libdir}/pkgconfig/*
 
 %{_bindir}/krb5-config
-%{_bindir}/sclient
 %{_mandir}/man1/krb5-config.1*
-%{_mandir}/man1/sclient.1*
-%{_mandir}/man8/sserver.8*
-%{_sbindir}/sserver
 
 # Protocol test clients.
 %{_bindir}/sim_client
@@ -718,6 +714,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Mar 07 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-2
+- Remove duplication between subpackages
+- Resolves: #1250228
+
 * Fri Mar 03 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-1
 - New upstream release - 1.15.1
 
