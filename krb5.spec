@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15.1
 # for prerelease, should be e.g., 0.3.beta2%{?dist}
-Release: 2%{?dist}
+Release: 3%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -64,6 +64,11 @@ Patch11: krb5-1.11-kpasswdtest.patch
 Patch12: Build-with-Werror-implicit-int-where-supported.patch
 Patch15: Use-fallback-realm-for-GSSAPI-ccache-selection.patch
 Patch16: Use-GSSAPI-fallback-skiptest.patch
+Patch17: Improve-PKINIT-UPN-SAN-matching.patch
+Patch18: Add-test-cert-generation-to-make-certs.sh.patch
+Patch19: Add-PKINIT-UPN-tests-to-t_pkinit.py.patch
+Patch20: Deindent-crypto_retrieve_X509_sans.patch
+Patch21: Add-certauth-pluggable-interface.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -714,6 +719,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Mar 22 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-3
+- Backport certauth plugin and related pkinit changes
+
 * Tue Mar 07 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-2
 - Remove duplication between subpackages
 - Resolves: #1250228
