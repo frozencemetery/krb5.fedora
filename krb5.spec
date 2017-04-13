@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15.1
 # for prerelease, should be e.g., 0.3.beta2%{?dist}
-Release: 4%{?dist}
+Release: 5%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -364,13 +364,6 @@ tar -cf "krb5-%{version}-pdfs.tar.new" build-pdf/*.pdf
 %{__cc} -fPIC -shared -o noport.so -Wall -Wextra $RPM_SOURCE_DIR/noport.c
 
 %check
-# Alright, this much is still a work in progress.
-%if %{?__isa_bits:%{__isa_bits}}%{!?__isa_bits:32} == 64
-if hostname | grep -q build ; then
-	sleep 600
-fi
-%endif
-
 mkdir nss_wrapper
 
 # Set things up to use the test wrappers.
@@ -516,6 +509,20 @@ rm -- "$RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/preauth/test.so"
 [ "$RPM_BUILD_ROOT" != '/' ] && rm -rf -- "$RPM_BUILD_ROOT"
 
 %post libs -p /sbin/ldconfig
+
+%triggerun libs -- krb5-libs
+old_ver=$(rpm -q --qf '%%{VERSION}' krb5-libs)
+
+old_rel=$(rpm -q --qf '%%{RELEASE}' krb5-libs)
+old_rel=${old_rel%%.*}
+
+if [[ $old_ver < 1.15.1 || ( $old_ver = 1.15.1 && $old_rel < 5 ) ]]; then
+    # add includedir /etc/krb5.conf.d to top of file
+    if ! grep -q 'includedir /etc/krb5.conf.d' /etc/krb5.conf ; then
+        sed -i '1i # To opt out of the system crypto-policies configuration of krb5, remove the\n# symlink at /etc/krb5.conf.d/crypto-policies which will not be recreated.\nincludedir /etc/krb5.conf.d/\n' /etc/krb5.conf
+    fi
+fi
+exit 0
 
 %postun libs -p /sbin/ldconfig
 
@@ -721,6 +728,11 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Apr 13 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-5
+- Automatically add includedir where not present
+- Try removing sleep statement to see if it is still needed
+- Resolves: #1433083
+
 * Fri Apr 07 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-4
 - Fix use of enterprise principals with forwarding
 
