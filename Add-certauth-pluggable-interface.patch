@@ -1,4 +1,4 @@
-From ee26c1e3f7e98ed656b154c212bd5a335e87f312 Mon Sep 17 00:00:00 2001
+From bb76ee06b88ebfc1a2abc95fc096299bda8946e9 Mon Sep 17 00:00:00 2001
 From: Matt Rogers <mrogers@redhat.com>
 Date: Tue, 28 Feb 2017 15:55:24 -0500
 Subject: [PATCH] Add certauth pluggable interface
@@ -21,7 +21,7 @@ doc/plugindev/certauth.rst and doc/admin/krb5_conf.rst.
 [ghudson@mit.edu: simplified code, edited docs]
 
 ticket: 8561 (new)
-(cherry picked from commit 6a48b95e3ad65605a657020385b34875677e8b75)
+(cherry picked from commit b619ce84470519bea65470be3263cd85fba94f57)
 ---
  doc/admin/conf_files/krb5_conf.rst                 |  21 ++
  doc/plugindev/certauth.rst                         |  27 ++
@@ -37,12 +37,12 @@ ticket: 8561 (new)
  src/plugins/certauth/test/deps                     |  14 +
  src/plugins/certauth/test/main.c                   | 209 +++++++++++++
  src/plugins/preauth/pkinit/pkinit_crypto.h         |   4 +
- src/plugins/preauth/pkinit/pkinit_crypto_openssl.c |  26 ++
- src/plugins/preauth/pkinit/pkinit_srv.c            | 340 ++++++++++++++++++---
+ src/plugins/preauth/pkinit/pkinit_crypto_openssl.c |  30 ++
+ src/plugins/preauth/pkinit/pkinit_srv.c            | 335 ++++++++++++++++++---
  src/plugins/preauth/pkinit/pkinit_trace.h          |   5 +
  src/tests/Makefile.in                              |   1 +
- src/tests/t_certauth.py                            |  43 +++
- 19 files changed, 783 insertions(+), 42 deletions(-)
+ src/tests/t_certauth.py                            |  47 +++
+ 19 files changed, 786 insertions(+), 42 deletions(-)
  create mode 100644 doc/plugindev/certauth.rst
  create mode 100644 src/include/krb5/certauth_plugin.h
  create mode 100644 src/plugins/certauth/test/Makefile.in
@@ -52,7 +52,7 @@ ticket: 8561 (new)
  create mode 100644 src/tests/t_certauth.py
 
 diff --git a/doc/admin/conf_files/krb5_conf.rst b/doc/admin/conf_files/krb5_conf.rst
-index 653aad613..ac89e3b52 100644
+index 653aad613..c0e4349c0 100644
 --- a/doc/admin/conf_files/krb5_conf.rst
 +++ b/doc/admin/conf_files/krb5_conf.rst
 @@ -858,6 +858,27 @@ built-in modules exist for this interface:
@@ -76,8 +76,8 @@ index 653aad613..ac89e3b52 100644
 +    is set to true for the realm.
 +
 +**pkinit_eku**
-+    This module rejects the certificate if it does not contain the
-+    PKINIT Extended Key Usage attribute consistent with the
++    This module rejects the certificate if it does not contain an
++    Extended Key Usage attribute consistent with the
 +    **pkinit_eku_checking** value for the realm.
 +
  
@@ -85,11 +85,11 @@ index 653aad613..ac89e3b52 100644
  --------------
 diff --git a/doc/plugindev/certauth.rst b/doc/plugindev/certauth.rst
 new file mode 100644
-index 000000000..8b0360327
+index 000000000..8a7f7c5eb
 --- /dev/null
 +++ b/doc/plugindev/certauth.rst
 @@ -0,0 +1,27 @@
-+.. _certauth:
++.. _certauth_plugin:
 +
 +PKINIT certificate authorization interface (certauth)
 +=====================================================
@@ -583,7 +583,7 @@ index b483affed..49b96b8ee 100644
 +
  #endif	/* _PKINIT_CRYPTO_H */
 diff --git a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
-index 8def8c542..c1276521b 100644
+index 8def8c542..a5b010b26 100644
 --- a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
 +++ b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
 @@ -2137,6 +2137,7 @@ crypto_retrieve_X509_sans(krb5_context context,
@@ -594,7 +594,7 @@ index 8def8c542..c1276521b 100644
          goto cleanup;
      }
      num_sans = sk_GENERAL_NAME_num(ialt);
-@@ -6176,3 +6177,28 @@ crypto_get_deferred_ids(krb5_context context,
+@@ -6176,3 +6177,32 @@ crypto_get_deferred_ids(krb5_context context,
      ret = (const pkinit_deferred_id *)deferred;
      return ret;
  }
@@ -605,7 +605,7 @@ index 8def8c542..c1276521b 100644
 +                       uint8_t **der_out, size_t *der_len)
 +{
 +    int len;
-+    unsigned char *p;
++    unsigned char *der, *p;
 +
 +    *der_out = NULL;
 +    *der_len = 0;
@@ -616,15 +616,19 @@ index 8def8c542..c1276521b 100644
 +    len = i2d_X509(reqctx->received_cert, NULL);
 +    if (len <= 0)
 +        return EINVAL;
-+    p = malloc(len);
++    p = der = malloc(len);
 +    if (p == NULL)
 +        return ENOMEM;
-+    *der_out = p;
++    if (i2d_X509(reqctx->received_cert, &p) <= 0) {
++        free(p);
++        return EINVAL;
++    }
++    *der_out = der;
 +    *der_len = len;
 +    return 0;
 +}
 diff --git a/src/plugins/preauth/pkinit/pkinit_srv.c b/src/plugins/preauth/pkinit/pkinit_srv.c
-index b5638a367..23826c5e8 100644
+index b5638a367..731d14eb8 100644
 --- a/src/plugins/preauth/pkinit/pkinit_srv.c
 +++ b/src/plugins/preauth/pkinit/pkinit_srv.c
 @@ -31,6 +31,25 @@
@@ -653,7 +657,7 @@ index b5638a367..23826c5e8 100644
  
  static krb5_error_code
  pkinit_init_kdc_req_context(krb5_context, pkinit_kdc_req_context *blob);
-@@ -51,6 +70,36 @@ pkinit_find_realm_context(krb5_context context,
+@@ -51,6 +70,34 @@ pkinit_find_realm_context(krb5_context context,
                            krb5_kdcpreauth_moddata moddata,
                            krb5_principal princ);
  
@@ -674,14 +678,12 @@ index b5638a367..23826c5e8 100644
 +free_certauth_handles(krb5_context context, certauth_handle *list)
 +{
 +    int i;
-+    certauth_handle h;
 +
 +    if (list == NULL)
 +        return;
 +    for (i = 0; list[i] != NULL; i++) {
-+        h = list[i];
-+        if (h->vt.fini != NULL)
-+            h->vt.fini(context, h->moddata);
++        if (list[i]->vt.fini != NULL)
++            list[i]->vt.fini(context, list[i]->moddata);
 +        free(list[i]);
 +    }
 +    free(list);
@@ -690,7 +692,7 @@ index b5638a367..23826c5e8 100644
  static krb5_error_code
  pkinit_create_edata(krb5_context context,
                      pkinit_plg_crypto_context plg_cryptoctx,
-@@ -123,7 +172,7 @@ verify_client_san(krb5_context context,
+@@ -123,7 +170,7 @@ verify_client_san(krb5_context context,
                    pkinit_kdc_req_context reqctx,
                    krb5_kdcpreauth_callbacks cb,
                    krb5_kdcpreauth_rock rock,
@@ -699,7 +701,7 @@ index b5638a367..23826c5e8 100644
                    int *valid_san)
  {
      krb5_error_code retval;
-@@ -134,12 +183,15 @@ verify_client_san(krb5_context context,
+@@ -134,12 +181,15 @@ verify_client_san(krb5_context context,
      char *client_string = NULL, *san_string;
  #endif
  
@@ -716,7 +718,7 @@ index b5638a367..23826c5e8 100644
          pkiDebug("%s: error from retrieve_certificate_sans()\n", __FUNCTION__);
          retval = KRB5KDC_ERR_CLIENT_NAME_MISMATCH;
          goto out;
-@@ -273,6 +325,76 @@ out:
+@@ -273,6 +323,73 @@ out:
      return retval;
  }
  
@@ -730,7 +732,7 @@ index b5638a367..23826c5e8 100644
 +               krb5_principal client)
 +{
 +    krb5_error_code ret;
-+    certauth_handle hd;
++    certauth_handle h;
 +    struct certauth_req_opts opts;
 +    krb5_boolean accepted = FALSE;
 +    uint8_t *cert;
@@ -739,7 +741,7 @@ index b5638a367..23826c5e8 100644
 +    char **ais = NULL, **ai = NULL;
 +
 +    /* Re-encode the received certificate into DER, which is extra work, but
-+     * avoids creating a crypto dependency on the interface. */
++     * avoids creating an X.509 library dependency in the interface. */
 +    ret = crypto_encode_der_cert(context, reqctx->cryptoctx, &cert, &cert_len);
 +    if (ret)
 +        goto cleanup;
@@ -760,12 +762,9 @@ index b5638a367..23826c5e8 100644
 +     */
 +    ret = KRB5_PLUGIN_NO_HANDLE;
 +    for (i = 0; certauth_modules != NULL && certauth_modules[i] != NULL; i++) {
-+        hd = certauth_modules[i];
-+        if (hd->vt.authorize == NULL)
-+            continue;
-+
-+        ret = hd->vt.authorize(context, hd->moddata, cert, cert_len, client,
-+                               &opts, db_ent, &ais);
++        h = certauth_modules[i];
++        ret = h->vt.authorize(context, h->moddata, cert, cert_len, client,
++                              &opts, db_ent, &ais);
 +        if (ret == 0)
 +            accepted = TRUE;
 +        else if (ret != KRB5_PLUGIN_NO_HANDLE)
@@ -778,7 +777,7 @@ index b5638a367..23826c5e8 100644
 +                if (ret)
 +                    goto cleanup;
 +            }
-+            hd->vt.free_ind(context, hd->moddata, ais);
++            h->vt.free_ind(context, h->moddata, ais);
 +            ais = NULL;
 +        }
 +    }
@@ -793,7 +792,7 @@ index b5638a367..23826c5e8 100644
  static void
  pkinit_server_verify_padata(krb5_context context,
                              krb5_data *req_pkt,
-@@ -295,7 +417,6 @@ pkinit_server_verify_padata(krb5_context context,
+@@ -295,7 +412,6 @@ pkinit_server_verify_padata(krb5_context context,
      pkinit_kdc_req_context reqctx = NULL;
      krb5_checksum cksum = {0, 0, 0, NULL};
      krb5_data *der_req = NULL;
@@ -801,7 +800,7 @@ index b5638a367..23826c5e8 100644
      krb5_data k5data;
      int is_signed = 1;
      krb5_pa_data **e_data = NULL;
-@@ -388,27 +509,11 @@ pkinit_server_verify_padata(krb5_context context,
+@@ -388,27 +504,11 @@ pkinit_server_verify_padata(krb5_context context,
          goto cleanup;
      }
      if (is_signed) {
@@ -831,7 +830,7 @@ index b5638a367..23826c5e8 100644
      } else { /* !is_signed */
          if (!krb5_principal_compare(context, request->client,
                                      krb5_anonymous_principal())) {
-@@ -1245,11 +1350,15 @@ pkinit_find_realm_context(krb5_context context,
+@@ -1245,11 +1345,15 @@ pkinit_find_realm_context(krb5_context context,
                            krb5_principal princ)
  {
      int i;
@@ -848,7 +847,7 @@ index b5638a367..23826c5e8 100644
      for (i = 0; realm_contexts[i] != NULL; i++) {
          pkinit_kdc_context p = realm_contexts[i];
  
-@@ -1331,6 +1440,155 @@ errout:
+@@ -1331,6 +1435,155 @@ errout:
      return retval;
  }
  
@@ -1004,7 +1003,7 @@ index b5638a367..23826c5e8 100644
  static int
  pkinit_server_plugin_init(krb5_context context,
                            krb5_kdcpreauth_moddata *moddata_out,
-@@ -1338,6 +1596,8 @@ pkinit_server_plugin_init(krb5_context context,
+@@ -1338,6 +1591,8 @@ pkinit_server_plugin_init(krb5_context context,
  {
      krb5_error_code retval = ENOMEM;
      pkinit_kdc_context plgctx, *realm_contexts = NULL;
@@ -1013,7 +1012,7 @@ index b5638a367..23826c5e8 100644
      size_t  i, j;
      size_t numrealms;
  
-@@ -1368,16 +1628,22 @@ pkinit_server_plugin_init(krb5_context context,
+@@ -1368,16 +1623,22 @@ pkinit_server_plugin_init(krb5_context context,
          goto errout;
      }
  
@@ -1044,7 +1043,7 @@ index b5638a367..23826c5e8 100644
      return retval;
  }
  
-@@ -1405,17 +1671,11 @@ static void
+@@ -1405,17 +1666,11 @@ static void
  pkinit_server_plugin_fini(krb5_context context,
                            krb5_kdcpreauth_moddata moddata)
  {
@@ -1094,12 +1093,16 @@ index b55469146..0e93d6b59 100644
  	$(RM) adata etinfo forward gcred hist hooks hrealm icred kdbtest
 diff --git a/src/tests/t_certauth.py b/src/tests/t_certauth.py
 new file mode 100644
-index 000000000..ca7df2b42
+index 000000000..e64a57b0d
 --- /dev/null
 +++ b/src/tests/t_certauth.py
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,47 @@
 +#!/usr/bin/python
 +from k5test import *
++
++# Skip this test if pkinit wasn't built.
++if not os.path.exists(os.path.join(plugins, 'preauth', 'pkinit.so')):
++    skip_rest('certauth tests', 'PKINIT module not built')
 +
 +certs = os.path.join(srctop, 'tests', 'dejagnu', 'pkinit-certs')
 +ca_pem = os.path.join(certs, 'ca.pem')
