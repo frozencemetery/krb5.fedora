@@ -5,7 +5,8 @@ AssertPathExists=/var/kerberos/krb5kdc/kpropd.acl
 
 [Service]
 Type=forking
-ExecStart=/usr/sbin/kpropd
+EnvironmentFile=-/etc/sysconfig/kprop
+ExecStart=/usr/sbin/kpropd $KPROPD_ARGS
 
 [Install]
 WantedBy=multi-user.target

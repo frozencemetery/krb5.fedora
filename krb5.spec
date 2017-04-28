@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15.1
 # for prerelease, should be e.g., 0.3.beta2%{?dist}
-Release: 7%{?dist}
+Release: 8%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -37,6 +37,7 @@ Source10: kdc.conf
 Source11: kadm5.acl
 Source19: krb5kdc.sysconfig
 Source20: kadmin.sysconfig
+Source21: kprop.sysconfig
 Source29: ksu.pamd
 Source31: kerberos-adm.portreserve
 Source32: krb5_prop.portreserve
@@ -443,7 +444,8 @@ mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/run/krb5kdc
 mkdir -p $RPM_BUILD_ROOT/etc/sysconfig
 for sysconfig in \
 	%{SOURCE19}\
-	%{SOURCE20} ; do
+	%{SOURCE20}\
+	%{SOURCE21} ; do
 	install -pm 644 ${sysconfig} \
 	$RPM_BUILD_ROOT/etc/sysconfig/`basename ${sysconfig} .sysconfig`
 done
@@ -599,6 +601,7 @@ exit 0
 %dir %{_localstatedir}/run/krb5kdc
 %config(noreplace) /etc/sysconfig/krb5kdc
 %config(noreplace) /etc/sysconfig/kadmin
+%config(noreplace) /etc/sysconfig/kprop
 %config(noreplace) /etc/logrotate.d/krb5kdc
 %config(noreplace) /etc/logrotate.d/kadmind
 
@@ -732,6 +735,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Apr 28 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-8
+- Add kprop service env config file
+
 * Wed Apr 19 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-7
 - Update backports of certauth and corresponding test
 
