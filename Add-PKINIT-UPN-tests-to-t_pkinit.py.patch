@@ -1,4 +1,4 @@
-From 650504957919949aa8ede95fc5e251cdd96e9895 Mon Sep 17 00:00:00 2001
+From e03e4c839a67da9b6f4135999de653d22118d8a3 Mon Sep 17 00:00:00 2001
 From: Matt Rogers <mrogers@redhat.com>
 Date: Fri, 9 Dec 2016 11:43:27 -0500
 Subject: [PATCH] Add PKINIT UPN tests to t_pkinit.py

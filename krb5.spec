@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15.1
 # for prerelease, should be e.g., 0.3.beta2%{?dist}
-Release: 9%{?dist}
+Release: 10%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -52,7 +52,7 @@ Source39: krb5-krb5kdc.conf
 Source100: noport.c
 
 Patch1: krb5-1.12.1-pam.patch
-Patch2: krb5-1.15-beta1-selinux-label.patch
+Patch2: krb5-1.15.1-selinux-label.patch
 Patch3: krb5-1.12-ksu-path.patch
 Patch4: krb5-1.12-ktany.patch
 Patch5: krb5-1.15-beta1-buildconf.patch
@@ -731,6 +731,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Jun 07 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-10
+- Fix custom build with -DDEBUG
+
 * Wed May 24 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-9
 - Use standard trigger logic for krb5 snippet
 

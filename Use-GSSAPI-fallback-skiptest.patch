@@ -1,4 +1,4 @@
-From 99df255485ea60bd32e8fffc012348d1046693b2 Mon Sep 17 00:00:00 2001
+From 659b4dd127cdd001e34ea4faf30885f7b1bc4945 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Wed, 1 Mar 2017 17:46:22 -0500
 Subject: [PATCH] Use GSSAPI fallback skiptest

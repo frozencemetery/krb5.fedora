@@ -1,4 +1,4 @@
-From efc27c7800ac9863493b4d3b763fefcaac4e3801 Mon Sep 17 00:00:00 2001
+From b7195f09475da34a227db8dae813a54b0353d447 Mon Sep 17 00:00:00 2001
 From: Matt Rogers <mrogers@redhat.com>
 Date: Tue, 4 Apr 2017 16:54:56 -0400
 Subject: [PATCH] Add the client_name() kdcpreauth callback

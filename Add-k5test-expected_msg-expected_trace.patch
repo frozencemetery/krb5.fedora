@@ -1,4 +1,4 @@
-From 771cbaa6c4cc441f46985d67381de69c77349ed7 Mon Sep 17 00:00:00 2001
+From 166c5212d1954c6ac8d445485c47cc88b3802907 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Tue, 17 Jan 2017 11:24:41 -0500
 Subject: [PATCH] Add k5test expected_msg, expected_trace

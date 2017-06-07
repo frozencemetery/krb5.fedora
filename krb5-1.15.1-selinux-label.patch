@@ -1,7 +1,7 @@
-From 6d95fa032279ef3a53348243c9d0d4b9233761db Mon Sep 17 00:00:00 2001
+From a3280e7ec607b9eb7b79cf75cd323fbbdd125b02 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:30:53 -0400
-Subject: [PATCH] krb5-1.15-beta1-selinux-label.patch
+Subject: [PATCH] krb5-1.15.1-selinux-label.patch
 
 SELinux bases access to files on the domain of the requesting process,
 the operation being performed, and the context applied to the file.
@@ -653,7 +653,7 @@ index 6239e4176..17bcd2a67 100644
  
 diff --git a/src/util/support/selinux.c b/src/util/support/selinux.c
 new file mode 100644
-index 000000000..230263421
+index 000000000..6d41f3244
 --- /dev/null
 +++ b/src/util/support/selinux.c
 @@ -0,0 +1,406 @@
@@ -720,7 +720,7 @@ index 000000000..230263421
 +{
 +#ifdef DEBUG
 +    va_list ap;
-+    va_start(ap, str);
++    va_start(ap, fmt);
 +    if (isatty(fileno(stderr))) {
 +        vfprintf(stderr, fmt, ap);
 +    }
