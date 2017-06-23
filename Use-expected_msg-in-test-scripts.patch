@@ -1,0 +1,2584 @@
+From 9b2d26cf4cfebdce46430a7ab891e3a7faad5f47 Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Wed, 18 Jan 2017 11:22:58 -0500
+Subject: [PATCH] Use expected_msg in test scripts
+
+(cherry picked from commit d406afa363554097ac48646a29249c04f498c88e)
+---
+ src/appl/gss-sample/t_gss_sample.py |  18 ++-
+ src/appl/user_user/t_user2user.py   |   6 +-
+ src/kdc/t_emptytgt.py               |   5 +-
+ src/lib/krb5/krb/t_expire_warn.py   |  13 +-
+ src/tests/gssapi/t_authind.py       |   5 +-
+ src/tests/gssapi/t_ccselect.py      |  10 +-
+ src/tests/gssapi/t_client_keytab.py |  60 +++------
+ src/tests/gssapi/t_enctypes.py      |   4 +-
+ src/tests/gssapi/t_export_cred.py   |   4 +-
+ src/tests/gssapi/t_gssapi.py        |  97 +++++---------
+ src/tests/gssapi/t_s4u.py           |  21 ++-
+ src/tests/t_audit.py                |  11 +-
+ src/tests/t_authdata.py             |  58 +++-----
+ src/tests/t_ccache.py               |  38 ++----
+ src/tests/t_crossrealm.py           |  14 +-
+ src/tests/t_dump.py                 |  31 ++---
+ src/tests/t_general.py              |  12 +-
+ src/tests/t_hostrealm.py            |   5 +-
+ src/tests/t_iprop.py                | 103 ++++++---------
+ src/tests/t_kadm5_hook.py           |  10 +-
+ src/tests/t_kadmin_acl.py           | 254 ++++++++++++++----------------------
+ src/tests/t_kadmin_parsing.py       |  30 ++---
+ src/tests/t_kdb.py                  | 127 +++++++-----------
+ src/tests/t_kdb_locking.py          |   5 +-
+ src/tests/t_keydata.py              |  16 +--
+ src/tests/t_keyrollover.py          |  16 +--
+ src/tests/t_keytab.py               |  50 +++----
+ src/tests/t_kprop.py                |  13 +-
+ src/tests/t_localauth.py            |   5 +-
+ src/tests/t_mkey.py                 |  45 +++----
+ src/tests/t_otp.py                  |  10 +-
+ src/tests/t_pkinit.py               |  27 ++--
+ src/tests/t_policy.py               | 101 +++++---------
+ src/tests/t_preauth.py              |  14 +-
+ src/tests/t_pwqual.py               |  25 ++--
+ src/tests/t_referral.py             |  10 +-
+ src/tests/t_renew.py                |   5 +-
+ src/tests/t_salt.py                 |  12 +-
+ src/tests/t_skew.py                 |  22 ++--
+ src/tests/t_stringattr.py           |   4 +-
+ 40 files changed, 475 insertions(+), 841 deletions(-)
+
+diff --git a/src/appl/gss-sample/t_gss_sample.py b/src/appl/gss-sample/t_gss_sample.py
+index 8a6b0304f..0299e4590 100755
+--- a/src/appl/gss-sample/t_gss_sample.py
++++ b/src/appl/gss-sample/t_gss_sample.py
+@@ -31,22 +31,20 @@ gss_server = os.path.join(appdir, 'gss-server')
+ # Run a gss-server process and a gss-client process, with additional
+ # gss-client flags given by options and additional gss-server flags
+ # given by server_options.  Return the output of gss-client.
+-def run_client_server(realm, options, server_options, expected_code=0):
++def run_client_server(realm, options, server_options, **kwargs):
+     portstr = str(realm.server_port())
+     server_args = [gss_server, '-export', '-port', portstr]
+     server_args += server_options + ['host']
+     server = realm.start_server(server_args, 'starting...')
+-    out = realm.run([gss_client, '-port', portstr] + options +
+-                    [hostname, 'host', 'testmsg'], expected_code=expected_code)
++    realm.run([gss_client, '-port', portstr] + options +
++              [hostname, 'host', 'testmsg'], **kwargs)
+     stop_daemon(server)
+-    return out
+ 
+ # Run a gss-server and gss-client process, and verify that gss-client
+ # displayed the expected output for a successful negotiation.
+ def server_client_test(realm, options, server_options):
+-    out = run_client_server(realm, options, server_options)
+-    if 'Signature verified.' not in out:
+-        fail('Expected message not seen in gss-client output')
++    run_client_server(realm, options, server_options,
++                      expected_msg='Signature verified.')
+ 
+ # Make up a filename to hold user's initial credentials.
+ def ccache_savefile(realm):
+@@ -81,10 +79,10 @@ def pw_test(realm, options, server_options=[]):
+ # IAKERB, gss_aqcuire_cred_with_password() otherwise).
+ def wrong_pw_test(realm, options, server_options=[], iakerb=False):
+     options = options + ['-user', realm.user_princ, '-pass', 'wrongpw']
+-    out = run_client_server(realm, options, server_options, expected_code=1)
+     failed_op = 'initializing context' if iakerb else 'acquiring creds'
+-    if 'GSS-API error ' + failed_op not in out:
+-        fail('Expected error not seen in gss-client output')
++    msg = 'GSS-API error ' + failed_op
++    run_client_server(realm, options, server_options, expected_code=1,
++                      expected_msg=msg)
+ 
+ # Perform a test of the server and client with initial credentials
+ # obtained with the client keytab
+diff --git a/src/appl/user_user/t_user2user.py b/src/appl/user_user/t_user2user.py
+index 8bdef8e07..2a7d03f8d 100755
+--- a/src/appl/user_user/t_user2user.py
++++ b/src/appl/user_user/t_user2user.py
+@@ -10,9 +10,9 @@ for realm in multipass_realms():
+     else:
+         srv_output = realm.start_server(['./uuserver', '9999'], 'Server started')
+ 
+-    output = realm.run(['./uuclient', hostname, 'testing message', '9999'])
+-    if 'uu-client: server says \"Hello, other end of connection.\"' not in output:
+-        fail('Message not echoed back.')
++    msg = 'uu-client: server says "Hello, other end of connection."'
++    realm.run(['./uuclient', hostname, 'testing message', '9999'],
++              expected_msg=msg)
+ 
+ 
+ success('User-2-user test programs')
+diff --git a/src/kdc/t_emptytgt.py b/src/kdc/t_emptytgt.py
+index 8f7717a01..2d0432e33 100755
+--- a/src/kdc/t_emptytgt.py
++++ b/src/kdc/t_emptytgt.py
+@@ -2,7 +2,6 @@
+ from k5test import *
+ 
+ realm = K5Realm(create_host=False)
+-output = realm.run([kvno, 'krbtgt/'], expected_code=1)
+-if 'not found in Kerberos database' not in output:
+-    fail('TGT lookup for empty realm failed in unexpected way')
++realm.run([kvno, 'krbtgt/'], expected_code=1,
++          expected_msg='not found in Kerberos database')
+ success('Empty tgt lookup.')
+diff --git a/src/lib/krb5/krb/t_expire_warn.py b/src/lib/krb5/krb/t_expire_warn.py
+index e021379ab..aed39e399 100755
+--- a/src/lib/krb5/krb/t_expire_warn.py
++++ b/src/lib/krb5/krb/t_expire_warn.py
+@@ -39,15 +39,10 @@ realm.run([kadminl, 'addprinc', '-pw', 'pass', '-pwexpire', '3 days', 'days'])
+ output = realm.run(['./t_expire_warn', 'noexpire', 'pass', '0'])
+ if output:
+     fail('Unexpected output for noexpire')
+-output = realm.run(['./t_expire_warn', 'minutes', 'pass', '0'])
+-if ' less than one hour on ' not in output:
+-    fail('Expected warning not seen for minutes')
+-output = realm.run(['./t_expire_warn', 'hours', 'pass', '0'])
+-if ' hours on ' not in output:
+-    fail('Expected warning not seen for hours')
+-output = realm.run(['./t_expire_warn', 'days', 'pass', '0'])
+-if ' days on ' not in output:
+-    fail('Expected warning not seen for days')
++realm.run(['./t_expire_warn', 'minutes', 'pass', '0'],
++          expected_msg=' less than one hour on ')
++realm.run(['./t_expire_warn', 'hours', 'pass', '0'], expected_msg=' hours on ')
++realm.run(['./t_expire_warn', 'days', 'pass', '0'], expected_msg=' days on ')
+ 
+ # Check for expected expire callback behavior.  These tests are
+ # carefully agnostic about whether the KDC supports last_req fields,
+diff --git a/src/tests/gssapi/t_authind.py b/src/tests/gssapi/t_authind.py
+index 316bc4093..dfd0a9a04 100644
+--- a/src/tests/gssapi/t_authind.py
++++ b/src/tests/gssapi/t_authind.py
+@@ -24,9 +24,8 @@ if ('Attribute auth-indicators Authenticated Complete') not in out:
+ if '73757065727374726f6e67' not in out:
+     fail('Expected auth indicator not seen in name attributes')
+ 
+-out = realm.run(['./t_srcattrs', 'p:service/2'], expected_code=1)
+-if 'gss_init_sec_context: KDC policy rejects request' not in out:
+-    fail('Expected error message not seen for indicator mismatch')
++msg = 'gss_init_sec_context: KDC policy rejects request'
++realm.run(['./t_srcattrs', 'p:service/2'], expected_code=1, expected_msg=msg)
+ 
+ realm.kinit(realm.user_princ, password('user'), ['-X', 'indicators=one two'])
+ out = realm.run(['./t_srcattrs', 'p:service/2'])
+diff --git a/src/tests/gssapi/t_ccselect.py b/src/tests/gssapi/t_ccselect.py
+index 6be6b4ec0..1ea614d30 100755
+--- a/src/tests/gssapi/t_ccselect.py
++++ b/src/tests/gssapi/t_ccselect.py
+@@ -45,9 +45,8 @@ refserver = 'p:host/' + hostname + '@'
+ 
+ # Verify that we can't get initiator creds with no credentials in the
+ # collection.
+-output = r1.run(['./t_ccselect', host1, '-'], expected_code=1)
+-if 'No Kerberos credentials available' not in output:
+-    fail('Expected error not seen in output when no credentials available')
++r1.run(['./t_ccselect', host1, '-'], expected_code=1,
++       expected_msg='No Kerberos credentials available')
+ 
+ # Make a directory collection and use it for client commands in both realms.
+ ccdir = os.path.join(r1.testdir, 'cc')
+@@ -117,8 +116,7 @@ if output != (zaphod + '\n'):
+ output = r1.run(['./t_ccselect', refserver])
+ if output != (bob + '\n'):
+     fail('bob not chosen via primary cache when no .k5identity line matches.')
+-output = r1.run(['./t_ccselect', 'h:bogus@' + hostname], expected_code=1)
+-if 'Can\'t find client principal noprinc' not in output:
+-    fail('Expected error not seen when k5identity selects bad principal.')
++r1.run(['./t_ccselect', 'h:bogus@' + hostname], expected_code=1,
++       expected_msg="Can't find client principal noprinc")
+ 
+ success('GSSAPI credential selection tests')
+diff --git a/src/tests/gssapi/t_client_keytab.py b/src/tests/gssapi/t_client_keytab.py
+index 4c8747a50..2da87f45b 100755
+--- a/src/tests/gssapi/t_client_keytab.py
++++ b/src/tests/gssapi/t_client_keytab.py
+@@ -15,9 +15,7 @@ realm.extract_keytab(realm.user_princ, realm.client_keytab)
+ realm.extract_keytab(bob, realm.client_keytab)
+ 
+ # Test 1: no name/cache specified, pick first principal from client keytab
+-out = realm.run(['./t_ccselect', phost])
+-if realm.user_princ not in out:
+-    fail('Authenticated as wrong principal')
++realm.run(['./t_ccselect', phost], expected_msg=realm.user_princ)
+ realm.run([kdestroy])
+ 
+ # Test 2: no name/cache specified, pick principal from k5identity
+@@ -25,36 +23,27 @@ k5idname = os.path.join(realm.testdir, '.k5identity')
+ k5id = open(k5idname, 'w')
+ k5id.write('%s service=host host=%s\n' % (bob, hostname))
+ k5id.close()
+-out = realm.run(['./t_ccselect', gssserver])
+-if bob not in out:
+-    fail('Authenticated as wrong principal')
++realm.run(['./t_ccselect', gssserver], expected_msg=bob)
+ os.remove(k5idname)
+ realm.run([kdestroy])
+ 
+ # Test 3: no name/cache specified, default ccache has name but no creds
+ realm.run(['./ccinit', realm.ccache, bob])
+-out = realm.run(['./t_ccselect', phost])
+-if bob not in out:
+-    fail('Authenticated as wrong principal')
++realm.run(['./t_ccselect', phost], expected_msg=bob)
+ # Leave tickets for next test.
+ 
+ # Test 4: name specified, non-collectable default cache doesn't match
+-out = realm.run(['./t_ccselect', phost, puser], expected_code=1)
+-if 'Principal in credential cache does not match desired name' not in out:
+-    fail('Expected error not seen')
++msg = 'Principal in credential cache does not match desired name'
++realm.run(['./t_ccselect', phost, puser], expected_code=1, expected_msg=msg)
+ realm.run([kdestroy])
+ 
+ # Test 5: name specified, nonexistent default cache
+-out = realm.run(['./t_ccselect', phost, pbob])
+-if bob not in out:
+-    fail('Authenticated as wrong principal')
++realm.run(['./t_ccselect', phost, pbob], expected_msg=bob)
+ # Leave tickets for next test.
+ 
+ # Test 6: name specified, matches default cache, time to refresh
+ realm.run(['./ccrefresh', realm.ccache, '1'])
+-out = realm.run(['./t_ccselect', phost, pbob])
+-if bob not in out:
+-    fail('Authenticated as wrong principal')
++realm.run(['./t_ccselect', phost, pbob], expected_msg=bob)
+ out = realm.run(['./ccrefresh', realm.ccache])
+ if int(out) < 1000:
+     fail('Credentials apparently not refreshed')
+@@ -67,9 +56,8 @@ realm.run([kdestroy])
+ 
+ # Test 8: ccache specified with name but no creds; name not in client keytab
+ realm.run(['./ccinit', realm.ccache, realm.host_princ])
+-out = realm.run(['./t_imp_cred', phost], expected_code=1)
+-if 'Credential cache is empty' not in out:
+-    fail('Expected error not seen')
++realm.run(['./t_imp_cred', phost], expected_code=1,
++          expected_msg='Credential cache is empty')
+ realm.run([kdestroy])
+ 
+ # Test 9: ccache specified with name but no creds; name in client keytab
+@@ -104,16 +92,12 @@ realm.env['KRB5CCNAME'] = ccname
+ # Test 12: name specified, matching cache in collection with no creds
+ bobcache = os.path.join(ccdir, 'tktbob')
+ realm.run(['./ccinit', bobcache, bob])
+-out = realm.run(['./t_ccselect', phost, pbob])
+-if bob not in out:
+-    fail('Authenticated as wrong principal')
++realm.run(['./t_ccselect', phost, pbob], expected_msg=bob)
+ # Leave tickets for next test.
+ 
+ # Test 13: name specified, matching cache in collection, time to refresh
+ realm.run(['./ccrefresh', bobcache, '1'])
+-out = realm.run(['./t_ccselect', phost, pbob])
+-if bob not in out:
+-    fail('Authenticated as wrong principal')
++realm.run(['./t_ccselect', phost, pbob], expected_msg=bob)
+ out = realm.run(['./ccrefresh', bobcache])
+ if int(out) < 1000:
+     fail('Credentials apparently not refreshed')
+@@ -121,22 +105,15 @@ realm.run([kdestroy, '-A'])
+ 
+ # Test 14: name specified, collection has default for different principal
+ realm.kinit(realm.user_princ, password('user'))
+-out = realm.run(['./t_ccselect', phost, pbob])
+-if bob not in out:
+-    fail('Authenticated as wrong principal')
+-out = realm.run([klist])
+-if 'Default principal: %s\n' % realm.user_princ not in out:
+-    fail('Default cache overwritten by acquire_cred')
++realm.run(['./t_ccselect', phost, pbob], expected_msg=bob)
++msg = 'Default principal: %s\n' % realm.user_princ
++realm.run([klist], expected_msg=msg)
+ realm.run([kdestroy, '-A'])
+ 
+ # Test 15: name specified, collection has no default cache
+-out = realm.run(['./t_ccselect', phost, pbob])
+-if bob not in out:
+-    fail('Authenticated as wrong principal')
++realm.run(['./t_ccselect', phost, pbob], expected_msg=bob)
+ # Make sure the tickets we acquired didn't become the default
+-out = realm.run([klist], expected_code=1)
+-if 'No credentials cache found' not in out:
+-    fail('Expected error not seen')
++realm.run([klist], expected_code=1, expected_msg='No credentials cache found')
+ realm.run([kdestroy, '-A'])
+ 
+ # Test 16: default client keytab cannot be resolved, but valid
+@@ -145,8 +122,7 @@ conf = {'libdefaults': {'default_client_keytab_name': '%{'}}
+ bad_cktname = realm.special_env('bad_cktname', False, krb5_conf=conf)
+ del bad_cktname['KRB5_CLIENT_KTNAME']
+ realm.kinit(realm.user_princ, password('user'))
+-out = realm.run(['./t_ccselect', phost], env=bad_cktname)
+-if realm.user_princ not in out:
+-    fail('Expected principal not seen for bad client keytab name')
++realm.run(['./t_ccselect', phost], env=bad_cktname,
++          expected_msg=realm.user_princ)
+ 
+ success('Client keytab tests')
+diff --git a/src/tests/gssapi/t_enctypes.py b/src/tests/gssapi/t_enctypes.py
+index 862f22989..f513db2b5 100755
+--- a/src/tests/gssapi/t_enctypes.py
++++ b/src/tests/gssapi/t_enctypes.py
+@@ -58,9 +58,7 @@ def test(msg, ienc, aenc, tktenc='', tktsession='', proto='', isubkey='',
+ # and check that it fails with the expected error message.
+ def test_err(msg, ienc, aenc, expected_err):
+     shutil.copyfile(os.path.join(realm.testdir, 'save'), realm.ccache)
+-    out = realm.run(cmdline(ienc, aenc), expected_code=1)
+-    if expected_err not in out:
+-        fail(msg)
++    realm.run(cmdline(ienc, aenc), expected_code=1, expected_msg=expected_err)
+ 
+ 
+ # By default, all of the key enctypes should be aes256.
+diff --git a/src/tests/gssapi/t_export_cred.py b/src/tests/gssapi/t_export_cred.py
+index 698835928..b98962788 100755
+--- a/src/tests/gssapi/t_export_cred.py
++++ b/src/tests/gssapi/t_export_cred.py
+@@ -23,9 +23,7 @@ def ccache_restore(realm):
+ def check(realm, args):
+     ccache_restore(realm)
+     realm.run(['./t_export_cred'] + args)
+-    output = realm.run([klist, '-f'])
+-    if 'Flags: Ff' not in output:
+-        fail('Forwarded tickets not found in ccache after t_export_cred')
++    realm.run([klist, '-f'], expected_msg='Flags: Ff')
+ 
+ # Check a given set of arguments with no specified mech and with krb5
+ # and SPNEGO as the specified mech.
+diff --git a/src/tests/gssapi/t_gssapi.py b/src/tests/gssapi/t_gssapi.py
+index e23c936d7..397e58962 100755
+--- a/src/tests/gssapi/t_gssapi.py
++++ b/src/tests/gssapi/t_gssapi.py
+@@ -28,57 +28,40 @@ realm.run([kadminl, 'renprinc', 'service1/abraham', 'service1/andrew'])
+ 
+ # Test with no acceptor name, including client/keytab principal
+ # mismatch (non-fatal) and missing keytab entry (fatal).
+-output = realm.run(['./t_accname', 'p:service1/andrew'])
+-if 'service1/abraham' not in output:
+-    fail('Expected service1/abraham in t_accname output')
+-output = realm.run(['./t_accname', 'p:service1/barack'])
+-if 'service1/barack' not in output:
+-    fail('Expected service1/barack in t_accname output')
+-output = realm.run(['./t_accname', 'p:service2/calvin'])
+-if 'service2/calvin' not in output:
+-    fail('Expected service1/barack in t_accname output')
+-output = realm.run(['./t_accname', 'p:service2/dwight'], expected_code=1)
+-if ' not found in keytab' not in output:
+-    fail('Expected error message not seen in t_accname output')
++realm.run(['./t_accname', 'p:service1/andrew'],
++          expected_msg='service1/abraham')
++realm.run(['./t_accname', 'p:service1/barack'], expected_msg='service1/barack')
++realm.run(['./t_accname', 'p:service2/calvin'], expected_msg='service2/calvin')
++realm.run(['./t_accname', 'p:service2/dwight'], expected_code=1,
++          expected_msg=' not found in keytab')
+ 
+ # Test with acceptor name containing service only, including
+ # client/keytab hostname mismatch (non-fatal) and service name
+ # mismatch (fatal).
+-output = realm.run(['./t_accname', 'p:service1/andrew', 'h:service1'])
+-if 'service1/abraham' not in output:
+-    fail('Expected service1/abraham in t_accname output')
+-output = realm.run(['./t_accname', 'p:service1/andrew', 'h:service2'],
+-                   expected_code=1)
+-if ' not found in keytab' not in output:
+-    fail('Expected error message not seen in t_accname output')
+-output = realm.run(['./t_accname', 'p:service2/calvin', 'h:service2'])
+-if 'service2/calvin' not in output:
+-    fail('Expected service2/calvin in t_accname output')
+-output = realm.run(['./t_accname', 'p:service2/calvin', 'h:service1'],
+-                   expected_code=1)
+-if ' found in keytab but does not match server principal' not in output:
+-    fail('Expected error message not seen in t_accname output')
++realm.run(['./t_accname', 'p:service1/andrew', 'h:service1'],
++          expected_msg='service1/abraham')
++realm.run(['./t_accname', 'p:service1/andrew', 'h:service2'], expected_code=1,
++          expected_msg=' not found in keytab')
++realm.run(['./t_accname', 'p:service2/calvin', 'h:service2'],
++          expected_msg='service2/calvin')
++realm.run(['./t_accname', 'p:service2/calvin', 'h:service1'], expected_code=1,
++          expected_msg=' found in keytab but does not match server principal')
+ 
+ # Test with acceptor name containing service and host.  Use the
+ # client's un-canonicalized hostname as acceptor input to mirror what
+ # many servers do.
+-output = realm.run(['./t_accname', 'p:' + realm.host_princ,
+-                    'h:host@%s' % socket.gethostname()])
+-if realm.host_princ not in output:
+-    fail('Expected %s in t_accname output' % realm.host_princ)
+-output = realm.run(['./t_accname', 'p:host/-nomatch-',
+-                    'h:host@%s' % socket.gethostname()],
+-                   expected_code=1)
+-if ' not found in keytab' not in output:
+-    fail('Expected error message not seen in t_accname output')
++realm.run(['./t_accname', 'p:' + realm.host_princ,
++           'h:host@%s' % socket.gethostname()], expected_msg=realm.host_princ)
++realm.run(['./t_accname', 'p:host/-nomatch-',
++           'h:host@%s' % socket.gethostname()], expected_code=1,
++          expected_msg=' not found in keytab')
+ 
+ # Test krb5_gss_import_cred.
+ realm.run(['./t_imp_cred', 'p:service1/barack'])
+ realm.run(['./t_imp_cred', 'p:service1/barack', 'service1/barack'])
+ realm.run(['./t_imp_cred', 'p:service1/andrew', 'service1/abraham'])
+-output = realm.run(['./t_imp_cred', 'p:service2/dwight'], expected_code=1)
+-if ' not found in keytab' not in output:
+-    fail('Expected error message not seen in t_imp_cred output')
++realm.run(['./t_imp_cred', 'p:service2/dwight'], expected_code=1,
++          expected_msg=' not found in keytab')
+ 
+ # Test credential store extension.
+ tmpccname = 'FILE:' + os.path.join(realm.testdir, 'def_cache')
+@@ -116,10 +99,8 @@ ignore_conf = {'libdefaults': {'ignore_acceptor_hostname': 'true'}}
+ realm = K5Realm(krb5_conf=ignore_conf)
+ realm.run([kadminl, 'addprinc', '-randkey', 'host/-nomatch-'])
+ realm.run([kadminl, 'xst', 'host/-nomatch-'])
+-output = realm.run(['./t_accname', 'p:host/-nomatch-',
+-                    'h:host@%s' % socket.gethostname()])
+-if 'host/-nomatch-' not in output:
+-    fail('Expected host/-nomatch- in t_accname output')
++realm.run(['./t_accname', 'p:host/-nomatch-',
++           'h:host@%s' % socket.gethostname()], expected_msg='host/-nomatch-')
+ 
+ realm.stop()
+ 
+@@ -141,41 +122,25 @@ r3.stop()
+ realm = K5Realm()
+ 
+ # Test deferred resolution of the default ccache for initiator creds.
+-output = realm.run(['./t_inq_cred'])
+-if realm.user_princ not in output:
+-    fail('Expected %s in t_inq_cred output' % realm.user_princ)
+-output = realm.run(['./t_inq_cred', '-k'])
+-if realm.user_princ not in output:
+-    fail('Expected %s in t_inq_cred output' % realm.user_princ)
+-output = realm.run(['./t_inq_cred', '-s'])
+-if realm.user_princ not in output:
+-    fail('Expected %s in t_inq_cred output' % realm.user_princ)
++realm.run(['./t_inq_cred'], expected_msg=realm.user_princ)
++realm.run(['./t_inq_cred', '-k'], expected_msg=realm.user_princ)
++realm.run(['./t_inq_cred', '-s'], expected_msg=realm.user_princ)
+ 
+ # Test picking a name from the keytab for acceptor creds.
+-output = realm.run(['./t_inq_cred', '-a'])
+-if realm.host_princ not in output:
+-    fail('Expected %s in t_inq_cred output' % realm.host_princ)
+-output = realm.run(['./t_inq_cred', '-k', '-a'])
+-if realm.host_princ not in output:
+-    fail('Expected %s in t_inq_cred output' % realm.host_princ)
+-output = realm.run(['./t_inq_cred', '-s', '-a'])
+-if realm.host_princ not in output:
+-    fail('Expected %s in t_inq_cred output' % realm.host_princ)
++realm.run(['./t_inq_cred', '-a'], expected_msg=realm.host_princ)
++realm.run(['./t_inq_cred', '-k', '-a'], expected_msg=realm.host_princ)
++realm.run(['./t_inq_cred', '-s', '-a'], expected_msg=realm.host_princ)
+ 
+ # Test client keytab initiation (non-deferred) with a specified name.
+ realm.extract_keytab(realm.user_princ, realm.client_keytab)
+ os.remove(realm.ccache)
+-output = realm.run(['./t_inq_cred', '-k'])
+-if realm.user_princ not in output:
+-    fail('Expected %s in t_inq_cred output' % realm.user_princ)
++realm.run(['./t_inq_cred', '-k'], expected_msg=realm.user_princ)
+ 
+ # Test deferred client keytab initiation and GSS_C_BOTH cred usage.
+ os.remove(realm.client_keytab)
+ os.remove(realm.ccache)
+ shutil.copyfile(realm.keytab, realm.client_keytab)
+-output = realm.run(['./t_inq_cred', '-k', '-b'])
+-if realm.host_princ not in output:
+-    fail('Expected %s in t_inq_cred output' % realm.host_princ)
++realm.run(['./t_inq_cred', '-k', '-b'], expected_msg=realm.host_princ)
+ 
+ # Test gss_export_name behavior.
+ out = realm.run(['./t_export_name', 'u:x'])
+diff --git a/src/tests/gssapi/t_s4u.py b/src/tests/gssapi/t_s4u.py
+index 7366e3915..e4cd68469 100755
+--- a/src/tests/gssapi/t_s4u.py
++++ b/src/tests/gssapi/t_s4u.py
+@@ -42,10 +42,8 @@ if ('auth1: ' + realm.user_princ not in output or
+ # result in no delegated credential being created by
+ # accept_sec_context.
+ realm.kinit(realm.user_princ, password('user'), ['-c', usercache])
+-output = realm.run(['./t_s4u2proxy_krb5', usercache, storagecache, pservice1,
+-                    pservice1, pservice2])
+-if 'no credential delegated' not in output:
+-    fail('krb5 -> no delegated cred')
++realm.run(['./t_s4u2proxy_krb5', usercache, storagecache, pservice1,
++           pservice1, pservice2], expected_msg='no credential delegated')
+ 
+ # Try S4U2Self.  Ask for an S4U2Proxy step; this won't happen because
+ # service/1 isn't allowed to get a forwardable S4U2Self ticket.
+@@ -61,17 +59,15 @@ if ('Warning: no delegated cred handle' not in output or
+ # Correct that problem and try again.  As above, the S4U2Proxy step
+ # won't actually succeed since we don't support that in DB2.
+ realm.run([kadminl, 'modprinc', '+ok_to_auth_as_delegate', service1])
+-output = realm.run(['./t_s4u', puser, pservice2], expected_code=1)
+-if 'NOT_ALLOWED_TO_DELEGATE' not in output:
+-    fail('s4u2self')
++realm.run(['./t_s4u', puser, pservice2], expected_code=1,
++          expected_msg='NOT_ALLOWED_TO_DELEGATE')
+ 
+ # Again with SPNEGO.  This uses SPNEGO for the initial authentication,
+ # but still uses krb5 for S4U2Proxy--the delegated cred is returned as
+ # a krb5 cred, not a SPNEGO cred, and t_s4u uses the delegated cred
+ # directly rather than saving and reacquiring it.
+-output = realm.run(['./t_s4u', '--spnego', puser, pservice2], expected_code=1)
+-if 'NOT_ALLOWED_TO_DELEGATE' not in output:
+-    fail('s4u2self')
++realm.run(['./t_s4u', '--spnego', puser, pservice2], expected_code=1,
++          expected_msg='NOT_ALLOWED_TO_DELEGATE')
+ 
+ realm.stop()
+ 
+@@ -148,9 +144,8 @@ realm.stop()
+ # fail, but we can check that the right server principal was used.
+ r1, r2 = cross_realms(2, create_user=False)
+ r1.run([kinit, '-k', r1.host_princ])
+-out = r1.run(['./t_s4u', 'p:' + r2.host_princ], expected_code=1)
+-if 'Server not found in Kerberos database' not in out:
+-    fail('cross-realm s4u2self (t_s4u output)')
++r1.run(['./t_s4u', 'p:' + r2.host_princ], expected_code=1,
++       expected_msg='Server not found in Kerberos database')
+ r1.stop()
+ r2.stop()
+ with open(os.path.join(r2.testdir, 'kdc.log')) as f:
+diff --git a/src/tests/t_audit.py b/src/tests/t_audit.py
+index 69c9251e0..00e96bfea 100755
+--- a/src/tests/t_audit.py
++++ b/src/tests/t_audit.py
+@@ -14,18 +14,15 @@ realm.run([kvno, 'target'])
+ 
+ # Make S4U2Self and S4U2Proxy requests so they will be audited.  The
+ # S4U2Proxy request is expected to fail.
+-out = realm.run([kvno, '-k', realm.keytab, '-U', 'user', '-P', 'target'],
+-                expected_code=1)
+-if 'NOT_ALLOWED_TO_DELEGATE' not in out:
+-    fail('Unexpected error for S4U2Proxy')
++realm.run([kvno, '-k', realm.keytab, '-U', 'user', '-P', 'target'],
++          expected_code=1, expected_msg='NOT_ALLOWED_TO_DELEGATE')
+ 
+ # Make a U2U request so it will be audited.
+ uuserver = os.path.join(buildtop, 'appl', 'user_user', 'uuserver')
+ uuclient = os.path.join(buildtop, 'appl', 'user_user', 'uuclient')
+ port_arg = str(realm.server_port())
+ realm.start_server([uuserver, port_arg], 'Server started')
+-output = realm.run([uuclient, hostname, 'testing message', port_arg])
+-if 'Hello' not in output:
+-    fail('U2U request failed unexpectedly')
++realm.run([uuclient, hostname, 'testing message', port_arg],
++          expected_msg='Hello')
+ 
+ success('Audit tests')
+diff --git a/src/tests/t_authdata.py b/src/tests/t_authdata.py
+index 33525022b..dd92b338f 100644
+--- a/src/tests/t_authdata.py
++++ b/src/tests/t_authdata.py
+@@ -24,10 +24,8 @@ if ' -5: test1' not in out or '?-6: test2' not in out:
+ if 'fake' in out:
+     fail('KDC-only authdata not filtered for request with authdata')
+ 
+-out = realm.run(['./adata', realm.host_princ, '!-1', 'mandatoryforkdc'],
+-                expected_code=1)
+-if 'KDC policy rejects request' not in out:
+-    fail('Wrong error seen for mandatory-for-kdc failure')
++realm.run(['./adata', realm.host_princ, '!-1', 'mandatoryforkdc'],
++          expected_code=1, expected_msg='KDC policy rejects request')
+ 
+ # The no_auth_data_required server flag should suppress SIGNTICKET,
+ # but not module or request authdata.
+@@ -98,45 +96,32 @@ realm2.extract_keytab('krbtgt/LOCAL', realm.keytab)
+ # AS request to local-realm service
+ realm.kinit(realm.user_princ, password('user'),
+             ['-X', 'indicators=indcl', '-r', '2d', '-S', realm.host_princ])
+-out = realm.run(['./adata', realm.host_princ])
+-if '+97: [indcl]' not in out:
+-    fail('auth-indicator not seen for AS req to service')
++realm.run(['./adata', realm.host_princ], expected_msg='+97: [indcl]')
+ 
+ # Ticket modification request
+ realm.kinit(realm.user_princ, None, ['-R', '-S', realm.host_princ])
+-out = realm.run(['./adata', realm.host_princ])
+-if '+97: [indcl]' not in out:
+-    fail('auth-indicator not seen for ticket modification request')
++realm.run(['./adata', realm.host_princ], expected_msg='+97: [indcl]')
+ 
+ # AS request to cross TGT
+ realm.kinit(realm.user_princ, password('user'),
+             ['-X', 'indicators=indcl', '-S', 'krbtgt/FOREIGN'])
+-out = realm.run(['./adata', 'krbtgt/FOREIGN'])
+-if '+97: [indcl]' not in out:
+-    fail('auth-indicator not seen for AS req to cross-realm TGT')
++realm.run(['./adata', 'krbtgt/FOREIGN'], expected_msg='+97: [indcl]')
+ 
+ # Multiple indicators
+ realm.kinit(realm.user_princ, password('user'),
+             ['-X', 'indicators=indcl indcl2 indcl3'])
+-out = realm.run(['./adata', realm.krbtgt_princ])
+-if '+97: [indcl, indcl2, indcl3]' not in out:
+-    fail('multiple auth-indicators not seen for normal AS req')
++realm.run(['./adata', realm.krbtgt_princ],
++          expected_msg='+97: [indcl, indcl2, indcl3]')
+ 
+ # AS request to local TGT (resulting creds are used for TGS tests)
+ realm.kinit(realm.user_princ, password('user'), ['-X', 'indicators=indcl'])
+-out = realm.run(['./adata', realm.krbtgt_princ])
+-if '+97: [indcl]' not in out:
+-    fail('auth-indicator not seen for normal AS req')
++realm.run(['./adata', realm.krbtgt_princ], expected_msg='+97: [indcl]')
+ 
+ # Local TGS request for local realm service
+-out = realm.run(['./adata', realm.host_princ])
+-if '+97: [indcl]' not in out:
+-    fail('auth-indicator not seen for local TGS req')
++realm.run(['./adata', realm.host_princ], expected_msg='+97: [indcl]')
+ 
+ # Local TGS request for cross TGT service
+-out = realm.run(['./adata', 'krbtgt/FOREIGN'])
+-if '+97: [indcl]' not in out:
+-    fail('auth-indicator not seen for TGS req to cross-realm TGT')
++realm.run(['./adata', 'krbtgt/FOREIGN'], expected_msg='+97: [indcl]')
+ 
+ # We don't yet have support for passing auth indicators across realms,
+ # so just verify that indicators don't survive cross-realm requests.
+@@ -152,16 +137,13 @@ if '97:' in out:
+ 
+ # Test that the CAMMAC signature still works during a krbtgt rollover.
+ realm.run([kadminl, 'cpw', '-randkey', '-keepold', realm.krbtgt_princ])
+-out = realm.run(['./adata', realm.host_princ])
+-if '+97: [indcl]' not in out:
+-    fail('auth-indicator not seen for local TGS req after krbtgt rotation')
++realm.run(['./adata', realm.host_princ], expected_msg='+97: [indcl]')
+ 
+ # Test indicator enforcement.
+ realm.addprinc('restricted')
+ realm.run([kadminl, 'setstr', 'restricted', 'require_auth', 'superstrong'])
+-out = realm.run([kvno, 'restricted'], expected_code=1)
+-if 'KDC policy rejects request' not in out:
+-    fail('expected error not seen for auth indicator enforcement')
++realm.run([kvno, 'restricted'], expected_code=1,
++          expected_msg='KDC policy rejects request')
+ realm.run([kadminl, 'setstr', 'restricted', 'require_auth', 'indcl'])
+ realm.run([kvno, 'restricted'])
+ realm.kinit(realm.user_princ, password('user'), ['-X', 'indicators=ind1 ind2'])
+@@ -222,13 +204,11 @@ if '+97: [indcl]' not in out or '[inds1]' in out:
+ # Test that KDB module authdata is included in an AS request, by
+ # default or with an explicit PAC request.
+ realm.kinit(realm.user_princ, None, ['-k'])
+-out = realm.run(['./adata', realm.krbtgt_princ])
+-if '-456: db-authdata-test' not in out:
+-    fail('DB authdata not seen in default AS request')
++realm.run(['./adata', realm.krbtgt_princ],
++          expected_msg='-456: db-authdata-test')
+ realm.kinit(realm.user_princ, None, ['-k', '--request-pac'])
+-out = realm.run(['./adata', realm.krbtgt_princ])
+-if '-456: db-authdata-test' not in out:
+-    fail('DB authdata not seen with --request-pac')
++realm.run(['./adata', realm.krbtgt_princ],
++          expected_msg='-456: db-authdata-test')
+ 
+ # Test that KDB module authdata is suppressed in an AS request by a
+ # negative PAC request.
+@@ -238,9 +218,7 @@ if '-456: db-authdata-test' in out:
+     fail('DB authdata not suppressed by --no-request-pac')
+ 
+ # Test that KDB authdata is included in a TGS request by default.
+-out = realm.run(['./adata', 'service/1'])
+-if '-456: db-authdata-test' not in out:
+-    fail('DB authdata not seen in TGS request')
++realm.run(['./adata', 'service/1'], expected_msg='-456: db-authdata-test')
+ 
+ # Test that KDB authdata is suppressed in a TGS request by the
+ # +no_auth_data_required flag.
+diff --git a/src/tests/t_ccache.py b/src/tests/t_ccache.py
+index 47d963130..2dcd19102 100755
+--- a/src/tests/t_ccache.py
++++ b/src/tests/t_ccache.py
+@@ -35,15 +35,11 @@ if not test_keyring:
+ 
+ # Test kdestroy and klist of a non-existent ccache.
+ realm.run([kdestroy])
+-output = realm.run([klist], expected_code=1)
+-if 'No credentials cache found' not in output:
+-    fail('Expected error message not seen in klist output')
++realm.run([klist], expected_code=1, expected_msg='No credentials cache found')
+ 
+ # Test kinit with an inaccessible ccache.
+-out = realm.run([kinit, '-c', 'testdir/xx/yy', realm.user_princ],
+-                input=(password('user') + '\n'), expected_code=1)
+-if 'Failed to store credentials' not in out:
+-    fail('Expected error message not seen in kinit output')
++realm.kinit(realm.user_princ, password('user'), flags=['-c', 'testdir/xx/yy'],
++            expected_code=1, expected_msg='Failed to store credentials')
+ 
+ # Test klist -s with a single ccache.
+ realm.run([klist, '-s'], expected_code=1)
+@@ -65,9 +61,7 @@ def collection_test(realm, ccname):
+ 
+     realm.run([klist, '-A', '-s'], expected_code=1)
+     realm.kinit('alice', password('alice'))
+-    output = realm.run([klist])
+-    if 'Default principal: alice@' not in output:
+-        fail('Initial kinit failed to get credentials for alice.')
++    realm.run([klist], expected_msg='Default principal: alice@')
+     realm.run([klist, '-A', '-s'])
+     realm.run([kdestroy])
+     output = realm.run([klist], expected_code=1)
+@@ -130,25 +124,20 @@ if test_keyring:
+     realm.env['KRB5CCNAME'] = 'KEYRING:' + cname
+     realm.run([kdestroy, '-A'])
+     realm.kinit(realm.user_princ, password('user'))
+-    out = realm.run([klist, '-l'])
+-    if 'KEYRING:legacy:' + cname + ':' + cname not in out:
+-        fail('Wrong initial primary name in keyring legacy collection')
++    msg = 'KEYRING:legacy:' + cname + ':' + cname
++    realm.run([klist, '-l'], expected_msg=msg)
+     # Make sure this cache is linked to the session keyring.
+     id = realm.run([keyctl, 'search', '@s', 'keyring', cname])
+-    out = realm.run([keyctl, 'list', id.strip()])
+-    if 'user: __krb5_princ__' not in out:
+-        fail('Legacy cache not linked into session keyring')
++    realm.run([keyctl, 'list', id.strip()],
++              expected_msg='user: __krb5_princ__')
+     # Remove the collection keyring.  When the collection is
+     # reinitialized, the legacy cache should reappear inside it
+     # automatically as the primary cache.
+     cleanup_keyring('@s', col_ringname)
+-    out = realm.run([klist])
+-    if realm.user_princ not in out:
+-        fail('Cannot see legacy cache after removing collection')
++    realm.run([klist], expected_msg=realm.user_princ)
+     coll_id = realm.run([keyctl, 'search', '@s', 'keyring', '_krb_' + cname])
+-    out = realm.run([keyctl, 'list', coll_id.strip()])
+-    if (id.strip() + ':') not in out:
+-        fail('Legacy cache did not reappear in collection after klist')
++    msg = id.strip() + ':'
++    realm.run([keyctl, 'list', coll_id.strip()], expected_msg=msg)
+     # Destroy the cache and check that it is unlinked from the session keyring.
+     realm.run([kdestroy])
+     realm.run([keyctl, 'search', '@s', 'keyring', cname], expected_code=1)
+@@ -160,8 +149,7 @@ conf = {'libdefaults': {'default_ccache_name': 'testdir/%{null}abc%{uid}'}}
+ realm = K5Realm(krb5_conf=conf, create_kdb=False)
+ del realm.env['KRB5CCNAME']
+ uidstr = str(os.getuid())
+-out = realm.run([klist], expected_code=1)
+-if 'testdir/abc%s' % uidstr not in out:
+-    fail('Wrong ccache in klist')
++msg = 'testdir/abc%s' % uidstr
++realm.run([klist], expected_code=1, expected_msg=msg)
+ 
+ success('Credential cache tests')
+diff --git a/src/tests/t_crossrealm.py b/src/tests/t_crossrealm.py
+index 0d967b8a5..1fa48793a 100755
+--- a/src/tests/t_crossrealm.py
++++ b/src/tests/t_crossrealm.py
+@@ -25,9 +25,7 @@
+ from k5test import *
+ 
+ def test_kvno(r, princ, test, env=None):
+-    output = r.run([kvno, princ], env=env)
+-    if princ not in output:
+-        fail('%s: principal %s not in kvno output' % (test, princ))
++    r.run([kvno, princ], env=env, expected_msg=princ)
+ 
+ 
+ def stop(*realms):
+@@ -85,9 +83,8 @@ capaths = {'capaths': {'A': {'C': 'B'}}}
+ r1, r2, r3 = cross_realms(3, xtgts=((0,1), (1,2)),
+                           args=({'realm': 'A', 'krb5_conf': capaths},
+                                 {'realm': 'B'}, {'realm': 'C'}))
+-output = r1.run([kvno, r3.host_princ], expected_code=1)
+-if 'KDC policy rejects request' not in output:
+-    fail('transited 1: Expected error message not in output')
++r1.run([kvno, r3.host_princ], expected_code=1,
++       expected_msg='KDC policy rejects request')
+ stop(r1, r2, r3)
+ 
+ # Test a different kind of transited error.  The KDC for D does not
+@@ -99,9 +96,8 @@ r1, r2, r3, r4 = cross_realms(4, xtgts=((0,1), (1,2), (2,3)),
+                                     {'realm': 'B', 'krb5_conf': capaths},
+                                     {'realm': 'C', 'krb5_conf': capaths},
+                                     {'realm': 'D'}))
+-output = r1.run([kvno, r4.host_princ], expected_code=1)
+-if 'Illegal cross-realm ticket' not in output:
+-    fail('transited 2: Expected error message not in output')
++r1.run([kvno, r4.host_princ], expected_code=1,
++       expected_msg='Illegal cross-realm ticket')
+ stop(r1, r2, r3, r4)
+ 
+ success('Cross-realm tests')
+diff --git a/src/tests/t_dump.py b/src/tests/t_dump.py
+index 5d3a43762..8a9462bd8 100755
+--- a/src/tests/t_dump.py
++++ b/src/tests/t_dump.py
+@@ -36,12 +36,10 @@ if 'Expiration date: [never]' not in out or 'MKey: vno 1' not in out:
+ out = realm.run([kadminl, 'getpols'])
+ if 'fred\n' not in out or 'barney\n' not in out:
+     fail('Missing policy after load')
+-out = realm.run([kadminl, 'getpol', 'compat'])
+-if 'Number of old keys kept: 5' not in out:
+-    fail('Policy (1.8 format) has wrong value after load')
+-out = realm.run([kadminl, 'getpol', 'barney'])
+-if 'Number of old keys kept: 1' not in out:
+-    fail('Policy has wrong value after load')
++realm.run([kadminl, 'getpol', 'compat'],
++          expected_msg='Number of old keys kept: 5')
++realm.run([kadminl, 'getpol', 'barney'],
++          expected_msg='Number of old keys kept: 1')
+ 
+ # Dump/load again, and make sure everything is still there.
+ realm.run([kdb5_util, 'dump', dumpfile])
+@@ -81,15 +79,10 @@ dump_compare(realm, ['-ov'], srcdump_ov)
+ def load_dump_check_compare(realm, opt, srcfile):
+     realm.run([kdb5_util, 'destroy', '-f'])
+     realm.run([kdb5_util, 'load'] + opt + [srcfile])
+-    out = realm.run([kadminl, 'getprincs'])
+-    if 'user@' not in out:
+-        fail('Loaded dumpfile missing user principal')
+-    out = realm.run([kadminl, 'getprinc', 'nokeys'])
+-    if 'Number of keys: 0' not in out:
+-        fail('Loading dumpfile did not process zero-key principal')
+-    out = realm.run([kadminl, 'getpols'])
+-    if 'testpol' not in out:
+-        fail('Loaded dumpfile missing test policy')
++    realm.run([kadminl, 'getprincs'], expected_msg='user@')
++    realm.run([kadminl, 'getprinc', 'nokeys'],
++              expected_msg='Number of keys: 0')
++    realm.run([kadminl, 'getpols'], expected_msg='testpol')
+     dump_compare(realm, opt, srcfile)
+ 
+ # Load each format of dump, check it, re-dump it, and compare.
+@@ -99,12 +92,8 @@ load_dump_check_compare(realm, ['-b7'], srcdump_b7)
+ 
+ # Loading the last (-b7 format) dump won't have loaded the
+ # per-principal kadm data.  Load that incrementally with -ov.
+-out = realm.run([kadminl, 'getprinc', 'user'])
+-if 'Policy: [none]' not in out:
+-    fail('Loaded b7 dump unexpectedly contains user policy reference')
++realm.run([kadminl, 'getprinc', 'user'], expected_msg='Policy: [none]')
+ realm.run([kdb5_util, 'load', '-update', '-ov', srcdump_ov])
+-out = realm.run([kadminl, 'getprinc', 'user'])
+-if 'Policy: testpol' not in out:
+-    fail('Loading ov dump did not add user policy reference')
++realm.run([kadminl, 'getprinc', 'user'], expected_msg='Policy: testpol')
+ 
+ success('Dump/load tests')
+diff --git a/src/tests/t_general.py b/src/tests/t_general.py
+index 16bf6c5e3..6621b7230 100755
+--- a/src/tests/t_general.py
++++ b/src/tests/t_general.py
+@@ -3,10 +3,9 @@ from k5test import *
+ 
+ for realm in multipass_realms(create_host=False):
+     # Check that kinit fails appropriately with the wrong password.
+-    output = realm.run([kinit, realm.user_princ], input='wrong\n',
+-                       expected_code=1)
+-    if 'Password incorrect while getting initial credentials' not in output:
+-        fail('Expected error message not seen in kinit output')
++    msg = 'Password incorrect while getting initial credentials'
++    realm.run([kinit, realm.user_princ], input='wrong\n', expected_code=1,
++              expected_msg=msg)
+ 
+     # Check that we can kinit as a different principal.
+     realm.kinit(realm.admin_princ, password('admin'))
+@@ -42,9 +41,8 @@ realm.run(['./responder', '-r', 'password=%s' % password('user'),
+ # Test that WRONG_REALM responses aren't treated as referrals unless
+ # they contain a crealm field pointing to a different realm.
+ # (Regression test for #8060.)
+-out = realm.run([kinit, '-C', 'notfoundprinc'], expected_code=1)
+-if 'not found in Kerberos database' not in out:
+-    fail('Expected error message not seen in kinit -C output')
++realm.run([kinit, '-C', 'notfoundprinc'], expected_code=1,
++          expected_msg='not found in Kerberos database')
+ 
+ # Spot-check KRB5_TRACE output
+ expected_trace = ('Sending initial UDP request',
+diff --git a/src/tests/t_hostrealm.py b/src/tests/t_hostrealm.py
+index 76b282d2a..224c067ef 100755
+--- a/src/tests/t_hostrealm.py
++++ b/src/tests/t_hostrealm.py
+@@ -20,9 +20,8 @@ def test(realm, args, expected_realms, msg, env=None):
+         fail(msg)
+ 
+ def test_error(realm, args, expected_error, msg, env=None):
+-    out = realm.run(['./hrealm'] + args, env=env, expected_code=1)
+-    if expected_error not in out:
+-        fail(msg)
++    realm.run(['./hrealm'] + args, env=env, expected_code=1,
++              expected_msg=expected_error)
+ 
+ def testh(realm, host, expected_realms, msg, env=None):
+     test(realm, ['-h', host], expected_realms, msg, env=env)
+diff --git a/src/tests/t_iprop.py b/src/tests/t_iprop.py
+index e64fdd279..8e23cd5de 100755
+--- a/src/tests/t_iprop.py
++++ b/src/tests/t_iprop.py
+@@ -214,9 +214,8 @@ check_ulog(7, 1, 7, [None, pr1, pr3, pr2, pr2, pr2, pr2])
+ kpropd1.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd1, False, 6, 7)
+ check_ulog(2, 6, 7, [None, pr2], slave1)
+-out = realm.run([kadminl, 'getprinc', pr2], env=slave1)
+-if 'Attributes: DISALLOW_ALL_TIX' not in out:
+-    fail('slave1 does not have modification from master')
++realm.run([kadminl, 'getprinc', pr2], env=slave1,
++          expected_msg='Attributes: DISALLOW_ALL_TIX')
+ 
+ # Start kadmind -proponly for slave1.  (Use the slave1m environment
+ # which defines iprop_port to $port8.)
+@@ -245,15 +244,13 @@ check_ulog(8, 1, 8, [None, pr1, pr3, pr2, pr2, pr2, pr2, pr1])
+ kpropd1.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd1, False, 7, 8)
+ check_ulog(3, 6, 8, [None, pr2, pr1], slave1)
+-out = realm.run([kadminl, 'getprinc', pr1], env=slave1)
+-if 'Maximum ticket life: 0 days 00:20:00' not in out:
+-    fail('slave1 does not have modification from master')
++realm.run([kadminl, 'getprinc', pr1], env=slave1,
++          expected_msg='Maximum ticket life: 0 days 00:20:00')
+ kpropd3.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd3, False, 7, 8)
+ check_ulog(2, 7, 8, [None, pr1], slave3)
+-out = realm.run([kadminl, '-r', realm.realm, 'getprinc', pr1], env=slave3)
+-if 'Maximum ticket life: 0 days 00:20:00' not in out:
+-    fail('slave3 does not have modification from slave1')
++realm.run([kadminl, '-r', realm.realm, 'getprinc', pr1], env=slave3,
++          expected_msg='Maximum ticket life: 0 days 00:20:00')
+ stop_daemon(kpropd3)
+ 
+ # Test dissimilar default_realm and domain_realm map settings (no -r realm).
+@@ -287,15 +284,13 @@ check_ulog(9, 1, 9, [None, pr1, pr3, pr2, pr2, pr2, pr2, pr1, pr1])
+ kpropd1.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd1, False, 8, 9)
+ check_ulog(4, 6, 9, [None, pr2, pr1, pr1], slave1)
+-out = realm.run([kadminl, 'getprinc', pr1], env=slave1)
+-if 'Maximum renewable life: 0 days 22:00:00\n' not in out:
+-    fail('slave1 does not have modification from master')
++realm.run([kadminl, 'getprinc', pr1], env=slave1,
++          expected_msg='Maximum renewable life: 0 days 22:00:00\n')
+ kpropd2.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd2, False, 8, 9)
+ check_ulog(3, 7, 9, [None, pr1, pr1], slave2)
+-out = realm.run([kadminl, 'getprinc', pr1], env=slave2)
+-if 'Maximum renewable life: 0 days 22:00:00\n' not in out:
+-    fail('slave2 does not have modification from slave1')
++realm.run([kadminl, 'getprinc', pr1], env=slave2,
++          expected_msg='Maximum renewable life: 0 days 22:00:00\n')
+ 
+ # Reset the ulog on slave1 to force a full resync from master.  The
+ # resync will use the old dump file and then propagate changes.
+@@ -317,15 +312,11 @@ check_ulog(10, 1, 10, [None, pr1, pr3, pr2, pr2, pr2, pr2, pr1, pr1, pr2])
+ kpropd1.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd1, False, 9, 10)
+ check_ulog(5, 6, 10, [None, pr2, pr1, pr1, pr2], slave1)
+-out = realm.run([kadminl, 'getprinc', pr2], env=slave1)
+-if 'Attributes:\n' not in out:
+-    fail('slave1 does not have modification from master')
++realm.run([kadminl, 'getprinc', pr2], env=slave1, expected_msg='Attributes:\n')
+ kpropd2.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd2, False, 9, 10)
+ check_ulog(4, 7, 10, [None, pr1, pr1, pr2], slave2)
+-out = realm.run([kadminl, 'getprinc', pr2], env=slave2)
+-if 'Attributes:\n' not in out:
+-    fail('slave2 does not have modification from slave1')
++realm.run([kadminl, 'getprinc', pr2], env=slave2, expected_msg='Attributes:\n')
+ 
+ # Create a policy and check that it propagates via full resync.
+ realm.run([kadminl, 'addpol', '-minclasses', '2', 'testpol'])
+@@ -333,15 +324,13 @@ check_ulog(1, 1, 1, [None])
+ kpropd1.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd1, True, 10, 1)
+ check_ulog(1, 1, 1, [None], slave1)
+-out = realm.run([kadminl, 'getpol', 'testpol'], env=slave1)
+-if 'Minimum number of password character classes: 2' not in out:
+-    fail('slave1 does not have policy from master')
++realm.run([kadminl, 'getpol', 'testpol'], env=slave1,
++          expected_msg='Minimum number of password character classes: 2')
+ kpropd2.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd2, True, 10, 1)
+ check_ulog(1, 1, 1, [None], slave2)
+-out = realm.run([kadminl, 'getpol', 'testpol'], env=slave2)
+-if 'Minimum number of password character classes: 2' not in out:
+-    fail('slave2 does not have policy from slave1')
++realm.run([kadminl, 'getpol', 'testpol'], env=slave2,
++          expected_msg='Minimum number of password character classes: 2')
+ 
+ # Modify the policy and test that it also propagates via full resync.
+ realm.run([kadminl, 'modpol', '-minlength', '17', 'testpol'])
+@@ -349,15 +338,13 @@ check_ulog(1, 1, 1, [None])
+ kpropd1.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd1, True, 1, 1)
+ check_ulog(1, 1, 1, [None], slave1)
+-out = realm.run([kadminl, 'getpol', 'testpol'], env=slave1)
+-if 'Minimum password length: 17' not in out:
+-    fail('slave1 does not have policy change from master')
++realm.run([kadminl, 'getpol', 'testpol'], env=slave1,
++          expected_msg='Minimum password length: 17')
+ kpropd2.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd2, True, 1, 1)
+ check_ulog(1, 1, 1, [None], slave2)
+-out = realm.run([kadminl, 'getpol', 'testpol'], env=slave2)
+-if 'Minimum password length: 17' not in out:
+-    fail('slave2 does not have policy change from slave1')
++realm.run([kadminl, 'getpol', 'testpol'], env=slave2,
++          expected_msg='Minimum password length: 17')
+ 
+ # Delete the policy and test that it propagates via full resync.
+ realm.run([kadminl, 'delpol', 'testpol'])
+@@ -365,15 +352,13 @@ check_ulog(1, 1, 1, [None])
+ kpropd1.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd1, True, 1, 1)
+ check_ulog(1, 1, 1, [None], slave1)
+-out = realm.run([kadminl, 'getpol', 'testpol'], env=slave1, expected_code=1)
+-if 'Policy does not exist' not in out:
+-    fail('slave1 did not get policy deletion from master')
++realm.run([kadminl, 'getpol', 'testpol'], env=slave1, expected_code=1,
++          expected_msg='Policy does not exist')
+ kpropd2.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd2, True, 1, 1)
+ check_ulog(1, 1, 1, [None], slave2)
+-out = realm.run([kadminl, 'getpol', 'testpol'], env=slave2, expected_code=1)
+-if 'Policy does not exist' not in out:
+-    fail('slave2 did not get policy deletion from slave1')
++realm.run([kadminl, 'getpol', 'testpol'], env=slave2, expected_code=1,
++          expected_msg='Policy does not exist')
+ 
+ # Modify a principal on the master and test that it propagates incrementally.
+ realm.run([kadminl, 'modprinc', '-maxlife', '10 minutes', pr1])
+@@ -381,15 +366,13 @@ check_ulog(2, 1, 2, [None, pr1])
+ kpropd1.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd1, False, 1, 2)
+ check_ulog(2, 1, 2, [None, pr1], slave1)
+-out = realm.run([kadminl, 'getprinc', pr1], env=slave1)
+-if 'Maximum ticket life: 0 days 00:10:00' not in out:
+-    fail('slave1 does not have modification from master')
++realm.run([kadminl, 'getprinc', pr1], env=slave1,
++          expected_msg='Maximum ticket life: 0 days 00:10:00')
+ kpropd2.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd2, False, 1, 2)
+ check_ulog(2, 1, 2, [None, pr1], slave2)
+-out = realm.run([kadminl, 'getprinc', pr1], env=slave2)
+-if 'Maximum ticket life: 0 days 00:10:00' not in out:
+-    fail('slave2 does not have modification from slave1')
++realm.run([kadminl, 'getprinc', pr1], env=slave2,
++          expected_msg='Maximum ticket life: 0 days 00:10:00')
+ 
+ # Delete a principal and test that it propagates incrementally.
+ realm.run([kadminl, 'delprinc', pr3])
+@@ -397,15 +380,13 @@ check_ulog(3, 1, 3, [None, pr1, pr3])
+ kpropd1.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd1, False, 2, 3)
+ check_ulog(3, 1, 3, [None, pr1, pr3], slave1)
+-out = realm.run([kadminl, 'getprinc', pr3], env=slave1, expected_code=1)
+-if 'Principal does not exist' not in out:
+-    fail('slave1 does not have principal deletion from master')
++realm.run([kadminl, 'getprinc', pr3], env=slave1, expected_code=1,
++          expected_msg='Principal does not exist')
+ kpropd2.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd2, False, 2, 3)
+ check_ulog(3, 1, 3, [None, pr1, pr3], slave2)
+-out = realm.run([kadminl, 'getprinc', pr3], env=slave2, expected_code=1)
+-if 'Principal does not exist' not in out:
+-    fail('slave2 does not have principal deletion from slave1')
++realm.run([kadminl, 'getprinc', pr3], env=slave2, expected_code=1,
++          expected_msg='Principal does not exist')
+ 
+ # Rename a principal and test that it propagates incrementally.
+ renpr = "quacked@" + realm.realm
+@@ -414,16 +395,14 @@ check_ulog(6, 1, 6, [None, pr1, pr3, renpr, pr1, renpr])
+ kpropd1.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd1, False, 3, 6)
+ check_ulog(6, 1, 6, [None, pr1, pr3, renpr, pr1, renpr], slave1)
+-out = realm.run([kadminl, 'getprinc', pr1], env=slave1, expected_code=1)
+-if 'Principal does not exist' not in out:
+-    fail('slave1 does not have principal deletion from master')
++realm.run([kadminl, 'getprinc', pr1], env=slave1, expected_code=1,
++          expected_msg='Principal does not exist')
+ realm.run([kadminl, 'getprinc', renpr], env=slave1)
+ kpropd2.send_signal(signal.SIGUSR1)
+ wait_for_prop(kpropd2, False, 3, 6)
+ check_ulog(6, 1, 6, [None, pr1, pr3, renpr, pr1, renpr], slave2)
+-out = realm.run([kadminl, 'getprinc', pr1], env=slave2, expected_code=1)
+-if 'Principal does not exist' not in out:
+-    fail('slave2 does not have principal deletion from master')
++realm.run([kadminl, 'getprinc', pr1], env=slave2, expected_code=1,
++          expected_msg='Principal does not exist')
+ realm.run([kadminl, 'getprinc', renpr], env=slave2)
+ 
+ pr1 = renpr
+@@ -455,9 +434,8 @@ out = realm.run_kpropd_once(slave1, ['-d'])
+ if 'Got incremental updates (sno=2 ' not in out:
+     fail('Expected full dump and synchronized from kpropd -t')
+ check_ulog(2, 1, 2, [None, pr1], slave1)
+-out = realm.run([kadminl, 'getprinc', pr1], env=slave1)
+-if 'Maximum ticket life: 0 days 00:05:00' not in out:
+-    fail('slave1 does not have modification from master after kpropd -t')
++realm.run([kadminl, 'getprinc', pr1], env=slave1,
++          expected_msg='Maximum ticket life: 0 days 00:05:00')
+ 
+ # Propagate a policy change via full resync.
+ realm.run([kadminl, 'addpol', '-minclasses', '3', 'testpol'])
+@@ -467,8 +445,7 @@ if ('Full propagation transfer finished' not in out or
+     'KDC is synchronized' not in out):
+     fail('Expected full dump and synchronized from kpropd -t')
+ check_ulog(1, 1, 1, [None], slave1)
+-out = realm.run([kadminl, 'getpol', 'testpol'], env=slave1)
+-if 'Minimum number of password character classes: 3' not in out:
+-    fail('slave1 does not have policy from master after kpropd -t')
++realm.run([kadminl, 'getpol', 'testpol'], env=slave1,
++          expected_msg='Minimum number of password character classes: 3')
+ 
+ success('iprop tests')
+diff --git a/src/tests/t_kadm5_hook.py b/src/tests/t_kadm5_hook.py
+index 708e328b0..c1c8c9419 100755
+--- a/src/tests/t_kadm5_hook.py
++++ b/src/tests/t_kadm5_hook.py
+@@ -7,12 +7,10 @@ plugin = os.path.join(buildtop, "plugins", "kadm5_hook", "test",
+ hook_krb5_conf = {'plugins': {'kadm5_hook': { 'module': 'test:' + plugin}}}
+ 
+ realm = K5Realm(krb5_conf=hook_krb5_conf, create_user=False, create_host=False)
+-output = realm.run([kadminl, 'addprinc', '-randkey', 'test'])
+-if "create: stage precommit" not in output:
+-    fail('kadm5_hook test output not found')
++realm.run([kadminl, 'addprinc', '-randkey', 'test'],
++          expected_msg='create: stage precommit')
+ 
+-output = realm.run([kadminl, 'renprinc', 'test', 'test2'])
+-if "rename: stage precommit" not in output:
+-    fail('kadm5_hook test output not found')
++realm.run([kadminl, 'renprinc', 'test', 'test2'],
++          expected_msg='rename: stage precommit')
+ 
+ success('kadm5_hook')
+diff --git a/src/tests/t_kadmin_acl.py b/src/tests/t_kadmin_acl.py
+index 188929a76..bbbbae99e 100755
+--- a/src/tests/t_kadmin_acl.py
++++ b/src/tests/t_kadmin_acl.py
+@@ -87,27 +87,24 @@ for pw in (['-pw', 'newpw'], ['-randkey']):
+         args = pw + ks
+         kadmin_as(all_changepw, ['cpw'] + args + ['unselected'])
+         kadmin_as(some_changepw, ['cpw'] + args + ['selected'])
+-        out = kadmin_as(none, ['cpw'] + args + ['selected'], expected_code=1)
+-        if 'Operation requires ``change-password\'\' privilege' not in out:
+-            fail('cpw failure (no perms)')
+-        out = kadmin_as(some_changepw, ['cpw'] + args + ['unselected'],
+-                        expected_code=1)
+-        if 'Operation requires ``change-password\'\' privilege' not in out:
+-            fail('cpw failure (target)')
+-        out = kadmin_as(none, ['cpw'] + args + ['none'])
++        msg = "Operation requires ``change-password'' privilege"
++        kadmin_as(none, ['cpw'] + args + ['selected'], expected_code=1,
++                  expected_msg=msg)
++        kadmin_as(some_changepw, ['cpw'] + args + ['unselected'],
++                  expected_code=1, expected_msg=msg)
++        kadmin_as(none, ['cpw'] + args + ['none'])
+         realm.run([kadminl, 'modprinc', '-policy', 'minlife', 'none'])
+-        out = kadmin_as(none, ['cpw'] + args + ['none'], expected_code=1)
+-        if 'Current password\'s minimum life has not expired' not in out:
+-            fail('cpw failure (minimum life)')
++        msg = "Current password's minimum life has not expired"
++        kadmin_as(none, ['cpw'] + args + ['none'], expected_code=1,
++                  expected_msg=msg)
+         realm.run([kadminl, 'modprinc', '-clearpolicy', 'none'])
+ realm.run([kadminl, 'delprinc', 'selected'])
+ realm.run([kadminl, 'delprinc', 'unselected'])
+ 
+ kadmin_as(all_add, ['addpol', 'policy'])
+ realm.run([kadminl, 'delpol', 'policy'])
+-out = kadmin_as(none, ['addpol', 'policy'], expected_code=1)
+-if 'Operation requires ``add\'\' privilege' not in out:
+-    fail('addpol failure (no perms)')
++kadmin_as(none, ['addpol', 'policy'], expected_code=1,
++          expected_msg="Operation requires ``add'' privilege")
+ 
+ # addprinc can generate two different RPC calls depending on options.
+ for ks in ([], ['-e', 'aes256-cts']):
+@@ -117,89 +114,62 @@ for ks in ([], ['-e', 'aes256-cts']):
+     kadmin_as(some_add, ['addprinc'] + args + ['selected'])
+     realm.run([kadminl, 'delprinc', 'selected'])
+     kadmin_as(restricted_add, ['addprinc'] + args + ['unselected'])
+-    out = realm.run([kadminl, 'getprinc', 'unselected'])
+-    if 'REQUIRES_PRE_AUTH' not in out:
+-        fail('addprinc success (restrictions) -- restriction check')
++    realm.run([kadminl, 'getprinc', 'unselected'],
++              expected_msg='REQUIRES_PRE_AUTH')
+     realm.run([kadminl, 'delprinc', 'unselected'])
+-    out = kadmin_as(none, ['addprinc'] + args + ['selected'], expected_code=1)
+-    if 'Operation requires ``add\'\' privilege' not in out:
+-        fail('addprinc failure (no perms)')
+-    out = kadmin_as(some_add, ['addprinc'] + args + ['unselected'],
+-                    expected_code=1)
+-    if 'Operation requires ``add\'\' privilege' not in out:
+-        fail('addprinc failure (target)')
++    kadmin_as(none, ['addprinc'] + args + ['selected'], expected_code=1,
++              expected_msg="Operation requires ``add'' privilege")
++    kadmin_as(some_add, ['addprinc'] + args + ['unselected'], expected_code=1,
++              expected_msg="Operation requires ``add'' privilege")
+ 
+ realm.addprinc('unselected', 'pw')
+ kadmin_as(all_delete, ['delprinc', 'unselected'])
+ realm.addprinc('selected', 'pw')
+ kadmin_as(some_delete, ['delprinc', 'selected'])
+ realm.addprinc('unselected', 'pw')
+-out = kadmin_as(none, ['delprinc', 'unselected'], expected_code=1)
+-if 'Operation requires ``delete\'\' privilege' not in out:
+-    fail('delprinc failure (no perms)')
+-out = kadmin_as(some_delete, ['delprinc', 'unselected'], expected_code=1)
+-if 'Operation requires ``delete\'\' privilege' not in out:
+-    fail('delprinc failure (no target)')
++kadmin_as(none, ['delprinc', 'unselected'], expected_code=1,
++          expected_msg="Operation requires ``delete'' privilege")
++kadmin_as(some_delete, ['delprinc', 'unselected'], expected_code=1,
++          expected_msg="Operation requires ``delete'' privilege")
+ realm.run([kadminl, 'delprinc', 'unselected'])
+ 
+-out = kadmin_as(all_inquire, ['getpol', 'minlife'])
+-if 'Policy: minlife' not in out:
+-    fail('getpol success (acl)')
+-out = kadmin_as(none, ['getpol', 'minlife'], expected_code=1)
+-if 'Operation requires ``get\'\' privilege' not in out:
+-    fail('getpol failure (no perms)')
++kadmin_as(all_inquire, ['getpol', 'minlife'], expected_msg='Policy: minlife')
++kadmin_as(none, ['getpol', 'minlife'], expected_code=1,
++          expected_msg="Operation requires ``get'' privilege")
+ realm.run([kadminl, 'modprinc', '-policy', 'minlife', 'none'])
+-out = kadmin_as(none, ['getpol', 'minlife'])
+-if 'Policy: minlife' not in out:
+-    fail('getpol success (self policy exemption)')
++kadmin_as(none, ['getpol', 'minlife'], expected_msg='Policy: minlife')
+ realm.run([kadminl, 'modprinc', '-clearpolicy', 'none'])
+ 
+ realm.addprinc('selected', 'pw')
+ realm.addprinc('unselected', 'pw')
+-out = kadmin_as(all_inquire, ['getprinc', 'unselected'])
+-if 'Principal: unselected@KRBTEST.COM' not in out:
+-    fail('getprinc success (acl)')
+-out = kadmin_as(some_inquire, ['getprinc', 'selected'])
+-if 'Principal: selected@KRBTEST.COM' not in out:
+-    fail('getprinc success (target)')
+-out = kadmin_as(none, ['getprinc', 'selected'], expected_code=1)
+-if 'Operation requires ``get\'\' privilege' not in out:
+-    fail('getprinc failure (no perms)')
+-out = kadmin_as(some_inquire, ['getprinc', 'unselected'], expected_code=1)
+-if 'Operation requires ``get\'\' privilege' not in out:
+-    fail('getprinc failure (target)')
+-out = kadmin_as(none, ['getprinc', 'none'])
+-if 'Principal: none@KRBTEST.COM' not in out:
+-    fail('getprinc success (self exemption)')
++kadmin_as(all_inquire, ['getprinc', 'unselected'],
++          expected_msg='Principal: unselected@KRBTEST.COM')
++kadmin_as(some_inquire, ['getprinc', 'selected'],
++          expected_msg='Principal: selected@KRBTEST.COM')
++kadmin_as(none, ['getprinc', 'selected'], expected_code=1,
++          expected_msg="Operation requires ``get'' privilege")
++kadmin_as(some_inquire, ['getprinc', 'unselected'], expected_code=1,
++          expected_msg="Operation requires ``get'' privilege")
++kadmin_as(none, ['getprinc', 'none'],
++          expected_msg='Principal: none@KRBTEST.COM')
+ realm.run([kadminl, 'delprinc', 'selected'])
+ realm.run([kadminl, 'delprinc', 'unselected'])
+ 
+-out = kadmin_as(all_list, ['listprincs'])
+-if 'K/M@KRBTEST.COM' not in out:
+-    fail('listprincs success (acl)')
+-out = kadmin_as(none, ['listprincs'], expected_code=1)
+-if 'Operation requires ``list\'\' privilege' not in out:
+-    fail('listprincs failure (no perms)')
++kadmin_as(all_list, ['listprincs'], expected_msg='K/M@KRBTEST.COM')
++kadmin_as(none, ['listprincs'], expected_code=1,
++          expected_msg="Operation requires ``list'' privilege")
+ 
+ realm.addprinc('selected', 'pw')
+ realm.addprinc('unselected', 'pw')
+ realm.run([kadminl, 'setstr', 'selected', 'key', 'value'])
+ realm.run([kadminl, 'setstr', 'unselected', 'key', 'value'])
+-out = kadmin_as(all_inquire, ['getstrs', 'unselected'])
+-if 'key: value' not in out:
+-    fail('getstrs success (acl)')
+-out = kadmin_as(some_inquire, ['getstrs', 'selected'])
+-if 'key: value' not in out:
+-    fail('getstrs success (target)')
+-out = kadmin_as(none, ['getstrs', 'selected'], expected_code=1)
+-if 'Operation requires ``get\'\' privilege' not in out:
+-    fail('getstrs failure (no perms)')
+-out = kadmin_as(some_inquire, ['getstrs', 'unselected'], expected_code=1)
+-if 'Operation requires ``get\'\' privilege' not in out:
+-    fail('getstrs failure (target)')
+-out = kadmin_as(none, ['getstrs', 'none'])
+-if '(No string attributes.)' not in out:
+-    fail('getstrs success (self exemption)')
++kadmin_as(all_inquire, ['getstrs', 'unselected'], expected_msg='key: value')
++kadmin_as(some_inquire, ['getstrs', 'selected'], expected_msg='key: value')
++kadmin_as(none, ['getstrs', 'selected'], expected_code=1,
++          expected_msg="Operation requires ``get'' privilege")
++kadmin_as(some_inquire, ['getstrs', 'unselected'], expected_code=1,
++          expected_msg="Operation requires ``get'' privilege")
++kadmin_as(none, ['getstrs', 'none'], expected_msg='(No string attributes.)')
+ realm.run([kadminl, 'delprinc', 'selected'])
+ realm.run([kadminl, 'delprinc', 'unselected'])
+ 
+@@ -207,27 +177,21 @@ out = kadmin_as(all_modify, ['modpol', '-maxlife', '1 hour', 'policy'],
+                 expected_code=1)
+ if 'Operation requires' in out:
+     fail('modpol success (acl)')
+-out = kadmin_as(none, ['modpol', '-maxlife', '1 hour', 'policy'],
+-                expected_code=1)
+-if 'Operation requires ``modify\'\' privilege' not in out:
+-    fail('modpol failure (no perms)')
++kadmin_as(none, ['modpol', '-maxlife', '1 hour', 'policy'], expected_code=1,
++          expected_msg="Operation requires ``modify'' privilege")
+ 
+ realm.addprinc('selected', 'pw')
+ realm.addprinc('unselected', 'pw')
+ kadmin_as(all_modify, ['modprinc', '-maxlife', '1 hour',  'unselected'])
+ kadmin_as(some_modify, ['modprinc', '-maxlife', '1 hour', 'selected'])
+ kadmin_as(restricted_modify, ['modprinc', '-maxlife', '1 hour', 'unselected'])
+-out = realm.run([kadminl, 'getprinc', 'unselected'])
+-if 'REQUIRES_PRE_AUTH' not in out:
+-    fail('addprinc success (restrictions) -- restriction check')
+-out = kadmin_as(all_inquire, ['modprinc', '-maxlife', '1 hour', 'selected'],
+-                expected_code=1)
+-if 'Operation requires ``modify\'\' privilege' not in out:
+-    fail('addprinc failure (no perms)')
+-out = kadmin_as(some_modify, ['modprinc', '-maxlife', '1 hour', 'unselected'],
+-                expected_code=1)
+-if 'Operation requires' not in out:
+-    fail('modprinc failure (target)')
++realm.run([kadminl, 'getprinc', 'unselected'],
++          expected_msg='REQUIRES_PRE_AUTH')
++kadmin_as(all_inquire, ['modprinc', '-maxlife', '1 hour', 'selected'],
++          expected_code=1,
++          expected_msg="Operation requires ``modify'' privilege")
++kadmin_as(some_modify, ['modprinc', '-maxlife', '1 hour', 'unselected'],
++          expected_code=1, expected_msg='Operation requires')
+ realm.run([kadminl, 'delprinc', 'selected'])
+ realm.run([kadminl, 'delprinc', 'unselected'])
+ 
+@@ -235,12 +199,10 @@ realm.addprinc('selected', 'pw')
+ realm.addprinc('unselected', 'pw')
+ kadmin_as(all_modify, ['purgekeys', 'unselected'])
+ kadmin_as(some_modify, ['purgekeys', 'selected'])
+-out = kadmin_as(none, ['purgekeys', 'selected'], expected_code=1)
+-if 'Operation requires ``modify\'\' privilege' not in out:
+-    fail('purgekeys failure (no perms)')
+-out = kadmin_as(some_modify, ['purgekeys', 'unselected'], expected_code=1)
+-if 'Operation requires ``modify\'\' privilege' not in out:
+-    fail('purgekeys failure (target)')
++kadmin_as(none, ['purgekeys', 'selected'], expected_code=1,
++          expected_msg="Operation requires ``modify'' privilege")
++kadmin_as(some_modify, ['purgekeys', 'unselected'], expected_code=1,
++          expected_msg="Operation requires ``modify'' privilege")
+ kadmin_as(none, ['purgekeys', 'none'])
+ realm.run([kadminl, 'delprinc', 'selected'])
+ realm.run([kadminl, 'delprinc', 'unselected'])
+@@ -250,36 +212,27 @@ kadmin_as(all_rename, ['renprinc', 'from', 'to'])
+ realm.run([kadminl, 'renprinc', 'to', 'from'])
+ kadmin_as(some_rename, ['renprinc', 'from', 'to'])
+ realm.run([kadminl, 'renprinc', 'to', 'from'])
+-out = kadmin_as(all_add, ['renprinc', 'from', 'to'], expected_code=1)
+-if 'Operation requires ``delete\'\' privilege' not in out:
+-    fail('renprinc failure (no delete perms)')
+-out = kadmin_as(all_delete, ['renprinc', 'from', 'to'], expected_code=1)
+-if 'Operation requires ``add\'\' privilege' not in out:
+-    fail('renprinc failure (no add perms)')
+-out = kadmin_as(some_rename, ['renprinc', 'from', 'notto'], expected_code=1)
+-if 'Operation requires ``add\'\' privilege' not in out:
+-    fail('renprinc failure (new target)')
++kadmin_as(all_add, ['renprinc', 'from', 'to'], expected_code=1,
++          expected_msg="Operation requires ``delete'' privilege")
++kadmin_as(all_delete, ['renprinc', 'from', 'to'], expected_code=1,
++          expected_msg="Operation requires ``add'' privilege")
++kadmin_as(some_rename, ['renprinc', 'from', 'notto'], expected_code=1,
++          expected_msg="Operation requires ``add'' privilege")
+ realm.run([kadminl, 'renprinc', 'from', 'notfrom'])
+-out = kadmin_as(some_rename, ['renprinc', 'notfrom', 'to'], expected_code=1)
+-if 'Operation requires ``delete\'\' privilege' not in out:
+-    fail('renprinc failure (old target)')
+-out = kadmin_as(restricted_rename, ['renprinc', 'notfrom', 'to'],
+-                expected_code=1)
+-if 'Operation requires ``add\'\' privilege' not in out:
+-    fail('renprinc failure (restrictions)')
++kadmin_as(some_rename, ['renprinc', 'notfrom', 'to'], expected_code=1,
++          expected_msg="Operation requires ``delete'' privilege")
++kadmin_as(restricted_rename, ['renprinc', 'notfrom', 'to'], expected_code=1,
++          expected_msg="Operation requires ``add'' privilege")
+ realm.run([kadminl, 'delprinc', 'notfrom'])
+ 
+ realm.addprinc('selected', 'pw')
+ realm.addprinc('unselected', 'pw')
+ kadmin_as(all_modify, ['setstr', 'unselected', 'key', 'value'])
+ kadmin_as(some_modify, ['setstr', 'selected', 'key', 'value'])
+-out = kadmin_as(none, ['setstr', 'selected',  'key', 'value'], expected_code=1)
+-if 'Operation requires ``modify\'\' privilege' not in out:
+-    fail('addprinc failure (no perms)')
+-out = kadmin_as(some_modify, ['setstr', 'unselected', 'key', 'value'],
+-                expected_code=1)
+-if 'Operation requires' not in out:
+-    fail('modprinc failure (target)')
++kadmin_as(none, ['setstr', 'selected',  'key', 'value'], expected_code=1,
++          expected_msg="Operation requires ``modify'' privilege")
++kadmin_as(some_modify, ['setstr', 'unselected', 'key', 'value'],
++          expected_code=1, expected_msg='Operation requires')
+ realm.run([kadminl, 'delprinc', 'selected'])
+ realm.run([kadminl, 'delprinc', 'unselected'])
+ 
+@@ -287,28 +240,21 @@ kadmin_as(admin, ['addprinc', '-pw', 'pw', 'anytarget'])
+ realm.run([kadminl, 'delprinc', 'anytarget'])
+ kadmin_as(wctarget, ['addprinc', '-pw', 'pw', 'wild/card'])
+ realm.run([kadminl, 'delprinc', 'wild/card'])
+-out = kadmin_as(wctarget, ['addprinc', '-pw', 'pw', 'wild/card/extra'],
+-                expected_code=1)
+-if 'Operation requires' not in out:
+-    fail('addprinc failure (target wildcard extra component)')
++kadmin_as(wctarget, ['addprinc', '-pw', 'pw', 'wild/card/extra'],
++          expected_code=1, expected_msg='Operation requires')
+ realm.addprinc('admin/user', 'pw')
+ kadmin_as(admin, ['delprinc', 'admin/user'])
+-out = kadmin_as(admin, ['delprinc', 'none'], expected_code=1)
+-if 'Operation requires' not in out:
+-    fail('delprinc failure (wildcard backreferences not matched)')
++kadmin_as(admin, ['delprinc', 'none'], expected_code=1,
++          expected_msg='Operation requires')
+ realm.addprinc('four/one/three', 'pw')
+ kadmin_as(onetwothreefour, ['delprinc', 'four/one/three'])
+ 
+ kadmin_as(restrictions, ['addprinc', '-pw', 'pw', 'type1'])
+-out = realm.run([kadminl, 'getprinc', 'type1'])
+-if 'Policy: minlife' not in out:
+-    fail('restriction (policy)')
++realm.run([kadminl, 'getprinc', 'type1'], expected_msg='Policy: minlife')
+ realm.run([kadminl, 'delprinc', 'type1'])
+ kadmin_as(restrictions, ['addprinc', '-pw', 'pw', '-policy', 'minlife',
+                          'type2'])
+-out = realm.run([kadminl, 'getprinc', 'type2'])
+-if 'Policy: [none]' not in out:
+-    fail('restriction (clearpolicy)')
++realm.run([kadminl, 'getprinc', 'type2'], expected_msg='Policy: [none]')
+ realm.run([kadminl, 'delprinc', 'type2'])
+ kadmin_as(restrictions, ['addprinc', '-pw', 'pw', '-maxlife', '1 minute',
+                          'type3'])
+@@ -319,40 +265,32 @@ if ('Maximum ticket life: 0 days 00:01:00' not in out or
+ realm.run([kadminl, 'delprinc', 'type3'])
+ kadmin_as(restrictions, ['addprinc', '-pw', 'pw', '-maxrenewlife', '1 day',
+                          'type3'])
+-out = realm.run([kadminl, 'getprinc', 'type3'])
+-if 'Maximum renewable life: 0 days 02:00:00' not in out:
+-    fail('restriction (maxrenewlife high)')
++realm.run([kadminl, 'getprinc', 'type3'],
++          expected_msg='Maximum renewable life: 0 days 02:00:00')
+ 
+ realm.run([kadminl, 'addprinc', '-pw', 'pw', 'extractkeys'])
+-out = kadmin_as(all_wildcard, ['ktadd', '-norandkey', 'extractkeys'],
+-                expected_code=1)
+-if 'Operation requires ``extract-keys\'\' privilege' not in out:
+-    fail('extractkeys failure (all_wildcard)')
++kadmin_as(all_wildcard, ['ktadd', '-norandkey', 'extractkeys'],
++          expected_code=1,
++          expected_msg="Operation requires ``extract-keys'' privilege")
+ kadmin_as(all_extract, ['ktadd', '-norandkey', 'extractkeys'])
+ realm.kinit('extractkeys', flags=['-k'])
+ os.remove(realm.keytab)
+ 
+ kadmin_as(all_modify, ['modprinc', '+lockdown_keys', 'extractkeys'])
+-out = kadmin_as(all_changepw, ['cpw', '-pw', 'newpw', 'extractkeys'],
+-                expected_code=1)
+-if 'Operation requires ``change-password\'\' privilege' not in out:
+-    fail('extractkeys failure (all_changepw)')
++kadmin_as(all_changepw, ['cpw', '-pw', 'newpw', 'extractkeys'],
++          expected_code=1,
++          expected_msg="Operation requires ``change-password'' privilege")
+ kadmin_as(all_changepw, ['cpw', '-randkey', 'extractkeys'])
+-out = kadmin_as(all_extract, ['ktadd', '-norandkey', 'extractkeys'],
+-                expected_code=1)
+-if 'Operation requires ``extract-keys\'\' privilege' not in out:
+-    fail('extractkeys failure (all_extract)')
+-out = kadmin_as(all_delete, ['delprinc', 'extractkeys'], expected_code=1)
+-if 'Operation requires ``delete\'\' privilege' not in out:
+-    fail('extractkeys failure (all_delete)')
+-out = kadmin_as(all_rename, ['renprinc', 'extractkeys', 'renamedprinc'],
+-                expected_code=1)
+-if 'Operation requires ``delete\'\' privilege' not in out:
+-    fail('extractkeys failure (all_rename)')
+-out = kadmin_as(all_modify, ['modprinc', '-lockdown_keys', 'extractkeys'],
+-                expected_code=1)
+-if 'Operation requires ``modify\'\' privilege' not in out:
+-    fail('extractkeys failure (all_modify)')
++kadmin_as(all_extract, ['ktadd', '-norandkey', 'extractkeys'], expected_code=1,
++          expected_msg="Operation requires ``extract-keys'' privilege")
++kadmin_as(all_delete, ['delprinc', 'extractkeys'], expected_code=1,
++          expected_msg="Operation requires ``delete'' privilege")
++kadmin_as(all_rename, ['renprinc', 'extractkeys', 'renamedprinc'],
++          expected_code=1,
++          expected_msg="Operation requires ``delete'' privilege")
++kadmin_as(all_modify, ['modprinc', '-lockdown_keys', 'extractkeys'],
++          expected_code=1,
++          expected_msg="Operation requires ``modify'' privilege")
+ realm.run([kadminl, 'modprinc', '-lockdown_keys', 'extractkeys'])
+ kadmin_as(all_extract, ['ktadd', '-norandkey', 'extractkeys'])
+ realm.kinit('extractkeys', flags=['-k'])
+diff --git a/src/tests/t_kadmin_parsing.py b/src/tests/t_kadmin_parsing.py
+index 92d72d2b0..8de387c64 100644
+--- a/src/tests/t_kadmin_parsing.py
++++ b/src/tests/t_kadmin_parsing.py
+@@ -57,33 +57,27 @@ realm = K5Realm(create_host=False, get_creds=False)
+ realm.run([kadminl, 'addpol', 'pol'])
+ for instr, outstr in intervals:
+     realm.run([kadminl, 'modprinc', '-maxlife', instr, realm.user_princ])
+-    out = realm.run([kadminl, 'getprinc', realm.user_princ])
+-    if 'Maximum ticket life: ' + outstr + '\n' not in out:
+-        fail('princ maxlife: ' + instr)
++    msg = 'Maximum ticket life: ' + outstr + '\n'
++    realm.run([kadminl, 'getprinc', realm.user_princ], expected_msg=msg)
+ 
+     realm.run([kadminl, 'modprinc', '-maxrenewlife', instr, realm.user_princ])
+-    out = realm.run([kadminl, 'getprinc', realm.user_princ])
+-    if 'Maximum renewable life: ' + outstr + '\n' not in out:
+-        fail('princ maxrenewlife: ' + instr)
++    msg = 'Maximum renewable life: ' + outstr + '\n'
++    realm.run([kadminl, 'getprinc', realm.user_princ], expected_msg=msg)
+ 
+     realm.run([kadminl, 'modpol', '-maxlife', instr, 'pol'])
+-    out = realm.run([kadminl, 'getpol', 'pol'])
+-    if 'Maximum password life: ' + outstr + '\n' not in out:
+-        fail('pol maxlife: ' + instr)
++    msg = 'Maximum password life: ' + outstr + '\n'
++    realm.run([kadminl, 'getpol', 'pol'], expected_msg=msg)
+ 
+     realm.run([kadminl, 'modpol', '-minlife', instr, 'pol'])
+-    out = realm.run([kadminl, 'getpol', 'pol'])
+-    if 'Minimum password life: ' + outstr + '\n' not in out:
+-        fail('pol maxlife: ' + instr)
++    msg = 'Minimum password life: ' + outstr + '\n'
++    realm.run([kadminl, 'getpol', 'pol'], expected_msg=msg)
+ 
+     realm.run([kadminl, 'modpol', '-failurecountinterval', instr, 'pol'])
+-    out = realm.run([kadminl, 'getpol', 'pol'])
+-    if 'Password failure count reset interval: ' + outstr + '\n' not in out:
+-        fail('pol maxlife: ' + instr)
++    msg = 'Password failure count reset interval: ' + outstr + '\n'
++    realm.run([kadminl, 'getpol', 'pol'], expected_msg=msg)
+ 
+     realm.run([kadminl, 'modpol', '-lockoutduration', instr, 'pol'])
+-    out = realm.run([kadminl, 'getpol', 'pol'])
+-    if 'Password lockout duration: ' + outstr + '\n' not in out:
+-        fail('pol maxlife: ' + instr)
++    msg = 'Password lockout duration: ' + outstr + '\n'
++    realm.run([kadminl, 'getpol', 'pol'], expected_msg=msg)
+ 
+ success('kadmin command parsing tests')
+diff --git a/src/tests/t_kdb.py b/src/tests/t_kdb.py
+index 185225afa..44635b089 100755
+--- a/src/tests/t_kdb.py
++++ b/src/tests/t_kdb.py
+@@ -167,47 +167,31 @@ if out != 'KRBTEST.COM\n':
+ # because we're sticking a krbPrincipalAux objectclass onto a subtree
+ # krbContainer, but it works and it avoids having to load core.schema
+ # in the test LDAP server.
+-out = realm.run([kadminl, 'ank', '-randkey', '-x', 'dn=cn=krb5', 'princ1'],
+-                expected_code=1)
+-if 'DN is out of the realm subtree' not in out:
+-    fail('Unexpected kadmin.local output for out-of-realm dn')
++realm.run([kadminl, 'ank', '-randkey', '-x', 'dn=cn=krb5', 'princ1'],
++          expected_code=1, expected_msg='DN is out of the realm subtree')
+ realm.run([kadminl, 'ank', '-randkey', '-x', 'dn=cn=t2,cn=krb5', 'princ1'])
+-out = realm.run([kadminl, 'getprinc', 'princ1'])
+-if 'Principal: princ1' not in out:
+-    fail('Unexpected kadmin.local output after creating princ1')
+-out = realm.run([kadminl, 'ank', '-randkey', '-x', 'dn=cn=t2,cn=krb5',
+-                 'again'], expected_code=1)
+-if 'ldap object is already kerberized' not in out:
+-    fail('Unexpected kadmin.local output trying to re-kerberize DN')
++realm.run([kadminl, 'getprinc', 'princ1'], expected_msg='Principal: princ1')
++realm.run([kadminl, 'ank', '-randkey', '-x', 'dn=cn=t2,cn=krb5', 'again'],
++          expected_code=1, expected_msg='ldap object is already kerberized')
+ # Check that we can't set linkdn on a non-standalone object.
+-out = realm.run([kadminl, 'modprinc', '-x', 'linkdn=cn=t1,cn=krb5', 'princ1'],
+-                expected_code=1)
+-if 'link information can not be set' not in out:
+-    fail('Unexpected kadmin.local output trying to set linkdn on princ1')
++realm.run([kadminl, 'modprinc', '-x', 'linkdn=cn=t1,cn=krb5', 'princ1'],
++          expected_code=1, expected_msg='link information can not be set')
+ 
+ # Create a principal with a specified linkdn.
+-out = realm.run([kadminl, 'ank', '-randkey', '-x', 'linkdn=cn=krb5', 'princ2'],
+-                expected_code=1)
+-if 'DN is out of the realm subtree' not in out:
+-    fail('Unexpected kadmin.local output for out-of-realm linkdn')
++realm.run([kadminl, 'ank', '-randkey', '-x', 'linkdn=cn=krb5', 'princ2'],
++          expected_code=1, expected_msg='DN is out of the realm subtree')
+ realm.run([kadminl, 'ank', '-randkey', '-x', 'linkdn=cn=t1,cn=krb5', 'princ2'])
+ # Check that we can't reset linkdn.
+-out = realm.run([kadminl, 'modprinc', '-x', 'linkdn=cn=t2,cn=krb5', 'princ2'],
+-                expected_code=1)
+-if 'kerberos principal is already linked' not in out:
+-    fail('Unexpected kadmin.local output for re-specified linkdn')
++realm.run([kadminl, 'modprinc', '-x', 'linkdn=cn=t2,cn=krb5', 'princ2'],
++          expected_code=1, expected_msg='kerberos principal is already linked')
+ 
+ # Create a principal with a specified containerdn.
+-out = realm.run([kadminl, 'ank', '-randkey', '-x', 'containerdn=cn=krb5',
+-                 'princ3'], expected_code=1)
+-if 'DN is out of the realm subtree' not in out:
+-    fail('Unexpected kadmin.local output for out-of-realm containerdn')
++realm.run([kadminl, 'ank', '-randkey', '-x', 'containerdn=cn=krb5', 'princ3'],
++          expected_code=1, expected_msg='DN is out of the realm subtree')
+ realm.run([kadminl, 'ank', '-randkey', '-x', 'containerdn=cn=t1,cn=krb5',
+            'princ3'])
+-out = realm.run([kadminl, 'modprinc', '-x', 'containerdn=cn=t2,cn=krb5',
+-                 'princ3'], expected_code=1)
+-if 'containerdn option not supported' not in out:
+-    fail('Unexpected kadmin.local output trying to reset containerdn')
++realm.run([kadminl, 'modprinc', '-x', 'containerdn=cn=t2,cn=krb5', 'princ3'],
++          expected_code=1, expected_msg='containerdn option not supported')
+ 
+ # Create and modify a ticket policy.
+ kldaputil(['create_policy', '-maxtktlife', '3hour', '-maxrenewlife', '6hour',
+@@ -255,9 +239,8 @@ if out:
+ kldaputil(['create_policy', 'tktpol2'])
+ 
+ # Try to create a password policy conflicting with a ticket policy.
+-out = realm.run([kadminl, 'addpol', 'tktpol2'], expected_code=1)
+-if 'Already exists while creating policy "tktpol2"' not in out:
+-    fail('Expected error not seen in kadmin.local output')
++realm.run([kadminl, 'addpol', 'tktpol2'], expected_code=1,
++          expected_msg='Already exists while creating policy "tktpol2"')
+ 
+ # Try to create a ticket policy conflicting with a password policy.
+ realm.run([kadminl, 'addpol', 'pwpol'])
+@@ -266,16 +249,13 @@ if 'Already exists while creating policy object' not in out:
+     fail('Expected error not seen in kdb5_ldap_util output')
+ 
+ # Try to use a password policy as a ticket policy.
+-out = realm.run([kadminl, 'modprinc', '-x', 'tktpolicy=pwpol', 'princ4'],
+-                expected_code=1)
+-if 'Object class violation' not in out:
+-    fail('Expected error not seem in kadmin.local output')
++realm.run([kadminl, 'modprinc', '-x', 'tktpolicy=pwpol', 'princ4'],
++          expected_code=1, expected_msg='Object class violation')
+ 
+ # Use a ticket policy as a password policy (CVE-2014-5353).  This
+ # works with a warning; use kadmin.local -q so the warning is shown.
+-out = realm.run([kadminl, '-q', 'modprinc -policy tktpol2 princ4'])
+-if 'WARNING: policy "tktpol2" does not exist' not in out:
+-    fail('Expected error not seen in kadmin.local output')
++realm.run([kadminl, '-q', 'modprinc -policy tktpol2 princ4'],
++          expected_msg='WARNING: policy "tktpol2" does not exist')
+ 
+ # Do some basic tests with a KDC against the LDAP module, exercising the
+ # db_args processing code.
+@@ -298,9 +278,8 @@ if 'krbPrincipalAuthInd: otp' not in out:
+ if 'krbPrincipalAuthInd: radius' not in out:
+     fail('Expected krbPrincipalAuthInd value not in output')
+ 
+-out = realm.run([kadminl, 'getstrs', 'authind'])
+-if 'require_auth: otp radius' not in out:
+-    fail('Expected auth indicators value not in output')
++realm.run([kadminl, 'getstrs', 'authind'],
++          expected_msg='require_auth: otp radius')
+ 
+ # Test service principal aliases.
+ realm.addprinc('canon', password('canon'))
+@@ -311,12 +290,10 @@ ldap_modify('dn: krbPrincipalName=canon@KRBTEST.COM,cn=t1,cn=krb5\n'
+             '-\n'
+             'add: krbCanonicalName\n'
+             'krbCanonicalName: canon@KRBTEST.COM\n')
+-out = realm.run([kadminl, 'getprinc', 'alias'])
+-if 'Principal: canon@KRBTEST.COM\n' not in out:
+-    fail('Could not fetch canon through alias')
+-out = realm.run([kadminl, 'getprinc', 'canon'])
+-if 'Principal: canon@KRBTEST.COM\n' not in out:
+-    fail('Could not fetch canon through canon')
++realm.run([kadminl, 'getprinc', 'alias'],
++          expected_msg='Principal: canon@KRBTEST.COM\n')
++realm.run([kadminl, 'getprinc', 'canon'],
++          expected_msg='Principal: canon@KRBTEST.COM\n')
+ realm.run([kvno, 'alias'])
+ realm.run([kvno, 'canon'])
+ out = realm.run([klist])
+@@ -334,9 +311,8 @@ ldap_modify('dn: krbPrincipalName=krbtgt/KRBTEST.COM@KRBTEST.COM,'
+             '-\n'
+             'add: krbCanonicalName\n'
+             'krbCanonicalName: krbtgt/KRBTEST.COM@KRBTEST.COM\n')
+-out = realm.run([kadminl, 'getprinc', 'tgtalias'])
+-if 'Principal: krbtgt/KRBTEST.COM@KRBTEST.COM' not in out:
+-    fail('Could not fetch krbtgt through tgtalias')
++realm.run([kadminl, 'getprinc', 'tgtalias'],
++          expected_msg='Principal: krbtgt/KRBTEST.COM@KRBTEST.COM')
+ realm.kinit(realm.user_princ, password('user'))
+ realm.run([kvno, 'tgtalias'])
+ realm.klist(realm.user_princ, 'tgtalias@KRBTEST.COM')
+@@ -352,9 +328,8 @@ realm.klist(realm.user_princ, 'alias@KRBTEST.COM')
+ 
+ # Test client principal aliases, with and without preauth.
+ realm.kinit('canon', password('canon'))
+-out = realm.kinit('alias', password('canon'), expected_code=1)
+-if 'not found in Kerberos database' not in out:
+-    fail('Wrong error message for kinit to alias without -C flag')
++realm.kinit('alias', password('canon'), expected_code=1,
++            expected_msg='not found in Kerberos database')
+ realm.kinit('alias', password('canon'), ['-C'])
+ realm.run([kvno, 'alias'])
+ realm.klist('canon@KRBTEST.COM', 'alias@KRBTEST.COM')
+@@ -413,31 +388,24 @@ realm.run([kadminl, 'addprinc', '-randkey', '-e', 'aes256-cts,aes128-cts',
+            'kvnoprinc'])
+ realm.run([kadminl, 'cpw', '-randkey', '-keepold', '-e',
+            'aes256-cts,aes128-cts', 'kvnoprinc'])
+-out = realm.run([kadminl, 'getprinc', 'kvnoprinc'])
+-if 'Number of keys: 4' not in out:
+-    fail('After cpw -keepold, wrong number of keys')
++realm.run([kadminl, 'getprinc', 'kvnoprinc'], expected_msg='Number of keys: 4')
+ realm.run([kadminl, 'cpw', '-randkey', '-keepold', '-e',
+            'aes256-cts,aes128-cts', 'kvnoprinc'])
+-out = realm.run([kadminl, 'getprinc', 'kvnoprinc'])
+-if 'Number of keys: 6' not in out:
+-    fail('After cpw -keepold, wrong number of keys')
++realm.run([kadminl, 'getprinc', 'kvnoprinc'], expected_msg='Number of keys: 6')
+ 
+ # Regression test for #8041 (NULL dereference on keyless principals).
+ realm.run([kadminl, 'addprinc', '-nokey', 'keylessprinc'])
+-out = realm.run([kadminl, 'getprinc', 'keylessprinc'])
+-if 'Number of keys: 0' not in out:
+-    fail('Failed to create a principal with no keys')
++realm.run([kadminl, 'getprinc', 'keylessprinc'],
++          expected_msg='Number of keys: 0')
+ realm.run([kadminl, 'cpw', '-randkey', '-e', 'aes256-cts,aes128-cts',
+            'keylessprinc'])
+ realm.run([kadminl, 'cpw', '-randkey', '-keepold', '-e',
+            'aes256-cts,aes128-cts', 'keylessprinc'])
+-out = realm.run([kadminl, 'getprinc', 'keylessprinc'])
+-if 'Number of keys: 4' not in out:
+-    fail('Failed to add keys to keylessprinc')
++realm.run([kadminl, 'getprinc', 'keylessprinc'],
++          expected_msg='Number of keys: 4')
+ realm.run([kadminl, 'purgekeys', '-all', 'keylessprinc'])
+-out = realm.run([kadminl, 'getprinc', 'keylessprinc'])
+-if 'Number of keys: 0' not in out:
+-    fail('After purgekeys -all, keys remain')
++realm.run([kadminl, 'getprinc', 'keylessprinc'],
++          expected_msg='Number of keys: 0')
+ 
+ # Test for 8354 (old password history entries when -keepold is used)
+ realm.run([kadminl, 'addpol', '-history', '2', 'keepoldpasspol'])
+@@ -451,9 +419,8 @@ realm.stop()
+ # Briefly test dump and load.
+ dumpfile = os.path.join(realm.testdir, 'dump')
+ realm.run([kdb5_util, 'dump', dumpfile])
+-out = realm.run([kdb5_util, 'load', dumpfile], expected_code=1)
+-if 'KDB module requires -update argument' not in out:
+-    fail('Unexpected error from kdb5_util load without -update')
++realm.run([kdb5_util, 'load', dumpfile], expected_code=1,
++          expected_msg='KDB module requires -update argument')
+ realm.run([kdb5_util, 'load', '-update', dumpfile])
+ 
+ # Destroy the realm.
+@@ -501,14 +468,10 @@ realm.addprinc(realm.user_princ, password('user'))
+ realm.kinit(realm.user_princ, password('user'))
+ realm.stop()
+ # Exercise DB options, which should cause binding to fail.
+-out = realm.run([kadminl, '-x', 'sasl_authcid=ab', 'getprinc', 'user'],
+-                expected_code=1)
+-if 'Cannot bind to LDAP server' not in out:
+-    fail('Expected error not seen in kadmin.local output')
+-out = realm.run([kadminl, '-x', 'bindpwd=wrong', 'getprinc', 'user'],
+-                expected_code=1)
+-if 'Cannot bind to LDAP server' not in out:
+-    fail('Expected error not seen in kadmin.local output')
++realm.run([kadminl, '-x', 'sasl_authcid=ab', 'getprinc', 'user'],
++          expected_code=1, expected_msg='Cannot bind to LDAP server')
++realm.run([kadminl, '-x', 'bindpwd=wrong', 'getprinc', 'user'],
++          expected_code=1, expected_msg='Cannot bind to LDAP server')
+ realm.run([kdb5_ldap_util, 'destroy', '-f'])
+ 
+ # We could still use tests to exercise:
+diff --git a/src/tests/t_kdb_locking.py b/src/tests/t_kdb_locking.py
+index e8d86e09b..aac0a220f 100755
+--- a/src/tests/t_kdb_locking.py
++++ b/src/tests/t_kdb_locking.py
+@@ -21,9 +21,8 @@ if not os.path.exists(kadm5_lock):
+     fail('kadm5 lock file not created: ' + kadm5_lock)
+ os.unlink(kadm5_lock)
+ 
+-output = realm.kinit(p, p, [], expected_code=1)
+-if 'A service is not available' not in output:
+-    fail('krb5kdc should have returned service not available error')
++realm.kinit(p, p, [], expected_code=1,
++            expected_msg='A service is not available')
+ 
+ f = open(kadm5_lock, 'w')
+ f.close()
+diff --git a/src/tests/t_keydata.py b/src/tests/t_keydata.py
+index 686e543bd..5c04a8523 100755
+--- a/src/tests/t_keydata.py
++++ b/src/tests/t_keydata.py
+@@ -5,27 +5,19 @@ realm = K5Realm(create_user=False, create_host=False)
+ 
+ # Create a principal with no keys.
+ realm.run([kadminl, 'addprinc', '-nokey', 'user'])
+-out = realm.run([kadminl, 'getprinc', 'user'])
+-if 'Number of keys: 0' not in out:
+-    fail('getprinc (addprinc -nokey)')
++realm.run([kadminl, 'getprinc', 'user'], expected_msg='Number of keys: 0')
+ 
+ # Change its password and check the resulting kvno.
+ realm.run([kadminl, 'cpw', '-pw', 'password', 'user'])
+-out = realm.run([kadminl, 'getprinc', 'user'])
+-if 'vno 1' not in out:
+-    fail('getprinc (cpw -pw)')
++realm.run([kadminl, 'getprinc', 'user'], expected_msg='vno 1')
+ 
+ # Delete all of its keys.
+ realm.run([kadminl, 'purgekeys', '-all', 'user'])
+-out = realm.run([kadminl, 'getprinc', 'user'])
+-if 'Number of keys: 0' not in out:
+-    fail('getprinc (purgekeys)')
++realm.run([kadminl, 'getprinc', 'user'], expected_msg='Number of keys: 0')
+ 
+ # Randomize its keys and check the resulting kvno.
+ realm.run([kadminl, 'cpw', '-randkey', 'user'])
+-out = realm.run([kadminl, 'getprinc', 'user'])
+-if 'vno 1' not in out:
+-    fail('getprinc (cpw -randkey)')
++realm.run([kadminl, 'getprinc', 'user'], expected_msg='vno 1')
+ 
+ # Return true if patype appears to have been received in a hint list
+ # from a KDC error message, based on the trace file fname.
+diff --git a/src/tests/t_keyrollover.py b/src/tests/t_keyrollover.py
+index 35d0b61b8..bfd38914b 100755
+--- a/src/tests/t_keyrollover.py
++++ b/src/tests/t_keyrollover.py
+@@ -23,25 +23,17 @@ realm.run([kvno, princ1])
+ realm.run([kadminl, 'purgekeys', realm.krbtgt_princ])
+ # Make sure an old TGT fails after purging old TGS key.
+ realm.run([kvno, princ2], expected_code=1)
+-output = realm.run([klist, '-e'])
+-
+-expected = 'krbtgt/%s@%s\n\tEtype (skey, tkt): des-cbc-crc, des-cbc-crc' % \
++msg = 'krbtgt/%s@%s\n\tEtype (skey, tkt): des-cbc-crc, des-cbc-crc' % \
+     (realm.realm, realm.realm)
+-
+-if expected not in output:
+-    fail('keyrollover: expected TGS enctype not found')
++realm.run([klist, '-e'], expected_msg=msg)
+ 
+ # Check that new key actually works.
+ realm.kinit(realm.user_princ, password('user'))
+ realm.run([kvno, realm.host_princ])
+-output = realm.run([klist, '-e'])
+-
+-expected = 'krbtgt/%s@%s\n\tEtype (skey, tkt): ' \
++msg = 'krbtgt/%s@%s\n\tEtype (skey, tkt): ' \
+     'aes256-cts-hmac-sha1-96, aes256-cts-hmac-sha1-96' % \
+     (realm.realm, realm.realm)
+-
+-if expected not in output:
+-    fail('keyrollover: expected TGS enctype not found after change')
++realm.run([klist, '-e'], expected_msg=msg)
+ 
+ # Test that the KDC only accepts the first enctype for a kvno, for a
+ # local-realm TGS request.  To set this up, we abuse an edge-case
+diff --git a/src/tests/t_keytab.py b/src/tests/t_keytab.py
+index a06e6c296..a48740ba5 100755
+--- a/src/tests/t_keytab.py
++++ b/src/tests/t_keytab.py
+@@ -14,9 +14,8 @@ realm.run([ktutil], input=('rkt %s\ndelent 1\nwkt %s\n' %
+ realm.kinit(realm.host_princ, flags=['-k', '-t', pkeytab])
+ 
+ # Test kinit with no keys for client in keytab.
+-output = realm.kinit(realm.user_princ, flags=['-k'], expected_code=1)
+-if 'no suitable keys' not in output:
+-    fail('Expected error not seen in kinit output')
++realm.kinit(realm.user_princ, flags=['-k'], expected_code=1,
++            expected_msg='no suitable keys')
+ 
+ # Test kinit and klist with client keytab defaults.
+ realm.extract_keytab(realm.user_princ, realm.client_keytab);
+@@ -31,14 +30,12 @@ if realm.client_keytab not in out or realm.user_princ not in out:
+ 
+ # Test implicit request for keytab (-i or -t without -k)
+ realm.run([kdestroy])
+-output = realm.kinit(realm.host_princ, flags=['-t', realm.keytab])
+-if 'keytab specified, forcing -k' not in output:
+-    fail('Expected output not seen from kinit -t keytab')
++realm.kinit(realm.host_princ, flags=['-t', realm.keytab],
++            expected_msg='keytab specified, forcing -k')
+ realm.klist(realm.host_princ)
+ realm.run([kdestroy])
+-output = realm.kinit(realm.user_princ, flags=['-i'])
+-if 'keytab specified, forcing -k' not in output:
+-    fail('Expected output not seen from kinit -i')
++realm.kinit(realm.user_princ, flags=['-i'],
++            expected_msg='keytab specified, forcing -k')
+ realm.klist(realm.user_princ)
+ 
+ # Test extracting keys with multiple key versions present.
+@@ -70,12 +67,10 @@ def test_key_rotate(realm, princ, expected_kvno):
+     realm.run_kadmin(['ktadd', '-k', realm.keytab, princ])
+     realm.run([kadminl, 'ktrem', princ, 'old'])
+     realm.kinit(princ, flags=['-k'])
+-    out = realm.run([klist, '-k'])
+-    if ('%d %s' % (expected_kvno, princ)) not in out:
+-        fail('kvno %d not listed in keytab' % expected_kvno)
+-    out = realm.run_kadmin(['getprinc', princ])
+-    if ('Key: vno %d,' % expected_kvno) not in out:
+-        fail('vno %d not seen in getprinc output' % expected_kvno)
++    msg = '%d %s' % (expected_kvno, princ)
++    out = realm.run([klist, '-k'], expected_msg=msg)
++    msg = 'Key: vno %d,' % expected_kvno
++    out = realm.run_kadmin(['getprinc', princ], expected_msg=msg)
+ 
+ princ = 'foo/bar@%s' % realm.realm
+ realm.addprinc(princ)
+@@ -109,9 +104,8 @@ f = open(realm.keytab, 'w')
+ f.write('\x05\x02\x00\x00\x00' + chr(len(record)))
+ f.write(record)
+ f.close()
+-out = realm.run([klist, '-k'])
+-if ('   2 %s' % realm.user_princ) not in out:
+-    fail('Expected entry not seen in klist -k output')
++msg = '   2 %s' % realm.user_princ
++out = realm.run([klist, '-k'], expected_msg=msg)
+ 
+ # Make sure zero-fill isn't treated as a 32-bit kvno.
+ f = open(realm.keytab, 'w')
+@@ -119,9 +113,8 @@ f.write('\x05\x02\x00\x00\x00' + chr(len(record) + 4))
+ f.write(record)
+ f.write('\x00\x00\x00\x00')
+ f.close()
+-out = realm.run([klist, '-k'])
+-if ('   2 %s' % realm.user_princ) not in out:
+-    fail('Expected entry not seen in klist -k output')
++msg = '   2 %s' % realm.user_princ
++out = realm.run([klist, '-k'], expected_msg=msg)
+ 
+ # Make sure a hand-crafted 32-bit kvno is recognized.
+ f = open(realm.keytab, 'w')
+@@ -129,9 +122,8 @@ f.write('\x05\x02\x00\x00\x00' + chr(len(record) + 4))
+ f.write(record)
+ f.write('\x00\x00\x00\x03')
+ f.close()
+-out = realm.run([klist, '-k'])
+-if ('   3 %s' % realm.user_princ) not in out:
+-    fail('Expected entry not seen in klist -k output')
++msg = '   3 %s' % realm.user_princ
++out = realm.run([klist, '-k'], expected_msg=msg)
+ 
+ # Test parameter expansion in profile variables
+ realm.stop()
+@@ -142,11 +134,9 @@ realm = K5Realm(krb5_conf=conf, create_kdb=False)
+ del realm.env['KRB5_KTNAME']
+ del realm.env['KRB5_CLIENT_KTNAME']
+ uidstr = str(os.getuid())
+-out = realm.run([klist, '-k'], expected_code=1)
+-if 'FILE:testdir/abc%s' % uidstr not in out:
+-    fail('Wrong keytab in klist -k output')
+-out = realm.run([klist, '-ki'], expected_code=1)
+-if 'FILE:testdir/xyz%s' % uidstr not in out:
+-    fail('Wrong keytab in klist -ki output')
++msg = 'FILE:testdir/abc%s' % uidstr
++out = realm.run([klist, '-k'], expected_code=1, expected_msg=msg)
++msg = 'FILE:testdir/xyz%s' % uidstr
++out = realm.run([klist, '-ki'], expected_code=1, expected_msg=msg)
+ 
+ success('Keytab-related tests')
+diff --git a/src/tests/t_kprop.py b/src/tests/t_kprop.py
+index 02cdfeec2..39169675d 100755
+--- a/src/tests/t_kprop.py
++++ b/src/tests/t_kprop.py
+@@ -43,9 +43,7 @@ for realm in multipass_realms(create_user=False):
+     realm.run([kprop, '-f', dumpfile, '-P', str(realm.kprop_port()), hostname])
+     check_output(kpropd)
+ 
+-    out = realm.run([kadminl, 'listprincs'], slave)
+-    if 'wakawaka' not in out:
+-        fail('Slave does not have all principals from master')
++    realm.run([kadminl, 'listprincs'], slave, expected_msg='wakawaka')
+ 
+ # default_realm tests follow.
+ # default_realm and domain_realm different than realm.realm (test -r argument).
+@@ -79,9 +77,8 @@ realm.run([kdb5_util, 'dump', dumpfile])
+ realm.run([kprop, '-r', realm.realm, '-f', dumpfile, '-P',
+            str(realm.kprop_port()), hostname])
+ check_output(kpropd)
+-out = realm.run([kadminl, '-r', realm.realm, 'listprincs'], slave2)
+-if 'wakawaka' not in out:
+-    fail('Slave does not have all principals from master')
++realm.run([kadminl, '-r', realm.realm, 'listprincs'], slave2,
++          expected_msg='wakawaka')
+ 
+ stop_daemon(kpropd)
+ 
+@@ -90,8 +87,6 @@ kpropd = realm.start_kpropd(slave3, ['-d'])
+ realm.run([kdb5_util, 'dump', dumpfile])
+ realm.run([kprop, '-f', dumpfile, '-P', str(realm.kprop_port()), hostname])
+ check_output(kpropd)
+-out = realm.run([kadminl, 'listprincs'], slave3)
+-if 'wakawaka' not in out:
+-    fail('Slave does not have all principals from master')
++realm.run([kadminl, 'listprincs'], slave3, expected_msg='wakawaka')
+ 
+ success('kprop tests')
+diff --git a/src/tests/t_localauth.py b/src/tests/t_localauth.py
+index 4590485ac..aa625d038 100755
+--- a/src/tests/t_localauth.py
++++ b/src/tests/t_localauth.py
+@@ -14,9 +14,8 @@ def test_an2ln(env, aname, result, msg):
+         fail(msg)
+ 
+ def test_an2ln_err(env, aname, err, msg):
+-    out = realm.run(['./localauth', aname], env=env, expected_code=1)
+-    if err not in out:
+-        fail(msg)
++    realm.run(['./localauth', aname], env=env, expected_code=1,
++              expected_msg=err)
+ 
+ def test_userok(env, aname, lname, ok, msg):
+     out = realm.run(['./localauth', aname, lname], env=env)
+diff --git a/src/tests/t_mkey.py b/src/tests/t_mkey.py
+index c53b71b45..615cd91ca 100755
+--- a/src/tests/t_mkey.py
++++ b/src/tests/t_mkey.py
+@@ -92,9 +92,8 @@ def check_stash(*expected):
+ 
+ # Verify that the user principal has the expected mkvno.
+ def check_mkvno(princ, expected_mkvno):
+-    out = realm.run([kadminl, 'getprinc', princ])
+-    if ('MKey: vno %d\n' % expected_mkvno) not in out:
+-        fail('Unexpected mkvno in user DB entry')
++    msg = 'MKey: vno %d\n' % expected_mkvno
++    realm.run([kadminl, 'getprinc', princ], expected_msg=msg)
+ 
+ 
+ # Change the password using either kadmin.local or kadmin, then check
+@@ -160,9 +159,8 @@ check_mkvno(realm.user_princ, 1)
+ collisionfile = os.path.join(realm.testdir, 'stash_tmp')
+ f = open(collisionfile, 'w')
+ f.close()
+-output = realm.run([kdb5_util, 'stash'], expected_code=1)
+-if 'Temporary stash file already exists' not in output:
+-    fail('Did not detect temp stash file collision')
++realm.run([kdb5_util, 'stash'], expected_code=1,
++          expected_msg='Temporary stash file already exists')
+ os.unlink(collisionfile)
+ 
+ # Add a new master key with no options.  Verify that:
+@@ -179,9 +177,8 @@ change_password_check_mkvno(True, realm.user_princ, 'abcd', 1)
+ change_password_check_mkvno(False, realm.user_princ, 'user', 1)
+ 
+ # Verify that use_mkey won't make all master keys inactive.
+-out = realm.run([kdb5_util, 'use_mkey', '1', 'now+1day'], expected_code=1)
+-if 'there must be one master key currently active' not in out:
+-    fail('Unexpected error from use_mkey making all mkeys inactive')
++realm.run([kdb5_util, 'use_mkey', '1', 'now+1day'], expected_code=1,
++          expected_msg='there must be one master key currently active')
+ check_mkey_list((2, defetype, False, False), (1, defetype, True, True))
+ 
+ # Make the new master key active.  Verify that:
+@@ -194,9 +191,8 @@ change_password_check_mkvno(True, realm.user_princ, 'abcd', 2)
+ change_password_check_mkvno(False, realm.user_princ, 'user', 2)
+ 
+ # Check purge_mkeys behavior with both master keys still in use.
+-out = realm.run([kdb5_util, 'purge_mkeys', '-f', '-v'])
+-if 'All keys in use, nothing purged.' not in out:
+-    fail('Unexpected output from purge_mkeys with both mkeys in use')
++realm.run([kdb5_util, 'purge_mkeys', '-f', '-v'],
++          expected_msg='All keys in use, nothing purged.')
+ 
+ # Do an update_princ_encryption dry run and for real.  Verify that:
+ # 1. The target master key is 2 (the active mkvno).
+@@ -226,9 +222,8 @@ update_princ_encryption(False, 2, nprincs - 1, 0)
+ check_mkvno(realm.user_princ, 2)
+ 
+ # Test the safety check for purging with an outdated stash file.
+-out = realm.run([kdb5_util, 'purge_mkeys', '-f'], expected_code=1)
+-if 'stash file needs updating' not in out:
+-    fail('Unexpected error from purge_mkeys safety check')
++realm.run([kdb5_util, 'purge_mkeys', '-f'], expected_code=1,
++          expected_msg='stash file needs updating')
+ 
+ # Update the master stash file and check it.  Save a copy of the old
+ # one for a later test.
+@@ -253,18 +248,15 @@ check_mkey_list((2, defetype, True, True))
+ check_master_dbent(2, (2, defetype))
+ os.rename(stash_file, stash_file + '.save')
+ os.rename(stash_file + '.old', stash_file)
+-out = realm.run([kadminl, 'getprinc', 'user'], expected_code=1)
+-if 'Unable to decrypt latest master key' not in out:
+-    fail('Unexpected error from kadmin.local with old stash file')
++realm.run([kadminl, 'getprinc', 'user'], expected_code=1,
++          expected_msg='Unable to decrypt latest master key')
+ os.rename(stash_file + '.save', stash_file)
+ realm.run([kdb5_util, 'stash'])
+ check_stash((2, defetype))
+-out = realm.run([kdb5_util, 'use_mkey', '1'], expected_code=1)
+-if '1 is an invalid KVNO value' not in out:
+-    fail('Unexpected error from use_mkey with invalid kvno')
+-out = realm.run([kdb5_util, 'purge_mkeys', '-f', '-v'])
+-if 'There is only one master key which can not be purged.' not in out:
+-    fail('Unexpected output from purge_mkeys with one mkey')
++realm.run([kdb5_util, 'use_mkey', '1'], expected_code=1,
++          expected_msg='1 is an invalid KVNO value')
++realm.run([kdb5_util, 'purge_mkeys', '-f', '-v'],
++          expected_msg='There is only one master key which can not be purged.')
+ 
+ # Add a third master key with a specified enctype.  Verify that:
+ # 1. The new master key receives the correct number.
+@@ -331,8 +323,7 @@ check_mkey_list((2, defetype, True, True), (1, des3, True, False))
+ # Regression test for #8395.  Purge the master key and verify that a
+ # master key fetch does not segfault.
+ realm.run([kadminl, 'purgekeys', '-all', 'K/M'])
+-out = realm.run([kadminl, 'getprinc', realm.user_princ], expected_code=1)
+-if 'Cannot find master key record in database' not in out:
+-    fail('Unexpected output from failed master key fetch')
++realm.run([kadminl, 'getprinc', realm.user_princ], expected_code=1,
++          expected_msg='Cannot find master key record in database')
+ 
+ success('Master key rollover tests')
+diff --git a/src/tests/t_otp.py b/src/tests/t_otp.py
+index f098374f9..9b18ff94b 100755
+--- a/src/tests/t_otp.py
++++ b/src/tests/t_otp.py
+@@ -199,9 +199,8 @@ realm.run([kadminl, 'setstr', realm.user_princ, 'otp', otpconfig('udp')])
+ realm.kinit(realm.user_princ, 'accept', flags=flags)
+ verify(daemon, queue, True, realm.user_princ.split('@')[0], 'accept')
+ realm.extract_keytab(realm.krbtgt_princ, realm.keytab)
+-out = realm.run(['./adata', realm.krbtgt_princ])
+-if '+97: [indotp1, indotp2]' not in out:
+-    fail('auth indicators not seen in OTP ticket')
++realm.run(['./adata', realm.krbtgt_princ],
++          expected_msg='+97: [indotp1, indotp2]')
+ 
+ # Repeat with an indicators override in the string attribute.
+ daemon = UDPRadiusDaemon(args=(server_addr, secret_file, 'accept', queue))
+@@ -212,9 +211,8 @@ realm.run([kadminl, 'setstr', realm.user_princ, 'otp', oconf])
+ realm.kinit(realm.user_princ, 'accept', flags=flags)
+ verify(daemon, queue, True, realm.user_princ.split('@')[0], 'accept')
+ realm.extract_keytab(realm.krbtgt_princ, realm.keytab)
+-out = realm.run(['./adata', realm.krbtgt_princ])
+-if '+97: [indtok1, indtok2]' not in out:
+-    fail('auth indicators not seen in OTP ticket')
++realm.run(['./adata', realm.krbtgt_princ],
++          expected_msg='+97: [indtok1, indtok2]')
+ 
+ # Detect upstream pyrad bug
+ #   https://github.com/wichert/pyrad/pull/18
+diff --git a/src/tests/t_pkinit.py b/src/tests/t_pkinit.py
+index f56141564..e943f4974 100755
+--- a/src/tests/t_pkinit.py
++++ b/src/tests/t_pkinit.py
+@@ -101,10 +101,9 @@ realm.kinit('user@krbtest.com',
+             flags=['-E', '-X', 'X509_user_identity=%s' % p12_upn2_identity])
+ 
+ # Test a mismatch.
+-out = realm.run([kinit, '-X', 'X509_user_identity=%s' % p12_upn2_identity,
+-                 'user2'], expected_code=1)
+-if 'kinit: Client name mismatch while getting initial credentials' not in out:
+-    fail('Wrong error for UPN SAN mismatch')
++msg = 'kinit: Client name mismatch while getting initial credentials'
++realm.run([kinit, '-X', 'X509_user_identity=%s' % p12_upn2_identity, 'user2'],
++          expected_code=1, expected_msg=msg)
+ realm.stop()
+ 
+ realm = K5Realm(krb5_conf=pkinit_krb5_conf, kdc_conf=pkinit_kdc_conf,
+@@ -118,9 +117,8 @@ realm.klist(realm.user_princ)
+ realm.run([kvno, realm.host_princ])
+ 
+ # Test anonymous PKINIT.
+-out = realm.kinit('@%s' % realm.realm, flags=['-n'], expected_code=1)
+-if 'not found in Kerberos database' not in out:
+-    fail('Wrong error for anonymous PKINIT without anonymous enabled')
++realm.kinit('@%s' % realm.realm, flags=['-n'], expected_code=1,
++            expected_msg='not found in Kerberos database')
+ realm.addprinc('WELLKNOWN/ANONYMOUS')
+ realm.kinit('@%s' % realm.realm, flags=['-n'])
+ realm.klist('WELLKNOWN/ANONYMOUS@WELLKNOWN:ANONYMOUS')
+@@ -135,9 +133,8 @@ f.write('WELLKNOWN/ANONYMOUS@WELLKNOWN:ANONYMOUS a *')
+ f.close()
+ realm.start_kadmind()
+ realm.run([kadmin, '-n', 'addprinc', '-pw', 'test', 'testadd'])
+-out = realm.run([kadmin, '-n', 'getprinc', 'testadd'], expected_code=1)
+-if "Operation requires ``get'' privilege" not in out:
+-    fail('Anonymous kadmin has too much privilege')
++realm.run([kadmin, '-n', 'getprinc', 'testadd'], expected_code=1,
++          expected_msg="Operation requires ``get'' privilege")
+ realm.stop_kadmind()
+ 
+ # Test with anonymous restricted; FAST should work but kvno should fail.
+@@ -146,9 +143,8 @@ realm.stop_kdc()
+ realm.start_kdc(env=r_env)
+ realm.kinit('@%s' % realm.realm, flags=['-n'])
+ realm.kinit('@%s' % realm.realm, flags=['-n', '-T', realm.ccache])
+-out = realm.run([kvno, realm.host_princ], expected_code=1)
+-if 'KDC policy rejects request' not in out:
+-    fail('Wrong error for restricted anonymous PKINIT')
++realm.run([kvno, realm.host_princ], expected_code=1,
++          expected_msg='KDC policy rejects request')
+ 
+ # Regression test for #8458: S4U2Self requests crash the KDC if
+ # anonymous is restricted.
+@@ -200,9 +196,8 @@ realm.kinit(realm.user_princ,
+             password='encrypted')
+ realm.klist(realm.user_princ)
+ realm.run([kvno, realm.host_princ])
+-out = realm.run(['./adata', realm.host_princ])
+-if '+97: [indpkinit1, indpkinit2]' not in out:
+-    fail('auth indicators not seen in PKINIT ticket')
++realm.run(['./adata', realm.host_princ],
++          expected_msg='+97: [indpkinit1, indpkinit2]')
+ 
+ # Run the basic test - PKINIT with FILE: identity, with a password on the key,
+ # supplied by the responder.
+diff --git a/src/tests/t_policy.py b/src/tests/t_policy.py
+index bfec96a93..26c4e466e 100755
+--- a/src/tests/t_policy.py
++++ b/src/tests/t_policy.py
+@@ -7,35 +7,27 @@ realm = K5Realm(create_host=False, start_kadmind=True)
+ # Test password quality enforcement.
+ realm.run([kadminl, 'addpol', '-minlength', '6', '-minclasses', '2', 'pwpol'])
+ realm.run([kadminl, 'addprinc', '-randkey', '-policy', 'pwpol', 'pwuser'])
+-out = realm.run([kadminl, 'cpw', '-pw', 'sh0rt', 'pwuser'], expected_code=1)
+-if 'Password is too short' not in out:
+-    fail('short password')
+-out = realm.run([kadminl, 'cpw', '-pw', 'longenough', 'pwuser'],
+-                expected_code=1)
+-if 'Password does not contain enough character classes' not in out:
+-    fail('insufficient character classes')
++realm.run([kadminl, 'cpw', '-pw', 'sh0rt', 'pwuser'], expected_code=1,
++          expected_msg='Password is too short')
++realm.run([kadminl, 'cpw', '-pw', 'longenough', 'pwuser'], expected_code=1,
++          expected_msg='Password does not contain enough character classes')
+ realm.run([kadminl, 'cpw', '-pw', 'l0ngenough', 'pwuser'])
+ 
+ # Test some password history enforcement.  Even with no history value,
+ # the current password should be denied.
+-out = realm.run([kadminl, 'cpw', '-pw', 'l0ngenough', 'pwuser'],
+-                expected_code=1)
+-if 'Cannot reuse password' not in out:
+-    fail('reuse of current password')
++realm.run([kadminl, 'cpw', '-pw', 'l0ngenough', 'pwuser'], expected_code=1,
++          expected_msg='Cannot reuse password')
+ realm.run([kadminl, 'modpol', '-history', '2', 'pwpol'])
+ realm.run([kadminl, 'cpw', '-pw', 'an0therpw', 'pwuser'])
+-out = realm.run([kadminl, 'cpw', '-pw', 'l0ngenough', 'pwuser'],
+-                expected_code=1)
+-if 'Cannot reuse password' not in out:
+-    fail('reuse of old password')
++realm.run([kadminl, 'cpw', '-pw', 'l0ngenough', 'pwuser'], expected_code=1,
++          expected_msg='Cannot reuse password')
+ realm.run([kadminl, 'cpw', '-pw', '3rdpassword', 'pwuser'])
+ realm.run([kadminl, 'cpw', '-pw', 'l0ngenough', 'pwuser'])
+ 
+ # Test references to nonexistent policies.
+ realm.run([kadminl, 'addprinc', '-randkey', '-policy', 'newpol', 'newuser'])
+-out = realm.run([kadminl, 'getprinc', 'newuser'])
+-if 'Policy: newpol [does not exist]\n' not in out:
+-    fail('getprinc output for principal referencing nonexistent policy')
++realm.run([kadminl, 'getprinc', 'newuser'],
++          expected_msg='Policy: newpol [does not exist]\n')
+ realm.run([kadminl, 'modprinc', '-policy', 'newpol', 'pwuser'])
+ # pwuser should allow reuse of the current password since newpol doesn't exist.
+ realm.run([kadminl, 'cpw', '-pw', '3rdpassword', 'pwuser'])
+@@ -45,29 +37,20 @@ realm.run([kadmin, '-p', 'pwuser', '-w', '3rdpassword', 'cpw', '-pw',
+ 
+ # Create newpol and verify that it is enforced.
+ realm.run([kadminl, 'addpol', '-minlength', '3', 'newpol'])
+-out = realm.run([kadminl, 'getprinc', 'pwuser'])
+-if 'Policy: newpol\n' not in out:
+-    fail('getprinc after creating policy (pwuser)')
+-out = realm.run([kadminl, 'cpw', '-pw', 'aa', 'pwuser'], expected_code=1)
+-if 'Password is too short' not in out:
+-    fail('short password after creating policy (pwuser)')
+-out = realm.run([kadminl, 'cpw', '-pw', '3rdpassword', 'pwuser'],
+-                expected_code=1)
+-if 'Cannot reuse password' not in out:
+-    fail('reuse of current password after creating policy')
++realm.run([kadminl, 'getprinc', 'pwuser'], expected_msg='Policy: newpol\n')
++realm.run([kadminl, 'cpw', '-pw', 'aa', 'pwuser'], expected_code=1,
++          expected_msg='Password is too short')
++realm.run([kadminl, 'cpw', '-pw', '3rdpassword', 'pwuser'], expected_code=1,
++          expected_msg='Cannot reuse password')
+ 
+-out = realm.run([kadminl, 'getprinc', 'newuser'])
+-if 'Policy: newpol\n' not in out:
+-    fail('getprinc after creating policy (newuser)')
+-out = realm.run([kadminl, 'cpw', '-pw', 'aa', 'newuser'], expected_code=1)
+-if 'Password is too short' not in out:
+-    fail('short password after creating policy (newuser)')
++realm.run([kadminl, 'getprinc', 'newuser'], expected_msg='Policy: newpol\n')
++realm.run([kadminl, 'cpw', '-pw', 'aa', 'newuser'], expected_code=1,
++          expected_msg='Password is too short')
+ 
+ # Delete the policy and verify that it is no longer enforced.
+ realm.run([kadminl, 'delpol', 'newpol'])
+-out = realm.run([kadminl, 'getpol', 'newpol'], expected_code=1)
+-if 'Policy does not exist' not in out:
+-    fail('deletion of referenced policy')
++realm.run([kadminl, 'getpol', 'newpol'], expected_code=1,
++          expected_msg='Policy does not exist')
+ realm.run([kadminl, 'cpw', '-pw', 'aa', 'pwuser'])
+ 
+ # Test basic password lockout support.
+@@ -78,18 +61,14 @@ realm.run([kadminl, 'modprinc', '+requires_preauth', '-policy', 'lockout',
+            'user'])
+ 
+ # kinit twice with the wrong password.
+-output = realm.run([kinit, realm.user_princ], input='wrong\n', expected_code=1)
+-if 'Password incorrect while getting initial credentials' not in output:
+-    fail('Expected error message not seen in kinit output')
+-output = realm.run([kinit, realm.user_princ], input='wrong\n', expected_code=1)
+-if 'Password incorrect while getting initial credentials' not in output:
+-    fail('Expected error message not seen in kinit output')
++realm.run([kinit, realm.user_princ], input='wrong\n', expected_code=1,
++          expected_msg='Password incorrect while getting initial credentials')
++realm.run([kinit, realm.user_princ], input='wrong\n', expected_code=1,
++          expected_msg='Password incorrect while getting initial credentials')
+ 
+ # Now the account should be locked out.
+-output = realm.run([kinit, realm.user_princ], expected_code=1)
+-if 'Client\'s credentials have been revoked while getting initial credentials' \
+-        not in output:
+-    fail('Expected lockout error message not seen in kinit output')
++m = 'Client\'s credentials have been revoked while getting initial credentials'
++realm.run([kinit, realm.user_princ], expected_code=1, expected_msg=m)
+ 
+ # Check that modprinc -unlock allows a further attempt.
+ realm.run([kadminl, 'modprinc', '-unlock', 'user'])
+@@ -113,10 +92,8 @@ realm.run([kadminl, 'cpw', '-pw', 'pw2', 'user'])
+ # Swap the keys, simulating older kadmin having chosen the second entry.
+ realm.run(['./hist', 'swap'])
+ # Make sure we can read the history entry.
+-out = realm.run([kadminl, 'cpw', '-pw', password('user'), 'user'],
+-                expected_code=1)
+-if 'Cannot reuse password' not in out:
+-    fail('Expected error not seen in output')
++realm.run([kadminl, 'cpw', '-pw', password('user'), 'user'], expected_code=1,
++          expected_msg='Cannot reuse password')
+ 
+ # Test key/salt constraints.
+ 
+@@ -142,9 +119,8 @@ realm.run([kadminl, 'cpw', '-randkey', '-e', 'aes256-cts', 'server'])
+ 
+ # Test modpol.
+ realm.run([kadminl, 'modpol', '-allowedkeysalts', 'aes256-cts,rc4-hmac', 'ak'])
+-out = realm.run([kadminl, 'getpol', 'ak'])
+-if not 'Allowed key/salt types: aes256-cts,rc4-hmac' in out:
+-    fail('getpol does not implement allowedkeysalts?')
++realm.run([kadminl, 'getpol', 'ak'],
++          expected_msg='Allowed key/salt types: aes256-cts,rc4-hmac')
+ 
+ # Test subsets and full set.
+ realm.run([kadminl, 'cpw', '-randkey', '-e', 'rc4-hmac', 'server'])
+@@ -153,19 +129,14 @@ realm.run([kadminl, 'cpw', '-randkey', '-e', 'aes256-cts,rc4-hmac', 'server'])
+ realm.run([kadminl, 'cpw', '-randkey', '-e', 'rc4-hmac,aes256-cts', 'server'])
+ 
+ # Check that the order we got is the one from the policy.
+-out = realm.run([kadminl, 'getprinc', '-terse', 'server'])
+-if not '2\t1\t6\t18\t0\t1\t6\t23\t0' in out:
+-    fail('allowed_keysalts policy did not preserve order')
++realm.run([kadminl, 'getprinc', '-terse', 'server'],
++          expected_msg='2\t1\t6\t18\t0\t1\t6\t23\t0')
+ 
+ # Test partially intersecting sets.
+-out = realm.run([kadminl, 'cpw', '-randkey', '-e', 'rc4-hmac,aes128-cts',
+-                 'server'], expected_code=1)
+-if not 'Invalid key/salt tuples' in out:
+-    fail('allowed_keysalts policy not applied properly')
+-out = realm.run([kadminl, 'cpw', '-randkey', '-e',
+-                 'rc4-hmac,aes256-cts,aes128-cts', 'server'], expected_code=1)
+-if not 'Invalid key/salt tuples' in out:
+-    fail('allowed_keysalts policy not applied properly')
++realm.run([kadminl, 'cpw', '-randkey', '-e', 'rc4-hmac,aes128-cts', 'server'],
++          expected_code=1, expected_msg='Invalid key/salt tuples')
++realm.run([kadminl, 'cpw', '-randkey', '-e', 'rc4-hmac,aes256-cts,aes128-cts',
++           'server'], expected_code=1, expected_msg='Invalid key/salt tuples')
+ 
+ # Test reset of allowedkeysalts.
+ realm.run([kadminl, 'modpol', '-allowedkeysalts', '-', 'ak'])
+diff --git a/src/tests/t_preauth.py b/src/tests/t_preauth.py
+index 0ef8bbca4..1823a797d 100644
+--- a/src/tests/t_preauth.py
++++ b/src/tests/t_preauth.py
+@@ -10,18 +10,12 @@ realm = K5Realm(create_host=False, get_creds=False, krb5_conf=conf)
+ realm.run([kadminl, 'modprinc', '+requires_preauth', realm.user_princ])
+ realm.run([kadminl, 'setstr', realm.user_princ, 'teststring', 'testval'])
+ realm.run([kadminl, 'addprinc', '-nokey', '+requires_preauth', 'nokeyuser'])
+-out = realm.run([kinit, realm.user_princ], input=password('user')+'\n')
+-if 'testval' not in out:
+-    fail('Decrypted string attribute not in kinit output')
+-out = realm.run([kinit, 'nokeyuser'], input=password('user')+'\n',
+-                expected_code=1)
+-if 'no key' not in out:
+-    fail('Expected "no key" message not in kinit output')
++realm.kinit(realm.user_princ, password('user'), expected_msg='testval')
++realm.kinit('nokeyuser', password('user'), expected_code=1,
++            expected_msg='no key')
+ 
+ # Exercise KDC_ERR_MORE_PREAUTH_DATA_REQUIRED and secure cookies.
+ realm.run([kadminl, 'setstr', realm.user_princ, '2rt', 'secondtrip'])
+-out = realm.run([kinit, realm.user_princ], input=password('user')+'\n')
+-if '2rt: secondtrip' not in out:
+-    fail('multi round-trip cookie test')
++realm.kinit(realm.user_princ, password('user'), expected_msg='2rt: secondtrip')
+ 
+ success('Pre-authentication framework tests')
+diff --git a/src/tests/t_pwqual.py b/src/tests/t_pwqual.py
+index 0d1d387d8..011110bd1 100755
+--- a/src/tests/t_pwqual.py
++++ b/src/tests/t_pwqual.py
+@@ -18,29 +18,24 @@ f.close()
+ realm.run([kadminl, 'addpol', 'pol'])
+ 
+ # The built-in "empty" module rejects empty passwords even without a policy.
+-out = realm.run([kadminl, 'addprinc', '-pw', '', 'p1'], expected_code=1)
+-if 'Empty passwords are not allowed' not in out:
+-    fail('Expected error not seen for empty password')
++realm.run([kadminl, 'addprinc', '-pw', '', 'p1'], expected_code=1,
++          expected_msg='Empty passwords are not allowed')
+ 
+ # The built-in "dict" module rejects dictionary words, but only with a policy.
+ realm.run([kadminl, 'addprinc', '-pw', 'birds', 'p2'])
+-out = realm.run([kadminl, 'addprinc', '-pw', 'birds', '-policy', 'pol', 'p3'],
+-                expected_code=1)
+-if 'Password is in the password dictionary' not in out:
+-    fail('Expected error not seen from dictionary password')
++realm.run([kadminl, 'addprinc', '-pw', 'birds', '-policy', 'pol', 'p3'],
++          expected_code=1,
++          expected_msg='Password is in the password dictionary')
+ 
+ # The built-in "princ" module rejects principal components, only with a policy.
+ realm.run([kadminl, 'addprinc', '-pw', 'p4', 'p4'])
+-out = realm.run([kadminl, 'addprinc', '-pw', 'p5', '-policy', 'pol', 'p5'],
+-                expected_code=1)
+-if 'Password may not match principal name' not in out:
+-    fail('Expected error not seen from principal component')
++realm.run([kadminl, 'addprinc', '-pw', 'p5', '-policy', 'pol', 'p5'],
++          expected_code=1,
++          expected_msg='Password may not match principal name')
+ 
+ # The dynamic "combo" module rejects pairs of dictionary words.
+-out = realm.run([kadminl, 'addprinc', '-pw', 'birdsoranges', 'p6'],
+-                expected_code=1)
+-if 'Password may not be a pair of dictionary words' not in out:
+-    fail('Expected error not seen from combo module')
++realm.run([kadminl, 'addprinc', '-pw', 'birdsoranges', 'p6'], expected_code=1,
++          expected_msg='Password may not be a pair of dictionary words')
+ 
+ # These plugin ordering tests aren't specifically related to the
+ # password quality interface, but are convenient to put here.
+diff --git a/src/tests/t_referral.py b/src/tests/t_referral.py
+index 559fbd5f7..9765116aa 100755
+--- a/src/tests/t_referral.py
++++ b/src/tests/t_referral.py
+@@ -23,9 +23,8 @@ def testref(realm, nametype):
+ # Get credentials and check that we get an error, not a referral.
+ def testfail(realm, nametype):
+     shutil.copyfile(savefile, realm.ccache)
+-    out = realm.run(['./gcred', nametype, 'a/x.d'], expected_code=1)
+-    if 'not found in Kerberos database' not in out:
+-        fail('unexpected error')
++    realm.run(['./gcred', nametype, 'a/x.d'], expected_code=1,
++              expected_msg='not found in Kerberos database')
+ 
+ # Create a modified KDC environment and restart the KDC.
+ def restart_kdc(realm, kdc_conf):
+@@ -116,9 +115,8 @@ r1, r2 = cross_realms(2, xtgts=(),
+                       create_host=False)
+ r2.addprinc('abc\@XYZ', 'pw')
+ r1.start_kdc()
+-out = r1.kinit('user', expected_code=1)
+-if 'not found in Kerberos database' not in out:
+-    fail('Expected error not seen for referral without canonicalize flag')
++r1.kinit('user', expected_code=1,
++         expected_msg='not found in Kerberos database')
+ r1.kinit('user', password('user'), ['-C'])
+ r1.klist('user@KRBTEST2.COM', 'krbtgt/KRBTEST2.COM')
+ r1.kinit('abc@XYZ', 'pw', ['-E'])
+diff --git a/src/tests/t_renew.py b/src/tests/t_renew.py
+index a5f0d4bc1..106c8ecd3 100755
+--- a/src/tests/t_renew.py
++++ b/src/tests/t_renew.py
+@@ -32,9 +32,8 @@ realm.run([kvno, realm.user_princ])
+ 
+ # Make sure we can't renew non-renewable tickets.
+ test('non-renewable', '1h', '1h', False)
+-out = realm.kinit(realm.user_princ, flags=['-R'], expected_code=1)
+-if "KDC can't fulfill requested option" not in out:
+-    fail('expected error not seen renewing non-renewable ticket')
++realm.kinit(realm.user_princ, flags=['-R'], expected_code=1,
++            expected_msg="KDC can't fulfill requested option")
+ 
+ # Test that -allow_renewable on the client principal works.
+ realm.run([kadminl, 'modprinc', '-allow_renewable', 'user'])
+diff --git a/src/tests/t_salt.py b/src/tests/t_salt.py
+index e923c92d1..ddb1905ed 100755
+--- a/src/tests/t_salt.py
++++ b/src/tests/t_salt.py
+@@ -62,13 +62,11 @@ for ks in dup_kstypes:
+ # fails.
+ def test_reject_afs3(realm, etype):
+     query = 'ank -e ' + etype + ':afs3 -pw password princ1'
+-    out = realm.run([kadminl, 'ank', '-e', etype + ':afs3', '-pw', 'password',
+-                     'princ1'], expected_code=1)
+-    if 'Invalid key generation parameters from KDC' not in out:
+-        fail('Allowed afs3 salt for ' + etype)
+-    out = realm.run([kadminl, 'getprinc', 'princ1'], expected_code=1)
+-    if 'Principal does not exist' not in out:
+-        fail('Created principal with afs3 salt and enctype ' + etype)
++    realm.run([kadminl, 'ank', '-e', etype + ':afs3', '-pw', 'password',
++               'princ1'], expected_code=1,
++              expected_msg='Invalid key generation parameters from KDC')
++    realm.run([kadminl, 'getprinc', 'princ1'], expected_code=1,
++              expected_msg='Principal does not exist')
+ 
+ # Verify that the afs3 salt is rejected for arcfour and pbkdf2 enctypes.
+ # We do not currently do any verification on the key-generation parameters
+diff --git a/src/tests/t_skew.py b/src/tests/t_skew.py
+index b72971070..f2ae06695 100755
+--- a/src/tests/t_skew.py
++++ b/src/tests/t_skew.py
+@@ -37,22 +37,16 @@ realm.kinit(realm.user_princ, password('user'),
+ 
+ # kinit should detect too much skew in the KDC response.  kinit with
+ # FAST should fail from the KDC since the armor AP-REQ won't be valid.
+-out = realm.kinit(realm.user_princ, password('user'), expected_code=1)
+-if 'Clock skew too great in KDC reply' not in out:
+-    fail('Expected error message not seen in kinit skew case')
+-out = realm.kinit(realm.user_princ, None, flags=['-T', fast_cache],
+-                  expected_code=1)
+-if 'Clock skew too great while' not in out:
+-    fail('Expected error message not seen in kinit FAST skew case')
++realm.kinit(realm.user_princ, password('user'), expected_code=1,
++            expected_msg='Clock skew too great in KDC reply')
++realm.kinit(realm.user_princ, None, flags=['-T', fast_cache], expected_code=1,
++            expected_msg='Clock skew too great while')
+ 
+ # kinit (with preauth) should fail from the KDC, with or without FAST.
+ realm.run([kadminl, 'modprinc', '+requires_preauth', 'user'])
+-out = realm.kinit(realm.user_princ, password('user'), expected_code=1)
+-if 'Clock skew too great while' not in out:
+-    fail('Expected error message not seen in kinit skew case (preauth)')
+-out = realm.kinit(realm.user_princ, None, flags=['-T', fast_cache],
+-                  expected_code=1)
+-if 'Clock skew too great while' not in out:
+-    fail('Expected error message not seen in kinit FAST skew case (preauth)')
++realm.kinit(realm.user_princ, password('user'), expected_code=1,
++            expected_msg='Clock skew too great while')
++realm.kinit(realm.user_princ, None, flags=['-T', fast_cache], expected_code=1,
++            expected_msg='Clock skew too great while')
+ 
+ success('Clock skew tests')
+diff --git a/src/tests/t_stringattr.py b/src/tests/t_stringattr.py
+index 281c8726f..5672a0f20 100755
+--- a/src/tests/t_stringattr.py
++++ b/src/tests/t_stringattr.py
+@@ -28,9 +28,7 @@ realm = K5Realm(start_kadmind=True, create_host=False, get_creds=False)
+ 
+ realm.prep_kadmin()
+ 
+-out = realm.run_kadmin(['getstrs', 'user'])
+-if '(No string attributes.)' not in out:
+-    fail('Empty attribute query')
++realm.run_kadmin(['getstrs', 'user'], expected_msg='(No string attributes.)')
+ 
+ realm.run_kadmin(['setstr', 'user', 'attr1', 'value1'])
+ realm.run_kadmin(['setstr', 'user', 'attr2', 'value2'])

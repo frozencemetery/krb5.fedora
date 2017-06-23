@@ -1,0 +1,75 @@
+From 52eeabfdeb9a91c6e4c7124b38fa6915df37f8bf Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Tue, 17 Jan 2017 11:25:22 -0500
+Subject: [PATCH] Use expected_trace in test scripts
+
+(cherry picked from commit 7b7e5d964e5d020fdda3fb9843d9b8cf8b29a6f8)
+---
+ src/tests/t_general.py | 24 ++++++++----------------
+ src/tests/t_pkinit.py  | 15 ++++++---------
+ 2 files changed, 14 insertions(+), 25 deletions(-)
+
+diff --git a/src/tests/t_general.py b/src/tests/t_general.py
+index 6d523fe45..16bf6c5e3 100755
+--- a/src/tests/t_general.py
++++ b/src/tests/t_general.py
+@@ -47,21 +47,13 @@ if 'not found in Kerberos database' not in out:
+     fail('Expected error message not seen in kinit -C output')
+ 
+ # Spot-check KRB5_TRACE output
+-tracefile = os.path.join(realm.testdir, 'trace')
+-realm.run(['env', 'KRB5_TRACE=' + tracefile, kinit, realm.user_princ],
+-          input=(password('user') + "\n"))
+-f = open(tracefile, 'r')
+-trace = f.read()
+-f.close()
+-expected = ('Sending initial UDP request',
+-            'Received answer',
+-            'Selected etype info',
+-            'AS key obtained',
+-            'Decrypted AS reply',
+-            'FAST negotiation: available',
+-            'Storing user@KRBTEST.COM')
+-for e in expected:
+-    if e not in trace:
+-        fail('Expected output not in kinit trace log')
++expected_trace = ('Sending initial UDP request',
++                  'Received answer',
++                  'Selected etype info',
++                  'AS key obtained',
++                  'Decrypted AS reply',
++                  'FAST negotiation: available',
++                  'Storing user@KRBTEST.COM')
++realm.kinit(realm.user_princ, password('user'), expected_trace=expected_trace)
+ 
+ success('FAST kinit, trace logging')
+diff --git a/src/tests/t_pkinit.py b/src/tests/t_pkinit.py
+index 183977750..f56141564 100755
+--- a/src/tests/t_pkinit.py
++++ b/src/tests/t_pkinit.py
+@@ -176,19 +176,16 @@ realm.klist(realm.user_princ)
+ 
+ # Test a DH parameter renegotiation by temporarily setting a 4096-bit
+ # minimum on the KDC.
+-tracefile = os.path.join(realm.testdir, 'trace')
+ minbits_kdc_conf = {'realms': {'$realm': {'pkinit_dh_min_bits': '4096'}}}
+ minbits_env = realm.special_env('restrict', True, kdc_conf=minbits_kdc_conf)
+ realm.stop_kdc()
+ realm.start_kdc(env=minbits_env)
+-realm.run(['env', 'KRB5_TRACE=' + tracefile, kinit, '-X',
+-           'X509_user_identity=' + file_identity, realm.user_princ])
+-with open(tracefile, 'r') as f:
+-    trace = f.read()
+-if ('Key parameters not accepted' not in trace or
+-    'Preauth tryagain input types' not in trace or
+-    'trying again with KDC-provided parameters' not in trace):
+-    fail('DH renegotiation steps not found in kinit trace log')
++expected_trace = ('Key parameters not accepted',
++                  'Preauth tryagain input types',
++                  'trying again with KDC-provided parameters')
++realm.kinit(realm.user_princ,
++            flags=['-X', 'X509_user_identity=%s' % file_identity],
++            expected_trace=expected_trace)
+ realm.stop_kdc()
+ realm.start_kdc()
+ 

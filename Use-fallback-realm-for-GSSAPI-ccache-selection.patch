@@ -1,4 +1,4 @@
-From 215931cd91a160516c5fb8a5fbc8568534c49ff0 Mon Sep 17 00:00:00 2001
+From 4963152dc973e8ff74f257f64b0960a7716b480c Mon Sep 17 00:00:00 2001
 From: Matt Rogers <mrogers@redhat.com>
 Date: Fri, 10 Feb 2017 12:53:42 -0500
 Subject: [PATCH] Use fallback realm for GSSAPI ccache selection
@@ -11,11 +11,10 @@ Modify t_ccselect.py tests to account for fallback behavior.
 
 ticket: 8549 (new)
 (cherry picked from commit 234b64bd6139d5b75dadd5abbd5bef5a162e298a)
-[rharwood@redhat.com conflicts t_ccselect.py]
 ---
- src/lib/krb5/ccache/ccselect.c | 37 +++++++++++++++++++++++++-----
- src/tests/gssapi/t_ccselect.py | 51 +++++++++++++++++++++++++++++++++---------
- 2 files changed, 73 insertions(+), 15 deletions(-)
+ src/lib/krb5/ccache/ccselect.c | 37 ++++++++++++++++++++++++++-----
+ src/tests/gssapi/t_ccselect.py | 50 +++++++++++++++++++++++++++++++++---------
+ 2 files changed, 72 insertions(+), 15 deletions(-)
 
 diff --git a/src/lib/krb5/ccache/ccselect.c b/src/lib/krb5/ccache/ccselect.c
 index 2f3071a27..ee4b83a9b 100644
@@ -90,7 +89,7 @@ index 2f3071a27..ee4b83a9b 100644
  
  void
 diff --git a/src/tests/gssapi/t_ccselect.py b/src/tests/gssapi/t_ccselect.py
-index 6be6b4ec0..c6201ca41 100755
+index 1ea614d30..668a2cc62 100755
 --- a/src/tests/gssapi/t_ccselect.py
 +++ b/src/tests/gssapi/t_ccselect.py
 @@ -31,12 +31,18 @@ r2 = K5Realm(create_user=False, realm='KRBTEST2.COM', portbase=62000,
@@ -117,7 +116,7 @@ index 6be6b4ec0..c6201ca41 100755
  
  # refserver specifies the target as a principal in the referral realm.
  # The principal won't be treated as a host principal by the
-@@ -67,6 +73,16 @@ r1.addprinc(alice, password('alice'))
+@@ -66,6 +72,16 @@ r1.addprinc(alice, password('alice'))
  r1.addprinc(bob, password('bob'))
  r2.addprinc(zaphod, password('zaphod'))
  
@@ -134,7 +133,7 @@ index 6be6b4ec0..c6201ca41 100755
  # Get tickets for one user in each realm (zaphod will be primary).
  r1.kinit(alice, password('alice'))
  r2.kinit(zaphod, password('zaphod'))
-@@ -94,10 +110,24 @@ if output != (zaphod + '\n'):
+@@ -93,10 +109,24 @@ if output != (zaphod + '\n'):
      fail('zaphod not chosen as default initiator name for server in r1')
  
  # Check that primary cache is used if server realm is unknown.
@@ -161,7 +160,7 @@ index 6be6b4ec0..c6201ca41 100755
  
  # Get a second cred in r1 (bob will be primary).
  r1.kinit(bob, password('bob'))
-@@ -105,20 +135,21 @@ r1.kinit(bob, password('bob'))
+@@ -104,19 +134,19 @@ r1.kinit(bob, password('bob'))
  # Try some cache selections using .k5identity.
  k5id = open(os.path.join(r1.testdir, '.k5identity'), 'w')
  k5id.write('%s realm=%s\n' % (alice, r1.realm))
@@ -179,10 +178,8 @@ index 6be6b4ec0..c6201ca41 100755
  output = r1.run(['./t_ccselect', refserver])
  if output != (bob + '\n'):
      fail('bob not chosen via primary cache when no .k5identity line matches.')
--output = r1.run(['./t_ccselect', 'h:bogus@' + hostname], expected_code=1)
- if 'Can\'t find client principal noprinc' not in output:
-     fail('Expected error not seen when k5identity selects bad principal.')
+-r1.run(['./t_ccselect', 'h:bogus@' + hostname], expected_code=1,
 +r1.run(['./t_ccselect', 'h:bogus@' + foo2], expected_code=1,
-+       expected_msg="Can't find client principal noprinc")
+        expected_msg="Can't find client principal noprinc")
  
  success('GSSAPI credential selection tests')

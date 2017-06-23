@@ -1,4 +1,4 @@
-From f113cd5a3d043493c8d4c53dd346b290a0959de9 Mon Sep 17 00:00:00 2001
+From 14455b071bab5ed93e42df84dc0b0e5f889cb98b Mon Sep 17 00:00:00 2001
 From: Matt Rogers <mrogers@redhat.com>
 Date: Tue, 28 Feb 2017 15:55:24 -0500
 Subject: [PATCH] Add certauth pluggable interface
