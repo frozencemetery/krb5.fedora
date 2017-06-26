@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15.1
 # for prerelease, should be e.g., 0.3.beta2%{?dist}
-Release: 12%{?dist}
+Release: 13%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -370,7 +370,7 @@ tar -cf "krb5-%{version}-pdfs.tar.new" build-pdf/*.pdf
 %{__cc} -fPIC -shared -o noport.so -Wall -Wextra $RPM_SOURCE_DIR/noport.c
 
 %check
-%ifarch ppc64el
+%ifarch ppc64le
 # https://bugzilla.redhat.com/show_bug.cgi?id=1465147
 exit 0
 %endif
@@ -739,6 +739,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Jun 26 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-13
+- Fix arch name (ppc64le, not ppc64el)
+- Related-to: #1464381
+
 * Mon Jun 26 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-12
 - Skip test suite on ppc64el
 - Related-to: #1464381
