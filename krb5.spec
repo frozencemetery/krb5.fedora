@@ -121,7 +121,7 @@ BuildRequires: pam-devel
 BuildRequires: systemd-units
 
 # For the test framework.
-BuildRequires: perl, dejagnu, tcl-devel
+BuildRequires: perl-interpreter, dejagnu, tcl-devel
 BuildRequires: net-tools, rpcbind
 BuildRequires: hostname
 BuildRequires: iproute
