@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15.1
 # for prerelease, should be e.g., 0.3.beta2%{?dist}
-Release: 15%{?dist}
+Release: 16%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -87,7 +87,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, bison, cmake, flex, gawk, gettext, pkgconfig, sed
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
 BuildRequires: gzip, ncurses-devel
-BuildRequires: python-sphinx, texlive-pdftex
+BuildRequires: python2-sphinx, texlive-pdftex
 
 # For autosetup
 BuildRequires: git
@@ -126,7 +126,7 @@ BuildRequires: perl-interpreter, dejagnu, tcl-devel
 BuildRequires: net-tools, rpcbind
 BuildRequires: hostname
 BuildRequires: iproute
-BuildRequires: python-pyrad
+BuildRequires: python2-pyrad
 BuildRequires: libverto-devel
 BuildRequires: openldap-devel
 BuildRequires: openssl-devel >= 0.9.8
@@ -741,6 +741,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Jul 19 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-16
+- Explicitly require python2 packages
+
 * Wed Jul 19 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-15
 - Add support to query the SSF of a context
 - Pick up rename of perl dependency
