@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15.1
 # for prerelease, should be e.g., 0.3.beta2%{?dist}
-Release: 16%{?dist}
+Release: 17%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -79,6 +79,7 @@ Patch50: Correct-error-handling-bug-in-prior-commit.patch
 Patch51: Add-k5test-expected_msg-expected_trace.patch
 Patch52: Fix-leaks-in-gss_inquire_cred_by_oid.patch
 Patch53: Add-support-to-query-the-SSF-of-a-GSS-context.patch
+Patch54: Prevent-KDC-unset-status-assertion-failures.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -741,6 +742,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Jul 20 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-17
+- Fix CVE-2017-11368 (remote triggerable assertion failure)
+
 * Wed Jul 19 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-16
 - Explicitly require python2 packages
 
