@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14.4
-Release: 4%{?dist}
+Release: 5%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -68,6 +68,7 @@ Patch20: Don-t-feed-OS-RNG-output-into-the-OS-RNG.patch
 Patch21: Rename-prng_os.c-to-prng_device.c.patch
 Patch22: Add-getrandom-to-k5_get_os_entropy-using-syscall.patch
 Patch23: Add-OS-prng-intended-for-use-with-getrandom.patch
+Patch25: Prevent-KDC-unset-status-assertion-failures.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -722,6 +723,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Jul 20 2017 Robbie Harwood <rharwood@redhat.com> - 1.14.4-5
+- Fix CVE-2017-11368 (remote triggerable assertion failure)
+
 * Fri Sep 30 2016 Robbie Harwood <rharwood@redhat.com> - 1.14.4-4
 - Fix backward check in kprop.service
 
