@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15.1
 # for prerelease, should be e.g., 0.3.beta2%{?dist}
-Release: 19%{?dist}
+Release: 20%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -520,13 +520,12 @@ rm -- "$RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/preauth/test.so"
 
 %post libs -p /sbin/ldconfig
 
-%triggerun libs -- krb5-libs < 1.15.1-5
-# Previously, there was logic to make this conditional in order to
-# (effectively) allow for multiple triggers.  However, RPM doesn't keep the
-# database consistent during upgrades.
-#
-# When a second trigger is needed, this will be made unconditional.
+%triggerun libs -- krb5-libs < 1.15.1-20
+if ! grep -q 'dns_canonicalize_hostname' /etc/krb5.conf ; then
+    sed -i 's/\[libdefaults\]/\[libdefaults\]\n dns_canonicalize_hostname = false/' /etc/krb5.conf
+fi
 
+# Correct trigger would be krb5-libs < 1.15.1-5
 if ! grep -q 'includedir /etc/krb5.conf.d' /etc/krb5.conf ; then
     sed -i '1i # To opt out of the system crypto-policies configuration of krb5, remove the\n# symlink at /etc/krb5.conf.d/crypto-policies which will not be recreated.\nincludedir /etc/krb5.conf.d/\n' /etc/krb5.conf
 fi
@@ -737,6 +736,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Aug 02 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-20
+- Disable dns_canonicalize_hostname.  This may break some setups.
+
 * Wed Aug 02 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-19
 - Re-enable test suite on ppc64le (no other changes)
 
