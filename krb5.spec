@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15.1
 # for prerelease, should be e.g., 0.3.beta2%{?dist}
-Release: 20%{?dist}
+Release: 21%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -80,6 +80,7 @@ Patch51: Add-k5test-expected_msg-expected_trace.patch
 Patch52: Fix-leaks-in-gss_inquire_cred_by_oid.patch
 Patch53: Add-support-to-query-the-SSF-of-a-GSS-context.patch
 Patch54: Prevent-KDC-unset-status-assertion-failures.patch
+Patch55: Remove-incomplete-PKINIT-OCSP-support.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -736,6 +737,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Aug 07 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-21
+- Display an error message if ocsp pkinit is requested
+
 * Wed Aug 02 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-20
 - Disable dns_canonicalize_hostname.  This may break some setups.
 
