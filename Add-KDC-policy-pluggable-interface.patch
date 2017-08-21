@@ -1,4 +1,4 @@
-From 387ac75a30b679d6f0b0408b6c8e46ec2df30088 Mon Sep 17 00:00:00 2001
+From 648fa08747a5f2025f47e5b0bc2589f55a65218a Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 27 Jun 2017 17:15:39 -0400
 Subject: [PATCH] Add KDC policy pluggable interface
@@ -18,8 +18,7 @@ Also authored by Matt Rogers <mrogers@redhat.com>.
 
 ticket: 8606 (new)
 (cherry picked from commit d0969f6a8170344031ef58fd2a161190f1edfb96)
-[rharwood@redhat.com: plugin numbering for not having kadmin auth, and
-conflict in tests]
+[rharwood@redhat.com: mention but do not use kadm_auth]
 ---
  doc/plugindev/index.rst                        |   1 +
  doc/plugindev/kdcpolicy.rst                    |  24 +++
@@ -95,7 +94,7 @@ index 000000000..74f21f08f
 +explicitly not as stable as other public interfaces, modules which do
 +this may not retain compatibility across releases.
 diff --git a/src/Makefile.in b/src/Makefile.in
-index b0249778c..84856debb 100644
+index ad8565056..e47bddcb1 100644
 --- a/src/Makefile.in
 +++ b/src/Makefile.in
 @@ -21,6 +21,7 @@ SUBDIRS=util include lib \
@@ -107,10 +106,10 @@ index b0249778c..84856debb 100644
  	plugins/preauth/pkinit \
  	plugins/preauth/test \
 diff --git a/src/configure.in b/src/configure.in
-index 24f653f0d..a3881e93f 100644
+index 4ae2c07d5..ee1983043 100644
 --- a/src/configure.in
 +++ b/src/configure.in
-@@ -1467,6 +1467,7 @@ dnl	ccapi ccapi/lib ccapi/lib/unix ccapi/server ccapi/server/unix ccapi/test
+@@ -1470,6 +1470,7 @@ dnl	ccapi ccapi/lib ccapi/lib/unix ccapi/server ccapi/server/unix ccapi/test
  	plugins/kdb/db2/libdb2/recno
  	plugins/kdb/db2/libdb2/test
  	plugins/kdb/test
@@ -131,7 +130,7 @@ index 0239338a1..6a3fa8242 100644
  	$(INSTALL_DATA) $(srcdir)/krb5/localauth_plugin.h $(DESTDIR)$(KRB5_INCDIR)$(S)krb5$(S)localauth_plugin.h
  	$(INSTALL_DATA) $(srcdir)/krb5/locate_plugin.h $(DESTDIR)$(KRB5_INCDIR)$(S)krb5$(S)locate_plugin.h
 diff --git a/src/include/k5-int.h b/src/include/k5-int.h
-index 06ca2b66d..a157ff03f 100644
+index ed9c7bf75..39ffb9568 100644
 --- a/src/include/k5-int.h
 +++ b/src/include/k5-int.h
 @@ -1157,7 +1157,9 @@ struct plugin_interface {
@@ -294,7 +293,7 @@ index 000000000..c7592c5db
 +
 +#endif /* KRB5_POLICY_PLUGIN_H */
 diff --git a/src/kdc/do_as_req.c b/src/kdc/do_as_req.c
-index a4bf91b1b..7636bfb52 100644
+index f85da6da6..f5cf8ad89 100644
 --- a/src/kdc/do_as_req.c
 +++ b/src/kdc/do_as_req.c
 @@ -207,6 +207,13 @@ finish_process_as_req(struct as_req_state *state, krb5_error_code errcode)
@@ -312,7 +311,7 @@ index a4bf91b1b..7636bfb52 100644
       * Find the server key
       */
 diff --git a/src/kdc/do_tgs_req.c b/src/kdc/do_tgs_req.c
-index 339259fd1..b2d5952bf 100644
+index ac5864603..0009a9319 100644
 --- a/src/kdc/do_tgs_req.c
 +++ b/src/kdc/do_tgs_req.c
 @@ -518,6 +518,12 @@ process_tgs_req(struct server_handle *handle, krb5_data *pkt,
@@ -329,7 +328,7 @@ index 339259fd1..b2d5952bf 100644
       * Set authtime to be the same as header or evidence ticket's
       */
 diff --git a/src/kdc/kdc_util.c b/src/kdc/kdc_util.c
-index 30c501c67..f7212d7a3 100644
+index b710aefe4..5455e2a67 100644
 --- a/src/kdc/kdc_util.c
 +++ b/src/kdc/kdc_util.c
 @@ -642,7 +642,6 @@ validate_as_request(kdc_realm_t *kdc_active_realm,
@@ -354,7 +353,7 @@ index 30c501c67..f7212d7a3 100644
  }
  
 diff --git a/src/kdc/kdc_util.h b/src/kdc/kdc_util.h
-index bcf05fc27..b499a04e1 100644
+index 672f94380..dcedfd538 100644
 --- a/src/kdc/kdc_util.h
 +++ b/src/kdc/kdc_util.h
 @@ -166,17 +166,6 @@ kdc_err(krb5_context call_context, errcode_t code, const char *fmt, ...)
@@ -735,10 +734,10 @@ index 6b000dc90..2a57b0a01 100644
  
  #endif /* __KRB5_KDC_POLICY__ */
 diff --git a/src/kdc/tgs_policy.c b/src/kdc/tgs_policy.c
-index a30cacc66..ea285376f 100644
+index d0f25d1b7..33cfbcd81 100644
 --- a/src/kdc/tgs_policy.c
 +++ b/src/kdc/tgs_policy.c
-@@ -374,11 +374,5 @@ validate_tgs_request(kdc_realm_t *kdc_active_realm,
+@@ -375,11 +375,5 @@ validate_tgs_request(kdc_realm_t *kdc_active_realm,
      if (ret && ret != KRB5_PLUGIN_OP_NOTSUPP)
          return errcode_to_protocol(ret);
  
@@ -919,13 +918,13 @@ index 000000000..9682ec74f
 @@ -0,0 +1 @@
 +kdcpolicy_test_initvt
 diff --git a/src/tests/Makefile.in b/src/tests/Makefile.in
-index 0e93d6b59..60e39dd14 100644
+index 2b3112537..a2093108b 100644
 --- a/src/tests/Makefile.in
 +++ b/src/tests/Makefile.in
-@@ -168,6 +168,7 @@ check-pytests: localauth plugorder rdreq responder s2p s4u2proxy unlockiter
- 	$(RUNPYTEST) $(srcdir)/t_princflags.py $(PYTESTFLAGS)
+@@ -169,6 +169,7 @@ check-pytests: localauth plugorder rdreq responder s2p s4u2proxy unlockiter
  	$(RUNPYTEST) $(srcdir)/t_tabdump.py $(PYTESTFLAGS)
  	$(RUNPYTEST) $(srcdir)/t_certauth.py $(PYTESTFLAGS)
+ 	$(RUNPYTEST) $(srcdir)/t_y2038.py $(PYTESTFLAGS)
 +	$(RUNPYTEST) $(srcdir)/t_kdcpolicy.py $(PYTESTFLAGS)
  
  clean:
