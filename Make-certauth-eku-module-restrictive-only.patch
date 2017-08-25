@@ -1,0 +1,31 @@
+From 2b1a91087b668ab1021f1ca461b8210e7e015c8a Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Thu, 24 Aug 2017 11:11:46 -0400
+Subject: [PATCH] Make certauth eku module restrictive-only
+
+The PKINIT certauth eku module should never authoritatively authorize
+a certificate, because an extended key usage does not establish a
+relationship between the certificate and any specific user; it only
+establishes that the certificate was created for PKINIT client
+authentication.  Therefore, pkinit_eku_authorize() should return
+KRB5_PLUGIN_NO_HANDLE on success, not 0.
+
+ticket: 8561
+(cherry picked from commit aca6fd6bc07934a90a18a70116ea3b620228950a)
+---
+ src/plugins/preauth/pkinit/pkinit_srv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/plugins/preauth/pkinit/pkinit_srv.c b/src/plugins/preauth/pkinit/pkinit_srv.c
+index 32ca122f2..d7a604c80 100644
+--- a/src/plugins/preauth/pkinit/pkinit_srv.c
++++ b/src/plugins/preauth/pkinit/pkinit_srv.c
+@@ -1495,7 +1495,7 @@ pkinit_eku_authorize(krb5_context context, krb5_certauth_moddata moddata,
+         return KRB5KDC_ERR_INCONSISTENT_KEY_PURPOSE;
+     }
+ 
+-    return 0;
++    return KRB5_PLUGIN_NO_HANDLE;
+ }
+ 
+ static krb5_error_code
