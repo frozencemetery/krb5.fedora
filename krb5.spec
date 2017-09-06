@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15.1
 # for prerelease, should be e.g., 0.3.beta2%{?dist}
-Release: 27%{?dist}
+Release: 28%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -96,6 +96,7 @@ Patch67: Fix-certauth-built-in-module-returns.patch
 Patch68: Add-test-cert-with-no-extensions.patch
 Patch69: Add-PKINIT-test-case-for-generic-client-cert.patch
 Patch70: Add-hostname-based-ccselect-module.patch
+Patch71: Preserve-GSS-context-on-init-accept-failure.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -747,6 +748,11 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Sep 06 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-28
+- Save other programs from worrying about CVE-2017-11462
+- Resolves: #1488873
+- Resolves: #1488874
+
 * Tue Sep 05 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-27
 - Add hostname-based ccselect module
 - Resolves: #1463665
