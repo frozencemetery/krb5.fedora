@@ -13,7 +13,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.14.4
-Release: 8%{?dist}
+Release: 9%{?dist}
 # - Maybe we should explode from the now-available-to-everybody tarball instead?
 # http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
 # - The sources below are stored in a lookaside cache. Upload with
@@ -71,6 +71,7 @@ Patch23: Add-OS-prng-intended-for-use-with-getrandom.patch
 Patch24: Use-fallback-realm-for-GSSAPI-ccache-selection.patch
 Patch25: Use-GSSAPI-fallback-skiptest.patch
 Patch26: Prevent-KDC-unset-status-assertion-failures.patch
+Patch71: Preserve-GSS-context-on-init-accept-failure.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -725,6 +726,11 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Sep 06 2017 Robbie Harwood <rharwood@redhat.com> - 1.14.4-9
+- Save other programs from worrying about CVE-2017-11462
+- Resolves: #1488873
+- Resolves: #1488874
+
 * Thu Jul 20 2017 Robbie Harwood <rharwood@redhat.com> - 1.14.4-8
 - Fix CVE-2017-11368 (remote triggerable assertion failure)
 
