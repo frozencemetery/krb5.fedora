@@ -1,4 +1,4 @@
-From a3280e7ec607b9eb7b79cf75cd323fbbdd125b02 Mon Sep 17 00:00:00 2001
+From aaf74b66a51cbda90ba40f73eb8def9b192ab262 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:30:53 -0400
 Subject: [PATCH] krb5-1.15.1-selinux-label.patch

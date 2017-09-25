@@ -1,4 +1,4 @@
-From 14455b071bab5ed93e42df84dc0b0e5f889cb98b Mon Sep 17 00:00:00 2001
+From 43418f21de72060932661242126fe611b6b17d84 Mon Sep 17 00:00:00 2001
 From: Matt Rogers <mrogers@redhat.com>
 Date: Tue, 28 Feb 2017 15:55:24 -0500
 Subject: [PATCH] Add certauth pluggable interface
@@ -52,10 +52,10 @@ ticket: 8561 (new)
  create mode 100644 src/tests/t_certauth.py
 
 diff --git a/doc/admin/conf_files/krb5_conf.rst b/doc/admin/conf_files/krb5_conf.rst
-index 653aad613..c0e4349c0 100644
+index 02a935961..1d9bc9e34 100644
 --- a/doc/admin/conf_files/krb5_conf.rst
 +++ b/doc/admin/conf_files/krb5_conf.rst
-@@ -858,6 +858,27 @@ built-in modules exist for this interface:
+@@ -859,6 +859,27 @@ built-in modules exist for this interface:
      This module authorizes a principal to a local account if the
      principal name maps to the local account name.
  

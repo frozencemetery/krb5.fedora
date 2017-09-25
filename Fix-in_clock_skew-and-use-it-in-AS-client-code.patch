@@ -1,4 +1,4 @@
-From b0351efa57654f06477ab7540e6c0624e3a64f4e Mon Sep 17 00:00:00 2001
+From e2d34698687c00504b83e1c0deb56dc6232bef42 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Mon, 24 Apr 2017 02:02:36 -0400
 Subject: [PATCH] Fix in_clock_skew() and use it in AS client code

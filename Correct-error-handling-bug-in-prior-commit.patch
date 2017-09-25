@@ -1,4 +1,4 @@
-From 7fa2848a550bda947a6e425babb3f529b7e28ab6 Mon Sep 17 00:00:00 2001
+From 08d995aaf48e75c174525ae0b47e12c3170b3f5f Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Thu, 23 Mar 2017 13:42:55 -0400
 Subject: [PATCH] Correct error handling bug in prior commit

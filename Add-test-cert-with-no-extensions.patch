@@ -1,4 +1,4 @@
-From 03402d8462c44c16f85368c803c1a3823507e0f9 Mon Sep 17 00:00:00 2001
+From 565311d74c7532f9948b7b0b803f093aaa40afed Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Fri, 25 Aug 2017 12:33:33 -0400
 Subject: [PATCH] Add test cert with no extensions

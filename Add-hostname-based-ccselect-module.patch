@@ -1,4 +1,4 @@
-From 624060dabcc06ea40847ffd98c9b05c66e65d6ba Mon Sep 17 00:00:00 2001
+From 632575ab12fc5d6c9bdc83cb8200fb8f4f422b83 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Wed, 23 Aug 2017 17:25:17 -0400
 Subject: [PATCH] Add hostname-based ccselect module
@@ -21,10 +21,10 @@ ticket: 8613 (new)
  create mode 100644 src/lib/krb5/ccache/ccselect_hostname.c
 
 diff --git a/doc/admin/conf_files/krb5_conf.rst b/doc/admin/conf_files/krb5_conf.rst
-index c0e4349c0..5f1de2e50 100644
+index 1d9bc9e34..9c1ee94a4 100644
 --- a/doc/admin/conf_files/krb5_conf.rst
 +++ b/doc/admin/conf_files/krb5_conf.rst
-@@ -744,6 +744,10 @@ disabled with the disable tag):
+@@ -745,6 +745,10 @@ disabled with the disable tag):
      Uses the service realm to guess an appropriate cache from the
      collection
  

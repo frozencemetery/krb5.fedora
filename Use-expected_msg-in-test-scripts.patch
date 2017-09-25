@@ -1,4 +1,4 @@
-From 9b2d26cf4cfebdce46430a7ab891e3a7faad5f47 Mon Sep 17 00:00:00 2001
+From 24ac588502b1731a7fd2629804f8d9ed1668297e Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Wed, 18 Jan 2017 11:22:58 -0500
 Subject: [PATCH] Use expected_msg in test scripts

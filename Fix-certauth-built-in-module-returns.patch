@@ -1,4 +1,4 @@
-From d507d9a78e12418f83c6db6e22052543f3e5db37 Mon Sep 17 00:00:00 2001
+From 0d93e336e2cb8319bfd3e0fa096e5ee8ea3bbbbf Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Thu, 24 Aug 2017 11:11:46 -0400
 Subject: [PATCH] Fix certauth built-in module returns

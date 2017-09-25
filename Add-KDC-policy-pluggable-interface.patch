@@ -1,4 +1,4 @@
-From 648fa08747a5f2025f47e5b0bc2589f55a65218a Mon Sep 17 00:00:00 2001
+From 78a1f155701f94a228c4f58f98846195a39991c4 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 27 Jun 2017 17:15:39 -0400
 Subject: [PATCH] Add KDC policy pluggable interface

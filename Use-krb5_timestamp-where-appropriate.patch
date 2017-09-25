@@ -1,4 +1,4 @@
-From f0f0a503f58ed4f6ccf924751b356a70f515dd4b Mon Sep 17 00:00:00 2001
+From 0ae9141d53a8d9fe048542f89d17760990bd5bc4 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Wed, 17 May 2017 15:14:15 -0400
 Subject: [PATCH] Use krb5_timestamp where appropriate
@@ -81,7 +81,7 @@ index 16a35d2be..4ecc23481 100644
  
      retval = krb5_crypto_us_timeofday(&now, &now_usec);
 diff --git a/src/lib/kadm5/srv/server_acl.c b/src/lib/kadm5/srv/server_acl.c
-index 656dddff5..c2cf69169 100644
+index c4bb16dc7..679fc7c41 100644
 --- a/src/lib/kadm5/srv/server_acl.c
 +++ b/src/lib/kadm5/srv/server_acl.c
 @@ -375,7 +375,7 @@ kadm5int_acl_impose_restrictions(kcontext, recp, maskp, rp)
@@ -107,7 +107,7 @@ index 612553ba3..f4b8aef2b 100644
      krb5_tl_data tl_data;
  
 diff --git a/src/lib/kadm5/srv/svr_principal.c b/src/lib/kadm5/srv/svr_principal.c
-index f4a9a2ad2..0d4f0a632 100644
+index 137e1fb64..89f34482b 100644
 --- a/src/lib/kadm5/srv/svr_principal.c
 +++ b/src/lib/kadm5/srv/svr_principal.c
 @@ -296,7 +296,7 @@ kadm5_create_principal_3(void *server_handle,
@@ -146,7 +146,7 @@ index f4a9a2ad2..0d4f0a632 100644
      kadm5_policy_ent_rec        pol;
      krb5_keysalt                keysalt;
      int                         i, kvno, ret;
-@@ -1888,7 +1888,7 @@ kadm5_setkey_principal_4(void *server_handle, krb5_principal principal,
+@@ -1891,7 +1891,7 @@ kadm5_setkey_principal_4(void *server_handle, krb5_principal principal,
  {
      krb5_db_entry *kdb;
      osa_princ_ent_rec adb;

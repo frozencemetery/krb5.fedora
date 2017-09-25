@@ -14,38 +14,38 @@
 # Should be in form 5.0, 6.1, etc.
 %global kdbversion 6.1
 
+%global majmin 1.15
+
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.15.1
-# for prerelease, should be e.g., 0.3.beta2%{?dist}
-Release: 28%{?dist}
-# - Maybe we should explode from the now-available-to-everybody tarball instead?
-# http://web.mit.edu/kerberos/dist/krb5/1.13/krb5-1.13.2-signed.tar
-# - The sources below are stored in a lookaside cache. Upload with
-# $ fedpkg upload krb5-1.13.2.tar.gz krb5-1.13.2.tar.gz.asc # (and don't
-# remove, otherwise you can't go back or branch from a previous point)
-Source0: krb5-%{version}%{prerelease}.tar.gz
-Source1: krb5-%{version}%{prerelease}.tar.gz.asc
+Version: %{majmin}.2
+# for prerelease, should be e.g., 0.3.beta2% { ?dist } (without spaces)
+Release: 1%{?dist}
+
+# lookaside-cached sources; two downloads and a build artifact
+Source0: https://web.mit.edu/kerberos/dist/krb5/%{majmin}/krb5-%{version}%{prerelease}.tar.gz
+# rharwood has trust path to signing key and verifies on check-in
+Source1: https://web.mit.edu/kerberos/dist/krb5/%{majmin}/krb5-%{version}%{prerelease}.tar.gz.asc
+# This source is generated during the build because it is documentation.
+# To override this behavior (e.g., new upstream version), do:
+#     tar cfT krb5-1.15.2-pdfs.tar /dev/null
+# or the like.  This logic persists due to how slow the stranger Fedora
+# architecture builders are.  5 minutes on my laptop, 45 on koji easy.
 Source3: krb5-%{version}%{prerelease}-pdfs.tar
+
+# Numbering is a relic of old init systems etc.  It's easiest to just leave.
 Source2: kprop.service
 Source4: kadmin.service
 Source5: krb5kdc.service
 Source6: krb5.conf
-#Source7: _kpropd
-#Source8: _kadmind
 Source10: kdc.conf
 Source11: kadm5.acl
 Source19: krb5kdc.sysconfig
 Source20: kadmin.sysconfig
 Source21: kprop.sysconfig
 Source29: ksu.pamd
-Source31: kerberos-adm.portreserve
-Source32: krb5_prop.portreserve
 Source33: krb5kdc.logrotate
 Source34: kadmind.logrotate
-#Source36: kpropd.init
-#Source37: kadmind.init
-#Source38: krb5kdc.init
 Source39: krb5-krb5kdc.conf
 
 # Carry this locally until it's available in a packaged form.
@@ -77,11 +77,8 @@ Patch48: Use-the-canonical-client-principal-name-for-OTP.patch
 Patch49: Add-certauth-pluggable-interface.patch
 Patch50: Correct-error-handling-bug-in-prior-commit.patch
 Patch51: Add-k5test-expected_msg-expected_trace.patch
-Patch52: Fix-leaks-in-gss_inquire_cred_by_oid.patch
 Patch53: Add-support-to-query-the-SSF-of-a-GSS-context.patch
-Patch54: Prevent-KDC-unset-status-assertion-failures.patch
 Patch55: Remove-incomplete-PKINIT-OCSP-support.patch
-Patch56: Allow-clock-skew-in-krb5-gss_context_time.patch
 Patch57: Fix-in_clock_skew-and-use-it-in-AS-client-code.patch
 Patch58: Add-timestamp-helper-functions.patch
 Patch59: Make-timestamp-manipulations-y2038-safe.patch
@@ -96,7 +93,6 @@ Patch67: Fix-certauth-built-in-module-returns.patch
 Patch68: Add-test-cert-with-no-extensions.patch
 Patch69: Add-PKINIT-test-case-for-generic-client-cert.patch
 Patch70: Add-hostname-based-ccselect-module.patch
-Patch71: Preserve-GSS-context-on-init-accept-failure.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -105,7 +101,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, bison, cmake, flex, gawk, gettext, pkgconfig, sed
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
 BuildRequires: gzip, ncurses-devel
-BuildRequires: python2-sphinx, texlive-pdftex
+BuildRequires: python2-sphinx, texlive-pdftex, latexmk
 
 # For autosetup
 BuildRequires: git
@@ -124,7 +120,9 @@ BuildRequires: tex(ifthen.sty)
 BuildRequires: tex(inputenc.sty)
 BuildRequires: tex(longtable.sty)
 BuildRequires: tex(multirow.sty)
+BuildRequires: tex(needspace.sty)
 BuildRequires: tex(report.cls)
+BuildRequires: tex(tabulary.sty)
 BuildRequires: tex(threeparttable.sty)
 BuildRequires: tex(times.sty)
 BuildRequires: tex(titlesec.sty)
@@ -748,6 +746,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Sep 25 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.2-1
+- New upstream release - krb5-1.15.2
+- Adjust patches as appropriate
+
 * Wed Sep 06 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.1-28
 - Save other programs from worrying about CVE-2017-11462
 - Resolves: #1488873

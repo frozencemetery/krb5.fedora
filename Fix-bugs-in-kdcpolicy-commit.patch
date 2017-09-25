@@ -1,4 +1,4 @@
-From 7ab7253c617364ffe8facd870e286c5876e6c30f Mon Sep 17 00:00:00 2001
+From c8c704cdaaa15a0908024f0917344048c0df5940 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Sat, 19 Aug 2017 19:09:24 -0400
 Subject: [PATCH] Fix bugs in kdcpolicy commit

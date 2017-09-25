@@ -1,4 +1,4 @@
-From 3a9d6156a57fb17285e238ec0633ea2b24db91d6 Mon Sep 17 00:00:00 2001
+From 466d09c9b2c456d663672cb6d5f661ef86e8536e Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Mon, 31 Jul 2017 16:03:41 -0400
 Subject: [PATCH] Remove incomplete PKINIT OCSP support
@@ -19,7 +19,7 @@ ticket: 8603 (new)
  5 files changed, 11 insertions(+), 20 deletions(-)
 
 diff --git a/doc/admin/conf_files/kdc_conf.rst b/doc/admin/conf_files/kdc_conf.rst
-index 13077ecf4..a4b2a5432 100644
+index 4e54f7e1d..d00e7926c 100644
 --- a/doc/admin/conf_files/kdc_conf.rst
 +++ b/doc/admin/conf_files/kdc_conf.rst
 @@ -765,9 +765,6 @@ For information about the syntax of some of these options, see
@@ -33,7 +33,7 @@ index 13077ecf4..a4b2a5432 100644
      Specifies the location of intermediate certificates which may be
      used by the KDC to complete the trust chain between a client's
 diff --git a/src/man/kdc.conf.man b/src/man/kdc.conf.man
-index 10b333c38..166e68f9a 100644
+index d207ebd7f..c47da0117 100644
 --- a/src/man/kdc.conf.man
 +++ b/src/man/kdc.conf.man
 @@ -886,9 +886,6 @@ Specifies an authentication indicator to include in the ticket if

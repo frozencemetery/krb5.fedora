@@ -1,4 +1,4 @@
-From 9cd133e626f114c9a11d6d731f7f97072d59e20f Mon Sep 17 00:00:00 2001
+From 5faadd66bb278bcc1c618e199444e3012eeec215 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Wed, 11 Jan 2017 10:49:30 -0500
 Subject: [PATCH] Add test case for PKINIT DH renegotiation

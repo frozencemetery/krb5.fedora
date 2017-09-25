@@ -1,4 +1,4 @@
-From 2a7ea306e35a35296314484eec9eff5d8e38f02a Mon Sep 17 00:00:00 2001
+From a3408731e3d73f99028f20c3f33caa5a411b430c Mon Sep 17 00:00:00 2001
 From: Simo Sorce <simo@redhat.com>
 Date: Thu, 30 Mar 2017 11:27:09 -0400
 Subject: [PATCH] Add support to query the SSF of a GSS context

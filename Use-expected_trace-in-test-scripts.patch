@@ -1,4 +1,4 @@
-From 52eeabfdeb9a91c6e4c7124b38fa6915df37f8bf Mon Sep 17 00:00:00 2001
+From 35a00879008457d21ccc6e623835976a21f5000b Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Tue, 17 Jan 2017 11:25:22 -0500
 Subject: [PATCH] Use expected_trace in test scripts

@@ -1,4 +1,4 @@
-From ca1ab893b3590ab887f7c0f4a41ad6b2fddf3421 Mon Sep 17 00:00:00 2001
+From d5462c96c9918ffa7d3f05de310c5aed34181941 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Wed, 4 Jan 2017 11:33:57 -0500
 Subject: [PATCH] Deindent crypto_retrieve_X509_sans()

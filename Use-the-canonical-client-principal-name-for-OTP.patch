@@ -1,4 +1,4 @@
-From 1d729e7bd01cd0a5e4db0ba16fc5058b21b4abb2 Mon Sep 17 00:00:00 2001
+From 7998de0b9ccd0c8813159cc3f1d49fe107e3e0ba Mon Sep 17 00:00:00 2001
 From: Matt Rogers <mrogers@redhat.com>
 Date: Wed, 5 Apr 2017 16:48:55 -0400
 Subject: [PATCH] Use the canonical client principal name for OTP

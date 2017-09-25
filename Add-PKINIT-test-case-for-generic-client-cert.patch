@@ -1,4 +1,4 @@
-From 22e89e4e2d2819b7371efb848be525914b2750e8 Mon Sep 17 00:00:00 2001
+From e267849bcc3813989470c03565b22d25c71af91e Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Fri, 25 Aug 2017 12:39:14 -0400
 Subject: [PATCH] Add PKINIT test case for generic client cert

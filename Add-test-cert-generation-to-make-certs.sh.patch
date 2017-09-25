@@ -1,4 +1,4 @@
-From d81c0069df0f18574bc0beb7e45139f6d2bc3849 Mon Sep 17 00:00:00 2001
+From 5e3885e9d7c7cd2a19a291cdb1e54312ca7f7e1f Mon Sep 17 00:00:00 2001
 From: Matt Rogers <mrogers@redhat.com>
 Date: Mon, 5 Dec 2016 12:22:45 -0500
 Subject: [PATCH] Add test cert generation to make-certs.sh

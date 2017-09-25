@@ -1,4 +1,4 @@
-From 4963152dc973e8ff74f257f64b0960a7716b480c Mon Sep 17 00:00:00 2001
+From feee4c633a7db348ef99f1f0c99a5c2e6cb70f92 Mon Sep 17 00:00:00 2001
 From: Matt Rogers <mrogers@redhat.com>
 Date: Fri, 10 Feb 2017 12:53:42 -0500
 Subject: [PATCH] Use fallback realm for GSSAPI ccache selection

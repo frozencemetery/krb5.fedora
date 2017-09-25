@@ -1,4 +1,4 @@
-From 84e4545db26e31ae69da8559128513157f533858 Mon Sep 17 00:00:00 2001
+From 03265620488b84238c31170356b5f41c80f0e9d9 Mon Sep 17 00:00:00 2001
 From: Matt Rogers <mrogers@redhat.com>
 Date: Mon, 5 Dec 2016 12:17:59 -0500
 Subject: [PATCH] Improve PKINIT UPN SAN matching
