@@ -14,18 +14,16 @@
 # Should be in form 5.0, 6.1, etc.
 %global kdbversion 6.1
 
-%global majmin 1.15
-
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: %{majmin}.2
+Version: 1.15.2
 # for prerelease, should be e.g., 0.3.beta2% { ?dist } (without spaces)
-Release: 1%{?dist}
+Release: 2%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
-Source0: https://web.mit.edu/kerberos/dist/krb5/%{majmin}/krb5-%{version}%{prerelease}.tar.gz
+Source0: https://web.mit.edu/kerberos/dist/krb5/1.15/krb5-%{version}%{prerelease}.tar.gz
 # rharwood has trust path to signing key and verifies on check-in
-Source1: https://web.mit.edu/kerberos/dist/krb5/%{majmin}/krb5-%{version}%{prerelease}.tar.gz.asc
+Source1: https://web.mit.edu/kerberos/dist/krb5/1.15/krb5-%{version}%{prerelease}.tar.gz.asc
 # This source is generated during the build because it is documentation.
 # To override this behavior (e.g., new upstream version), do:
 #     tar cfT krb5-1.15.2-pdfs.tar /dev/null
@@ -93,6 +91,7 @@ Patch67: Fix-certauth-built-in-module-returns.patch
 Patch68: Add-test-cert-with-no-extensions.patch
 Patch69: Add-PKINIT-test-case-for-generic-client-cert.patch
 Patch70: Add-hostname-based-ccselect-module.patch
+Patch71: Add-German-translation.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -746,6 +745,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Sep 28 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.2-2
+- Add German translation
+
 * Mon Sep 25 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.2-1
 - New upstream release - krb5-1.15.2
 - Adjust patches as appropriate
