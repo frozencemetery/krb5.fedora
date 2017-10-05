@@ -9,21 +9,21 @@
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 
 # leave empty or set to e.g., -beta2
-%global prerelease %{nil}
+%global prerelease -beta1
 
 # Should be in form 5.0, 6.1, etc.
 %global kdbversion 6.1
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.15.2
-# for prerelease, should be e.g., 0.3.beta2% { ?dist } (without spaces)
-Release: 2%{?dist}
+Version: 1.16
+# for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
+Release: 0.beta1.1%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
-Source0: https://web.mit.edu/kerberos/dist/krb5/1.15/krb5-%{version}%{prerelease}.tar.gz
+Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
 # rharwood has trust path to signing key and verifies on check-in
-Source1: https://web.mit.edu/kerberos/dist/krb5/1.15/krb5-%{version}%{prerelease}.tar.gz.asc
+Source1: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz.asc
 # This source is generated during the build because it is documentation.
 # To override this behavior (e.g., new upstream version), do:
 #     tar cfT krb5-1.15.2-pdfs.tar /dev/null
@@ -60,38 +60,7 @@ Patch33: krb5-1.13-dirsrv-accountlock.patch
 Patch34: krb5-1.9-debuginfo.patch
 Patch35: krb5-1.11-run_user_0.patch
 Patch36: krb5-1.11-kpasswdtest.patch
-Patch37: Build-with-Werror-implicit-int-where-supported.patch
-Patch38: Add-PKINIT-UPN-tests-to-t_pkinit.py.patch
-Patch39: Add-test-case-for-PKINIT-DH-renegotiation.patch
-Patch40: Use-expected_trace-in-test-scripts.patch
-Patch41: Use-expected_msg-in-test-scripts.patch
-Patch42: Use-fallback-realm-for-GSSAPI-ccache-selection.patch
 Patch43: Use-GSSAPI-fallback-skiptest.patch
-Patch44: Improve-PKINIT-UPN-SAN-matching.patch
-Patch45: Add-test-cert-generation-to-make-certs.sh.patch
-Patch46: Deindent-crypto_retrieve_X509_sans.patch
-Patch47: Add-the-client_name-kdcpreauth-callback.patch
-Patch48: Use-the-canonical-client-principal-name-for-OTP.patch
-Patch49: Add-certauth-pluggable-interface.patch
-Patch50: Correct-error-handling-bug-in-prior-commit.patch
-Patch51: Add-k5test-expected_msg-expected_trace.patch
-Patch53: Add-support-to-query-the-SSF-of-a-GSS-context.patch
-Patch55: Remove-incomplete-PKINIT-OCSP-support.patch
-Patch57: Fix-in_clock_skew-and-use-it-in-AS-client-code.patch
-Patch58: Add-timestamp-helper-functions.patch
-Patch59: Make-timestamp-manipulations-y2038-safe.patch
-Patch60: Add-timestamp-tests.patch
-Patch61: Add-y2038-documentation.patch
-Patch62: Fix-more-time-manipulations-for-y2038.patch
-Patch63: Use-krb5_timestamp-where-appropriate.patch
-Patch64: Add-KDC-policy-pluggable-interface.patch
-Patch65: Fix-bugs-in-kdcpolicy-commit.patch
-Patch66: Convert-some-pkiDebug-messages-to-TRACE-macros.patch
-Patch67: Fix-certauth-built-in-module-returns.patch
-Patch68: Add-test-cert-with-no-extensions.patch
-Patch69: Add-PKINIT-test-case-for-generic-client-cert.patch
-Patch70: Add-hostname-based-ccselect-module.patch
-Patch71: Add-German-translation.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -381,7 +350,7 @@ for pdf in admin appdev basic build plugindev user ; do
 	test -s build-pdf/$pdf.pdf || make -C build-pdf
 done
 # new krb5-%{version}-pdf
-tar -cf "krb5-%{version}-pdfs.tar.new" build-pdf/*.pdf
+tar -cf "krb5-%{version}%{prerelease}-pdfs.tar.new" build-pdf/*.pdf
 
 # We need to cut off any access to locally-running nameservers, too.
 %{__cc} -fPIC -shared -o noport.so -Wall -Wextra $RPM_SOURCE_DIR/noport.c
@@ -745,6 +714,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Oct 05 2017 Robbie Harwood <rharwood@redhat.com> - 1.16-0.beta1.1
+- New upstream prerelease (1.16-beta1)
+
 * Thu Sep 28 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.2-2
 - Add German translation
 

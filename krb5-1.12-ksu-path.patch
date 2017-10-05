@@ -1,4 +1,4 @@
-From 93b86d94b871aed49b14d7fc1a2a9f23c16cbe0f Mon Sep 17 00:00:00 2001
+From 7b3bdbc0ca882325291caad391c4d328f174a614 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:32:09 -0400
 Subject: [PATCH] krb5-1.12-ksu-path.patch

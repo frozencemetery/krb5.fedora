@@ -1,4 +1,4 @@
-From e0924e10dd431a898c9c95faa04b51edbe59c5ef Mon Sep 17 00:00:00 2001
+From 385194db1a08c1b923f9eb75e9602b56720fd50e Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:29:58 -0400
 Subject: [PATCH] krb5-1.12.1-pam.patch
@@ -28,10 +28,10 @@ changes we're proposing for how it handles cache collections.
  create mode 100644 src/clients/ksu/pam.h
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
-index 9c46da4b5..508e5fe90 100644
+index d6d1279c3..5c9c13e5f 100644
 --- a/src/aclocal.m4
 +++ b/src/aclocal.m4
-@@ -1675,3 +1675,70 @@ AC_DEFUN(KRB5_AC_PERSISTENT_KEYRING,[
+@@ -1696,3 +1696,70 @@ AC_DEFUN(KRB5_AC_PERSISTENT_KEYRING,[
        ]))
  ])dnl
  dnl
@@ -141,7 +141,7 @@ index b2fcbf240..5755bb58a 100644
  clean:
  	$(RM) ksu
 diff --git a/src/clients/ksu/main.c b/src/clients/ksu/main.c
-index 28342c2d7..cab0c1806 100644
+index 7ff676ca7..c6321c01b 100644
 --- a/src/clients/ksu/main.c
 +++ b/src/clients/ksu/main.c
 @@ -26,6 +26,7 @@
@@ -756,10 +756,10 @@ index 000000000..0ab76569c
 +void appl_pam_cleanup(void);
 +#endif
 diff --git a/src/configure.in b/src/configure.in
-index 037c9f316..daabd12c8 100644
+index 10f45eb12..7288a71ec 100644
 --- a/src/configure.in
 +++ b/src/configure.in
-@@ -1336,6 +1336,8 @@ AC_SUBST([VERTO_VERSION])
+@@ -1306,6 +1306,8 @@ AC_SUBST([VERTO_VERSION])
  
  AC_PATH_PROG(GROFF, groff)
  
