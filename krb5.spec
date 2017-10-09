@@ -12,13 +12,13 @@
 %global prerelease -beta1
 
 # Should be in form 5.0, 6.1, etc.
-%global kdbversion 6.1
+%global kdbversion 7.0
 
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 0.beta1.1%{?dist}
+Release: 0.beta1.2%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -714,6 +714,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Oct 09 2017 Robbie Harwood <rharwood@redhat.com> - 1.16-0.beta1.2
+- Actually bump kdbversion like I was supposed to
+
 * Thu Oct 05 2017 Robbie Harwood <rharwood@redhat.com> - 1.16-0.beta1.1
 - New upstream prerelease (1.16-beta1)
 
