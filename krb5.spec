@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 0.beta1.2%{?dist}
+Release: 0.beta1.3%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -110,7 +110,6 @@ BuildRequires: perl-interpreter, dejagnu, tcl-devel
 BuildRequires: net-tools, rpcbind
 BuildRequires: hostname
 BuildRequires: iproute
-BuildRequires: python2-pyrad
 BuildRequires: libverto-devel
 BuildRequires: openldap-devel
 BuildRequires: openssl-devel >= 0.9.8
@@ -714,6 +713,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Oct 23 2017 Robbie Harwood <rharwood@redhat.com> - 1.16-0.beta1.3
+- Drop dependency on python2-pyrad (dead upstream, broken with new python)
+
 * Mon Oct 09 2017 Robbie Harwood <rharwood@redhat.com> - 1.16-0.beta1.2
 - Actually bump kdbversion like I was supposed to
 
