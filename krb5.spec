@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15.2
 # for prerelease, should be e.g., 0.3.beta2% { ?dist } (without spaces)
-Release: 3%{?dist}
+Release: 4%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.15/krb5-%{version}%{prerelease}.tar.gz
@@ -92,6 +92,7 @@ Patch68: Add-test-cert-with-no-extensions.patch
 Patch69: Add-PKINIT-test-case-for-generic-client-cert.patch
 Patch70: Add-hostname-based-ccselect-module.patch
 Patch71: Add-German-translation.patch
+Patch72: Fix-PKINIT-cert-matching-data-construction.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -744,6 +745,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Oct 24 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.2-4
+- Fix CVE-2017-15088 (Buffer overflow in get_matching_data())
+
 * Mon Oct 23 2017 Robbie Harwood <rharwood@redhat.com> - 1.15.2-3
 - Drop dependency on python2-pyrad (dead upstream, broken with new python)
 
