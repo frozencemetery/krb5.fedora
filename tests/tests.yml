@@ -1,0 +1,16 @@
+---
+# This first play always runs on the local staging system
+- hosts: localhost
+  roles:
+  - role: standard-test-beakerlib
+    tags:
+    - classic
+    tests:
+    - inplace-upgrade-sanity-test
+    required_packages:
+    - expect            # Required for inplace-upgrade-sanity-test
+    - krb5-server       # Required for inplace-upgrade-sanity-test
+    - krb5-workstation  # Required for inplace-upgrade-sanity-test
+    - openssh-clients   # Required for inplace-upgrade-sanity-test
+    - openssh-server    # Required for inplace-upgrade-sanity-test
+    - rng-tools         # Required for inplace-upgrade-sanity-test
