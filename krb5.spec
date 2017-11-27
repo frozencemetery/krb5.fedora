@@ -9,7 +9,7 @@
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 
 # leave empty or set to e.g., -beta2
-%global prerelease -beta1
+%global prerelease -beta2
 
 # Should be in form 5.0, 6.1, etc.
 %global kdbversion 7.0
@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 0.beta1.4%{?dist}
+Release: 0.beta2.1%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -60,8 +60,6 @@ Patch33: krb5-1.13-dirsrv-accountlock.patch
 Patch34: krb5-1.9-debuginfo.patch
 Patch35: krb5-1.11-run_user_0.patch
 Patch36: krb5-1.11-kpasswdtest.patch
-Patch43: Use-GSSAPI-fallback-skiptest.patch
-Patch44: Fix-PKINIT-cert-matching-data-construction.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -714,6 +712,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Nov 27 2017 Robbie Harwood <rharwood@redhat.com> - 1.16-0.beta2.1
+- New upstream prerelease (1.16-beta2)
+
 * Tue Oct 24 2017 Robbie Harwood <rharwood@redhat.com> - 1.16-0.beta1.4
 - Fix CVE-2017-15088 (Buffer overflow in get_matching_data())
 

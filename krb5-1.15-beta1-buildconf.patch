@@ -1,4 +1,4 @@
-From 285eaffa69e9c2ff7f0adf017d192b5e7afb7002 Mon Sep 17 00:00:00 2001
+From e4103ccd0ad37297c64440ce9153e3dd355e1d5a Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:45:26 -0400
 Subject: [PATCH] krb5-1.15-beta1-buildconf.patch
@@ -8,6 +8,8 @@ and install shared libraries with the execute bit set on them.  Prune out
 the -L/usr/lib* and PIE flags where they might leak out and affect
 apps which just want to link with the libraries. FIXME: needs to check and
 not just assume that the compiler supports using these flags.
+
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/build-tools/krb5-config.in | 7 +++++++
  src/config/pre.in              | 2 +-

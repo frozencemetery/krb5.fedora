@@ -1,4 +1,4 @@
-From 385194db1a08c1b923f9eb75e9602b56720fd50e Mon Sep 17 00:00:00 2001
+From 42f20ac00a2f71dcef166b0cbf2db58d02f117c8 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:29:58 -0400
 Subject: [PATCH] krb5-1.12.1-pam.patch
@@ -16,6 +16,8 @@ When enabled, ksu gains a dependency on libpam.
 Originally RT#5939, though it's changed since then to perform the account
 and session management before dropping privileges, and to apply on top of
 changes we're proposing for how it handles cache collections.
+
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/aclocal.m4              |  67 ++++++++
  src/clients/ksu/Makefile.in |   8 +-

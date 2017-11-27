@@ -1,4 +1,4 @@
-From 9e7e92ae1dcd242044f2dfe3b89926ddddb6a221 Mon Sep 17 00:00:00 2001
+From 1940160be747f4c62ff00b95bc7d34301cf313d2 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:49:57 -0400
 Subject: [PATCH] krb5-1.11-run_user_0.patch
@@ -6,6 +6,8 @@ Subject: [PATCH] krb5-1.11-run_user_0.patch
 A hack: if we're looking at creating a ccache directory directly below
 the /run/user/0 directory, and /run/user/0 doesn't exist, try to create
 it, too.
+
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/lib/krb5/ccache/cc_dir.c | 14 ++++++++++++++
  1 file changed, 14 insertions(+)

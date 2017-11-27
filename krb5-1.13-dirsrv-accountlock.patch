@@ -1,10 +1,12 @@
-From 850689009f9aeddc0b63051a3e2883d02b05387e Mon Sep 17 00:00:00 2001
+From fd3013f4dec1dfdfa40a8161cfdfea87aaac8e35 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:47:44 -0400
 Subject: [PATCH] krb5-1.13-dirsrv-accountlock.patch
 
 Treat 'nsAccountLock: true' the same as 'loginDisabled: true'.  Updated from
 original version filed as RT#5891.
+
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/aclocal.m4                                    |  9 +++++++++
  src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c      | 17 +++++++++++++++++
