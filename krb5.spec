@@ -365,7 +365,7 @@ export SOCKET_WRAPPER_DIR="$PWD/sockets" ; mkdir -p $SOCKET_WRAPPER_DIR
 export LD_PRELOAD="$PWD/noport.so:libnss_wrapper.so:libsocket_wrapper.so"
 
 # ugh.  COPR doesn't expose the keyring, so try to cope.
-%if 0%{copr_username}%{copr_projectname}
+%if 0%{?copr_username:1}
 %global keyctl :
 %else
 %global keyctl keyctl
