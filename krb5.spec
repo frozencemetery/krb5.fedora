@@ -9,7 +9,7 @@
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 
 # leave empty or set to e.g., -beta2
-%global prerelease -beta2
+%global prerelease %{nil}
 
 # Should be in form 5.0, 6.1, etc.
 %global kdbversion 7.0
@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 0.beta2.1%{?dist}
+Release: 1
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -364,16 +364,23 @@ export NOPORT='53,111'
 export SOCKET_WRAPPER_DIR="$PWD/sockets" ; mkdir -p $SOCKET_WRAPPER_DIR
 export LD_PRELOAD="$PWD/noport.so:libnss_wrapper.so:libsocket_wrapper.so"
 
+# ugh.  COPR doesn't expose the keyring, so try to cope.
+%if 0%{copr_username}%{copr_projectname}
+%global keyctl :
+%else
+%global keyctl keyctl
+%endif
+
 # Run the test suite. We can't actually run the whole thing in the build
 # system, but we can at least run more than we used to.  The build system may
 # give us a revoked session keyring, so run affected tests with a new one.
 make -C src runenv.py
 : make -C src check TMPDIR=%{_tmppath}
-keyctl session - make -C src/lib check TMPDIR=%{_tmppath} OFFLINE=yes
+%{keyctl} session - make -C src/lib check TMPDIR=%{_tmppath} OFFLINE=yes
 make -C src/kdc check TMPDIR=%{_tmppath}
-keyctl session - make -C src/appl check TMPDIR=%{_tmppath}
+%{keyctl} session - make -C src/appl check TMPDIR=%{_tmppath}
 make -C src/clients check TMPDIR=%{_tmppath}
-keyctl session - make -C src/util check TMPDIR=%{_tmppath}
+%{keyctl} session - make -C src/util check TMPDIR=%{_tmppath}
 
 %install
 [ "$RPM_BUILD_ROOT" != '/' ] && rm -rf -- "$RPM_BUILD_ROOT"
@@ -712,6 +719,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Dec 06 2017 Robbie Harwood <rharwood@redhat.com> - 1.16-1
+- New upstream release (1.16)
+- No changes from beta2
+
 * Mon Nov 27 2017 Robbie Harwood <rharwood@redhat.com> - 1.16-0.beta2.1
 - New upstream prerelease (1.16-beta2)
 

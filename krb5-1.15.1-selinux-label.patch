@@ -1,4 +1,4 @@
-From 36874eb7b52ccc606f705029d6a5c83f77cea2c4 Mon Sep 17 00:00:00 2001
+From 2857105eb2e301164a1486d31907699d0073dc5f Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:30:53 -0400
 Subject: [PATCH] krb5-1.15.1-selinux-label.patch
@@ -35,8 +35,6 @@ stomp all over us.
 The selabel APIs for looking up the context should be thread-safe (per
 Red Hat #273081), so switching to using them instead of matchpathcon(),
 which we used earlier, is some improvement.
-
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/aclocal.m4                                     |  49 +++
  src/build-tools/krb5-config.in                     |   3 +-

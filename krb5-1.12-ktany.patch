@@ -1,4 +1,4 @@
-From 690b710e3cdf40cb9b9184ed6883f26c0d5d0d39 Mon Sep 17 00:00:00 2001
+From 812be10fc5f9f2d771fc38e6ba84f7d89a32f726 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:33:53 -0400
 Subject: [PATCH] krb5-1.12-ktany.patch
@@ -6,8 +6,6 @@ Subject: [PATCH] krb5-1.12-ktany.patch
 Adds an "ANY" keytab type which is a list of other keytab locations to search
 when searching for a specific entry.  When iterated through, it only presents
 the contents of the first keytab.
-
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/lib/krb5/keytab/Makefile.in |   3 +
  src/lib/krb5/keytab/kt_any.c    | 292 ++++++++++++++++++++++++++++++++++++++++
