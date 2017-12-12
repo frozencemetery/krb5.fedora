@@ -1,6 +1,7 @@
 [Unit]
 Description=Kerberos 5 KDC
-After=syslog.target network.target
+Wants=network-online.target
+After=syslog.target network.target network-online.target
 
 [Service]
 Type=forking

@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 1
+Release: 2
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -719,6 +719,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Dec 12 2017 Robbie Harwood <rharwood@redhat.com> - 1.16-2
+- Fix network service dependencies
+- Resolves: #1525230
+
 * Wed Dec 06 2017 Robbie Harwood <rharwood@redhat.com> - 1.16-1
 - New upstream release (1.16)
 - No changes from beta2
