@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 2
+Release: 3
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -60,6 +60,7 @@ Patch33: krb5-1.13-dirsrv-accountlock.patch
 Patch34: krb5-1.9-debuginfo.patch
 Patch35: krb5-1.11-run_user_0.patch
 Patch36: krb5-1.11-kpasswdtest.patch
+Patch37: Process-included-directories-in-alphabetical-order.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -719,6 +720,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Jan 29 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-3
+- Process included directories in alphabetical order
+
 * Tue Dec 12 2017 Robbie Harwood <rharwood@redhat.com> - 1.16-2
 - Fix network service dependencies
 - Resolves: #1525230
