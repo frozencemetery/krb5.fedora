@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 3
+Release: 4
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -507,7 +507,7 @@ rm -- "$RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/preauth/test.so"
 %clean
 [ "$RPM_BUILD_ROOT" != '/' ] && rm -rf -- "$RPM_BUILD_ROOT"
 
-%post libs -p /sbin/ldconfig
+%ldconfig_scriptlets libs
 
 %triggerun libs -- krb5-libs < 1.15.1-5
 if ! grep -q 'includedir /etc/krb5.conf.d' /etc/krb5.conf ; then
@@ -515,11 +515,7 @@ if ! grep -q 'includedir /etc/krb5.conf.d' /etc/krb5.conf ; then
 fi
 exit 0
 
-%postun libs -p /sbin/ldconfig
-
-%post server-ldap -p /sbin/ldconfig
-
-%postun server-ldap -p /sbin/ldconfig
+%ldconfig_scriptlets server-ldap
 
 %post server
 %systemd_post krb5kdc.service kadmin.service kprop.service
@@ -535,9 +531,7 @@ exit 0
 %systemd_postun_with_restart krb5kdc.service kadmin.service kprop.service
 exit 0
 
-%post -n libkadm5 -p /sbin/ldconfig
-
-%postun -n libkadm5 -p /sbin/ldconfig
+%ldconfig_scriptlets -n libkadm5
 
 %files workstation
 %defattr(-,root,root,-)
@@ -720,6 +714,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Sat Feb 03 2018 Igor Gnatenko <ignatenkobrain@fedoraproject.org> - 1.16-4
+- Switch to %%ldconfig_scriptlets
+
 * Mon Jan 29 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-3
 - Process included directories in alphabetical order
 
