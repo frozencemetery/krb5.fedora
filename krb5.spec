@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.15.2
 # for prerelease, should be e.g., 0.3.beta2% { ?dist } (without spaces)
-Release: 5%{?dist}
+Release: 6%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.15/krb5-%{version}%{prerelease}.tar.gz
@@ -746,6 +746,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Feb 12 2018 Robbie Harwood <rharwood@redhat.com> - 1.15.2-6
+- Fix leak in previous commit
+- Resolves: #1540939
+
 * Mon Jan 29 2018 Robbie Harwood <rharwood@redhat.com> - 1.15.2-5
 - Process include directories in alphabetical order
 
