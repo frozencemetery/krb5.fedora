@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 6%{?dist}
+Release: 7%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -61,6 +61,7 @@ Patch34: krb5-1.9-debuginfo.patch
 Patch35: krb5-1.11-run_user_0.patch
 Patch36: krb5-1.11-kpasswdtest.patch
 Patch37: Process-included-directories-in-alphabetical-order.patch
+Patch38: Fix-flaws-in-LDAP-DN-checking.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -714,6 +715,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Feb 13 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-7
+- Fix flaws in LDAP DN checking
+- CVE-2018-5729, CVE-2018-5730
+
 * Mon Feb 12 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-6
 - Fix a leak in the previous commit
 - Restore dist macro that was accidentally removed
