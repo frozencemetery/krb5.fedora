@@ -66,7 +66,6 @@ Patch38: Fix-flaws-in-LDAP-DN-checking.patch
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, bison, cmake, flex, gawk, gettext, pkgconfig, sed
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
 BuildRequires: gzip, ncurses-devel
