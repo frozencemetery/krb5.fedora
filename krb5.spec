@@ -504,9 +504,6 @@ rm -- "$RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/preauth/test.so"
 
 %find_lang %{gettext_domain}
 
-%clean
-[ "$RPM_BUILD_ROOT" != '/' ] && rm -rf -- "$RPM_BUILD_ROOT"
-
 %ldconfig_scriptlets libs
 
 %triggerun libs -- krb5-libs < 1.15.1-5
