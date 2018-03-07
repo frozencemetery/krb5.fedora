@@ -1,0 +1,60 @@
+From 5cdef749204eccf05ae5d7bad455d34899eb33da Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Sat, 3 Mar 2018 13:44:00 -0500
+Subject: [PATCH] Fix capaths "." values on client
+
+Commit b72aef2c1cbcc76f7fba14ddc54a4e66e7a4e66c (ticket 6966)
+introduced k5_client_realm_path() for use on the client in place of
+krb5_walk_realm_tree(), but failed to handle the special case of a
+capaths "." value as is done in the latter function.  Correct that
+omission and add a test case.
+
+ticket: 8646 (new)
+tags: pullup
+target_version: 1.16-next
+target_version: 1.15-next
+
+(cherry picked from commit f8d0877f848563d07152a0ee191fe82846fdb8f1)
+---
+ src/lib/krb5/krb/walk_rtree.c |  6 ++++++
+ src/tests/t_crossrealm.py     | 10 ++++++++++
+ 2 files changed, 16 insertions(+)
+
+diff --git a/src/lib/krb5/krb/walk_rtree.c b/src/lib/krb5/krb/walk_rtree.c
+index 0566a55f1..f4e8e35f5 100644
+--- a/src/lib/krb5/krb/walk_rtree.c
++++ b/src/lib/krb5/krb/walk_rtree.c
+@@ -133,6 +133,12 @@ k5_client_realm_path(krb5_context context, const krb5_data *client,
+     if (retval)
+         return retval;
+ 
++    /* A capaths value of "." means no intermediates. */
++    if (capvals != NULL && capvals[0] != NULL && *capvals[0] == '.') {
++        profile_free_list(capvals);
++        capvals = NULL;
++    }
++
+     /* Count capaths (if any) and allocate space.  Leave room for the client
+      * realm, server realm, and terminator. */
+     for (i = 0; capvals != NULL && capvals[i] != NULL; i++);
+diff --git a/src/tests/t_crossrealm.py b/src/tests/t_crossrealm.py
+index e7ddb0525..4d595dca6 100755
+--- a/src/tests/t_crossrealm.py
++++ b/src/tests/t_crossrealm.py
+@@ -109,6 +109,16 @@ test_kvno(r1, r4.host_princ, 'KDC capaths')
+ check_klist(r1, (tgt(r1, r1), tgt(r4, r3), r4.host_princ))
+ stop(r1, r2, r3, r4)
+ 
++# A capaths value of '.' should enforce direct cross-realm, with no
++# intermediate.
++capaths = {'capaths': {'A.X': {'B.X': '.'}}}
++r1, r2, r3 = cross_realms(3, xtgts=((0,1), (1,2)),
++                          args=({'realm': 'A.X', 'krb5_conf': capaths},
++                                {'realm': 'X'}, {'realm': 'B.X'}))
++r1.run([kvno, r3.host_princ], expected_code=1,
++       expected_msg='Server krbtgt/B.X@A.X not found in Kerberos database')
++stop(r1, r2, r3)
++
+ # Test transited error.  The KDC for C does not recognize B as an
+ # intermediate realm for A->C, so it refuses to issue a service
+ # ticket.
