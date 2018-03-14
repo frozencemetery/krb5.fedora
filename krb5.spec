@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 9%{?dist}
+Release: 10%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -64,6 +64,7 @@ Patch37: Process-included-directories-in-alphabetical-order.patch
 Patch38: Fix-flaws-in-LDAP-DN-checking.patch
 Patch39: Fix-capaths-.-values-on-client.patch
 Patch40: Fix-hex-conversion-of-PKINIT-certid-strings.patch
+Patch41: Exit-with-status-0-from-kadmind.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -713,6 +714,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Mar 14 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-10
+- Exit with status 0 from kadmind
+
 * Tue Mar 13 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-9
 - Fix hex conversion of PKINIT certid strings
 
