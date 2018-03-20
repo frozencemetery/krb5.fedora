@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 12%{?dist}
+Release: 13%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -724,6 +724,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Mar 20 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-13
+- Add pkinit_anchors default value to krb5.conf
+- Reindent krb5.conf to not be terrible
+
 * Tue Mar 20 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-12
 - Log preauth names in trace output
 - Misc bugfixes from upstream
