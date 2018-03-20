@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 13%{?dist}
+Release: 14%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -428,7 +428,7 @@ mkdir -m 755 -p $RPM_BUILD_ROOT/etc/gss/mech.d
 %if 0%{?configure_default_ccache_name}
 export DEFCCNAME="%{configured_default_ccache_name}"
 awk '{print}
-     /^# default_realm/{print " default_ccache_name =", ENVIRON["DEFCCNAME"]}' \
+     /^#    default_realm/{print " default_ccache_name =", ENVIRON["DEFCCNAME"]}' \
      %{SOURCE6} > $RPM_BUILD_ROOT/etc/krb5.conf
 touch -r %{SOURCE6} $RPM_BUILD_ROOT/etc/krb5.conf
 grep default_ccache_name $RPM_BUILD_ROOT/etc/krb5.conf
@@ -724,6 +724,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Mar 20 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-13
+- Fix problem with ccache_name logic in previous build
+
 * Tue Mar 20 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-13
 - Add pkinit_anchors default value to krb5.conf
 - Reindent krb5.conf to not be terrible
