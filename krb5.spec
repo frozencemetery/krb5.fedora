@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 14%{?dist}
+Release: 15%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -75,6 +75,16 @@ Patch48: Allow-validation-of-PACs-with-enterprise-names.patch
 Patch49: Fix-read-overflow-in-KDC-sort_pa_data.patch
 Patch50: Include-preauth-name-in-trace-output-if-possible.patch
 Patch51: Report-extended-errors-in-kinit-k-t-KDB.patch
+Patch52: Add-libkrb5support-hex-functions-and-tests.patch
+Patch53: Use-libkrb5support-hex-functions-where-appropriate.patch
+Patch54: Add-ASN.1-encoders-and-decoders-for-SPAKE-types.patch
+Patch55: Add-k5_buf_add_vfmt-to-k5buf-interface.patch
+Patch56: Add-vector-support-to-k5_sha256.patch
+Patch57: Move-zap-definition-to-k5-platform.h.patch
+Patch58: Implement-k5_buf_init_dynamic_zap.patch
+Patch59: Use-k5_buf_init_dynamic_zap-where-appropriate.patch
+Patch60: Add-SPAKE-preauth-support.patch
+Patch61: Add-doc-index-entries-for-SPAKE-constants.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -724,7 +734,12 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
-* Tue Mar 20 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-13
+* Tue Mar 27 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-15
+- Add SPAKE support
+- Improve protections on internal sensitive buffers
+- Improve internal hex encoding/decoding
+
+* Tue Mar 20 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-14
 - Fix problem with ccache_name logic in previous build
 
 * Tue Mar 20 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-13
