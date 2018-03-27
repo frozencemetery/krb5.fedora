@@ -1,4 +1,4 @@
-From 5824de8b471d132ed58eece98c614c56c7b0d48d Mon Sep 17 00:00:00 2001
+From b0fb55f284f543e1e3752512df1f581e77d486ca Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Mon, 26 Mar 2018 10:54:29 -0400
 Subject: [PATCH] Move zap() definition to k5-platform.h

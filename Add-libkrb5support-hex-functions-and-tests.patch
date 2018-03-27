@@ -1,34 +1,22 @@
-From 9fa4d4095164c09b70061fce5c31ccbd97bc7553 Mon Sep 17 00:00:00 2001
+From 443151a0690d3f11b38db54f650b320cb733535f Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Mon, 19 Feb 2018 00:51:44 -0500
 Subject: [PATCH] Add libkrb5support hex functions and tests
 
 (cherry picked from commit 720dea558da0062d3cea4385327161e62cf09a5e)
+[rharwood@redhat.com Remove .gitignore]
 ---
- .gitignore                                    |   1 +
  src/include/k5-hex.h                          |  53 ++++++++
  src/util/support/Makefile.in                  |  15 ++-
  src/util/support/deps                         |   6 +
  src/util/support/hex.c                        | 116 ++++++++++++++++++
  src/util/support/libkrb5support-fixed.exports |   2 +
  src/util/support/t_hex.c                      | 169 ++++++++++++++++++++++++++
- 7 files changed, 359 insertions(+), 3 deletions(-)
+ 6 files changed, 358 insertions(+), 3 deletions(-)
  create mode 100644 src/include/k5-hex.h
  create mode 100644 src/util/support/hex.c
  create mode 100644 src/util/support/t_hex.c
 
-diff --git a/.gitignore b/.gitignore
-index c13b5e356..91c8b942e 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -517,6 +517,7 @@ local.properties
- 
- /src/util/support/libkrb5support.exports
- /src/util/support/t_base64
-+/src/util/support/t_hex
- /src/util/support/t_json
- /src/util/support/t_k5buf
- /src/util/support/t_path
 diff --git a/src/include/k5-hex.h b/src/include/k5-hex.h
 new file mode 100644
 index 000000000..75bd2cb19

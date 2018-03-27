@@ -1,4 +1,4 @@
-From 0284b6503c003af90b9c317620d38b488dadcf86 Mon Sep 17 00:00:00 2001
+From bcc764eca6c92210716d1d6db59bfe112522a95d Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Fri, 25 Sep 2015 17:47:35 -0400
 Subject: [PATCH] Add SPAKE preauth support

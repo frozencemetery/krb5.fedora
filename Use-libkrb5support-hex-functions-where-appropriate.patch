@@ -1,4 +1,4 @@
-From a77bccb3fd953ae5800768efc0fb4a13753cb785 Mon Sep 17 00:00:00 2001
+From 4a33689d89144f9e473e8192241dcd2473c78bd7 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Mon, 19 Feb 2018 00:52:35 -0500
 Subject: [PATCH] Use libkrb5support hex functions where appropriate
