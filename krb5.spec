@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 19%{?dist}
+Release: 20%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -88,6 +88,7 @@ Patch61: Add-doc-index-entries-for-SPAKE-constants.patch
 Patch62: Fix-SPAKE-memory-leak.patch
 Patch63: Continue-after-KRB5_CC_END-in-KCM-cache-iteration.patch
 Patch64: Zap-data-when-freeing-krb5_spake_factor.patch
+Patch65: Be-more-careful-asking-for-AS-key-in-SPAKE-client.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -738,6 +739,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Apr 03 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-20
+- Be more careful asking for AS key in SPAKE client
+
 * Mon Apr 02 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-19
 - Zap data when freeing krb5_spake_factor
 
