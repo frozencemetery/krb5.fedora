@@ -1,0 +1,204 @@
+From 06d48c8d04a5efb098b026a1ec1c1609a5491ab0 Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Thu, 22 Mar 2018 20:07:17 -0400
+Subject: [PATCH] Return UPN SANs as strings
+
+(cherry picked from commit fd3c824e3be56a1fa77d140fd7e93934bfd6e565)
+---
+ src/plugins/preauth/pkinit/pkinit_crypto.h         |  4 ++--
+ src/plugins/preauth/pkinit/pkinit_crypto_openssl.c | 28 ++++++++--------------
+ src/plugins/preauth/pkinit/pkinit_matching.c       | 16 +++----------
+ src/plugins/preauth/pkinit/pkinit_srv.c            | 21 ++++++++++------
+ 4 files changed, 29 insertions(+), 40 deletions(-)
+
+diff --git a/src/plugins/preauth/pkinit/pkinit_crypto.h b/src/plugins/preauth/pkinit/pkinit_crypto.h
+index c7ff29fb2..4e4752ff7 100644
+--- a/src/plugins/preauth/pkinit/pkinit_crypto.h
++++ b/src/plugins/preauth/pkinit/pkinit_crypto.h
+@@ -98,7 +98,7 @@ typedef struct _pkinit_cert_matching_data {
+     unsigned int ku_bits;   /* key usage information */
+     unsigned int eku_bits;  /* extended key usage information */
+     krb5_principal *sans;   /* Null-terminated array of PKINIT SANs */
+-    krb5_principal *upns;   /* Null-terimnated array of UPN SANs */
++    char **upns;	    /* Null-terimnated array of UPN SANs */
+ } pkinit_cert_matching_data;
+ 
+ /*
+@@ -250,7 +250,7 @@ krb5_error_code crypto_retrieve_cert_sans
+ 		    if non-NULL, a null-terminated array of
+ 		    id-pkinit-san values found in the certificate
+ 		    are returned */
+-	krb5_principal **upn_sans,			/* OUT
++	char ***upn_sans,				/* OUT
+ 		    if non-NULL, a null-terminated array of
+ 		    id-ms-upn-san values found in the certificate
+ 		    are returned */
+diff --git a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
+index bc6de7ae8..b5a549c2c 100644
+--- a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
++++ b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
+@@ -29,6 +29,7 @@
+  * SUCH DAMAGES.
+  */
+ 
++#include "k5-int.h"
+ #include "pkinit_crypto_openssl.h"
+ #include "k5-buf.h"
+ #include <dlfcn.h>
+@@ -2083,15 +2084,14 @@ crypto_retrieve_X509_sans(krb5_context context,
+                           pkinit_plg_crypto_context plgctx,
+                           pkinit_req_crypto_context reqctx,
+                           X509 *cert,
+-                          krb5_principal **princs_ret,
+-                          krb5_principal **upn_ret,
++                          krb5_principal **princs_ret, char ***upn_ret,
+                           unsigned char ***dns_ret)
+ {
+     krb5_error_code retval = EINVAL;
+     char buf[DN_BUF_LEN];
+     int p = 0, u = 0, d = 0, ret = 0, l;
+     krb5_principal *princs = NULL;
+-    krb5_principal *upns = NULL;
++    char **upns = NULL;
+     unsigned char **dnss = NULL;
+     unsigned int i, num_found = 0, num_sans = 0;
+     X509_EXTENSION *ext = NULL;
+@@ -2141,7 +2141,7 @@ crypto_retrieve_X509_sans(krb5_context context,
+         }
+     }
+     if (upn_ret != NULL) {
+-        upns = calloc(num_sans + 1, sizeof(krb5_principal));
++        upns = calloc(num_sans + 1, sizeof(*upns));
+         if (upns == NULL) {
+             retval = ENOMEM;
+             goto cleanup;
+@@ -2184,16 +2184,9 @@ crypto_retrieve_X509_sans(krb5_context context,
+                 /* Prevent abuse of embedded null characters. */
+                 if (memchr(name.data, '\0', name.length))
+                     break;
+-                ret = krb5_parse_name_flags(context, name.data,
+-                                            KRB5_PRINCIPAL_PARSE_ENTERPRISE,
+-                                            &upns[u]);
+-                if (ret) {
+-                    pkiDebug("%s: failed parsing ms-upn san value\n",
+-                             __FUNCTION__);
+-                } else {
+-                    u++;
+-                    num_found++;
+-                }
++                upns[u] = k5memdup0(name.data, name.length, &ret);
++                if (upns[u] == NULL)
++                    goto cleanup;
+             } else {
+                 pkiDebug("%s: unrecognized othername oid in SAN\n",
+                          __FUNCTION__);
+@@ -2245,7 +2238,7 @@ cleanup:
+         krb5_free_principal(context, princs[i]);
+     free(princs);
+     for (i = 0; upns != NULL && upns[i] != NULL; i++)
+-        krb5_free_principal(context, upns[i]);
++        free(upns[i]);
+     free(upns);
+     for (i = 0; dnss != NULL && dnss[i] != NULL; i++)
+         free(dnss[i]);
+@@ -2269,8 +2262,7 @@ crypto_retrieve_cert_sans(krb5_context context,
+                           pkinit_plg_crypto_context plgctx,
+                           pkinit_req_crypto_context reqctx,
+                           pkinit_identity_crypto_context idctx,
+-                          krb5_principal **princs_ret,
+-                          krb5_principal **upn_ret,
++                          krb5_principal **princs_ret, char ***upn_ret,
+                           unsigned char ***dns_ret)
+ {
+     krb5_error_code retval = EINVAL;
+@@ -5094,7 +5086,7 @@ crypto_cert_free_matching_data(krb5_context context,
+         krb5_free_principal(context, md->sans[i]);
+     free(md->sans);
+     for (i = 0; md->upns != NULL && md->upns[i] != NULL; i++)
+-        krb5_free_principal(context, md->upns[i]);
++        free(md->upns[i]);
+     free(md->upns);
+     free(md);
+ }
+diff --git a/src/plugins/preauth/pkinit/pkinit_matching.c b/src/plugins/preauth/pkinit/pkinit_matching.c
+index 37bd0251a..c2a4c084d 100644
+--- a/src/plugins/preauth/pkinit/pkinit_matching.c
++++ b/src/plugins/preauth/pkinit/pkinit_matching.c
+@@ -490,11 +490,7 @@ component_match(krb5_context context,
+                     break;
+             }
+             for (i = 0; md->upns != NULL && md->upns[i] != NULL; i++) {
+-                krb5_unparse_name_flags(context, md->upns[i],
+-                                        KRB5_PRINCIPAL_UNPARSE_NO_REALM,
+-                                        &princ_string);
+-                match = regexp_match(context, rc, princ_string);
+-                krb5_free_unparsed_name(context, princ_string);
++                match = regexp_match(context, rc, md->upns[i]);
+                 if (match)
+                     break;
+             }
+@@ -584,14 +580,8 @@ check_all_certs(krb5_context context,
+             pkiDebug("%s: PKINIT san: '%s'\n", __FUNCTION__, san_string);
+             krb5_free_unparsed_name(context, san_string);
+         }
+-        for (j = 0; md->upns != NULL && md->upns[j] != NULL; j++) {
+-            char *san_string;
+-            krb5_unparse_name_flags(context, md->upns[j],
+-                                    KRB5_PRINCIPAL_UNPARSE_NO_REALM,
+-                                    &san_string);
+-            pkiDebug("%s: UPN san: '%s'\n", __FUNCTION__, san_string);
+-            krb5_free_unparsed_name(context, san_string);
+-        }
++        for (j = 0; md->upns != NULL && md->upns[j] != NULL; j++)
++            pkiDebug("%s: UPN san: '%s'\n", __FUNCTION__, md->upns[j]);
+ #endif
+         certs_checked++;
+         for (rc = rs->crs; rc != NULL; rc = rc->next) {
+diff --git a/src/plugins/preauth/pkinit/pkinit_srv.c b/src/plugins/preauth/pkinit/pkinit_srv.c
+index bbfde34b2..3cc573813 100644
+--- a/src/plugins/preauth/pkinit/pkinit_srv.c
++++ b/src/plugins/preauth/pkinit/pkinit_srv.c
+@@ -178,8 +178,9 @@ verify_client_san(krb5_context context,
+                   int *valid_san)
+ {
+     krb5_error_code retval;
+-    krb5_principal *princs = NULL;
+-    krb5_principal *upns = NULL;
++    krb5_principal *princs = NULL, upn;
++    krb5_boolean match;
++    char **upns = NULL;
+     int i;
+ #ifdef DEBUG_SAN_INFO
+     char *client_string = NULL, *san_string;
+@@ -255,12 +256,18 @@ verify_client_san(krb5_context context,
+     pkiDebug("%s: Checking upn sans\n", __FUNCTION__);
+     for (i = 0; upns[i] != NULL; i++) {
+ #ifdef DEBUG_SAN_INFO
+-        krb5_unparse_name(context, upns[i], &san_string);
+         pkiDebug("%s: Comparing client '%s' to upn san value '%s'\n",
+-                 __FUNCTION__, client_string, san_string);
+-        krb5_free_unparsed_name(context, san_string);
++                 __FUNCTION__, client_string, upns[i]);
+ #endif
+-        if (cb->match_client(context, rock, upns[i])) {
++        retval = krb5_parse_name_flags(context, upns[i],
++                                       KRB5_PRINCIPAL_PARSE_ENTERPRISE, &upn);
++        if (retval) {
++            /* XXX trace */
++            continue;
++        }
++        match = cb->match_client(context, rock, upn);
++        krb5_free_principal(context, upn);
++        if (match) {
+             TRACE_PKINIT_SERVER_MATCHING_UPN_FOUND(context);
+             *valid_san = 1;
+             retval = 0;
+@@ -286,7 +293,7 @@ out:
+     }
+     if (upns != NULL) {
+         for (i = 0; upns[i] != NULL; i++)
+-            krb5_free_principal(context, upns[i]);
++            free(upns[i]);
+         free(upns);
+     }
+ #ifdef DEBUG_SAN_INFO
