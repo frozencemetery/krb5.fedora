@@ -6,9 +6,9 @@ Subject: [PATCH] krb5-1.13-dirsrv-accountlock.patch
 Treat 'nsAccountLock: true' the same as 'loginDisabled: true'.  Updated from
 original version filed as RT#5891.
 ---
- src/aclocal.m4                                    |  9 +++++++++
- src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c      | 17 +++++++++++++++++
- src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c |  3 +++
+ src/aclocal.m4                                  |  9 +++++++++
+ src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c    | 17 +++++++++++++++++
+ .../kdb/ldap/libkdb_ldap/ldap_principal.c       |  3 +++
  3 files changed, 29 insertions(+)
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4

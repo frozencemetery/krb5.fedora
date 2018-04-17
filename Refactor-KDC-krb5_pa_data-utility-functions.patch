@@ -17,10 +17,10 @@ where applicable.
 
 (cherry picked from commit 4af478c18b02e1d2444a328bb79e6976ef3d312b)
 ---
- src/kdc/fast_util.c   |  28 +-------
+ src/kdc/fast_util.c   |  28 +------
  src/kdc/kdc_preauth.c |  14 ++--
- src/kdc/kdc_util.c    | 187 +++++++++++++++++++++++++-------------------------
- src/kdc/kdc_util.h    |   8 +--
+ src/kdc/kdc_util.c    | 187 +++++++++++++++++++++---------------------
+ src/kdc/kdc_util.h    |   8 +-
  4 files changed, 109 insertions(+), 128 deletions(-)
 
 diff --git a/src/kdc/fast_util.c b/src/kdc/fast_util.c

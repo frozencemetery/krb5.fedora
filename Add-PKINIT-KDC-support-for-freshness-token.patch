@@ -26,18 +26,18 @@ ticket: 8648
 (cherry picked from commit 4a9050df0bc34bfb08ba24462d6e2514640f4b8e)
 ---
  doc/admin/conf_files/kdc_conf.rst       |   4 +
- doc/admin/pkinit.rst                    |  25 ++++++
+ doc/admin/pkinit.rst                    |  25 +++++
  doc/appdev/refs/macros/index.rst        |   2 +
- doc/formats/freshness_token.rst         |  19 +++++
+ doc/formats/freshness_token.rst         |  19 ++++
  doc/formats/index.rst                   |   1 +
- src/include/krb5/kdcpreauth_plugin.h    |  17 +++++
+ src/include/krb5/kdcpreauth_plugin.h    |  17 ++++
  src/include/krb5/krb5.hin               |   3 +
  src/kdc/do_as_req.c                     |   2 +
- src/kdc/kdc_preauth.c                   | 130 +++++++++++++++++++++++++++++++-
+ src/kdc/kdc_preauth.c                   | 130 +++++++++++++++++++++++-
  src/kdc/kdc_util.h                      |   2 +
  src/plugins/preauth/pkinit/pkinit.h     |   2 +
- src/plugins/preauth/pkinit/pkinit_srv.c |  51 ++++++++++++-
- src/tests/t_pkinit.py                   |  50 ++++++++----
+ src/plugins/preauth/pkinit/pkinit_srv.c |  51 +++++++++-
+ src/tests/t_pkinit.py                   |  50 ++++++---
  13 files changed, 292 insertions(+), 16 deletions(-)
  create mode 100644 doc/formats/freshness_token.rst
 

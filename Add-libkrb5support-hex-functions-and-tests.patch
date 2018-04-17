@@ -6,12 +6,12 @@ Subject: [PATCH] Add libkrb5support hex functions and tests
 (cherry picked from commit 720dea558da0062d3cea4385327161e62cf09a5e)
 [rharwood@redhat.com Remove .gitignore]
 ---
- src/include/k5-hex.h                          |  53 ++++++++
- src/util/support/Makefile.in                  |  15 ++-
+ src/include/k5-hex.h                          |  53 ++++++
+ src/util/support/Makefile.in                  |  15 +-
  src/util/support/deps                         |   6 +
- src/util/support/hex.c                        | 116 ++++++++++++++++++
+ src/util/support/hex.c                        | 116 ++++++++++++
  src/util/support/libkrb5support-fixed.exports |   2 +
- src/util/support/t_hex.c                      | 169 ++++++++++++++++++++++++++
+ src/util/support/t_hex.c                      | 169 ++++++++++++++++++
  6 files changed, 358 insertions(+), 3 deletions(-)
  create mode 100644 src/include/k5-hex.h
  create mode 100644 src/util/support/hex.c

@@ -17,11 +17,11 @@ Originally RT#5939, though it's changed since then to perform the account
 and session management before dropping privileges, and to apply on top of
 changes we're proposing for how it handles cache collections.
 ---
- src/aclocal.m4              |  67 ++++++++
+ src/aclocal.m4              |  67 +++++++
  src/clients/ksu/Makefile.in |   8 +-
- src/clients/ksu/main.c      |  88 +++++++++-
- src/clients/ksu/pam.c       | 389 ++++++++++++++++++++++++++++++++++++++++++++
- src/clients/ksu/pam.h       |  57 +++++++
+ src/clients/ksu/main.c      |  88 +++++++-
+ src/clients/ksu/pam.c       | 389 ++++++++++++++++++++++++++++++++++++
+ src/clients/ksu/pam.h       |  57 ++++++
  src/configure.in            |   2 +
  6 files changed, 608 insertions(+), 3 deletions(-)
  create mode 100644 src/clients/ksu/pam.c

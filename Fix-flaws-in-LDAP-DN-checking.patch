@@ -41,10 +41,10 @@ target_version: 1.15-next
 
 (cherry picked from commit e1caf6fb74981da62039846931ebdffed71309d1)
 ---
- src/lib/kadm5/srv/svr_principal.c                  |   7 +
- src/plugins/kdb/ldap/libkdb_ldap/kdb_ldap.h        |   2 +-
- src/plugins/kdb/ldap/libkdb_ldap/ldap_principal2.c | 200 +++++++++++----------
- src/tests/t_kdb.py                                 |  11 ++
+ src/lib/kadm5/srv/svr_principal.c             |   7 +
+ src/plugins/kdb/ldap/libkdb_ldap/kdb_ldap.h   |   2 +-
+ .../kdb/ldap/libkdb_ldap/ldap_principal2.c    | 200 ++++++++++--------
+ src/tests/t_kdb.py                            |  11 +
  4 files changed, 125 insertions(+), 95 deletions(-)
 
 diff --git a/src/lib/kadm5/srv/svr_principal.c b/src/lib/kadm5/srv/svr_principal.c

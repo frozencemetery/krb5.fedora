@@ -14,21 +14,21 @@ build.
 
 (cherry picked from commit 78a09d95dff6915da4079bc611f4bb95f6a95f70)
 ---
- src/include/k5-spake.h               | 107 +++++++++++++++++++++++++++++++++++
- src/lib/krb5/asn.1/asn1_k_encode.c   |  52 ++++++++++++++++-
- src/lib/krb5/krb/kfree.c             |  40 +++++++++++++
+ src/include/k5-spake.h               | 107 +++++++++++++++++++++++++++
+ src/lib/krb5/asn.1/asn1_k_encode.c   |  52 ++++++++++++-
+ src/lib/krb5/krb/kfree.c             |  40 ++++++++++
  src/lib/krb5/libkrb5.exports         |   6 ++
  src/tests/asn.1/Makefile.in          |   2 +-
- src/tests/asn.1/krb5_decode_test.c   |  37 ++++++++++++
- src/tests/asn.1/krb5_encode_test.c   |  29 ++++++++++
- src/tests/asn.1/ktest.c              |  97 +++++++++++++++++++++++++++++++
+ src/tests/asn.1/krb5_decode_test.c   |  37 +++++++++
+ src/tests/asn.1/krb5_encode_test.c   |  29 ++++++++
+ src/tests/asn.1/ktest.c              |  97 ++++++++++++++++++++++++
  src/tests/asn.1/ktest.h              |   9 +++
- src/tests/asn.1/ktest_equal.c        |  49 ++++++++++++++++
+ src/tests/asn.1/ktest_equal.c        |  49 ++++++++++++
  src/tests/asn.1/ktest_equal.h        |   6 ++
- src/tests/asn.1/make-vectors.c       |  56 ++++++++++++++++++
+ src/tests/asn.1/make-vectors.c       |  56 ++++++++++++++
  src/tests/asn.1/reference_encode.out |   6 ++
- src/tests/asn.1/spake.asn1           |  44 ++++++++++++++
- src/tests/asn.1/trval_reference.out  |  50 ++++++++++++++++
+ src/tests/asn.1/spake.asn1           |  44 +++++++++++
+ src/tests/asn.1/trval_reference.out  |  50 +++++++++++++
  15 files changed, 588 insertions(+), 2 deletions(-)
  create mode 100644 src/include/k5-spake.h
  create mode 100644 src/tests/asn.1/spake.asn1

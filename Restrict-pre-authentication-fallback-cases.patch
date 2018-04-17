@@ -17,20 +17,20 @@ retried after a failure.
 ticket: 8654
 (cherry picked from commit 7a24a088c16d326127dd2b29084d4ca085c70d10)
 ---
- src/include/krb5/clpreauth_plugin.h      | 14 +++++
- src/lib/krb5/krb/get_in_tkt.c            | 21 +++-----
+ src/include/krb5/clpreauth_plugin.h      | 14 ++++
+ src/lib/krb5/krb/get_in_tkt.c            | 21 +++---
  src/lib/krb5/krb/init_creds_ctx.h        |  1 +
- src/lib/krb5/krb/int-proto.h             |  3 --
- src/lib/krb5/krb/preauth2.c              | 23 ++++-----
+ src/lib/krb5/krb/int-proto.h             |  3 -
+ src/lib/krb5/krb/preauth2.c              | 23 +++----
  src/lib/krb5/krb/preauth_ec.c            |  1 +
  src/lib/krb5/krb/preauth_encts.c         |  2 +
  src/lib/krb5/krb/preauth_otp.c           |  4 ++
  src/lib/krb5/krb/preauth_sam2.c          |  1 +
  src/plugins/preauth/pkinit/pkinit_clnt.c |  1 +
  src/plugins/preauth/spake/spake_client.c |  4 ++
- src/plugins/preauth/test/cltest.c        | 11 ++++
- src/tests/t_preauth.py                   | 88 ++++++++++++++++++++++++++++----
- src/tests/t_spake.py                     |  9 +---
+ src/plugins/preauth/test/cltest.c        | 11 +++
+ src/tests/t_preauth.py                   | 88 +++++++++++++++++++++---
+ src/tests/t_spake.py                     |  9 +--
  14 files changed, 134 insertions(+), 49 deletions(-)
 
 diff --git a/src/include/krb5/clpreauth_plugin.h b/src/include/krb5/clpreauth_plugin.h

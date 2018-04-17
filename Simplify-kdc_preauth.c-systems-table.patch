@@ -16,7 +16,7 @@ since it was first added.
 
 (cherry picked from commit fea1a488924faa3938ef723feaa1ff12d22a91ff)
 ---
- src/kdc/kdc_preauth.c | 526 ++++++++++++++++++--------------------------------
+ src/kdc/kdc_preauth.c | 526 +++++++++++++++---------------------------
  1 file changed, 184 insertions(+), 342 deletions(-)
 
 diff --git a/src/kdc/kdc_preauth.c b/src/kdc/kdc_preauth.c

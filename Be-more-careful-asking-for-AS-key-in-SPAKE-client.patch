@@ -20,7 +20,7 @@ spake_prep_questions() without a prototype.
 ticket: 8659
 (cherry picked from commit f240f1b0d324312be8aa59ead7cfbe0c329ed064)
 ---
- src/plugins/preauth/spake/spake_client.c | 111 ++++++++++++++++++-------------
+ src/plugins/preauth/spake/spake_client.c | 111 ++++++++++++++---------
  1 file changed, 66 insertions(+), 45 deletions(-)
 
 diff --git a/src/plugins/preauth/spake/spake_client.c b/src/plugins/preauth/spake/spake_client.c

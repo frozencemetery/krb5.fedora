@@ -12,11 +12,11 @@ and use it when formatting {patype} or {patypes}.
 ticket: 8653 (new)
 (cherry picked from commit 9c68fe39b018666eabe033b639c1f35d03ba51c7)
 ---
- src/include/k5-trace.h      |  17 ++--
+ src/include/k5-trace.h      |  17 +--
  src/lib/krb5/os/t_trace.ref |   2 +-
- src/lib/krb5/os/trace.c     |  61 ++++++++++++-
- src/tests/t_pkinit.py       |  43 ++++-----
- src/tests/t_preauth.py      | 216 ++++++++++++++++++++++----------------------
+ src/lib/krb5/os/trace.c     |  61 +++++++++-
+ src/tests/t_pkinit.py       |  43 +++----
+ src/tests/t_preauth.py      | 216 ++++++++++++++++++------------------
  5 files changed, 200 insertions(+), 139 deletions(-)
 
 diff --git a/src/include/k5-trace.h b/src/include/k5-trace.h

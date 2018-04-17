@@ -5,10 +5,10 @@ Subject: [PATCH] Return UPN SANs as strings
 
 (cherry picked from commit fd3c824e3be56a1fa77d140fd7e93934bfd6e565)
 ---
- src/plugins/preauth/pkinit/pkinit_crypto.h         |  4 ++--
- src/plugins/preauth/pkinit/pkinit_crypto_openssl.c | 28 ++++++++--------------
- src/plugins/preauth/pkinit/pkinit_matching.c       | 16 +++----------
- src/plugins/preauth/pkinit/pkinit_srv.c            | 21 ++++++++++------
+ src/plugins/preauth/pkinit/pkinit_crypto.h    |  4 +--
+ .../preauth/pkinit/pkinit_crypto_openssl.c    | 28 +++++++------------
+ src/plugins/preauth/pkinit/pkinit_matching.c  | 16 ++---------
+ src/plugins/preauth/pkinit/pkinit_srv.c       | 21 +++++++++-----
  4 files changed, 29 insertions(+), 40 deletions(-)
 
 diff --git a/src/plugins/preauth/pkinit/pkinit_crypto.h b/src/plugins/preauth/pkinit/pkinit_crypto.h

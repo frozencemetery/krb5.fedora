@@ -36,31 +36,31 @@ The selabel APIs for looking up the context should be thread-safe (per
 Red Hat #273081), so switching to using them instead of matchpathcon(),
 which we used earlier, is some improvement.
 ---
- src/aclocal.m4                                     |  49 +++
- src/build-tools/krb5-config.in                     |   3 +-
- src/config/pre.in                                  |   3 +-
- src/configure.in                                   |   2 +
- src/include/k5-int.h                               |   1 +
- src/include/k5-label.h                             |  32 ++
- src/include/krb5/krb5.hin                          |   6 +
- src/kadmin/dbutil/dump.c                           |  11 +-
- src/kdc/main.c                                     |   2 +-
- src/lib/kadm5/logger.c                             |   4 +-
- src/lib/kdb/kdb_log.c                              |   2 +-
- src/lib/krb5/ccache/cc_dir.c                       |  26 +-
- src/lib/krb5/keytab/kt_file.c                      |   4 +-
- src/lib/krb5/os/trace.c                            |   2 +-
- src/lib/krb5/rcache/rc_dfl.c                       |  13 +
- src/plugins/kdb/db2/adb_openclose.c                |   2 +-
- src/plugins/kdb/db2/kdb_db2.c                      |   4 +-
- src/plugins/kdb/db2/libdb2/btree/bt_open.c         |   3 +-
- src/plugins/kdb/db2/libdb2/hash/hash.c             |   3 +-
- src/plugins/kdb/db2/libdb2/recno/rec_open.c        |   4 +-
- .../kdb/ldap/ldap_util/kdb5_ldap_services.c        |  11 +-
- src/slave/kpropd.c                                 |   9 +
- src/util/profile/prof_file.c                       |   3 +-
- src/util/support/Makefile.in                       |   3 +-
- src/util/support/selinux.c                         | 406 +++++++++++++++++++++
+ src/aclocal.m4                                |  49 +++
+ src/build-tools/krb5-config.in                |   3 +-
+ src/config/pre.in                             |   3 +-
+ src/configure.in                              |   2 +
+ src/include/k5-int.h                          |   1 +
+ src/include/k5-label.h                        |  32 ++
+ src/include/krb5/krb5.hin                     |   6 +
+ src/kadmin/dbutil/dump.c                      |  11 +-
+ src/kdc/main.c                                |   2 +-
+ src/lib/kadm5/logger.c                        |   4 +-
+ src/lib/kdb/kdb_log.c                         |   2 +-
+ src/lib/krb5/ccache/cc_dir.c                  |  26 +-
+ src/lib/krb5/keytab/kt_file.c                 |   4 +-
+ src/lib/krb5/os/trace.c                       |   2 +-
+ src/lib/krb5/rcache/rc_dfl.c                  |  13 +
+ src/plugins/kdb/db2/adb_openclose.c           |   2 +-
+ src/plugins/kdb/db2/kdb_db2.c                 |   4 +-
+ src/plugins/kdb/db2/libdb2/btree/bt_open.c    |   3 +-
+ src/plugins/kdb/db2/libdb2/hash/hash.c        |   3 +-
+ src/plugins/kdb/db2/libdb2/recno/rec_open.c   |   4 +-
+ .../kdb/ldap/ldap_util/kdb5_ldap_services.c   |  11 +-
+ src/slave/kpropd.c                            |   9 +
+ src/util/profile/prof_file.c                  |   3 +-
+ src/util/support/Makefile.in                  |   3 +-
+ src/util/support/selinux.c                    | 406 ++++++++++++++++++
  25 files changed, 587 insertions(+), 21 deletions(-)
  create mode 100644 src/include/k5-label.h
  create mode 100644 src/util/support/selinux.c

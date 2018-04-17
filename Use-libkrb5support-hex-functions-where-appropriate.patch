@@ -5,25 +5,25 @@ Subject: [PATCH] Use libkrb5support hex functions where appropriate
 
 (cherry picked from commit b0c700608be7455041a8afc0e4502e8783ee7f30)
 ---
- src/kadmin/dbutil/deps                             | 16 +++---
- src/kadmin/dbutil/tabdump.c                        | 19 +++----
- src/kadmin/ktutil/deps                             | 13 +++--
- src/kadmin/ktutil/ktutil_funcs.c                   | 30 ++++------
- src/lib/crypto/crypto_tests/deps                   | 39 +++++++------
- src/lib/crypto/crypto_tests/t_cksum.c              | 35 +++---------
- src/lib/crypto/crypto_tests/t_crc.c                | 28 ++--------
- src/lib/crypto/crypto_tests/t_hmac.c               | 34 +++++------
- src/plugins/kdb/ldap/ldap_util/deps                | 18 +++---
- .../kdb/ldap/ldap_util/kdb5_ldap_services.c        | 32 ++++-------
- .../kdb/ldap/ldap_util/kdb5_ldap_services.h        |  2 -
- src/plugins/kdb/ldap/libkdb_ldap/deps              | 19 ++++---
- .../kdb/ldap/libkdb_ldap/ldap_service_stash.c      | 65 +++-------------------
- .../kdb/ldap/libkdb_ldap/ldap_service_stash.h      |  3 -
- .../kdb/ldap/libkdb_ldap/libkdb_ldap.exports       |  1 -
- src/slave/deps                                     | 15 ++---
- src/slave/kproplog.c                               | 11 ++--
- src/tests/gssapi/deps                              | 14 ++---
- src/tests/gssapi/t_prf.c                           | 13 +++--
+ src/kadmin/dbutil/deps                        | 16 ++---
+ src/kadmin/dbutil/tabdump.c                   | 19 +++---
+ src/kadmin/ktutil/deps                        | 13 ++--
+ src/kadmin/ktutil/ktutil_funcs.c              | 30 ++++-----
+ src/lib/crypto/crypto_tests/deps              | 39 ++++++-----
+ src/lib/crypto/crypto_tests/t_cksum.c         | 35 +++-------
+ src/lib/crypto/crypto_tests/t_crc.c           | 28 ++------
+ src/lib/crypto/crypto_tests/t_hmac.c          | 34 +++++-----
+ src/plugins/kdb/ldap/ldap_util/deps           | 18 ++---
+ .../kdb/ldap/ldap_util/kdb5_ldap_services.c   | 32 +++------
+ .../kdb/ldap/ldap_util/kdb5_ldap_services.h   |  2 -
+ src/plugins/kdb/ldap/libkdb_ldap/deps         | 19 +++---
+ .../kdb/ldap/libkdb_ldap/ldap_service_stash.c | 65 +++----------------
+ .../kdb/ldap/libkdb_ldap/ldap_service_stash.h |  3 -
+ .../kdb/ldap/libkdb_ldap/libkdb_ldap.exports  |  1 -
+ src/slave/deps                                | 15 +++--
+ src/slave/kproplog.c                          | 11 ++--
+ src/tests/gssapi/deps                         | 14 ++--
+ src/tests/gssapi/t_prf.c                      | 13 ++--
  19 files changed, 152 insertions(+), 255 deletions(-)
 
 diff --git a/src/kadmin/dbutil/deps b/src/kadmin/dbutil/deps

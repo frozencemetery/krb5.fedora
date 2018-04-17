@@ -5,9 +5,9 @@ Subject: [PATCH] Save SANs separately and unparse them with NO_REALM
 
 (cherry picked from commit 23ea8d6a9617d17ae5a529c23174d77adac39055)
 ---
- src/plugins/preauth/pkinit/pkinit_crypto.h         |  4 +--
- src/plugins/preauth/pkinit/pkinit_crypto_openssl.c | 37 +++-------------------
- src/plugins/preauth/pkinit/pkinit_matching.c       | 30 +++++++++++++-----
+ src/plugins/preauth/pkinit/pkinit_crypto.h    |  4 +-
+ .../preauth/pkinit/pkinit_crypto_openssl.c    | 37 ++-----------------
+ src/plugins/preauth/pkinit/pkinit_matching.c  | 30 +++++++++++----
  3 files changed, 28 insertions(+), 43 deletions(-)
 
 diff --git a/src/plugins/preauth/pkinit/pkinit_crypto.h b/src/plugins/preauth/pkinit/pkinit_crypto.h

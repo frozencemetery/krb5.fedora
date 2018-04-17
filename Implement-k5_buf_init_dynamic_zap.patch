@@ -8,8 +8,8 @@ reallocating or freeing the buffer.
 
 (cherry picked from commit 8ee8246c14702dc03b02e31b9fb5b7c2bb674bfb)
 ---
- src/include/k5-buf.h                          |  6 +++-
- src/util/support/k5buf.c                      | 41 +++++++++++++++++++++------
+ src/include/k5-buf.h                          |  6 ++-
+ src/util/support/k5buf.c                      | 41 +++++++++++++++----
  src/util/support/libkrb5support-fixed.exports |  1 +
  3 files changed, 39 insertions(+), 9 deletions(-)
 
