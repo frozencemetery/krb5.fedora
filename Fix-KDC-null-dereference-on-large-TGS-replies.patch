@@ -1,0 +1,224 @@
+From d3697aa9a653bc9aaf11f3c9e985ba544c23a9c3 Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Fri, 20 Apr 2018 16:16:02 -0400
+Subject: [PATCH] Fix KDC null dereference on large TGS replies
+
+For TGS requests, dispatch() doesn't set state->active_realm, which
+leads to a NULL dereference in finish_dispatch() if the reply is too
+big for UDP.  Prior to commit 0a2f14f752c32a24200363cc6b6ae64a92f81379
+the active realm was a global and was set when process_tgs_req()
+called setup_server_realm().
+
+Move TGS decoding out of process_tgs_req() so that we can set
+state->active_realm before any errors requiring response.  Add a test
+case.
+
+[ghudson@mit.edu: edited commit message; added test case; reduced code
+duplication; removed server handle from process_tgs_req() parameters]
+
+ticket: 8666
+tags: pullup
+target_version: 1.16-next
+target_version: 1.15-next
+
+(cherry picked from commit 6afa8b4abf8f7c5774d03e6b15ee7288ad68d725)
+---
+ src/kdc/Makefile.in   |  1 +
+ src/kdc/dispatch.c    | 50 ++++++++++++++++++++++++-------------------
+ src/kdc/do_tgs_req.c  | 24 ++++++---------------
+ src/kdc/kdc_util.h    |  5 ++---
+ src/kdc/t_bigreply.py | 19 ++++++++++++++++
+ 5 files changed, 56 insertions(+), 43 deletions(-)
+ create mode 100644 src/kdc/t_bigreply.py
+
+diff --git a/src/kdc/Makefile.in b/src/kdc/Makefile.in
+index 61a3dbc6f..117a8f561 100644
+--- a/src/kdc/Makefile.in
++++ b/src/kdc/Makefile.in
+@@ -85,6 +85,7 @@ check-cmocka: t_replay
+ check-pytests:
+ 	$(RUNPYTEST) $(srcdir)/t_workers.py $(PYTESTFLAGS)
+ 	$(RUNPYTEST) $(srcdir)/t_emptytgt.py $(PYTESTFLAGS)
++	$(RUNPYTEST) $(srcdir)/t_bigreply.py $(PYTESTFLAGS)
+ 
+ install:
+ 	$(INSTALL_PROGRAM) krb5kdc ${DESTDIR}$(SERVER_BINDIR)/krb5kdc
+diff --git a/src/kdc/dispatch.c b/src/kdc/dispatch.c
+index 3867ff952..3ed5176a8 100644
+--- a/src/kdc/dispatch.c
++++ b/src/kdc/dispatch.c
+@@ -124,7 +124,7 @@ dispatch(void *cb, const krb5_fulladdr *local_addr,
+          verto_ctx *vctx, loop_respond_fn respond, void *arg)
+ {
+     krb5_error_code retval;
+-    krb5_kdc_req *as_req;
++    krb5_kdc_req *req = NULL;
+     krb5_data *response = NULL;
+     struct dispatch_state *state;
+     struct server_handle *handle = cb;
+@@ -176,29 +176,35 @@ dispatch(void *cb, const krb5_fulladdr *local_addr,
+ 
+     /* try TGS_REQ first; they are more common! */
+ 
+-    if (krb5_is_tgs_req(pkt)) {
+-        retval = process_tgs_req(handle, pkt, remote_addr, &response);
+-    } else if (krb5_is_as_req(pkt)) {
+-        if (!(retval = decode_krb5_as_req(pkt, &as_req))) {
+-            /*
+-             * setup_server_realm() sets up the global realm-specific data
+-             * pointer.
+-             * process_as_req frees the request if it is called
+-             */
+-            state->active_realm = setup_server_realm(handle, as_req->server);
+-            if (state->active_realm != NULL) {
+-                process_as_req(as_req, pkt, local_addr, remote_addr,
+-                               state->active_realm, vctx,
+-                               finish_dispatch_cache, state);
+-                return;
+-            } else {
+-                retval = KRB5KDC_ERR_WRONG_REALM;
+-                krb5_free_kdc_req(kdc_err_context, as_req);
+-            }
+-        }
+-    } else
++    if (krb5_is_tgs_req(pkt))
++        retval = decode_krb5_tgs_req(pkt, &req);
++    else if (krb5_is_as_req(pkt))
++        retval = decode_krb5_as_req(pkt, &req);
++    else
+         retval = KRB5KRB_AP_ERR_MSG_TYPE;
++    if (retval)
++        goto done;
+ 
++    state->active_realm = setup_server_realm(handle, req->server);
++    if (state->active_realm == NULL) {
++        retval = KRB5KDC_ERR_WRONG_REALM;
++        goto done;
++    }
++
++    if (krb5_is_tgs_req(pkt)) {
++        /* process_tgs_req frees the request */
++        retval = process_tgs_req(req, pkt, remote_addr, state->active_realm,
++                                 &response);
++        req = NULL;
++    } else if (krb5_is_as_req(pkt)) {
++        /* process_as_req frees the request and calls finish_dispatch_cache. */
++        process_as_req(req, pkt, local_addr, remote_addr, state->active_realm,
++                       vctx, finish_dispatch_cache, state);
++        return;
++    }
++
++done:
++    krb5_free_kdc_req(kdc_err_context, req);
+     finish_dispatch_cache(state, retval, response);
+ }
+ 
+diff --git a/src/kdc/do_tgs_req.c b/src/kdc/do_tgs_req.c
+index cc5a69236..61051bafa 100644
+--- a/src/kdc/do_tgs_req.c
++++ b/src/kdc/do_tgs_req.c
+@@ -98,12 +98,12 @@ search_sprinc(kdc_realm_t *, krb5_kdc_req *, krb5_flags,
+ 
+ /*ARGSUSED*/
+ krb5_error_code
+-process_tgs_req(struct server_handle *handle, krb5_data *pkt,
+-                const krb5_fulladdr *from, krb5_data **response)
++process_tgs_req(krb5_kdc_req *request, krb5_data *pkt,
++                const krb5_fulladdr *from, kdc_realm_t *kdc_active_realm,
++                krb5_data **response)
+ {
+     krb5_keyblock * subkey = 0;
+     krb5_keyblock *header_key = NULL;
+-    krb5_kdc_req *request = 0;
+     krb5_db_entry *server = NULL;
+     krb5_db_entry *stkt_server = NULL;
+     krb5_kdc_rep reply;
+@@ -136,7 +136,6 @@ process_tgs_req(struct server_handle *handle, krb5_data *pkt,
+     krb5_pa_data *pa_tgs_req; /*points into request*/
+     krb5_data scratch;
+     krb5_pa_data **e_data = NULL;
+-    kdc_realm_t *kdc_active_realm = NULL;
+     krb5_audit_state *au_state = NULL;
+     krb5_data **auth_indicators = NULL;
+ 
+@@ -146,36 +145,25 @@ process_tgs_req(struct server_handle *handle, krb5_data *pkt,
+     memset(&enc_tkt_reply, 0, sizeof(enc_tkt_reply));
+     session_key.contents = NULL;
+ 
+-    retval = decode_krb5_tgs_req(pkt, &request);
+-    if (retval)
+-        return retval;
+     /* Save pointer to client-requested service principal, in case of
+      * errors before a successful call to search_sprinc(). */
+     sprinc = request->server;
+ 
+     if (request->msg_type != KRB5_TGS_REQ) {
+-        krb5_free_kdc_req(handle->kdc_err_context, request);
++        krb5_free_kdc_req(kdc_context, request);
+         return KRB5_BADMSGTYPE;
+     }
+ 
+-    /*
+-     * setup_server_realm() sets up the global realm-specific data pointer.
+-     */
+-    kdc_active_realm = setup_server_realm(handle, request->server);
+-    if (kdc_active_realm == NULL) {
+-        krb5_free_kdc_req(handle->kdc_err_context, request);
+-        return KRB5KDC_ERR_WRONG_REALM;
+-    }
+     errcode = kdc_make_rstate(kdc_active_realm, &state);
+     if (errcode !=0) {
+-        krb5_free_kdc_req(handle->kdc_err_context, request);
++        krb5_free_kdc_req(kdc_context, request);
+         return errcode;
+     }
+ 
+     /* Initialize audit state. */
+     errcode = kau_init_kdc_req(kdc_context, request, from, &au_state);
+     if (errcode) {
+-        krb5_free_kdc_req(handle->kdc_err_context, request);
++        krb5_free_kdc_req(kdc_context, request);
+         return errcode;
+     }
+     /* Seed the audit trail with the request ID and basic information. */
+diff --git a/src/kdc/kdc_util.h b/src/kdc/kdc_util.h
+index a63af2503..1885c9f80 100644
+--- a/src/kdc/kdc_util.h
++++ b/src/kdc/kdc_util.h
+@@ -145,9 +145,8 @@ process_as_req (krb5_kdc_req *, krb5_data *,
+ 
+ /* do_tgs_req.c */
+ krb5_error_code
+-process_tgs_req (struct server_handle *, krb5_data *,
+-                 const krb5_fulladdr *,
+-                 krb5_data ** );
++process_tgs_req (krb5_kdc_req *, krb5_data *, const krb5_fulladdr *,
++                 kdc_realm_t *, krb5_data ** );
+ /* dispatch.c */
+ void
+ dispatch (void *,
+diff --git a/src/kdc/t_bigreply.py b/src/kdc/t_bigreply.py
+new file mode 100644
+index 000000000..6bc9a8fe0
+--- /dev/null
++++ b/src/kdc/t_bigreply.py
+@@ -0,0 +1,19 @@
++#!/usr/bin/python
++from k5test import *
++
++# Set the maximum UDP reply size very low, so that all replies go
++# through the RESPONSE_TOO_BIG path.
++kdc_conf = {'kdcdefaults': {'kdc_max_dgram_reply_size': '10'}}
++realm = K5Realm(kdc_conf=kdc_conf, get_creds=False)
++
++msgs = ('Sending initial UDP request',
++        'Received answer',
++        'Request or response is too big for UDP; retrying with TCP',
++        ' to KRBTEST.COM (tcp only)',
++        'Initiating TCP connection',
++        'Sending TCP request',
++        'Terminating TCP connection')
++realm.kinit(realm.user_princ, password('user'), expected_trace=msgs)
++realm.run([kvno, realm.host_princ], expected_trace=msgs)
++
++success('Large KDC replies')
