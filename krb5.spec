@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 25%{?dist}
+Release: 26%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -94,8 +94,6 @@ Patch67: Return-UPN-SANs-as-strings.patch
 Patch68: Restrict-pre-authentication-fallback-cases.patch
 Patch69: Merge-duplicate-subsections-in-profile-library.patch
 Patch70: Fix-KDC-null-dereference-on-large-TGS-replies.patch
-Patch71: Check-for-zero-argc-in-ksu.patch
-Patch72: Move-zero-argc-check-earlier-in-ksu.patch
 Patch73: Set-error-message-on-KCM-get_princ-failure.patch
 
 License: MIT
@@ -748,6 +746,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Apr 30 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-26
+- Set error message on KCM get_princ failure
+
 * Mon Apr 30 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-25
 - Set error message on KCM get_princ failure
 

@@ -1,4 +1,4 @@
-From fb73fe5af9c82c20630cbf72c08e3e89f57deeaf Mon Sep 17 00:00:00 2001
+From f9c9d683852eb4881e099b3042d4c6e5e1444efc Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 27 Apr 2018 13:51:39 -0400
 Subject: [PATCH] Set error message on KCM get_princ failure
