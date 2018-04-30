@@ -1,0 +1,29 @@
+From 2c88cf9966d2dad7902df3eeef1834b55000b246 Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Tue, 24 Apr 2018 14:31:35 -0400
+Subject: [PATCH] Check for zero argc in ksu
+
+Most programs in the tree will perform a null dereference when argc is
+zero, but as a setuid program ksu should be extra careful about memory
+errors, even if this one is harmless.  Check and exit with status 1
+immediately.
+
+ticket: 8661
+(cherry picked from commit c5b0a998d6349f8c90821a347db5666aed0e50eb)
+---
+ src/clients/ksu/main.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/clients/ksu/main.c b/src/clients/ksu/main.c
+index c6321c01b..6cb91e24f 100644
+--- a/src/clients/ksu/main.c
++++ b/src/clients/ksu/main.c
+@@ -144,6 +144,8 @@ main (argc, argv)
+         exit(1);
+     }
+ 
++    if (argc == 0)
++        exit(1);
+     if (strrchr(argv[0], '/'))
+         argv[0] = strrchr(argv[0], '/')+1;
+     prog_name = argv[0];

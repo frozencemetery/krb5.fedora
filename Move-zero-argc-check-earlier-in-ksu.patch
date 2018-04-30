@@ -1,0 +1,39 @@
+From 292843b6a1d774198845d8e9511d1fa2ca5859e4 Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Tue, 24 Apr 2018 19:35:38 -0400
+Subject: [PATCH] Move zero argc check earlier in ksu
+
+For improved auditability, check for a zero argc value earlier in
+main() so that the first two calls to com_err() can't pass a NULL
+whoami value--which would be harmless, but that may not be obvious to
+a reader.
+
+ticket: 8661
+(cherry picked from commit e1b5b824f5d7388a67d0854b56d3906c4fbdd778)
+---
+ src/clients/ksu/main.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/clients/ksu/main.c b/src/clients/ksu/main.c
+index 6cb91e24f..b9a997fc2 100644
+--- a/src/clients/ksu/main.c
++++ b/src/clients/ksu/main.c
+@@ -127,6 +127,9 @@ main (argc, argv)
+     krb5_boolean restrict_creds;
+     krb5_deltat lifetime, rlife;
+ 
++    if (argc == 0)
++        exit(1);
++
+     params = (char **) xcalloc (2, sizeof (char *));
+     params[1] = NULL;
+ 
+@@ -144,8 +147,6 @@ main (argc, argv)
+         exit(1);
+     }
+ 
+-    if (argc == 0)
+-        exit(1);
+     if (strrchr(argv[0], '/'))
+         argv[0] = strrchr(argv[0], '/')+1;
+     prog_name = argv[0];
