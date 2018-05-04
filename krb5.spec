@@ -16,9 +16,9 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.16
+Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 27%{?dist}
+Release: 1%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -61,8 +61,6 @@ Patch34: krb5-1.9-debuginfo.patch
 Patch35: krb5-1.11-run_user_0.patch
 Patch36: krb5-1.11-kpasswdtest.patch
 Patch37: Process-included-directories-in-alphabetical-order.patch
-Patch38: Fix-flaws-in-LDAP-DN-checking.patch
-Patch39: Fix-capaths-.-values-on-client.patch
 Patch40: Fix-hex-conversion-of-PKINIT-certid-strings.patch
 Patch41: Exit-with-status-0-from-kadmind.patch
 Patch42: Include-etype-info-in-for-hardware-preauth-hints.patch
@@ -71,7 +69,6 @@ Patch44: Refactor-KDC-krb5_pa_data-utility-functions.patch
 Patch45: Simplify-kdc_preauth.c-systems-table.patch
 Patch46: Add-PKINIT-client-support-for-freshness-token.patch
 Patch47: Add-PKINIT-KDC-support-for-freshness-token.patch
-Patch48: Allow-validation-of-PACs-with-enterprise-names.patch
 Patch49: Fix-read-overflow-in-KDC-sort_pa_data.patch
 Patch50: Include-preauth-name-in-trace-output-if-possible.patch
 Patch51: Report-extended-errors-in-kinit-k-t-KDB.patch
@@ -86,15 +83,9 @@ Patch59: Use-k5_buf_init_dynamic_zap-where-appropriate.patch
 Patch60: Add-SPAKE-preauth-support.patch
 Patch61: Add-doc-index-entries-for-SPAKE-constants.patch
 Patch62: Fix-SPAKE-memory-leak.patch
-Patch63: Continue-after-KRB5_CC_END-in-KCM-cache-iteration.patch
 Patch64: Zap-data-when-freeing-krb5_spake_factor.patch
 Patch65: Be-more-careful-asking-for-AS-key-in-SPAKE-client.patch
-Patch66: Save-SANs-separately-and-unparse-them-with-NO_REALM.patch
-Patch67: Return-UPN-SANs-as-strings.patch
 Patch68: Restrict-pre-authentication-fallback-cases.patch
-Patch69: Merge-duplicate-subsections-in-profile-library.patch
-Patch70: Fix-KDC-null-dereference-on-large-TGS-replies.patch
-Patch73: Set-error-message-on-KCM-get_princ-failure.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -746,6 +737,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri May 04 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-1
+- New upstream release - 1.16.1
+
 * Thu May 03 2018 Robbie Harwood <rharwood@redhat.com> - 1.16-27
 - Fix configuration of default ccache name to match file indentation
 

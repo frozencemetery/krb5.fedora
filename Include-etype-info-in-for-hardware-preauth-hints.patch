@@ -1,4 +1,4 @@
-From be4a469216fb87408484b90be9a1da772ba923df Mon Sep 17 00:00:00 2001
+From 6f883193ddb63da0f29977e3b95a663321404546 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Wed, 3 Jan 2018 11:59:14 -0500
 Subject: [PATCH] Include etype-info in for hardware preauth hints

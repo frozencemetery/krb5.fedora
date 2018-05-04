@@ -1,4 +1,4 @@
-From 4656f809f0f50c3a0a82192f9436e3292a5fe82a Mon Sep 17 00:00:00 2001
+From e6945eee571b0ff776270dea52fb051b62aedabd Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Mon, 26 Mar 2018 11:12:39 -0400
 Subject: [PATCH] Implement k5_buf_init_dynamic_zap

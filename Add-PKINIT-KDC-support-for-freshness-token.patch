@@ -1,4 +1,4 @@
-From 4ddfba7c9c12056f9f5819648f20f68e5625dced Mon Sep 17 00:00:00 2001
+From 9f69b78a93de5ae396eb96d2957f36f8b9dc7458 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Mon, 12 Mar 2018 11:31:46 -0400
 Subject: [PATCH] Add PKINIT KDC support for freshness token
@@ -377,10 +377,10 @@ index 6f34dc289..80b130222 100644
          if (state->pa_data == NULL) {
              krb5_klog_syslog(LOG_INFO,
 diff --git a/src/kdc/kdc_util.h b/src/kdc/kdc_util.h
-index 18649b8ad..a63af2503 100644
+index 198eab9c4..1885c9f80 100644
 --- a/src/kdc/kdc_util.h
 +++ b/src/kdc/kdc_util.h
-@@ -427,11 +427,13 @@ struct krb5_kdcpreauth_rock_st {
+@@ -426,11 +426,13 @@ struct krb5_kdcpreauth_rock_st {
      krb5_kdc_req *request;
      krb5_data *inner_body;
      krb5_db_entry *client;
@@ -415,7 +415,7 @@ index 8489a3e23..fe2ec0d31 100644
      int dh_min_bits;	    /* minimum DH modulus size allowed */
  } pkinit_plg_opts;
 diff --git a/src/plugins/preauth/pkinit/pkinit_srv.c b/src/plugins/preauth/pkinit/pkinit_srv.c
-index 4e9685885..bbfde34b2 100644
+index 8aa4d8b49..76ad5bf19 100644
 --- a/src/plugins/preauth/pkinit/pkinit_srv.c
 +++ b/src/plugins/preauth/pkinit/pkinit_srv.c
 @@ -161,6 +161,10 @@ pkinit_server_get_edata(krb5_context context,
@@ -429,7 +429,7 @@ index 4e9685885..bbfde34b2 100644
      (*respond)(arg, retval, NULL);
  }
  
-@@ -396,6 +400,31 @@ cleanup:
+@@ -403,6 +407,31 @@ cleanup:
      return ret;
  }
  
@@ -461,7 +461,7 @@ index 4e9685885..bbfde34b2 100644
  static void
  pkinit_server_verify_padata(krb5_context context,
                              krb5_data *req_pkt,
-@@ -418,10 +447,11 @@ pkinit_server_verify_padata(krb5_context context,
+@@ -425,10 +454,11 @@ pkinit_server_verify_padata(krb5_context context,
      pkinit_kdc_req_context reqctx = NULL;
      krb5_checksum cksum = {0, 0, 0, NULL};
      krb5_data *der_req = NULL;
@@ -474,7 +474,7 @@ index 4e9685885..bbfde34b2 100644
      char **sp;
  
      pkiDebug("pkinit_verify_padata: entered!\n");
-@@ -592,6 +622,14 @@ pkinit_server_verify_padata(krb5_context context,
+@@ -599,6 +629,14 @@ pkinit_server_verify_padata(krb5_context context,
              goto cleanup;
          }
  
@@ -489,7 +489,7 @@ index 4e9685885..bbfde34b2 100644
          /* check if kdcPkId present and match KDC's subjectIdentifier */
          if (reqp->kdcPkId.data != NULL) {
              int valid_kdcPkId = 0;
-@@ -634,6 +672,13 @@ pkinit_server_verify_padata(krb5_context context,
+@@ -641,6 +679,13 @@ pkinit_server_verify_padata(krb5_context context,
          break;
      }
  
@@ -503,7 +503,7 @@ index 4e9685885..bbfde34b2 100644
      if (is_signed && plgctx->auth_indicators != NULL) {
          /* Assert configured authentication indicators. */
          for (sp = plgctx->auth_indicators; *sp != NULL; sp++) {
-@@ -1323,6 +1368,10 @@ pkinit_init_kdc_profile(krb5_context context, pkinit_kdc_context plgctx)
+@@ -1330,6 +1375,10 @@ pkinit_init_kdc_profile(krb5_context context, pkinit_kdc_context plgctx)
                                KRB5_CONF_PKINIT_REQUIRE_CRL_CHECKING,
                                0, &plgctx->opts->require_crl_checking);
  
@@ -515,7 +515,7 @@ index 4e9685885..bbfde34b2 100644
                               KRB5_CONF_PKINIT_EKU_CHECKING,
                               &eku_string);
 diff --git a/src/tests/t_pkinit.py b/src/tests/t_pkinit.py
-index b790a7cda..3030322e1 100755
+index 86fe661a0..5bc60cb1e 100755
 --- a/src/tests/t_pkinit.py
 +++ b/src/tests/t_pkinit.py
 @@ -39,6 +39,8 @@ pkinit_kdc_conf = {'realms': {'$realm': {
@@ -620,7 +620,7 @@ index b790a7cda..3030322e1 100755
  realm.kinit(realm.user_princ,
              flags=['-X', 'X509_user_identity=%s' % p12_identity])
  realm.klist(realm.user_princ)
-@@ -350,8 +376,6 @@ conf = open(softpkcs11rc, 'w')
+@@ -357,8 +383,6 @@ conf = open(softpkcs11rc, 'w')
  conf.write("%s\t%s\t%s\t%s\n" % ('user', 'user token', user_pem, privkey_pem))
  conf.close()
  # Expect to succeed without having to supply any more information.

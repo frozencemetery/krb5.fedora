@@ -1,4 +1,4 @@
-From d2297aa0ca6006dae654f0f2a24ac8f7ead737f6 Mon Sep 17 00:00:00 2001
+From abb19d2d2eac5f9f6e4a1bf26f59f3a62143dab9 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:47:00 -0400
 Subject: [PATCH] krb5-1.12-api.patch

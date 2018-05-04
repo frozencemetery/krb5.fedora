@@ -1,4 +1,4 @@
-From c7c44bbd80beabe7fb21f5fb6cfb9b57faa320f4 Mon Sep 17 00:00:00 2001
+From 88abb837d8a9ff12b71a848efbeaa9b9a009cc1f Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Mon, 29 Jan 2018 12:10:53 +0100
 Subject: [PATCH] Process included directories in alphabetical order

@@ -1,4 +1,4 @@
-From 812be10fc5f9f2d771fc38e6ba84f7d89a32f726 Mon Sep 17 00:00:00 2001
+From 01acbf3cbd60bd460e6ec6702589451d19c89933 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:33:53 -0400
 Subject: [PATCH] krb5-1.12-ktany.patch

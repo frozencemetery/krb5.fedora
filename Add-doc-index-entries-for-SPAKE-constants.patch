@@ -1,4 +1,4 @@
-From 6410daacd3b14ca1b96889f3db5ea9c94bf58734 Mon Sep 17 00:00:00 2001
+From 0ff94a373749e83fb9c2c5c6fa6d5788b2b63460 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Tue, 27 Mar 2018 00:49:43 -0400
 Subject: [PATCH] Add doc index entries for SPAKE constants

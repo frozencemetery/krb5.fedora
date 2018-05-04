@@ -1,4 +1,4 @@
-From 0afb9c336dd8573faa025915fcb97e643cc3e748 Mon Sep 17 00:00:00 2001
+From bd2f01d99b623be070c8bc8d660ca92c337147ae Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Sun, 11 Feb 2018 15:23:35 -0500
 Subject: [PATCH] Simplify kdc_preauth.c systems table

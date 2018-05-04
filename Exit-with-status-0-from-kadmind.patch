@@ -1,4 +1,4 @@
-From a4576a5946d84e1a74093c4fc171a7fcb1f7ef59 Mon Sep 17 00:00:00 2001
+From cb8f31e6bbf72e207b428d52c2fd9ed719bbec4f Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Wed, 14 Mar 2018 14:31:22 -0400
 Subject: [PATCH] Exit with status 0 from kadmind
@@ -19,10 +19,10 @@ code, which used a similar event model for signals.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/kadmin/server/ovsec_kadmd.c b/src/kadmin/server/ovsec_kadmd.c
-index 6c875901a..936955b89 100644
+index aac4d4ffd..0a28b2384 100644
 --- a/src/kadmin/server/ovsec_kadmd.c
 +++ b/src/kadmin/server/ovsec_kadmd.c
-@@ -560,5 +560,5 @@ main(int argc, char *argv[])
+@@ -559,5 +559,5 @@ main(int argc, char *argv[])
  
      krb5_klog_close(context);
      krb5_free_context(context);

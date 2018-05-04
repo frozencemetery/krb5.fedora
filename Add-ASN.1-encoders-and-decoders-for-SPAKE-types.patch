@@ -1,4 +1,4 @@
-From a675384ef4cc4b6d28cce20cbcef0d033206139a Mon Sep 17 00:00:00 2001
+From dd66546bde0bc868a9af2ac702c7466e7494b33b Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Sat, 13 Jun 2015 16:04:53 -0400
 Subject: [PATCH] Add ASN.1 encoders and decoders for SPAKE types

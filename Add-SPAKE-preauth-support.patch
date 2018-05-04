@@ -1,4 +1,4 @@
-From bcc764eca6c92210716d1d6db59bfe112522a95d Mon Sep 17 00:00:00 2001
+From b054d1d29e676600abd6fdd7a67a283c3c011f95 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Fri, 25 Sep 2015 17:47:35 -0400
 Subject: [PATCH] Add SPAKE preauth support
@@ -106,7 +106,7 @@ ticket: 8647 (new)
  create mode 100644 src/tests/t_spake.py
 
 diff --git a/NOTICE b/NOTICE
-index 1db2420a7..9dc1148b1 100644
+index 1f2ce6493..cb6ab462b 100644
 --- a/NOTICE
 +++ b/NOTICE
 @@ -1316,3 +1316,54 @@ The following notice applies to
@@ -219,10 +219,10 @@ index 1ac1a37c2..f8cf1be7c 100644
      (List of *key*:*salt* strings.)  Specifies the default key/salt
      combinations of principals for this realm.  Any principals created
 diff --git a/doc/admin/conf_files/krb5_conf.rst b/doc/admin/conf_files/krb5_conf.rst
-index 4ed9832c7..8cfe5f458 100644
+index 3d33dba40..2574e5c26 100644
 --- a/doc/admin/conf_files/krb5_conf.rst
 +++ b/doc/admin/conf_files/krb5_conf.rst
-@@ -365,6 +365,21 @@ The libdefaults section may contain any of the following relations:
+@@ -367,6 +367,21 @@ The libdefaults section may contain any of the following relations:
      with the session key type.  See the **kdc_req_checksum_type**
      configuration option for the possible values and their meanings.
  
@@ -354,7 +354,7 @@ index 640955c90..e32365daa 100644
 +For other cookies, there must be exactly one second-factor record
 +corresponding to the factor type chosen by the client.
 diff --git a/doc/notice.rst b/doc/notice.rst
-index 26011550b..cacfd659a 100644
+index a32e55529..8f6b68638 100644
 --- a/doc/notice.rst
 +++ b/doc/notice.rst
 @@ -1237,3 +1237,50 @@ The following notice applies to

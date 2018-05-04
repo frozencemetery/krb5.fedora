@@ -1,4 +1,4 @@
-From 61e3f0142b09cb230be3a2a110f5224e773f1281 Mon Sep 17 00:00:00 2001
+From 276ecd7ba513ce0bfe5e51d6368e00476041a5b4 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Thu, 21 Dec 2017 11:28:52 -0500
 Subject: [PATCH] Refactor KDC krb5_pa_data utility functions
@@ -373,10 +373,10 @@ index 754570c01..13111215d 100644
  }
  
 diff --git a/src/kdc/kdc_util.h b/src/kdc/kdc_util.h
-index f99efcf50..18649b8ad 100644
+index c57d48f73..198eab9c4 100644
 --- a/src/kdc/kdc_util.h
 +++ b/src/kdc/kdc_util.h
-@@ -203,10 +203,10 @@ void
+@@ -202,10 +202,10 @@ void
  free_padata_context(krb5_context context, void *padata_context);
  
  krb5_error_code

@@ -1,4 +1,4 @@
-From 7eb2df66aef8e2b58ec7dfa13e9ee19f5e3b5b34 Mon Sep 17 00:00:00 2001
+From 0bc035db40c5badae3cc00f452560785a0cb0a44 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Tue, 31 Jan 2017 17:02:34 -0500
 Subject: [PATCH] Add PKINIT client support for freshness token
@@ -275,7 +275,7 @@ index 2f88545da..d5858c424 100644
          free_krb5_algorithm_identifiers(&((*in)->supportedCMSTypes));
      if ((*in)->supportedKDFs) {
 diff --git a/src/plugins/preauth/pkinit/pkinit_trace.h b/src/plugins/preauth/pkinit/pkinit_trace.h
-index d4eb39d88..67e0caeb4 100644
+index 2d95da94a..7f95206c0 100644
 --- a/src/plugins/preauth/pkinit/pkinit_trace.h
 +++ b/src/plugins/preauth/pkinit/pkinit_trace.h
 @@ -41,6 +41,8 @@

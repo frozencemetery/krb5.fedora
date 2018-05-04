@@ -1,4 +1,4 @@
-From 46fada3b8a7ad21adf6831cf86c38a822a38748e Mon Sep 17 00:00:00 2001
+From 6b8f7371e49c3aa636871bb4e2ea2d2e86c743de Mon Sep 17 00:00:00 2001
 From: Sumit Bose <sbose@redhat.com>
 Date: Fri, 26 Jan 2018 11:47:50 -0500
 Subject: [PATCH] Fix hex conversion of PKINIT certid strings
@@ -17,10 +17,10 @@ ticket: 8636
  1 file changed, 44 insertions(+), 11 deletions(-)
 
 diff --git a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
-index ac107c2c1..4f21f90d2 100644
+index 2064eb7bd..eb2953fe1 100644
 --- a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
 +++ b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
-@@ -4623,6 +4623,43 @@ reassemble_pkcs11_name(pkinit_identity_opts *idopts)
+@@ -4616,6 +4616,43 @@ reassemble_pkcs11_name(pkinit_identity_opts *idopts)
      return ret;
  }
  
@@ -64,7 +64,7 @@ index ac107c2c1..4f21f90d2 100644
  static krb5_error_code
  pkinit_get_certs_pkcs11(krb5_context context,
                          pkinit_plg_crypto_context plg_cryptoctx,
-@@ -4665,18 +4702,14 @@ pkinit_get_certs_pkcs11(krb5_context context,
+@@ -4658,18 +4695,14 @@ pkinit_get_certs_pkcs11(krb5_context context,
      }
      /* Convert the ascii cert_id string into a binary blob */
      if (idopts->cert_id_string != NULL) {

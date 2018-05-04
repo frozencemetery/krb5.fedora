@@ -1,4 +1,4 @@
-From 181d3a9e2d274b49a2830895a59ce1b22be4000a Mon Sep 17 00:00:00 2001
+From 5ed0331bd6bfd39b9c5ca40ec38d536221118998 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Sat, 3 Feb 2018 20:53:42 -0500
 Subject: [PATCH] Add vector support to k5_sha256()
