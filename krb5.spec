@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 1%{?dist}
+Release: 2%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -86,6 +86,7 @@ Patch62: Fix-SPAKE-memory-leak.patch
 Patch64: Zap-data-when-freeing-krb5_spake_factor.patch
 Patch65: Be-more-careful-asking-for-AS-key-in-SPAKE-client.patch
 Patch68: Restrict-pre-authentication-fallback-cases.patch
+Patch69: Remove-nodes-option-from-make-certs-scripts.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -737,6 +738,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri May 04 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-2
+- Remove "-nodes" option from make-certs scripts
+
 * Fri May 04 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-1
 - New upstream release - 1.16.1
 
