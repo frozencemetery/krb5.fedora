@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 2%{?dist}
+Release: 3%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -87,6 +87,8 @@ Patch64: Zap-data-when-freeing-krb5_spake_factor.patch
 Patch65: Be-more-careful-asking-for-AS-key-in-SPAKE-client.patch
 Patch68: Restrict-pre-authentication-fallback-cases.patch
 Patch69: Remove-nodes-option-from-make-certs-scripts.patch
+Patch70: Fix-segfault-in-finish_dispatch.patch
+Patch71: Log-when-non-root-ksu-authorization-fails.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -738,6 +740,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Jun 01 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-3
+- Log when non-root ksu authorization fails
+- Resolves: #1575771
+
 * Fri May 04 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-2
 - Remove "-nodes" option from make-certs scripts
 
