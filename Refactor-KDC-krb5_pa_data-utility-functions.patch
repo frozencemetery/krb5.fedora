@@ -1,4 +1,4 @@
-From 276ecd7ba513ce0bfe5e51d6368e00476041a5b4 Mon Sep 17 00:00:00 2001
+From 7c59b7ee063489a4259c34b725728fee7e411c46 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Thu, 21 Dec 2017 11:28:52 -0500
 Subject: [PATCH] Refactor KDC krb5_pa_data utility functions

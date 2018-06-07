@@ -1,4 +1,4 @@
-From c98a6fc929b80dd8d221314e31903a9d5ee56295 Mon Sep 17 00:00:00 2001
+From 2b9e79d58b28196dba5f7d3ff2f32ca577444ddc Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Sat, 31 Mar 2018 10:43:49 -0400
 Subject: [PATCH] Be more careful asking for AS key in SPAKE client

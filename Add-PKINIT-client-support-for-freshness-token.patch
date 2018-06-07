@@ -1,4 +1,4 @@
-From 0bc035db40c5badae3cc00f452560785a0cb0a44 Mon Sep 17 00:00:00 2001
+From 5edc6de93196b4f07da6695a4b271a067000c84d Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Tue, 31 Jan 2017 17:02:34 -0500
 Subject: [PATCH] Add PKINIT client support for freshness token

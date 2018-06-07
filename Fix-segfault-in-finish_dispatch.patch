@@ -1,4 +1,4 @@
-From d134cd489a6841f510b3efdf4ddcb283493655f0 Mon Sep 17 00:00:00 2001
+From 617d153bb32d0bd7db33ccec21043d1113651f3a Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Wed, 18 Apr 2018 14:13:28 -0400
 Subject: [PATCH] Fix segfault in finish_dispatch()

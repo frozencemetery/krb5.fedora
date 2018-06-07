@@ -1,4 +1,4 @@
-From 3ea258c813de4c55a8979f019b716422b998e231 Mon Sep 17 00:00:00 2001
+From 390c515e13dffc8c00b44623cba47e27c2f20cf7 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Tue, 27 Mar 2018 10:36:05 -0400
 Subject: [PATCH] Fix SPAKE memory leak

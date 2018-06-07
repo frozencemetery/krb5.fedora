@@ -1,4 +1,4 @@
-From f2402ea18c8587dab261cd724ef62fd7f6bcc8ec Mon Sep 17 00:00:00 2001
+From 74e1079df0cc6e8932e487455177a69f782b863a Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Thu, 4 Jan 2018 14:35:12 -0500
 Subject: [PATCH] Add k5_buf_add_vfmt to k5buf interface

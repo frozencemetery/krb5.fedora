@@ -1,4 +1,4 @@
-From 1e423ec03dbd65845a4aeb8999d130d3d6a0cdd7 Mon Sep 17 00:00:00 2001
+From 70f41a8dafaadfb43aba4918564c22460f812dca Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Thu, 5 Apr 2018 16:23:34 -0400
 Subject: [PATCH] Restrict pre-authentication fallback cases

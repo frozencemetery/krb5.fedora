@@ -1,4 +1,4 @@
-From 177cb167cfc151a1f58fb3e771cd29d0598f462f Mon Sep 17 00:00:00 2001
+From 3b3e31316ae247e18ea22293dffbc8f604338fa7 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Sat, 17 Mar 2018 22:47:34 -0400
 Subject: [PATCH] Report extended errors in kinit -k -t KDB:

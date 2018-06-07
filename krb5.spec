@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 3%{?dist}
+Release: 4%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -60,7 +60,6 @@ Patch33: krb5-1.13-dirsrv-accountlock.patch
 Patch34: krb5-1.9-debuginfo.patch
 Patch35: krb5-1.11-run_user_0.patch
 Patch36: krb5-1.11-kpasswdtest.patch
-Patch37: Process-included-directories-in-alphabetical-order.patch
 Patch40: Fix-hex-conversion-of-PKINIT-certid-strings.patch
 Patch41: Exit-with-status-0-from-kadmind.patch
 Patch42: Include-etype-info-in-for-hardware-preauth-hints.patch
@@ -89,6 +88,8 @@ Patch68: Restrict-pre-authentication-fallback-cases.patch
 Patch69: Remove-nodes-option-from-make-certs-scripts.patch
 Patch70: Fix-segfault-in-finish_dispatch.patch
 Patch71: Log-when-non-root-ksu-authorization-fails.patch
+Patch72: Add-k5_dir_filenames-to-libkrb5support.patch
+Patch73: Process-profile-includedir-in-sorted-order.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -740,6 +741,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Jun 07 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-4
+- Update includedir processing to match upstream
+
 * Fri Jun 01 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-3
 - Log when non-root ksu authorization fails
 - Resolves: #1575771

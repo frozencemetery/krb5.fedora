@@ -1,4 +1,4 @@
-From cb8f31e6bbf72e207b428d52c2fd9ed719bbec4f Mon Sep 17 00:00:00 2001
+From 3bfe632c7011c335362d78356232507d9ee26f73 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Wed, 14 Mar 2018 14:31:22 -0400
 Subject: [PATCH] Exit with status 0 from kadmind

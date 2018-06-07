@@ -1,4 +1,4 @@
-From 6b85df6c6f4bb0e61ba0913722317f4e2c3c23fc Mon Sep 17 00:00:00 2001
+From 9dd3a84f324979c29e8ab4b472e98dfa73e6b290 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Mon, 7 May 2018 16:42:59 -0400
 Subject: [PATCH] Log when non-root ksu authorization fails

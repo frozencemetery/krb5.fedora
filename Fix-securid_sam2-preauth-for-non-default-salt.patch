@@ -1,4 +1,4 @@
-From 9c9ff189c16b16f848f2e85c1d262f12c6d5e922 Mon Sep 17 00:00:00 2001
+From e405f42b532e377e7e3d654313a07f8c11f48f9a Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Wed, 3 Jan 2018 12:06:08 -0500
 Subject: [PATCH] Fix securid_sam2 preauth for non-default salt

@@ -1,4 +1,4 @@
-From 9f69b78a93de5ae396eb96d2957f36f8b9dc7458 Mon Sep 17 00:00:00 2001
+From c93112a19f73b9a984cabd320129ee8f70cb4823 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Mon, 12 Mar 2018 11:31:46 -0400
 Subject: [PATCH] Add PKINIT KDC support for freshness token

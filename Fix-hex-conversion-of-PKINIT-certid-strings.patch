@@ -1,4 +1,4 @@
-From 6b8f7371e49c3aa636871bb4e2ea2d2e86c743de Mon Sep 17 00:00:00 2001
+From 8b898badbe8051270c6da96f5c15f3bc8b6d974e Mon Sep 17 00:00:00 2001
 From: Sumit Bose <sbose@redhat.com>
 Date: Fri, 26 Jan 2018 11:47:50 -0500
 Subject: [PATCH] Fix hex conversion of PKINIT certid strings
