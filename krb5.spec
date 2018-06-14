@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 4%{?dist}
+Release: 5%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -90,6 +90,7 @@ Patch70: Fix-segfault-in-finish_dispatch.patch
 Patch71: Log-when-non-root-ksu-authorization-fails.patch
 Patch72: Add-k5_dir_filenames-to-libkrb5support.patch
 Patch73: Process-profile-includedir-in-sorted-order.patch
+Patch74: Make-docs-build-python3-compatible.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -741,6 +742,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Jun 14 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-5
+- Make docs build python3-compatible
+- Resolves: #1590928
+
 * Thu Jun 07 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-4
 - Update includedir processing to match upstream
 
