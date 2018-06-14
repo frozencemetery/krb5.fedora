@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 6%{?dist}
+Release: 7%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -91,6 +91,7 @@ Patch71: Log-when-non-root-ksu-authorization-fails.patch
 Patch72: Add-k5_dir_filenames-to-libkrb5support.patch
 Patch73: Process-profile-includedir-in-sorted-order.patch
 Patch74: Make-docs-build-python3-compatible.patch
+Patch75: Add-flag-to-disable-encrypted-timestamp-on-client.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -742,6 +743,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Jun 14 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-7
+- Add flag to disable encrypted timestamp on client
+
 * Thu Jun 14 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-6
 - Switch to python3-sphinx for docs
 - Resolves: #1590928
