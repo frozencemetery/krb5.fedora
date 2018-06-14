@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 5%{?dist}
+Release: 6%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -98,7 +98,7 @@ Group: System Environment/Libraries
 BuildRequires: autoconf, bison, cmake, flex, gawk, gettext, pkgconfig, sed
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
 BuildRequires: gzip, ncurses-devel
-BuildRequires: python2-sphinx, texlive-pdftex, latexmk
+BuildRequires: python3-sphinx, texlive-pdftex, latexmk
 
 # For autosetup
 BuildRequires: git
@@ -742,6 +742,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Jun 14 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-6
+- Switch to python3-sphinx for docs
+- Resolves: #1590928
+
 * Thu Jun 14 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-5
 - Make docs build python3-compatible
 - Resolves: #1590928
