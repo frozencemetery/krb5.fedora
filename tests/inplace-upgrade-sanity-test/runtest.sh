@@ -37,12 +37,14 @@ TEST_ENTROPY_SOURCE=${TEST_ENTROPY_SOURCE:-no}
 echo TEST_ENTROPY_SOURCE=$TEST_ENTROPY_SOURCE
 
 hostnamectl set-hostname test.fedora.com
-echo "`hostname -I` test.fedora.com" >>/etc/hosts
+
+host_ip=`hostname -I | awk '{print$1}'`
+echo "$host_ip test.fedora.com" >> /etc/hosts
 
 krb5REALM1='ZMRAZ.COM'
 krb5REALM2='PKIS.NET'
 krb5HostName=`hostname`
-krb5DomainName=`hostname -d`
+krb5DomainName='fedora.com'
 krb5User='alice'
 krb5UserPass='alice'
 krb5UserKrbPass='aaa'
@@ -143,12 +145,12 @@ _EOF
         rlRun "kadmin.local -r $krb5REALM2 -q \"addprinc -randkey host/$krb5HostName\""
         rlRun "kadmin.local -r $krb5REALM2 -q \"addprinc -pw $krb5KDCPass krbtgt/$krb5REALM1@$krb5REALM2\""
         rlRun "kadmin.local -r $krb5REALM2 -q \"addprinc -pw $krb5KDCPass krbtgt/$krb5REALM2@$krb5REALM1\""
-        # Create test system user 
+        # Create test system user
         [ $krb5User != "root" ] && rlRun "useradd $krb5User"
         rlRun "echo $krb5UserPass | passwd --stdin $krb5User"
     rlPhaseEnd
     fi
-    
+
     rlPhaseStartTest "Daemon start and log file test"
         # Make sure there is enough entropy and start recording of the logs
         rlRun "rngd -r /dev/urandom"
@@ -217,7 +219,7 @@ _EOF
 #!/usr/bin/expect -f
 set USER    [lindex $argv 0]
 set HOST    [lindex $argv 1]
-set timeout 10
+set timeout 15
 spawn ssh $USER@$HOST pwd
 expect {
     -re ".*(yes/no).*" { send -- "yes\r"; exp_continue }
@@ -297,7 +299,7 @@ _EOF
         [ $krb5User != "root" ] && rlRun "userdel -r -f $krb5User"
     rlPhaseEnd
     fi
-    
+
     rlPhaseStartCleanup
         rlRun "popd"
         rlRun "rm -r $TmpDir"
