@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 8%{?dist}
+Release: 9%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -151,6 +151,9 @@ BuildRequires: yasm
 
 BuildRequires: nss_wrapper
 BuildRequires: socket_wrapper
+
+# To run TESTS, we need python2
+BuildRequires: python2
 
 %description
 Kerberos V5 is a trusted-third-party network authentication system,
@@ -744,6 +747,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Jul 06 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-9
+- Add BuildRequires on python2 so we can run tests at build-time
+
 * Fri Jul 06 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-8
 - Explicitly look for python2 in configure.in
 
