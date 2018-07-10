@@ -566,7 +566,6 @@ exit 0
 %ldconfig_scriptlets -n libkadm5
 
 %files workstation
-%defattr(-,root,root,-)
 %doc src/config-files/services.append
 %doc src/config-files/krb5.conf
 %doc build-html/*
@@ -601,7 +600,6 @@ exit 0
 %config(noreplace) /etc/pam.d/ksu
 
 %files server
-%defattr(-,root,root,-)
 %docdir %{_mandir}
 %doc build-pdf/admin.pdf build-pdf/build.pdf
 %doc src/config-files/kdc.conf
@@ -655,7 +653,6 @@ exit 0
 %{_mandir}/man8/sserver.8*
 
 %files server-ldap
-%defattr(-,root,root,-)
 %docdir %{_mandir}
 %doc src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
 %doc src/plugins/kdb/ldap/libkdb_ldap/kerberos.schema
@@ -670,7 +667,6 @@ exit 0
 %{_sbindir}/kdb5_ldap_util
 
 %files libs -f %{gettext_domain}.lang
-%defattr(-,root,root,-)
 %doc README NOTICE
 %{!?_licensedir:%global license %%doc}
 %license LICENSE
@@ -703,14 +699,12 @@ exit 0
 %dir %{_var}/kerberos/krb5/user
 
 %files pkinit
-%defattr(-,root,root,-)
 %dir %{_libdir}/krb5
 %dir %{_libdir}/krb5/plugins
 %dir %{_libdir}/krb5/plugins/preauth
 %{_libdir}/krb5/plugins/preauth/pkinit.so
 
 %files devel
-%defattr(-,root,root,-)
 %docdir %{_mandir}
 %doc build-pdf/appdev.pdf build-pdf/plugindev.pdf
 
@@ -738,7 +732,6 @@ exit 0
 %{_sbindir}/uuserver
 
 %files -n libkadm5
-%defattr(-,root,root,-)
 %{_libdir}/libkadm5clnt.so
 %{_libdir}/libkadm5clnt_mit.so
 %{_libdir}/libkadm5srv.so
