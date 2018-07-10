@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 9%{?dist}
+Release: 10%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -93,6 +93,7 @@ Patch73: Process-profile-includedir-in-sorted-order.patch
 Patch74: Make-docs-build-python3-compatible.patch
 Patch75: Add-flag-to-disable-encrypted-timestamp-on-client.patch
 Patch76: Explicitly-look-for-python2-in-configure.in.patch
+Patch77: Use-SHA-256-instead-of-MD5-for-audit-ticket-IDs.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -740,6 +741,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Jul 10 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-10
+- Use SHA-256 instead of MD5 for audit ticket IDs
+
 * Fri Jul 06 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-9
 - Add BuildRequires on python2 so we can run tests at build-time
 
