@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 10%{?dist}
+Release: 11%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -360,7 +360,8 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 	--with-system-verto \
 	--with-pam \
 	--with-selinux \
-	--with-prng-alg=os
+	--with-prng-alg=os \
+	|| (cat config.log; exit 1)
 # Now build it.
 make
 popd
@@ -741,6 +742,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Jul 11 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-11
+- Add build dependency on gcc
+
 * Tue Jul 10 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-10
 - Use SHA-256 instead of MD5 for audit ticket IDs
 
