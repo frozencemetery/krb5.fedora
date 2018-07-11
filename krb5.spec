@@ -99,6 +99,7 @@ License: MIT
 URL: http://web.mit.edu/kerberos/www/
 Group: System Environment/Libraries
 BuildRequires: autoconf, bison, cmake, flex, gawk, gettext, pkgconfig, sed
+BuildRequires: gcc
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
 BuildRequires: gzip, ncurses-devel
 BuildRequires: python3-sphinx, texlive-pdftex, latexmk
