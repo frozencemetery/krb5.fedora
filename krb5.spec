@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 11%{?dist}
+Release: 12%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -94,6 +94,8 @@ Patch74: Make-docs-build-python3-compatible.patch
 Patch75: Add-flag-to-disable-encrypted-timestamp-on-client.patch
 Patch76: Explicitly-look-for-python2-in-configure.in.patch
 Patch77: Use-SHA-256-instead-of-MD5-for-audit-ticket-IDs.patch
+Patch78: Add-k5test-mark-function.patch
+Patch79: Convert-Python-tests-to-Python-3.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -139,7 +141,7 @@ BuildRequires: pam-devel
 BuildRequires: systemd-units
 
 # For the test framework.
-BuildRequires: perl-interpreter, dejagnu, tcl-devel
+BuildRequires: perl-interpreter, dejagnu, tcl-devel, python3
 BuildRequires: net-tools, rpcbind
 BuildRequires: hostname
 BuildRequires: iproute
@@ -153,9 +155,6 @@ BuildRequires: yasm
 
 BuildRequires: nss_wrapper
 BuildRequires: socket_wrapper
-
-# To run TESTS, we need python2
-BuildRequires: python2
 
 %description
 Kerberos V5 is a trusted-third-party network authentication system,
@@ -743,6 +742,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Jul 12 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-12
+- Convert Python tests to Python 3
+
 * Wed Jul 11 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-11
 - Add build dependency on gcc
 
