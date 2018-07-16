@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 12%{?dist}
+Release: 13%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -96,6 +96,7 @@ Patch76: Explicitly-look-for-python2-in-configure.in.patch
 Patch77: Use-SHA-256-instead-of-MD5-for-audit-ticket-IDs.patch
 Patch78: Add-k5test-mark-function.patch
 Patch79: Convert-Python-tests-to-Python-3.patch
+Patch80: Zap-copy-of-secret-in-RC4-string-to-key.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -742,6 +743,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Jul 16 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-13
+- Zap copy of secret in RC4 string-to-key
+
 * Thu Jul 12 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-12
 - Convert Python tests to Python 3
 
