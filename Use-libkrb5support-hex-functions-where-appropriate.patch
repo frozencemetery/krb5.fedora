@@ -4,6 +4,7 @@ Date: Mon, 19 Feb 2018 00:52:35 -0500
 Subject: [PATCH] Use libkrb5support hex functions where appropriate
 
 (cherry picked from commit b0c700608be7455041a8afc0e4502e8783ee7f30)
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/kadmin/dbutil/deps                        | 16 ++---
  src/kadmin/dbutil/tabdump.c                   | 19 +++---

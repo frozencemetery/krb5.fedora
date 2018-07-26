@@ -12,6 +12,7 @@ commit message]
 
 ticket: 8636
 (cherry picked from commit 63e8b8142fd7b3931a7bf2d6448978ca536bafc0)
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  .../preauth/pkinit/pkinit_crypto_openssl.c    | 55 +++++++++++++++----
  1 file changed, 44 insertions(+), 11 deletions(-)

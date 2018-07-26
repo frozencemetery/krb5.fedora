@@ -10,6 +10,7 @@ freshnessToken field of pkAuthenticator
 
 ticket: 8648
 (cherry picked from commit 085785362e01467cb25c79a90dcebfba9ea019d8)
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  doc/user/user_commands/kinit.rst          |  3 +++
  src/include/k5-int-pkinit.h               |  1 +

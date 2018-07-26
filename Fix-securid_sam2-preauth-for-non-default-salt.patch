@@ -8,6 +8,7 @@ just the default salt type.
 
 ticket: 8629
 (cherry picked from commit a2339099ad13c84de0843fd04d0ba612fc194a1e)
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/plugins/preauth/securid_sam2/grail.c    | 3 +--
  src/plugins/preauth/securid_sam2/securid2.c | 3 +--

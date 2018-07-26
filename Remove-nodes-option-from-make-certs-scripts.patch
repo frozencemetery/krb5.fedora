@@ -12,6 +12,7 @@ pkcs12 subcommands, but genrsa creates unencrypted keys by default.
 [ghudson@mit.edu: edited commit message]
 
 (cherry picked from commit 928a36aae326d496c9a73f2cd41b4da45eef577c)
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/tests/dejagnu/pkinit-certs/make-certs.sh | 2 +-
  src/tests/dejagnu/proxy-certs/make-certs.sh  | 2 +-

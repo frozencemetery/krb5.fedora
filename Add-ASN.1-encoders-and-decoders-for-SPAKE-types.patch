@@ -13,6 +13,7 @@ compiled as part of "make test-vectors" and not as part of the regular
 build.
 
 (cherry picked from commit 78a09d95dff6915da4079bc611f4bb95f6a95f70)
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/include/k5-spake.h               | 107 +++++++++++++++++++++++++++
  src/lib/krb5/asn.1/asn1_k_encode.c   |  52 ++++++++++++-

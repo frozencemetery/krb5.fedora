@@ -11,6 +11,7 @@ and use it when formatting {patype} or {patypes}.
 
 ticket: 8653 (new)
 (cherry picked from commit 9c68fe39b018666eabe033b639c1f35d03ba51c7)
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/include/k5-trace.h      |  17 +--
  src/lib/krb5/os/t_trace.ref |   2 +-

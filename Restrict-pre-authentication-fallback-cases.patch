@@ -16,6 +16,7 @@ retried after a failure.
 
 ticket: 8654
 (cherry picked from commit 7a24a088c16d326127dd2b29084d4ca085c70d10)
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/include/krb5/clpreauth_plugin.h      | 14 ++++
  src/lib/krb5/krb/get_in_tkt.c            | 21 +++---

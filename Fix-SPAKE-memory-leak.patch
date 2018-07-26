@@ -10,6 +10,7 @@ data object to avoid a harmless uninitialized memory copy.
 
 ticket: 8647
 (cherry picked from commit 70b88b8018658e052d6eabf06f8fdad17fbe993c)
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/plugins/preauth/spake/openssl.c   | 1 +
  src/plugins/preauth/spake/spake_kdc.c | 1 +

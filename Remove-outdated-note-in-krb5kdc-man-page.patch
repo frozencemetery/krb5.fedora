@@ -13,6 +13,7 @@ tags: pullup
 target_version: 1.16-next
 
 (cherry picked from commit 728b66ab867e31c4c338c6a6309d629d39a4ec3f)
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  doc/admin/admin_commands/krb5kdc.rst | 7 -------
  1 file changed, 7 deletions(-)

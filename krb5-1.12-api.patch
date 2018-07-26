@@ -6,6 +6,8 @@ Subject: [PATCH] krb5-1.12-api.patch
 Reference docs don't define what happens if you call krb5_realm_compare() with
 malformed krb5_principal structures.  Define a behavior which keeps it from
 crashing if applications don't check ahead of time.
+
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/lib/krb5/krb/princ_comp.c | 7 +++++++
  1 file changed, 7 insertions(+)

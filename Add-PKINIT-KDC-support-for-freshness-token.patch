@@ -24,6 +24,7 @@ the RSA test.
 
 ticket: 8648
 (cherry picked from commit 4a9050df0bc34bfb08ba24462d6e2514640f4b8e)
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  doc/admin/conf_files/kdc_conf.rst       |   4 +
  doc/admin/pkinit.rst                    |  25 +++++

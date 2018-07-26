@@ -8,6 +8,7 @@ paths information in docs.  Call exec() directly instead.
 
 ticket: 8692 (new)
 (cherry picked from commit a7c6d98480f1e33454173f88381921472d72f80a)
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  doc/conf.py | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)

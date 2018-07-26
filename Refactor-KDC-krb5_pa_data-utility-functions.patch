@@ -16,6 +16,7 @@ callers accordingly, making small simplifications to memory handling
 where applicable.
 
 (cherry picked from commit 4af478c18b02e1d2444a328bb79e6976ef3d312b)
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/kdc/fast_util.c   |  28 +------
  src/kdc/kdc_preauth.c |  14 ++--

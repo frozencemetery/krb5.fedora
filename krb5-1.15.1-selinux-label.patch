@@ -35,6 +35,8 @@ stomp all over us.
 The selabel APIs for looking up the context should be thread-safe (per
 Red Hat #273081), so switching to using them instead of matchpathcon(),
 which we used earlier, is some improvement.
+
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/aclocal.m4                                |  49 +++
  src/build-tools/krb5-config.in                |   3 +-

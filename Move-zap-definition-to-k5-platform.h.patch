@@ -7,6 +7,7 @@ Make it possible to use zap() in parts of the code which should not
 include k5-int.h by moving its definition to k5-platform.h.
 
 (cherry picked from commit df6bef6f9ea6a5f6f3956a2988cd658c78aae817)
+Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/include/k5-int.h      | 45 -------------------------------------
  src/include/k5-platform.h | 47 ++++++++++++++++++++++++++++++++++++++-
