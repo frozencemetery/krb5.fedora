@@ -5,7 +5,6 @@ Subject: [PATCH] Add libkrb5support hex functions and tests
 
 (cherry picked from commit 720dea558da0062d3cea4385327161e62cf09a5e)
 [rharwood@redhat.com Remove .gitignore]
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/include/k5-hex.h                          |  53 ++++++
  src/util/support/Makefile.in                  |  15 +-

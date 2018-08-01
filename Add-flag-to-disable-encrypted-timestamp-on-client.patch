@@ -5,7 +5,6 @@ Subject: [PATCH] Add flag to disable encrypted timestamp on client
 
 ticket: 8655
 (cherry picked from commit 4ad376134b8d456392edbac7a7d351e6c7a7f0e7)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  doc/admin/conf_files/krb5_conf.rst | 10 ++++++++++
  doc/admin/spake.rst                |  8 ++++++++

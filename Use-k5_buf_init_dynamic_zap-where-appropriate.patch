@@ -4,7 +4,6 @@ Date: Mon, 26 Mar 2018 11:24:49 -0400
 Subject: [PATCH] Use k5_buf_init_dynamic_zap where appropriate
 
 (cherry picked from commit 9172599008f3a6790d4a9a67acff58049742dcb6)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/lib/krb5/ccache/cc_file.c    | 4 ++--
  src/lib/krb5/ccache/cc_keyring.c | 2 +-

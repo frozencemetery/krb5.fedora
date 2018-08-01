@@ -4,8 +4,6 @@ Date: Tue, 23 Aug 2016 16:32:09 -0400
 Subject: [PATCH] krb5-1.12-ksu-path.patch
 
 Set the default PATH to the one set by login.
-
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/clients/ksu/Makefile.in | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

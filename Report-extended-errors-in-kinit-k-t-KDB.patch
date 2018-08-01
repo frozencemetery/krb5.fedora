@@ -9,7 +9,6 @@ extended error messages.
 
 ticket: 8652 (new)
 (cherry picked from commit d4d902d317a2acc46ee71094a33a9203b6135275)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/clients/kinit/kinit.c | 1 +
  1 file changed, 1 insertion(+)

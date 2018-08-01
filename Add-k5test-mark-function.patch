@@ -8,7 +8,6 @@ by allowing the script to output marks, and displaying the most recent
 mark with command failures.
 
 (cherry picked from commit 4e813204ac3dace93297f47d64dfc0aaecc370f8)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/util/k5test.py | 14 ++++++++++++++
  1 file changed, 14 insertions(+)

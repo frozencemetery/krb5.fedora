@@ -7,7 +7,6 @@ Add a support function to get a list of filenames from a directory in
 sorted order.
 
 (cherry picked from commit 27534121eb39089ff4335d8b465027e9ba783682)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/include/k5-platform.h                     |   7 +
  src/util/support/Makefile.in                  |   3 +

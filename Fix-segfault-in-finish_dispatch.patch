@@ -12,8 +12,6 @@ dereference state->active_realm.
 tags: pullup
 target_version: 1.16-next
 target_version: 1.15-next
-
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/kdc/dispatch.c | 79 ++++++++++++++++++++++++----------------------
  1 file changed, 42 insertions(+), 37 deletions(-)

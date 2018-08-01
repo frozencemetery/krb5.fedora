@@ -10,7 +10,6 @@ password.
 
 ticket: 8629
 (cherry picked from commit ba92da05accc524b8037453b63ced1a6c65fd2a1)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/kdc/kdc_preauth.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)

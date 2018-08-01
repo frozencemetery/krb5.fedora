@@ -15,7 +15,6 @@ padata types.  The KRB5_PADATA_SERVER_REFERRAL entry has been disabled
 since it was first added.
 
 (cherry picked from commit fea1a488924faa3938ef723feaa1ff12d22a91ff)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/kdc/kdc_preauth.c | 526 +++++++++++++++---------------------------
  1 file changed, 184 insertions(+), 342 deletions(-)

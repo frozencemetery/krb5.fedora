@@ -47,7 +47,6 @@ registry contents; implemented P-384 and P-521]
 
 ticket: 8647 (new)
 (cherry picked from commit 7447259401569c92b1fb2e31cb02edbbffd67d35)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  NOTICE                                        |   51 +
  doc/admin/conf_files/kdc_conf.rst             |   22 +-

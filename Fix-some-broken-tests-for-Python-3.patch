@@ -15,7 +15,6 @@ currently not exercised by Travis.
 ticket: 8710
 (cherry picked from commit d1fb3551c0dff5c3e6555b31fcbf04ff04d577fe)
 [rharwood@redhat.com: .travis.yml]
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/lib/krad/t_daemon.py |  2 +-
  src/tests/jsonwalker.py  | 16 +++++-----------

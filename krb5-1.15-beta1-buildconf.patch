@@ -8,8 +8,6 @@ and install shared libraries with the execute bit set on them.  Prune out
 the -L/usr/lib* and PIE flags where they might leak out and affect
 apps which just want to link with the libraries. FIXME: needs to check and
 not just assume that the compiler supports using these flags.
-
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/build-tools/krb5-config.in | 7 +++++++
  src/config/pre.in              | 2 +-

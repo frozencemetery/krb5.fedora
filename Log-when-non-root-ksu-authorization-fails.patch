@@ -8,7 +8,6 @@ syslog at LOG_WARNING in keeping with other failure messages.
 
 ticket: 8270
 (cherry picked from commit 6cfa5c113e981f14f70ccafa20abfa5c46b665ba)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/clients/ksu/main.c | 10 ++++++++++
  1 file changed, 10 insertions(+)

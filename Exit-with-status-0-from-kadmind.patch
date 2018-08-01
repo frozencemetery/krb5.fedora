@@ -14,7 +14,6 @@ weird return code has been present since the addition of the kadmin
 code, which used a similar event model for signals.
 
 (cherry picked from commit f970ad412aca36f8a7d3addb1cd4026ed22e5592)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/kadmin/server/ovsec_kadmd.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

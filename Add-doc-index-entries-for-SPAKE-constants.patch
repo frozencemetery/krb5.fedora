@@ -5,7 +5,6 @@ Subject: [PATCH] Add doc index entries for SPAKE constants
 
 ticket: 8647
 (cherry picked from commit c010c9031753f356bb380e8a1324cc34721f8221)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  doc/appdev/refs/macros/index.rst | 2 ++
  1 file changed, 2 insertions(+)

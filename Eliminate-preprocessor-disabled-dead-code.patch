@@ -10,7 +10,6 @@ these dead hunks along with the complexity to support them.
 
 (cherry picked from commit 2bc951d3c88b460a16249115cbd51d69c3c57e22)
 [rharwood@redhat.com: context skew]
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/ccapi/common/win/OldCC/ccutils.c          |  6 --
  src/ccapi/common/win/OldCC/ccutils.h          |  3 -

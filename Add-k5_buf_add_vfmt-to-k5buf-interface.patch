@@ -4,7 +4,6 @@ Date: Thu, 4 Jan 2018 14:35:12 -0500
 Subject: [PATCH] Add k5_buf_add_vfmt to k5buf interface
 
 (cherry picked from commit f05766469efc2a055085c0bcf9d40c4cdf47fe36)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/include/k5-buf.h                          |  8 ++++++
  src/util/support/k5buf.c                      | 26 +++++++++++--------

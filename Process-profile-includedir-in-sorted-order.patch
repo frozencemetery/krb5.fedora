@@ -9,7 +9,6 @@ within the C locale).
 
 ticket: 8686
 (cherry picked from commit f574eda48740ad192f51e9a382a205e2ea0e60ad)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  doc/admin/conf_files/krb5_conf.rst |  4 ++-
  src/util/profile/prof_parse.c      | 56 +++++-------------------------

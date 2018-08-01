@@ -9,7 +9,6 @@ flushes to make prompts visible in k5test.py.
 
 ticket: 8710
 (cherry picked from commit 297535b72177dcced036b78107e9d0e37781c7a3)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/util/k5test.py | 2 ++
  1 file changed, 2 insertions(+)

@@ -8,7 +8,6 @@ to k5_sha256(), for efficient computation of SHA-256 hashes over
 concatenations of data values.
 
 (cherry picked from commit 4f3373e8c55b3e9bdfb5b065e07214c5816c85fa)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/include/k5-int.h                 | 4 ++--
  src/lib/crypto/builtin/sha2/sha256.c | 6 ++++--

@@ -15,7 +15,6 @@ doesn't need a #!/usr/bin/python header.
 
 ticket: 8709 (new)
 (cherry picked from commit 2bd410ecdb366083fe9b4e5f6ac4b741b624230b)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/appl/gss-sample/t_gss_sample.py     | 2 --
  src/appl/user_user/t_user2user.py       | 1 -

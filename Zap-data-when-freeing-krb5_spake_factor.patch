@@ -8,7 +8,6 @@ second-factor SPAKE is implemented, so should be zapped when freed.
 
 ticket: 8647
 (cherry picked from commit 9cc94a3f1ce06a4430f684300a747ec079102403)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/lib/krb5/krb/kfree.c | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)

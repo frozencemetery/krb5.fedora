@@ -16,8 +16,6 @@ When enabled, ksu gains a dependency on libpam.
 Originally RT#5939, though it's changed since then to perform the account
 and session management before dropping privileges, and to apply on top of
 changes we're proposing for how it handles cache collections.
-
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/aclocal.m4              |  67 +++++++
  src/clients/ksu/Makefile.in |   8 +-

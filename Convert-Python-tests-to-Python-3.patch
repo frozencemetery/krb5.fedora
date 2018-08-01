@@ -9,7 +9,6 @@ test code to conform to Python 3.
 ticket: 8710 (new)
 (cherry picked from commit e23d24beacb73581bbf4351250f3955e6fd44361)
 [rharwood@redhat.com: Context skew due to not having LMDB in tests]
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/Makefile.in                  |  1 +
  src/configure.in                 |  6 ++--

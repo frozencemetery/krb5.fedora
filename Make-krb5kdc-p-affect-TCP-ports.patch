@@ -9,7 +9,6 @@ ports.
 
 ticket: 8715 (new)
 (cherry picked from commit eb514587acc5c357bf0f554199bf0489b5515f8b)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  doc/admin/admin_commands/krb5kdc.rst | 12 ++++++------
  src/kdc/main.c                       | 12 ++++--------

@@ -15,7 +15,6 @@ instead get the count from the prior loop by stopping once we move all
 of the key-replacing modules to the front.
 
 (cherry picked from commit b38e318cea18fd65647189eed64aef83bf1cb772)
-Signed-off-by: Robbie Harwood <rharwood@redhat.com>
 ---
  src/kdc/kdc_preauth.c | 9 +++++----
  1 file changed, 5 insertions(+), 4 deletions(-)
