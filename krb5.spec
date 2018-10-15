@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 21%{?dist}
+Release: 22%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -103,10 +103,7 @@ Patch83: Make-krb5kdc-p-affect-TCP-ports.patch
 Patch84: Remove-outdated-note-in-krb5kdc-man-page.patch
 Patch85: Fix-k5test-prompts-for-Python-3.patch
 Patch86: In-FIPS-mode-add-plaintext-fallback-for-RC4-usages-a.patch
-# Disabled for now as it seems to make things worse for FreeIPA
-# (consistent crashes during server deployment, not just a crash
-# in a later test): https://bugzilla.redhat.com/show_bug.cgi?id=1633089#c26
-#Patch87: Fix-bugs-with-concurrent-use-of-MEMORY-ccaches.patch
+Patch87: Prefer-TCP-to-UDP-for-password-changes.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -753,6 +750,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Oct 15 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-22
+- Prefer TCP to UDP for password changes
+- Resolves: #1637611
+
 * Tue Oct 09 2018 Adam Williamson <awilliam@redhat.com> - 1.16.1-21
 - Revert the patch from -20 for now as it seems to make FreeIPA worse
 
