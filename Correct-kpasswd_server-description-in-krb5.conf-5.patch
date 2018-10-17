@@ -1,0 +1,28 @@
+From c5d97d45431509fe972ce24fed2429027221b0ec Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Tue, 16 Oct 2018 17:32:29 -0400
+Subject: [PATCH] Correct kpasswd_server description in krb5.conf(5)
+
+ticket: 8754 (new)
+tags: pullup
+target_version: 1.16-next
+
+(cherry picked from commit 762d804701f78fc76f728ec05a205eea6a2b2dd7)
+---
+ doc/admin/conf_files/krb5_conf.rst | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/doc/admin/conf_files/krb5_conf.rst b/doc/admin/conf_files/krb5_conf.rst
+index eb5c29e5d..f5139244b 100644
+--- a/doc/admin/conf_files/krb5_conf.rst
++++ b/doc/admin/conf_files/krb5_conf.rst
+@@ -523,7 +523,8 @@ following tags may be specified in the realm's subsection:
+ 
+ **kpasswd_server**
+     Points to the server where all the password changes are performed.
+-    If there is no such entry, the port 464 on the **admin_server**
++    If there is no such entry, DNS will be queried (unless forbidden
++    by **dns_lookup_kdc**).  Finally, port 464 on the **admin_server**
+     host will be tried.
+ 
+ **master_kdc**
