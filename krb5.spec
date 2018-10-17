@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 23%{?dist}
+Release: 24%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -105,6 +105,8 @@ Patch85: Fix-k5test-prompts-for-Python-3.patch
 Patch86: In-FIPS-mode-add-plaintext-fallback-for-RC4-usages-a.patch
 Patch87: Prefer-TCP-to-UDP-for-password-changes.patch
 Patch88: Correct-kpasswd_server-description-in-krb5.conf-5.patch
+Patch89: Prevent-SIGPIPE-from-socket-writes-on-UNIX-likes.patch
+Patch90: Use-port-sockets.h-macros-in-cc_kcm-sendto_kdc.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -751,6 +753,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Oct 17 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-24
+- Use port-sockets.h macros in cc_kcm, sendto_kdc
+- Resolves: #1631998
+
 * Wed Oct 17 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-23
 - Correct kpasswd_server description in krb5.conf(5)
 - Resolves: #1640272
