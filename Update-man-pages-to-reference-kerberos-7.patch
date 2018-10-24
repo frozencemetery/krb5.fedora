@@ -1,0 +1,476 @@
+From 92984a6d7208ceab384d5a21d03de08b4cb4c8d8 Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Mon, 15 Oct 2018 15:19:12 -0400
+Subject: [PATCH] Update man pages to reference kerberos(7)
+
+Remove broken references to old kerberos(1).  Reference kerberos(7)
+from all man pages, and create/update their environment section so
+that it references kerberos(7).
+
+ticket: 8755
+(cherry picked from commit 52cbe198d0d6f0085d4653b2f6a1ecc84d139118)
+[rharwood@redhat.com: conflicts: kvno doesn't have u2u yet, git derped
+on kswitch]
+---
+ doc/admin/admin_commands/k5srvutil.rst      |  9 ++++++++-
+ doc/admin/admin_commands/kadmin_local.rst   |  9 ++++++++-
+ doc/admin/admin_commands/kadmind.rst        |  9 ++++++++-
+ doc/admin/admin_commands/kdb5_ldap_util.rst |  9 ++++++++-
+ doc/admin/admin_commands/kdb5_util.rst      |  9 ++++++++-
+ doc/admin/admin_commands/kprop.rst          |  8 ++++----
+ doc/admin/admin_commands/kpropd.rst         | 10 +++++++++-
+ doc/admin/admin_commands/kproplog.rst       |  7 +++----
+ doc/admin/admin_commands/krb5kdc.rst        |  8 +++-----
+ doc/admin/admin_commands/ktutil.rst         |  9 ++++++++-
+ doc/admin/admin_commands/sserver.rst        |  9 ++++++++-
+ doc/user/user_commands/kdestroy.rst         | 13 +++----------
+ doc/user/user_commands/kinit.rst            | 14 +++-----------
+ doc/user/user_commands/klist.rst            | 13 +++----------
+ doc/user/user_commands/kpasswd.rst          |  9 ++++++++-
+ doc/user/user_commands/krb5-config.rst      |  2 +-
+ doc/user/user_commands/ksu.rst              | 13 +++++++++++++
+ doc/user/user_commands/kswitch.rst          | 14 ++++----------
+ doc/user/user_commands/kvno.rst             |  9 +++------
+ doc/user/user_commands/sclient.rst          |  8 +++++++-
+ 20 files changed, 120 insertions(+), 71 deletions(-)
+
+diff --git a/doc/admin/admin_commands/k5srvutil.rst b/doc/admin/admin_commands/k5srvutil.rst
+index b873d9077..79502cf9e 100644
+--- a/doc/admin/admin_commands/k5srvutil.rst
++++ b/doc/admin/admin_commands/k5srvutil.rst
+@@ -56,7 +56,14 @@ k5srvutil uses the :ref:`kadmin(1)` program to edit the keytab in
+ place.
+ 
+ 
++ENVIRONMENT
++-----------
++
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
++
++
+ SEE ALSO
+ --------
+ 
+-:ref:`kadmin(1)`, :ref:`ktutil(1)`
++:ref:`kadmin(1)`, :ref:`ktutil(1)`, :ref:`kerberos(7)`
+diff --git a/doc/admin/admin_commands/kadmin_local.rst b/doc/admin/admin_commands/kadmin_local.rst
+index 9b5ccf4e9..cefe6054b 100644
+--- a/doc/admin/admin_commands/kadmin_local.rst
++++ b/doc/admin/admin_commands/kadmin_local.rst
+@@ -996,7 +996,14 @@ The kadmin program was originally written by Tom Yu at MIT, as an
+ interface to the OpenVision Kerberos administration program.
+ 
+ 
++ENVIRONMENT
++-----------
++
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
++
++
+ SEE ALSO
+ --------
+ 
+-:ref:`kpasswd(1)`, :ref:`kadmind(8)`
++:ref:`kpasswd(1)`, :ref:`kadmind(8)`, :ref:`kerberos(7)`
+diff --git a/doc/admin/admin_commands/kadmind.rst b/doc/admin/admin_commands/kadmind.rst
+index f5b7733ea..8bfb48a32 100644
+--- a/doc/admin/admin_commands/kadmind.rst
++++ b/doc/admin/admin_commands/kadmind.rst
+@@ -116,8 +116,15 @@ OPTIONS
+     <dboptions>` in :ref:`kadmin(1)` for supported arguments.
+ 
+ 
++ENVIRONMENT
++-----------
++
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
++
++
+ SEE ALSO
+ --------
+ 
+ :ref:`kpasswd(1)`, :ref:`kadmin(1)`, :ref:`kdb5_util(8)`,
+-:ref:`kdb5_ldap_util(8)`, :ref:`kadm5.acl(5)`
++:ref:`kdb5_ldap_util(8)`, :ref:`kadm5.acl(5)`, :ref:`kerberos(7)`
+diff --git a/doc/admin/admin_commands/kdb5_ldap_util.rst b/doc/admin/admin_commands/kdb5_ldap_util.rst
+index cbf313f55..343df4dd9 100644
+--- a/doc/admin/admin_commands/kdb5_ldap_util.rst
++++ b/doc/admin/admin_commands/kdb5_ldap_util.rst
+@@ -456,7 +456,14 @@ Example::
+ .. _kdb5_ldap_util_list_policy_end:
+ 
+ 
++ENVIRONMENT
++-----------
++
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
++
++
+ SEE ALSO
+ --------
+ 
+-:ref:`kadmin(1)`
++:ref:`kadmin(1)`, :ref:`kerberos(7)`
+diff --git a/doc/admin/admin_commands/kdb5_util.rst b/doc/admin/admin_commands/kdb5_util.rst
+index 258498f0d..18a3fb627 100644
+--- a/doc/admin/admin_commands/kdb5_util.rst
++++ b/doc/admin/admin_commands/kdb5_util.rst
+@@ -491,7 +491,14 @@ Examples::
+     bar@EXAMPLE.COM	1	1	des-cbc-crc	normal	-1
+ 
+ 
++ENVIRONMENT
++-----------
++
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
++
++
+ SEE ALSO
+ --------
+ 
+-:ref:`kadmin(1)`
++:ref:`kadmin(1)`, :ref:`kerberos(7)`
+diff --git a/doc/admin/admin_commands/kprop.rst b/doc/admin/admin_commands/kprop.rst
+index 726c8cc2f..0bc353239 100644
+--- a/doc/admin/admin_commands/kprop.rst
++++ b/doc/admin/admin_commands/kprop.rst
+@@ -49,12 +49,12 @@ OPTIONS
+ ENVIRONMENT
+ -----------
+ 
+-*kprop* uses the following environment variable:
+-
+-* **KRB5_CONFIG**
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
+ 
+ 
+ SEE ALSO
+ --------
+ 
+-:ref:`kpropd(8)`, :ref:`kdb5_util(8)`, :ref:`krb5kdc(8)`
++:ref:`kpropd(8)`, :ref:`kdb5_util(8)`, :ref:`krb5kdc(8)`,
++:ref:`kerberos(7)`
+diff --git a/doc/admin/admin_commands/kpropd.rst b/doc/admin/admin_commands/kpropd.rst
+index 5468b0675..03aa8ce90 100644
+--- a/doc/admin/admin_commands/kpropd.rst
++++ b/doc/admin/admin_commands/kpropd.rst
+@@ -129,7 +129,15 @@ kpropd.acl
+     will allow Kerberos database propagation via :ref:`kprop(8)`.
+ 
+ 
++ENVIRONMENT
++-----------
++
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
++
++
+ SEE ALSO
+ --------
+ 
+-:ref:`kprop(8)`, :ref:`kdb5_util(8)`, :ref:`krb5kdc(8)`, inetd(8)
++:ref:`kprop(8)`, :ref:`kdb5_util(8)`, :ref:`krb5kdc(8)`,
++:ref:`kerberos(7)`, inetd(8)
+diff --git a/doc/admin/admin_commands/kproplog.rst b/doc/admin/admin_commands/kproplog.rst
+index ed906398d..b98e1b29b 100644
+--- a/doc/admin/admin_commands/kproplog.rst
++++ b/doc/admin/admin_commands/kproplog.rst
+@@ -74,12 +74,11 @@ OPTIONS
+ ENVIRONMENT
+ -----------
+ 
+-kproplog uses the following environment variables:
+-
+-* **KRB5_KDC_PROFILE**
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
+ 
+ 
+ SEE ALSO
+ --------
+ 
+-:ref:`kpropd(8)`
++:ref:`kpropd(8)`, :ref:`kerberos(7)`
+diff --git a/doc/admin/admin_commands/krb5kdc.rst b/doc/admin/admin_commands/krb5kdc.rst
+index b605b563d..0342d0d18 100644
+--- a/doc/admin/admin_commands/krb5kdc.rst
++++ b/doc/admin/admin_commands/krb5kdc.rst
+@@ -103,14 +103,12 @@ description for further details.
+ ENVIRONMENT
+ -----------
+ 
+-krb5kdc uses the following environment variables:
+-
+-* **KRB5_CONFIG**
+-* **KRB5_KDC_PROFILE**
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
+ 
+ 
+ SEE ALSO
+ --------
+ 
+ :ref:`kdb5_util(8)`, :ref:`kdc.conf(5)`, :ref:`krb5.conf(5)`,
+-:ref:`kdb5_ldap_util(8)`
++:ref:`kdb5_ldap_util(8)`, :ref:`kerberos(7)`
+diff --git a/doc/admin/admin_commands/ktutil.rst b/doc/admin/admin_commands/ktutil.rst
+index 2eb19ded2..7d8ab4913 100644
+--- a/doc/admin/admin_commands/ktutil.rst
++++ b/doc/admin/admin_commands/ktutil.rst
+@@ -127,7 +127,14 @@ EXAMPLE
+     ktutil:
+ 
+ 
++ENVIRONMENT
++-----------
++
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
++
++
+ SEE ALSO
+ --------
+ 
+-:ref:`kadmin(1)`, :ref:`kdb5_util(8)`
++:ref:`kadmin(1)`, :ref:`kdb5_util(8)`, :ref:`kerberos(7)`
+diff --git a/doc/admin/admin_commands/sserver.rst b/doc/admin/admin_commands/sserver.rst
+index b4e464466..a8dcf5d5b 100644
+--- a/doc/admin/admin_commands/sserver.rst
++++ b/doc/admin/admin_commands/sserver.rst
+@@ -99,7 +99,14 @@ COMMON ERROR MESSAGES
+    probably not installed in the proper directory.
+ 
+ 
++ENVIRONMENT
++-----------
++
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
++
++
+ SEE ALSO
+ --------
+ 
+-:ref:`sclient(1)`, services(5), inetd(8)
++:ref:`sclient(1)`, :ref:`kerberos(7)`, services(5), inetd(8)
+diff --git a/doc/user/user_commands/kdestroy.rst b/doc/user/user_commands/kdestroy.rst
+index b8c67aba4..c69d65667 100644
+--- a/doc/user/user_commands/kdestroy.rst
++++ b/doc/user/user_commands/kdestroy.rst
+@@ -53,15 +53,8 @@ when you log out.
+ ENVIRONMENT
+ -----------
+ 
+-kdestroy uses the following environment variable:
+-
+-**KRB5CCNAME**
+-    Location of the default Kerberos 5 credentials (ticket) cache, in
+-    the form *type*:*residual*.  If no *type* prefix is present, the
+-    **FILE** type is assumed.  The type of the default cache may
+-    determine the availability of a cache collection; for instance, a
+-    default cache of type **DIR** causes caches within the directory
+-    to be present in the collection.
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
+ 
+ 
+ FILES
+@@ -74,4 +67,4 @@ FILES
+ SEE ALSO
+ --------
+ 
+-:ref:`kinit(1)`, :ref:`klist(1)`
++:ref:`kinit(1)`, :ref:`klist(1)`, :ref:`kerberos(7)`
+diff --git a/doc/user/user_commands/kinit.rst b/doc/user/user_commands/kinit.rst
+index 1f696920f..d692e2791 100644
+--- a/doc/user/user_commands/kinit.rst
++++ b/doc/user/user_commands/kinit.rst
+@@ -200,19 +200,11 @@ OPTIONS
+     **disable_freshness**\ [**=yes**]
+         disable sending freshness tokens (for testing purposes only)
+ 
+-
+ ENVIRONMENT
+ -----------
+ 
+-kinit uses the following environment variables:
+-
+-**KRB5CCNAME**
+-    Location of the default Kerberos 5 credentials cache, in the form
+-    *type*:*residual*.  If no *type* prefix is present, the **FILE**
+-    type is assumed.  The type of the default cache may determine the
+-    availability of a cache collection; for instance, a default cache
+-    of type **DIR** causes caches within the directory to be present
+-    in the collection.
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
+ 
+ 
+ FILES
+@@ -228,4 +220,4 @@ FILES
+ SEE ALSO
+ --------
+ 
+-:ref:`klist(1)`, :ref:`kdestroy(1)`, kerberos(1)
++:ref:`klist(1)`, :ref:`kdestroy(1)`, :ref:`kerberos(7)`
+diff --git a/doc/user/user_commands/klist.rst b/doc/user/user_commands/klist.rst
+index c24c74132..88e457846 100644
+--- a/doc/user/user_commands/klist.rst
++++ b/doc/user/user_commands/klist.rst
+@@ -105,15 +105,8 @@ value is used to locate the default ticket cache.
+ ENVIRONMENT
+ -----------
+ 
+-klist uses the following environment variable:
+-
+-**KRB5CCNAME**
+-    Location of the default Kerberos 5 credentials (ticket) cache, in
+-    the form *type*:*residual*.  If no *type* prefix is present, the
+-    **FILE** type is assumed.  The type of the default cache may
+-    determine the availability of a cache collection; for instance, a
+-    default cache of type **DIR** causes caches within the directory
+-    to be present in the collection.
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
+ 
+ 
+ FILES
+@@ -129,4 +122,4 @@ FILES
+ SEE ALSO
+ --------
+ 
+-:ref:`kinit(1)`, :ref:`kdestroy(1)`
++:ref:`kinit(1)`, :ref:`kdestroy(1)`, :ref:`kerberos(7)`
+diff --git a/doc/user/user_commands/kpasswd.rst b/doc/user/user_commands/kpasswd.rst
+index 1b6463265..0583bbd05 100644
+--- a/doc/user/user_commands/kpasswd.rst
++++ b/doc/user/user_commands/kpasswd.rst
+@@ -33,7 +33,14 @@ OPTIONS
+     identity of the user invoking the kpasswd command.
+ 
+ 
++ENVIRONMENT
++-----------
++
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
++
++
+ SEE ALSO
+ --------
+ 
+-:ref:`kadmin(1)`, :ref:`kadmind(8)`
++:ref:`kadmin(1)`, :ref:`kadmind(8)`, :ref:`kerberos(7)`
+diff --git a/doc/user/user_commands/krb5-config.rst b/doc/user/user_commands/krb5-config.rst
+index ee0fceaa3..2c09141a1 100644
+--- a/doc/user/user_commands/krb5-config.rst
++++ b/doc/user/user_commands/krb5-config.rst
+@@ -80,4 +80,4 @@ the following output::
+ SEE ALSO
+ --------
+ 
+-kerberos(1), cc(1)
++:ref:`kerberos(7)`, cc(1)
+diff --git a/doc/user/user_commands/ksu.rst b/doc/user/user_commands/ksu.rst
+index b2f9121f0..29487a838 100644
+--- a/doc/user/user_commands/ksu.rst
++++ b/doc/user/user_commands/ksu.rst
+@@ -385,3 +385,16 @@ AUTHOR OF KSU
+ -------------
+ 
+ GENNADY (ARI) MEDVINSKY
++
++
++ENVIRONMENT
++-----------
++
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
++
++
++SEE ALSO
++--------
++
++:ref:`kerberos(7)`, :ref:`kinit(1)`
+diff --git a/doc/user/user_commands/kswitch.rst b/doc/user/user_commands/kswitch.rst
+index 56e5915ac..010332e6a 100644
+--- a/doc/user/user_commands/kswitch.rst
++++ b/doc/user/user_commands/kswitch.rst
+@@ -32,15 +32,8 @@ OPTIONS
+ ENVIRONMENT
+ -----------
+ 
+-kswitch uses the following environment variables:
+-
+-**KRB5CCNAME**
+-    Location of the default Kerberos 5 credentials (ticket) cache, in
+-    the form *type*:*residual*.  If no *type* prefix is present, the
+-    **FILE** type is assumed.  The type of the default cache may
+-    determine the availability of a cache collection; for instance, a
+-    default cache of type **DIR** causes caches within the directory
+-    to be present in the collection.
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
+ 
+ 
+ FILES
+@@ -53,4 +46,5 @@ FILES
+ SEE ALSO
+ --------
+ 
+-:ref:`kinit(1)`, :ref:`kdestroy(1)`, :ref:`klist(1)`), kerberos(1)
++:ref:`kinit(1)`, :ref:`kdestroy(1)`, :ref:`klist(1)`,
++:ref:`kerberos(7)`
+diff --git a/doc/user/user_commands/kvno.rst b/doc/user/user_commands/kvno.rst
+index 31ca24460..f269fb3f9 100644
+--- a/doc/user/user_commands/kvno.rst
++++ b/doc/user/user_commands/kvno.rst
+@@ -63,14 +63,11 @@ OPTIONS
+     delegation is not requested, the service name must match the
+     credentials cache client principal.
+ 
+-
+ ENVIRONMENT
+ -----------
+ 
+-kvno uses the following environment variable:
+-
+-**KRB5CCNAME**
+-    Location of the credentials (ticket) cache.
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
+ 
+ 
+ FILES
+@@ -83,4 +80,4 @@ FILES
+ SEE ALSO
+ --------
+ 
+-:ref:`kinit(1)`, :ref:`kdestroy(1)`
++:ref:`kinit(1)`, :ref:`kdestroy(1)`, :ref:`kerberos(7)`
+diff --git a/doc/user/user_commands/sclient.rst b/doc/user/user_commands/sclient.rst
+index ebf797253..1e3d38f82 100644
+--- a/doc/user/user_commands/sclient.rst
++++ b/doc/user/user_commands/sclient.rst
+@@ -17,8 +17,14 @@ purposes.  It contacts a sample server :ref:`sserver(8)` and
+ authenticates to it using Kerberos version 5 tickets, then displays
+ the server's response.
+ 
++ENVIRONMENT
++-----------
++
++See :ref:`kerberos(7)` for a description of Kerberos environment
++variables.
++
+ 
+ SEE ALSO
+ --------
+ 
+-:ref:`kinit(1)`, :ref:`sserver(8)`
++:ref:`kinit(1)`, :ref:`sserver(8)`, :ref:`kerberos(7)`
