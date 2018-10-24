@@ -698,6 +698,7 @@ exit 0
 /%{_mandir}/man5/k5identity.5*
 /%{_mandir}/man5/k5login.5*
 /%{_mandir}/man5/krb5.conf.5*
+/%{_mandir}/man7/kerberos.7*
 %{_libdir}/libgssapi_krb5.so.*
 %{_libdir}/libgssrpc.so.*
 %{_libdir}/libk5crypto.so.*
