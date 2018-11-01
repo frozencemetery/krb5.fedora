@@ -1,4 +1,4 @@
-From 162ba7fbce23d82719956de1b126e48fe676e9d1 Mon Sep 17 00:00:00 2001
+From 15a15da6b29fd16faee37560a0d099164fc927a1 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:45:26 -0400
 Subject: [PATCH] krb5-1.15-beta1-buildconf.patch
@@ -33,7 +33,7 @@ index c17cb5eb5..1891dea99 100755
  	lib_flags="$lib_flags -lkdb5 $KDB5_DB_LIB"
  	library=krb5
 diff --git a/src/config/pre.in b/src/config/pre.in
-index d4714d29a..03f5c8890 100644
+index 917357df9..a8540ae2a 100644
 --- a/src/config/pre.in
 +++ b/src/config/pre.in
 @@ -185,7 +185,7 @@ INSTALL_PROGRAM=@INSTALL_PROGRAM@ $(INSTALL_STRIP)

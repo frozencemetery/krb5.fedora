@@ -1,4 +1,4 @@
-From bd9a3cc0c53f6dc47a124eb6e8f698c7f1d3cd36 Mon Sep 17 00:00:00 2001
+From c6f1e5922c457e46566728b859c8cfd7dfcca873 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:47:44 -0400
 Subject: [PATCH] krb5-1.13-dirsrv-accountlock.patch
@@ -12,10 +12,10 @@ original version filed as RT#5891.
  3 files changed, 29 insertions(+)
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
-index 5eeaa2d8a..1fd243094 100644
+index db18226ed..518b1a547 100644
 --- a/src/aclocal.m4
 +++ b/src/aclocal.m4
-@@ -1677,6 +1677,15 @@ if test "$with_ldap" = yes; then
+@@ -1678,6 +1678,15 @@ if test "$with_ldap" = yes; then
    AC_MSG_NOTICE(enabling OpenLDAP database backend module support)
    OPENLDAP_PLUGIN=yes
  fi

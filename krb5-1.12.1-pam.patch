@@ -1,4 +1,4 @@
-From 4cbb4325a86d1d71fa45d254221ec460c41b434d Mon Sep 17 00:00:00 2001
+From 6d4f52b62dd2213704ac4361f9ef6c017ec78085 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:29:58 -0400
 Subject: [PATCH] krb5-1.12.1-pam.patch
@@ -28,10 +28,10 @@ changes we're proposing for how it handles cache collections.
  create mode 100644 src/clients/ksu/pam.h
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
-index d6d1279c3..5c9c13e5f 100644
+index 3752d9bd5..340546d80 100644
 --- a/src/aclocal.m4
 +++ b/src/aclocal.m4
-@@ -1696,3 +1696,70 @@ AC_DEFUN(KRB5_AC_PERSISTENT_KEYRING,[
+@@ -1697,3 +1697,70 @@ AC_DEFUN(KRB5_AC_PERSISTENT_KEYRING,[
        ]))
  ])dnl
  dnl
@@ -141,7 +141,7 @@ index b2fcbf240..5755bb58a 100644
  clean:
  	$(RM) ksu
 diff --git a/src/clients/ksu/main.c b/src/clients/ksu/main.c
-index 7ff676ca7..c6321c01b 100644
+index d9596d948..ec06788bc 100644
 --- a/src/clients/ksu/main.c
 +++ b/src/clients/ksu/main.c
 @@ -26,6 +26,7 @@
@@ -171,7 +171,7 @@ index 7ff676ca7..c6321c01b 100644
  /***********/
  
  #define KS_TEMPORARY_CACHE "MEMORY:_ksu"
-@@ -515,6 +521,23 @@ main (argc, argv)
+@@ -528,6 +534,23 @@ main (argc, argv)
                 prog_name,target_user,client_name,
                 source_user,ontty());
  
@@ -195,7 +195,7 @@ index 7ff676ca7..c6321c01b 100644
          /* Run authorization as target.*/
          if (krb5_seteuid(target_uid)) {
              com_err(prog_name, errno, _("while switching to target for "
-@@ -575,6 +598,24 @@ main (argc, argv)
+@@ -588,6 +611,24 @@ main (argc, argv)
  
              exit(1);
          }
@@ -220,7 +220,7 @@ index 7ff676ca7..c6321c01b 100644
      }
  
      if( some_rest_copy){
-@@ -632,6 +673,30 @@ main (argc, argv)
+@@ -645,6 +686,30 @@ main (argc, argv)
          exit(1);
      }
  
@@ -251,7 +251,7 @@ index 7ff676ca7..c6321c01b 100644
      /* set permissions */
      if (setgid(target_pwd->pw_gid) < 0) {
          perror("ksu: setgid");
-@@ -729,7 +794,7 @@ main (argc, argv)
+@@ -742,7 +807,7 @@ main (argc, argv)
          fprintf(stderr, "program to be execed %s\n",params[0]);
      }
  
@@ -260,7 +260,7 @@ index 7ff676ca7..c6321c01b 100644
          execv(params[0], params);
          com_err(prog_name, errno, _("while trying to execv %s"), params[0]);
          sweep_up(ksu_context, cc_target);
-@@ -759,16 +824,35 @@ main (argc, argv)
+@@ -772,16 +837,35 @@ main (argc, argv)
              if (ret_pid == -1) {
                  com_err(prog_name, errno, _("while calling waitpid"));
              }
@@ -756,10 +756,10 @@ index 000000000..0ab76569c
 +void appl_pam_cleanup(void);
 +#endif
 diff --git a/src/configure.in b/src/configure.in
-index 10f45eb12..7288a71ec 100644
+index 84529c120..5d5f148ca 100644
 --- a/src/configure.in
 +++ b/src/configure.in
-@@ -1306,6 +1306,8 @@ AC_SUBST([VERTO_VERSION])
+@@ -1348,6 +1348,8 @@ AC_SUBST([VERTO_VERSION])
  
  AC_PATH_PROG(GROFF, groff)
  

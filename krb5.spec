@@ -9,16 +9,16 @@
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 
 # leave empty or set to e.g., -beta2
-%global prerelease %{nil}
+%global prerelease -beta1
 
 # Should be in form 5.0, 6.1, etc.
 %global kdbversion 7.0
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.16.1
+Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 25%{?dist}
+Release: 0.beta1.1%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -50,7 +50,7 @@ Source39: krb5-krb5kdc.conf
 Source100: noport.c
 
 Patch26: krb5-1.12.1-pam.patch
-Patch27: krb5-1.15.1-selinux-label.patch
+Patch27: krb5-1.17-beta1-selinux-label.patch
 Patch28: krb5-1.12-ksu-path.patch
 Patch29: krb5-1.12-ktany.patch
 Patch30: krb5-1.15-beta1-buildconf.patch
@@ -60,56 +60,7 @@ Patch33: krb5-1.13-dirsrv-accountlock.patch
 Patch34: krb5-1.9-debuginfo.patch
 Patch35: krb5-1.11-run_user_0.patch
 Patch36: krb5-1.11-kpasswdtest.patch
-Patch40: Fix-hex-conversion-of-PKINIT-certid-strings.patch
-Patch41: Exit-with-status-0-from-kadmind.patch
-Patch42: Include-etype-info-in-for-hardware-preauth-hints.patch
-Patch43: Fix-securid_sam2-preauth-for-non-default-salt.patch
-Patch44: Refactor-KDC-krb5_pa_data-utility-functions.patch
-Patch45: Simplify-kdc_preauth.c-systems-table.patch
-Patch46: Add-PKINIT-client-support-for-freshness-token.patch
-Patch47: Add-PKINIT-KDC-support-for-freshness-token.patch
-Patch49: Fix-read-overflow-in-KDC-sort_pa_data.patch
-Patch50: Include-preauth-name-in-trace-output-if-possible.patch
-Patch51: Report-extended-errors-in-kinit-k-t-KDB.patch
-Patch52: Add-libkrb5support-hex-functions-and-tests.patch
-Patch53: Use-libkrb5support-hex-functions-where-appropriate.patch
-Patch54: Add-ASN.1-encoders-and-decoders-for-SPAKE-types.patch
-Patch55: Add-k5_buf_add_vfmt-to-k5buf-interface.patch
-Patch56: Add-vector-support-to-k5_sha256.patch
-Patch57: Move-zap-definition-to-k5-platform.h.patch
-Patch58: Implement-k5_buf_init_dynamic_zap.patch
-Patch59: Use-k5_buf_init_dynamic_zap-where-appropriate.patch
-Patch60: Add-SPAKE-preauth-support.patch
-Patch61: Add-doc-index-entries-for-SPAKE-constants.patch
-Patch62: Fix-SPAKE-memory-leak.patch
-Patch64: Zap-data-when-freeing-krb5_spake_factor.patch
-Patch65: Be-more-careful-asking-for-AS-key-in-SPAKE-client.patch
-Patch68: Restrict-pre-authentication-fallback-cases.patch
-Patch69: Remove-nodes-option-from-make-certs-scripts.patch
-Patch70: Fix-segfault-in-finish_dispatch.patch
-Patch71: Log-when-non-root-ksu-authorization-fails.patch
-Patch72: Add-k5_dir_filenames-to-libkrb5support.patch
-Patch73: Process-profile-includedir-in-sorted-order.patch
-Patch74: Make-docs-build-python3-compatible.patch
-Patch75: Add-flag-to-disable-encrypted-timestamp-on-client.patch
-Patch76: Explicitly-look-for-python2-in-configure.in.patch
-Patch77: Use-SHA-256-instead-of-MD5-for-audit-ticket-IDs.patch
-Patch78: Add-k5test-mark-function.patch
-Patch79: Convert-Python-tests-to-Python-3.patch
-Patch80: Zap-copy-of-secret-in-RC4-string-to-key.patch
-Patch81: Fix-some-broken-tests-for-Python-3.patch
-Patch82: Eliminate-preprocessor-disabled-dead-code.patch
-Patch83: Make-krb5kdc-p-affect-TCP-ports.patch
-Patch84: Remove-outdated-note-in-krb5kdc-man-page.patch
-Patch85: Fix-k5test-prompts-for-Python-3.patch
 Patch86: In-FIPS-mode-add-plaintext-fallback-for-RC4-usages-a.patch
-Patch87: Prefer-TCP-to-UDP-for-password-changes.patch
-Patch88: Correct-kpasswd_server-description-in-krb5.conf-5.patch
-Patch89: Prevent-SIGPIPE-from-socket-writes-on-UNIX-likes.patch
-Patch90: Use-port-sockets.h-macros-in-cc_kcm-sendto_kdc.patch
-Patch91: Bring-back-general-kerberos-man-page.patch
-Patch92: Modernize-kerberos-7.patch
-Patch93: Update-man-pages-to-reference-kerberos-7.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -757,6 +708,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Nov 01 2018 Robbie Harwood <rharwood@redhat.com> - 1.17-0.beta2.1
+- New upstream beta release
+
 * Wed Oct 24 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-25
 - Update man pages to reference kerberos(7)
 - Resolves: #1143767
