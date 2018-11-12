@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 1.beta1.1%{?dist}
+Release: 1.beta1.2%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -60,8 +60,9 @@ Patch33: krb5-1.13-dirsrv-accountlock.patch
 Patch34: krb5-1.9-debuginfo.patch
 Patch35: krb5-1.11-run_user_0.patch
 Patch36: krb5-1.11-kpasswdtest.patch
-Patch86: In-FIPS-mode-add-plaintext-fallback-for-RC4-usages-a.patch
 Patch87: Fix-spurious-errors-from-kcmio_unix_socket_write.patch
+Patch88: Become-FIPS-aware.patch
+Patch89: In-FIPS-mode-add-plaintext-fallback-for-RC4-usages-a.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -709,11 +710,14 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
-* Thu Nov 08 2018 Robbie Harwood <rharwood@redhat.com> - 1.17-1
+* Mon Nov 12 2018 Robbie Harwood <rharwood@redhat.com> - 1.17-1.beta1.2
+- Gain FIPS awareness
+
+* Thu Nov 08 2018 Robbie Harwood <rharwood@redhat.com> - 1.17-1.beta1.1
 - Fix spurious errors from kcmio_unix_socket_write
 - Resolves: #1645912
 
-* Thu Nov 01 2018 Robbie Harwood <rharwood@redhat.com> - 1.17-0.beta2.1
+* Thu Nov 01 2018 Robbie Harwood <rharwood@redhat.com> - 1.17-0.beta1.1
 - New upstream beta release
 
 * Wed Oct 24 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-25
