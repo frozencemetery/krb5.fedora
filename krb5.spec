@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 1.beta1.2%{?dist}
+Release: 1.beta1.3%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -63,6 +63,7 @@ Patch36: krb5-1.11-kpasswdtest.patch
 Patch87: Fix-spurious-errors-from-kcmio_unix_socket_write.patch
 Patch88: Become-FIPS-aware.patch
 Patch89: In-FIPS-mode-add-plaintext-fallback-for-RC4-usages-a.patch
+Patch90: Add-tests-for-KCM-ccache-type.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -710,6 +711,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Nov 29 2018 Robbie Harwood <rharwood@redhat.com> - 1.17-1.beta1.3
+- Add tests for KCM ccache type
+
 * Mon Nov 12 2018 Robbie Harwood <rharwood@redhat.com> - 1.17-1.beta1.2
 - Gain FIPS awareness
 
