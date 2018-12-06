@@ -1,4 +1,4 @@
-From 6d4f52b62dd2213704ac4361f9ef6c017ec78085 Mon Sep 17 00:00:00 2001
+From c734e307fb5cf75d2a54147ffe9b14b0c8a0558b Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:29:58 -0400
 Subject: [PATCH] krb5-1.12.1-pam.patch

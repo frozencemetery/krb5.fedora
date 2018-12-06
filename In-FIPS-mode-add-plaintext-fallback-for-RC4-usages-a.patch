@@ -1,4 +1,4 @@
-From 461739cdd608724020362bf0de07f76844bbfe10 Mon Sep 17 00:00:00 2001
+From 2bd85da058d2d73eb2818a8e64656fec9b21b3c3 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 31 Jul 2018 13:47:26 -0400
 Subject: [PATCH] In FIPS mode, add plaintext fallback for RC4 usages and taint
