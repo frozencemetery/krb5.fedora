@@ -9,7 +9,7 @@
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 
 # leave empty or set to e.g., -beta2
-%global prerelease -beta1
+%global prerelease -beta2
 
 # Should be in form 5.0, 6.1, etc.
 %global kdbversion 7.0
