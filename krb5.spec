@@ -18,12 +18,18 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 1.beta2.1%{?dist}
+Release: 1.beta2.2%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
 # rharwood has trust path to signing key and verifies on check-in
 Source1: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz.asc
+# This source is generated during the build because sphinx doesn't
+# give me architecture-deterministic documentation builds.
+# To override this behavior (e.g., new upstream version), do:
+#     tar cfT krb5-1.15.2-pdfs.tar /dev/null
+# or the like.
+Source3: krb5-%{version}%{prerelease}-pdfs.tar
 
 # Numbering is a relic of old init systems etc.  It's easiest to just leave.
 Source2: kprop.service
@@ -241,7 +247,7 @@ contains only the libkadm5clnt and libkadm5serv shared objects. This
 interface is not considered stable.
 
 %prep
-%autosetup -S git -n %{name}-%{version}%{prerelease}
+%autosetup -S git -n %{name}-%{version}%{prerelease} -a 3
 ln NOTICE LICENSE
 
 # Take the execute bit off of documentation.
@@ -342,7 +348,12 @@ sphinx-build -a -b man   -t pathsubs doc build-man
 sphinx-build -a -b html  -t pathsubs doc build-html
 rm -fr build-html/_sources
 sphinx-build -a -b latex -t pathsubs doc build-pdf
-make -C build-pdf
+# Build the PDFs if we don't have pre-built ones
+for pdf in admin appdev basic build plugindev user ; do
+    test -s build-pdf/$pdf.pdf || make -C build-pdf
+done
+# new krb5-%{version}-pdf
+tar -cf "krb5-%{version}%{prerelease}-pdfs.tar.new" build-pdf/*.pdf
 
 # We need to cut off any access to locally-running nameservers, too.
 %{__cc} -fPIC -shared -o noport.so -Wall -Wextra $RPM_SOURCE_DIR/noport.c
@@ -699,6 +710,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Dec 17 2018 Robbie Harwood <rharwood@redhat.com> - 1.17-1.beta2.2
+- Restore pdfs source file
+- Resolves: #1659716
+
 * Thu Dec 06 2018 Robbie Harwood <rharwood@redhat.com> - 1.17-1.beta2.1
 - New upstream release (1.17-beta2)
 - Drop pdfs source file
