@@ -1,0 +1,61 @@
+From 5ab44ff3ecdf362a792f193cf18df42866b70f80 Mon Sep 17 00:00:00 2001
+From: Isaac Boukris <iboukris@gmail.com>
+Date: Sat, 15 Dec 2018 11:56:36 +0200
+Subject: [PATCH] Remove incorrect KDC assertion
+
+The assertion in return_enc_padata() is reachable because
+kdc_make_s4u2self_rep() may have previously added encrypted padata.
+It is no longer necessary because the code uses add_pa_data_element()
+instead of allocating a new list.
+
+CVE-2018-20217:
+
+In MIT krb5 1.8 or later, an authenticated user who can obtain a TGT
+using an older encryption type (DES, DES3, or RC4) can cause an
+assertion failure in the KDC by sending an S4U2Self request.
+
+[ghudson@mit.edu: rewrote commit message with CVE description]
+
+ticket: 8767 (new)
+tags: pullup
+target_version: 1.17
+target_version: 1.16-next
+target_version: 1.15-next
+
+(cherry picked from commit 94e5eda5bb94d1d44733a49c3d9b6d1e42c74def)
+---
+ src/kdc/kdc_preauth.c     | 1 -
+ src/tests/gssapi/t_s4u.py | 8 ++++++++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/src/kdc/kdc_preauth.c b/src/kdc/kdc_preauth.c
+index 74953c99f..caf133c14 100644
+--- a/src/kdc/kdc_preauth.c
++++ b/src/kdc/kdc_preauth.c
+@@ -1683,7 +1683,6 @@ return_enc_padata(krb5_context context, krb5_data *req_pkt,
+     krb5_error_code code = 0;
+     /* This should be initialized and only used for Win2K compat and other
+      * specific standardized uses such as FAST negotiation. */
+-    assert(reply_encpart->enc_padata == NULL);
+     if (is_referral) {
+         code = return_referral_enc_padata(context, reply_encpart, server);
+         if (code)
+diff --git a/src/tests/gssapi/t_s4u.py b/src/tests/gssapi/t_s4u.py
+index fd29e1a27..f02c2fd13 100755
+--- a/src/tests/gssapi/t_s4u.py
++++ b/src/tests/gssapi/t_s4u.py
+@@ -139,6 +139,14 @@ if 'auth1: user@' not in out or 'auth2: user@' not in out:
+ 
+ realm.stop()
+ 
++mark('S4U2Self with various enctypes')
++for realm in multipass_realms(create_host=False, get_creds=False):
++    service1 = 'service/1@%s' % realm.realm
++    realm.addprinc(service1)
++    realm.extract_keytab(service1, realm.keytab)
++    realm.kinit(service1, None, ['-k'])
++    realm.run(['./t_s4u', 'e:user', '-'])
++
+ # Test cross realm S4U2Self using server referrals.
+ mark('cross-realm S4U2Self')
+ testprincs = {'krbtgt/SREALM': {'keys': 'aes128-cts'},
