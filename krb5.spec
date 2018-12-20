@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 1.beta2.2%{?dist}
+Release: 1.beta2.3%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -710,6 +710,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Dec 20 2018 Robbie Harwood <rharwood@redhat.com> - 1.17-1.beta2.3
+- Fix syntax on pkinit_anchors field in default krb5.conf
+
 * Mon Dec 17 2018 Robbie Harwood <rharwood@redhat.com> - 1.17-1.beta2.2
 - Restore pdfs source file
 - Resolves: #1659716
