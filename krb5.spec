@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 22%{?dist}
+Release: 23%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -103,7 +103,10 @@ Patch83: Make-krb5kdc-p-affect-TCP-ports.patch
 Patch84: Remove-outdated-note-in-krb5kdc-man-page.patch
 Patch85: Fix-k5test-prompts-for-Python-3.patch
 Patch86: In-FIPS-mode-add-plaintext-fallback-for-RC4-usages-a.patch
-Patch87: Fix-bugs-with-concurrent-use-of-MEMORY-ccaches.patch
+# Disabled for now as it seems to make things worse for FreeIPA
+# (consistent crashes during server deployment, not just a crash
+# in a later test): https://bugzilla.redhat.com/show_bug.cgi?id=1633089#c26
+#Patch87: Fix-bugs-with-concurrent-use-of-MEMORY-ccaches.patch
 Patch88: Remove-incorrect-KDC-assertion.patch
 
 License: MIT
@@ -751,6 +754,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Dec 28 2018 Adam Williamson <awilliam@redhat.com> - 1.16.1-23
+- Disable patch from -20 again (rharwood re-enabled it in -22, and
+  it immediately broke FreeIPA again)
+
 * Thu Dec 20 2018 Robbie Harwood <rharwood@redhat.com> - 1.16.1-22
 - Remove incorrect KDC assertion (CVE-2018-20217)
 
