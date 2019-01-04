@@ -1,4 +1,4 @@
-From f08cf208c78d4a7e96c11a51ef2715a2718412db Mon Sep 17 00:00:00 2001
+From ca75a685d19fec7c481fd3de9769ac3546e37a11 Mon Sep 17 00:00:00 2001
 From: Isaac Boukris <iboukris@gmail.com>
 Date: Sat, 15 Dec 2018 11:56:36 +0200
 Subject: [PATCH] Remove incorrect KDC assertion

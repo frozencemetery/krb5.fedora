@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 23%{?dist}
+Release: 24%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -103,11 +103,8 @@ Patch83: Make-krb5kdc-p-affect-TCP-ports.patch
 Patch84: Remove-outdated-note-in-krb5kdc-man-page.patch
 Patch85: Fix-k5test-prompts-for-Python-3.patch
 Patch86: In-FIPS-mode-add-plaintext-fallback-for-RC4-usages-a.patch
-# Disabled for now as it seems to make things worse for FreeIPA
-# (consistent crashes during server deployment, not just a crash
-# in a later test): https://bugzilla.redhat.com/show_bug.cgi?id=1633089#c26
-#Patch87: Fix-bugs-with-concurrent-use-of-MEMORY-ccaches.patch
 Patch88: Remove-incorrect-KDC-assertion.patch
+Patch89: Address-some-optimized-out-memset-calls.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -754,6 +751,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Jan 04 2019 Robbie Harwood <rharwood@redhat.com> - 1.16.1-24
+- Address some optimized-out memset() calls
+
 * Fri Dec 28 2018 Adam Williamson <awilliam@redhat.com> - 1.16.1-23
 - Disable patch from -20 again (rharwood re-enabled it in -22, and
   it immediately broke FreeIPA again)
