@@ -1,4 +1,4 @@
-From 643b5e486624989acddf66ac7ce2cf71b3816fda Mon Sep 17 00:00:00 2001
+From a81c558f4fc75ef988a283729fd9c7e79e9df70f Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 4 Jan 2019 17:00:15 -0500
 Subject: [PATCH] Use openssl's PRNG in FIPS mode

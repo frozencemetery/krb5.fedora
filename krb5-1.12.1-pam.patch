@@ -1,4 +1,4 @@
-From c734e307fb5cf75d2a54147ffe9b14b0c8a0558b Mon Sep 17 00:00:00 2001
+From c8f2e321b2d8471feee69bbca3179e675228bd8a Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:29:58 -0400
 Subject: [PATCH] krb5-1.12.1-pam.patch
@@ -756,10 +756,10 @@ index 000000000..0ab76569c
 +void appl_pam_cleanup(void);
 +#endif
 diff --git a/src/configure.in b/src/configure.in
-index 84529c120..5d5f148ca 100644
+index 61ef738dc..e9a12ac16 100644
 --- a/src/configure.in
 +++ b/src/configure.in
-@@ -1348,6 +1348,8 @@ AC_SUBST([VERTO_VERSION])
+@@ -1352,6 +1352,8 @@ AC_SUBST([VERTO_VERSION])
  
  AC_PATH_PROG(GROFF, groff)
  

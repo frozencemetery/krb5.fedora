@@ -9,7 +9,7 @@
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 
 # leave empty or set to e.g., -beta2
-%global prerelease -beta2
+%global prerelease %{nil}
 
 # Should be in form 5.0, 6.1, etc.
 %global kdbversion 7.0
@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 1.beta2.6%{?dist}
+Release: 2
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -63,7 +63,6 @@ Patch36: krb5-1.11-kpasswdtest.patch
 Patch88: Become-FIPS-aware.patch
 Patch89: In-FIPS-mode-add-plaintext-fallback-for-RC4-usages-a.patch
 Patch90: Add-tests-for-KCM-ccache-type.patch
-Patch91: Remove-incorrect-KDC-assertion.patch
 Patch92: Address-some-optimized-out-memset-calls.patch
 Patch93: Use-openssl-s-PRNG-in-FIPS-mode.patch
 
@@ -713,6 +712,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Jan 08 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-2
+- New upstream version (1.17)
+
 * Fri Jan 04 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-1.beta2.6
 - Use openssl's PRNG in FIPS mode
 
