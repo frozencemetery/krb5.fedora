@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 2
+Release: 3%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -65,6 +65,12 @@ Patch89: In-FIPS-mode-add-plaintext-fallback-for-RC4-usages-a.patch
 Patch90: Add-tests-for-KCM-ccache-type.patch
 Patch92: Address-some-optimized-out-memset-calls.patch
 Patch93: Use-openssl-s-PRNG-in-FIPS-mode.patch
+Patch94: Avoid-allocating-a-register-in-zap-assembly.patch
+Patch95: In-rd_req_dec-always-log-non-permitted-enctypes.patch
+Patch96: In-kpropd-debug-log-proper-ticket-enctype-names.patch
+Patch97: Add-function-and-enctype-flag-for-deprecations.patch
+Patch98: Make-etype-names-in-KDC-logs-human-readable.patch
+Patch99: Mark-deprecated-enctypes-when-used.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -712,6 +718,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Jan 17 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-3
+- enctype logging and explicit_bzero()
+
 * Tue Jan 08 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-2
 - New upstream version (1.17)
 
