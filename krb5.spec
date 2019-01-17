@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 24%{?dist}
+Release: 25%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -105,6 +105,12 @@ Patch85: Fix-k5test-prompts-for-Python-3.patch
 Patch86: In-FIPS-mode-add-plaintext-fallback-for-RC4-usages-a.patch
 Patch88: Remove-incorrect-KDC-assertion.patch
 Patch89: Address-some-optimized-out-memset-calls.patch
+Patch90: Avoid-allocating-a-register-in-zap-assembly.patch
+Patch91: In-rd_req_dec-always-log-non-permitted-enctypes.patch
+Patch92: In-kpropd-debug-log-proper-ticket-enctype-names.patch
+Patch93: Add-function-and-enctype-flag-for-deprecations.patch
+Patch94: Make-etype-names-in-KDC-logs-human-readable.patch
+Patch95: Mark-deprecated-enctypes-when-used.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -751,6 +757,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Jan 17 2019 Robbie Harwood <rharwood@redhat.com> - 1.16.1-25
+- enctype logging and explicit_bzero()
+
 * Fri Jan 04 2019 Robbie Harwood <rharwood@redhat.com> - 1.16.1-24
 - Address some optimized-out memset() calls
 
