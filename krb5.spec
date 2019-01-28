@@ -74,7 +74,6 @@ Patch99: Mark-deprecated-enctypes-when-used.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
-Group: System Environment/Libraries
 BuildRequires: autoconf, bison, cmake, flex, gawk, gettext, pkgconfig, sed
 BuildRequires: gcc
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
@@ -138,7 +137,6 @@ practice of sending passwords over the network in unencrypted form.
 
 %package devel
 Summary: Development files needed to compile Kerberos 5 programs
-Group: Development/Libraries
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 Requires: libkadm5%{?_isa} = %{version}-%{release}
 Requires: libcom_err-devel
@@ -154,7 +152,6 @@ to install this package.
 
 %package libs
 Summary: The non-admin shared libraries used by Kerberos 5
-Group: System Environment/Libraries
 Requires: coreutils, gawk, grep, sed
 Requires: keyutils-libs >= 1.5.8
 Requires: /etc/crypto-policies/back-ends/krb5.config
@@ -165,7 +162,6 @@ contains the shared libraries needed by Kerberos 5. If you are using
 Kerberos, you need to install this package.
 
 %package server
-Group: System Environment/Daemons
 Summary: The KDC and related programs for Kerberos 5
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 Requires(post): systemd-units
@@ -197,7 +193,6 @@ you need to install this package (in other words, most people should
 NOT install this package).
 
 %package server-ldap
-Group: System Environment/Daemons
 Summary: The LDAP storage plugin for the Kerberos 5 KDC
 Requires: %{name}-server%{?_isa} = %{version}-%{release}
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
@@ -221,7 +216,6 @@ realm, you need to install this package.
 
 %package workstation
 Summary: Kerberos 5 programs for use on workstations
-Group: System Environment/Base
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 Requires: libkadm5%{?_isa} = %{version}-%{release}
 
@@ -233,7 +227,6 @@ installed on every workstation.
 
 %package pkinit
 Summary: The PKINIT module for Kerberos 5
-Group: System Environment/Libraries
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 Obsoletes: krb5-pkinit-openssl < %{version}-%{release}
 Provides: krb5-pkinit-openssl = %{version}-%{release}
@@ -246,7 +239,6 @@ certificate.
 
 %package -n libkadm5
 Summary: Kerberos 5 Administrative libraries
-Group: System Environment/Base
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description -n libkadm5
