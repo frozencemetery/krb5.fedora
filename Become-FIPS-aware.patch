@@ -1,4 +1,4 @@
-From ebcee0c8dc5f3055597e0b574d98cbe65f55319e Mon Sep 17 00:00:00 2001
+From d8db85101c535a32937136118561aeb5646d2136 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 9 Nov 2018 15:12:21 -0500
 Subject: [PATCH] Become FIPS-aware
@@ -13,15 +13,14 @@ This will slow down some calls slightly (FIPS_mode() takes multiple
 locks), but not for any crypto we care about - AES is fine, for
 instance.
 
-(cherry picked from commit ee05742839df659d2136b37f91d0a888de2b5e26)
-(cherry picked from commit b38ed4d97152f1dce126235935d30e549ead77b3)
+(cherry picked from commit ce06474e3b12430480374f923c25bae9581fb146)
 ---
- src/lib/crypto/openssl/enc_provider/camellia.c  | 6 ++++++
- src/lib/crypto/openssl/enc_provider/des.c       | 9 +++++++++
- src/lib/crypto/openssl/enc_provider/rc4.c       | 3 +++
- src/lib/crypto/openssl/hash_provider/hash_evp.c | 4 ++++
- src/lib/crypto/openssl/hmac.c                   | 6 +++++-
- 5 files changed, 27 insertions(+), 1 deletion(-)
+ src/lib/crypto/openssl/enc_provider/camellia.c  |  6 ++++++
+ src/lib/crypto/openssl/enc_provider/des.c       |  9 +++++++++
+ src/lib/crypto/openssl/enc_provider/rc4.c       | 13 ++++++++++++-
+ src/lib/crypto/openssl/hash_provider/hash_evp.c |  4 ++++
+ src/lib/crypto/openssl/hmac.c                   |  6 +++++-
+ 5 files changed, 36 insertions(+), 2 deletions(-)
 
 diff --git a/src/lib/crypto/openssl/enc_provider/camellia.c b/src/lib/crypto/openssl/enc_provider/camellia.c
 index 2da691329..f79679a0b 100644
@@ -82,10 +81,34 @@ index a662db512..7d17d287e 100644
      if (ret != 0)
          return ret;
 diff --git a/src/lib/crypto/openssl/enc_provider/rc4.c b/src/lib/crypto/openssl/enc_provider/rc4.c
-index 7f3c086ed..ef8205535 100644
+index 7f3c086ed..a3f2a7442 100644
 --- a/src/lib/crypto/openssl/enc_provider/rc4.c
 +++ b/src/lib/crypto/openssl/enc_provider/rc4.c
-@@ -125,6 +125,9 @@ k5_arcfour_init_state(const krb5_keyblock *key,
+@@ -66,6 +66,9 @@ k5_arcfour_docrypt(krb5_key key,const krb5_data *state, krb5_crypto_iov *data,
+     EVP_CIPHER_CTX *ctx = NULL;
+     struct arcfour_state *arcstate;
+ 
++    if (FIPS_mode())
++        return KRB5_CRYPTO_INTERNAL;
++
+     arcstate = (state != NULL) ? (struct arcfour_state *) state->data : NULL;
+     if (arcstate != NULL) {
+         ctx = arcstate->ctx;
+@@ -113,7 +116,12 @@ k5_arcfour_docrypt(krb5_key key,const krb5_data *state, krb5_crypto_iov *data,
+ static void
+ k5_arcfour_free_state(krb5_data *state)
+ {
+-    struct arcfour_state *arcstate = (struct arcfour_state *) state->data;
++    struct arcfour_state *arcstate;
++
++    if (FIPS_mode())
++        return;
++
++    arcstate = (struct arcfour_state *) state->data;
+ 
+     EVP_CIPHER_CTX_free(arcstate->ctx);
+     free(arcstate);
+@@ -125,6 +133,9 @@ k5_arcfour_init_state(const krb5_keyblock *key,
  {
      struct arcfour_state *arcstate;
  
