@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 5%{?dist}
+Release: 6%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -71,6 +71,8 @@ Patch96: In-kpropd-debug-log-proper-ticket-enctype-names.patch
 Patch97: Add-function-and-enctype-flag-for-deprecations.patch
 Patch98: Make-etype-names-in-KDC-logs-human-readable.patch
 Patch99: Mark-deprecated-enctypes-when-used.patch
+Patch100: Properly-size-ifdef-in-k5_cccol_lock.patch
+Patch101: Fix-memory-leak-in-none-replay-cache-type.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -710,6 +712,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Feb 25 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-6
+- Fix memory leak in 'none' replay cache type
+- Silence a coverity warning while we're here.
+
 * Fri Feb 01 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-5
 - Update FIPS blocking for RC4
 
