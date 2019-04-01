@@ -1,7 +1,7 @@
-From d8db85101c535a32937136118561aeb5646d2136 Mon Sep 17 00:00:00 2001
+From 9f5fbf191d74cae9b28d318fff4c80d3d3e49c86 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 9 Nov 2018 15:12:21 -0500
-Subject: [PATCH] Become FIPS-aware
+Subject: [PATCH] Become FIPS-aware (with 3DES)
 
 A lot of the FIPS error conditions from OpenSSL are incredibly
 mysterious (at best, things return NULL unexpectedly; at worst,
@@ -10,17 +10,16 @@ ENOMEM).  In order to cope with this, we need to have some level of
 awareness of what we can and can't safely call.
 
 This will slow down some calls slightly (FIPS_mode() takes multiple
-locks), but not for any crypto we care about - AES is fine, for
-instance.
-
-(cherry picked from commit ce06474e3b12430480374f923c25bae9581fb146)
+locks), but not for any crypto we care about - which is to say that
+AES is fine.
 ---
  src/lib/crypto/openssl/enc_provider/camellia.c  |  6 ++++++
  src/lib/crypto/openssl/enc_provider/des.c       |  9 +++++++++
+ src/lib/crypto/openssl/enc_provider/des3.c      |  6 ++++++
  src/lib/crypto/openssl/enc_provider/rc4.c       | 13 ++++++++++++-
  src/lib/crypto/openssl/hash_provider/hash_evp.c |  4 ++++
  src/lib/crypto/openssl/hmac.c                   |  6 +++++-
- 5 files changed, 36 insertions(+), 2 deletions(-)
+ 6 files changed, 42 insertions(+), 2 deletions(-)
 
 diff --git a/src/lib/crypto/openssl/enc_provider/camellia.c b/src/lib/crypto/openssl/enc_provider/camellia.c
 index 2da691329..f79679a0b 100644
@@ -79,6 +78,30 @@ index a662db512..7d17d287e 100644
 +
      ret = validate(key, ivec, data, num_data, &empty);
      if (ret != 0)
+         return ret;
+diff --git a/src/lib/crypto/openssl/enc_provider/des3.c b/src/lib/crypto/openssl/enc_provider/des3.c
+index 1c439c2cd..8be555a8d 100644
+--- a/src/lib/crypto/openssl/enc_provider/des3.c
++++ b/src/lib/crypto/openssl/enc_provider/des3.c
+@@ -84,6 +84,9 @@ k5_des3_encrypt(krb5_key key, const krb5_data *ivec, krb5_crypto_iov *data,
+     EVP_CIPHER_CTX *ctx;
+     krb5_boolean empty;
+ 
++    if (FIPS_mode())
++        return KRB5_CRYPTO_INTERNAL;
++
+     ret = validate(key, ivec, data, num_data, &empty);
+     if (ret != 0 || empty)
+         return ret;
+@@ -133,6 +136,9 @@ k5_des3_decrypt(krb5_key key, const krb5_data *ivec, krb5_crypto_iov *data,
+     EVP_CIPHER_CTX *ctx;
+     krb5_boolean empty;
+ 
++    if (FIPS_mode())
++        return KRB5_CRYPTO_INTERNAL;
++
+     ret = validate(key, ivec, data, num_data, &empty);
+     if (ret != 0 || empty)
          return ret;
 diff --git a/src/lib/crypto/openssl/enc_provider/rc4.c b/src/lib/crypto/openssl/enc_provider/rc4.c
 index 7f3c086ed..a3f2a7442 100644
