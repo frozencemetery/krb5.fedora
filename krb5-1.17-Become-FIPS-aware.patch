@@ -1,7 +1,7 @@
-From 9f5fbf191d74cae9b28d318fff4c80d3d3e49c86 Mon Sep 17 00:00:00 2001
+From 15c0aec4315cc5cfae864b179848f043e2b100c6 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 9 Nov 2018 15:12:21 -0500
-Subject: [PATCH] Become FIPS-aware (with 3DES)
+Subject: [PATCH] krb5-1.17 Become FIPS-aware
 
 A lot of the FIPS error conditions from OpenSSL are incredibly
 mysterious (at best, things return NULL unexpectedly; at worst,

@@ -1,0 +1,1410 @@
+From 152f5ed9961f54dd9d764ffb3c6298eb85d8f934 Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Mon, 9 Oct 2017 15:58:33 -0400
+Subject: [PATCH] Remove srvtab support
+
+Also change internal names from "srvtab" to "keytab" where the old
+name was used.
+
+ticket: 8793 (new)
+(cherry picked from commit a23e670b40f69b6be0024f8a60d2afaf7f7a005a)
+---
+ doc/admin/admin_commands/ktutil.rst           |  22 +-
+ doc/basic/keytab_def.rst                      |   6 +-
+ src/kadmin/ktutil/ktutil.c                    |  11 +-
+ src/kadmin/ktutil/ktutil.h                    |   4 -
+ src/kadmin/ktutil/ktutil_ct.ct                |   4 +-
+ src/kadmin/ktutil/ktutil_funcs.c              |  19 -
+ src/kadmin/testing/proto/krb5.conf.proto      |   2 +-
+ src/kadmin/testing/scripts/env-setup.shin     |   2 +-
+ src/kadmin/testing/scripts/init_db            |   2 +-
+ .../testing/scripts/make-host-keytab.plin     |   2 +-
+ .../testing/scripts/start_servers_local       |   3 -
+ src/kprop/kprop.c                             |  10 +-
+ src/kprop/kpropd.c                            |  12 +-
+ src/lib/kadm5/unit-test/api.current/init.exp  |   4 +-
+ src/lib/krb5/keytab/Makefile.in               |   3 -
+ src/lib/krb5/keytab/deps                      |  11 -
+ src/lib/krb5/keytab/kt_srvtab.c               | 435 ------------------
+ src/lib/krb5/keytab/ktbase.c                  |   7 +-
+ src/lib/krb5/krb/in_tkt_sky.c                 |   6 +-
+ src/lib/krb5/libkrb5.exports                  |   1 -
+ src/lib/rpc/unit-test/Makefile.in             |   6 +-
+ src/lib/rpc/unit-test/config/unix.exp         |   2 +-
+ src/lib/rpc/unit-test/lib/helpers.exp         |   4 +-
+ src/lib/rpc/unit-test/rpc_test_setup.sh       |   6 +-
+ src/man/ktutil.man                            |  26 +-
+ src/tests/dejagnu/config/default.exp          |  58 ++-
+ src/tests/dejagnu/krb-standalone/gssapi.exp   |   8 +-
+ src/tests/dejagnu/krb-standalone/kadmin.exp   |  48 +-
+ src/tests/dejagnu/krb-standalone/kprop.exp    |   6 +-
+ src/tests/dejagnu/krb-standalone/sample.exp   |   8 +-
+ src/tests/dejagnu/krb-standalone/simple.exp   |   6 +-
+ .../dejagnu/krb-standalone/standalone.exp     |   4 +-
+ src/tests/dejagnu/krb-standalone/tcp.exp      |   5 -
+ 33 files changed, 86 insertions(+), 667 deletions(-)
+ delete mode 100644 src/lib/krb5/keytab/kt_srvtab.c
+
+diff --git a/doc/admin/admin_commands/ktutil.rst b/doc/admin/admin_commands/ktutil.rst
+index 0dbc08f60..0897c7757 100644
+--- a/doc/admin/admin_commands/ktutil.rst
++++ b/doc/admin/admin_commands/ktutil.rst
+@@ -13,8 +13,8 @@ DESCRIPTION
+ -----------
+ 
+ The ktutil command invokes a command interface from which an
+-administrator can read, write, or edit entries in a keytab or Kerberos
+-V4 srvtab file.
++administrator can read, write, or edit entries in a keytab.  (Kerberos
++V4 srvtab files are no longer supported.)
+ 
+ 
+ COMMANDS
+@@ -38,15 +38,6 @@ Read the Kerberos V5 keytab file *keytab* into the current keylist.
+ 
+ Alias: **rkt**
+ 
+-read_st
+-~~~~~~~
+-
+-    **read_st** *srvtab*
+-
+-Read the Kerberos V4 srvtab file *srvtab* into the current keylist.
+-
+-Alias: **rst**
+-
+ write_kt
+ ~~~~~~~~
+ 
+@@ -56,15 +47,6 @@ Write the current keylist into the Kerberos V5 keytab file *keytab*.
+ 
+ Alias: **wkt**
+ 
+-write_st
+-~~~~~~~~
+-
+-    **write_st** *srvtab*
+-
+-Write the current keylist into the Kerberos V4 srvtab file *srvtab*.
+-
+-Alias: **wst**
+-
+ clear_list
+ ~~~~~~~~~~
+ 
+diff --git a/doc/basic/keytab_def.rst b/doc/basic/keytab_def.rst
+index 33ae67c6c..6c7fcc3b0 100644
+--- a/doc/basic/keytab_def.rst
++++ b/doc/basic/keytab_def.rst
+@@ -12,10 +12,8 @@ credentials for client applications.
+ 
+ Keytabs are named using the format *type*\ ``:``\ *value*.  Usually
+ *type* is ``FILE`` and *value* is the absolute pathname of the file.
+-Other possible values for *type* are ``SRVTAB``, which indicates a
+-file in the deprecated Kerberos 4 srvtab format, and ``MEMORY``, which
+-indicates a temporary keytab stored in the memory of the current
+-process.
++The other possible value for *type* is ``MEMORY``, which indicates a
++temporary keytab stored in the memory of the current process.
+ 
+ A keytab contains one or more entries, where each entry consists of a
+ timestamp (indicating when the entry was written to the keytab), a
+diff --git a/src/kadmin/ktutil/ktutil.c b/src/kadmin/ktutil/ktutil.c
+index 196f20786..92d7023a4 100644
+--- a/src/kadmin/ktutil/ktutil.c
++++ b/src/kadmin/ktutil/ktutil.c
+@@ -98,15 +98,8 @@ void ktutil_read_v4(argc, argv)
+     int argc;
+     char *argv[];
+ {
+-    krb5_error_code retval;
+-
+-    if (argc != 2) {
+-        fprintf(stderr, _("%s: must specify the srvtab to read\n"), argv[0]);
+-        return;
+-    }
+-    retval = ktutil_read_srvtab(kcontext, argv[1], &ktlist);
+-    if (retval)
+-        com_err(argv[0], retval, _("while reading srvtab \"%s\""), argv[1]);
++    fprintf(stderr, _("%s: reading srvtabs is no longer supported\n"),
++            argv[0]);
+ }
+ 
+ void ktutil_write_v5(argc, argv)
+diff --git a/src/kadmin/ktutil/ktutil.h b/src/kadmin/ktutil/ktutil.h
+index ddb754bae..acaf0239a 100644
+--- a/src/kadmin/ktutil/ktutil.h
++++ b/src/kadmin/ktutil/ktutil.h
+@@ -50,10 +50,6 @@ krb5_error_code ktutil_write_keytab (krb5_context,
+                                      krb5_kt_list,
+                                      char *);
+ 
+-krb5_error_code ktutil_read_srvtab (krb5_context,
+-                                    char *,
+-                                    krb5_kt_list *);
+-
+ void ktutil_add_entry (int, char *[]);
+ 
+ void ktutil_clear_list (int, char *[]);
+diff --git a/src/kadmin/ktutil/ktutil_ct.ct b/src/kadmin/ktutil/ktutil_ct.ct
+index 0c7ccb689..2061ef9d0 100644
+--- a/src/kadmin/ktutil/ktutil_ct.ct
++++ b/src/kadmin/ktutil/ktutil_ct.ct
+@@ -32,13 +32,13 @@ request ktutil_clear_list, "Clear the current keylist.",
+ request ktutil_read_v5, "Read a krb5 keytab into the current keylist.",
+ 	read_kt, rkt;
+ 
+-request ktutil_read_v4, "Read a krb4 srvtab into the current keylist.",
++request ktutil_read_v4, "Deprecated and removed.",
+ 	read_st, rst;
+ 
+ request ktutil_write_v5, "Write the current keylist to a krb5 keytab.",
+ 	write_kt, wkt;
+ 
+-request ktutil_write_v4, "Write the current keylist to a krb4 srvtab.",
++request ktutil_write_v4, "Deprecated and removed.",
+ 	write_st, wst;
+ 
+ request ktutil_add_entry, "Add an entry to the current keylist.",
+diff --git a/src/kadmin/ktutil/ktutil_funcs.c b/src/kadmin/ktutil/ktutil_funcs.c
+index 6d119a2b6..e2e005d22 100644
+--- a/src/kadmin/ktutil/ktutil_funcs.c
++++ b/src/kadmin/ktutil/ktutil_funcs.c
+@@ -368,22 +368,3 @@ krb5_error_code ktutil_write_keytab(context, list, name)
+     krb5_kt_close(context, kt);
+     return retval;
+ }
+-
+-/*
+- * Read in a named krb4 srvtab and append to list.  Allocate new list
+- * if needed.
+- */
+-krb5_error_code ktutil_read_srvtab(context, name, list)
+-    krb5_context context;
+-    char *name;
+-    krb5_kt_list *list;
+-{
+-    char *ktname;
+-    krb5_error_code result;
+-
+-    if (asprintf(&ktname, "SRVTAB:%s", name) < 0)
+-        return ENOMEM;
+-    result = ktutil_read_keytab(context, ktname, list);
+-    free(ktname);
+-    return result;
+-}
+diff --git a/src/kadmin/testing/proto/krb5.conf.proto b/src/kadmin/testing/proto/krb5.conf.proto
+index 9c4bc1de7..f91cf70f3 100644
+--- a/src/kadmin/testing/proto/krb5.conf.proto
++++ b/src/kadmin/testing/proto/krb5.conf.proto
+@@ -1,6 +1,6 @@
+ [libdefaults]
+ 	default_realm = __REALM__
+-	default_keytab_name = FILE:__K5ROOT__/v5srvtab
++	default_keytab_name = FILE:__K5ROOT__/keytab
+ 	dns_fallback = no
+ 	plugin_base_dir = __PLUGIN_DIR__
+ 	allow_weak_crypto = true
+diff --git a/src/kadmin/testing/scripts/env-setup.shin b/src/kadmin/testing/scripts/env-setup.shin
+index c8d866f15..726298351 100755
+--- a/src/kadmin/testing/scripts/env-setup.shin
++++ b/src/kadmin/testing/scripts/env-setup.shin
+@@ -77,7 +77,7 @@ SRVTCL=$TESTDIR/util/kadm5_srv_tcl; export SRVTCL
+ 
+ KRB5_CONFIG=$K5ROOT/krb5.conf; export KRB5_CONFIG
+ KRB5_KDC_PROFILE=$K5ROOT/kdc.conf; export KRB5_KDC_PROFILE
+-KRB5_KTNAME=$K5ROOT/ovsec_adm.srvtab; export KRB5_KTNAME
++KRB5_KTNAME=$K5ROOT/ovsec_adm.keytab; export KRB5_KTNAME
+ KRB5_CLIENT_KTNAME=$K5ROOT/client_keytab; export KRB5_CLIENT_KTNAME
+ KRB5CCNAME=$K5ROOT/krb5cc_unit-test; export KRB5CCNAME
+ 
+diff --git a/src/kadmin/testing/scripts/init_db b/src/kadmin/testing/scripts/init_db
+index cd7165628..bf119f2ac 100755
+--- a/src/kadmin/testing/scripts/init_db
++++ b/src/kadmin/testing/scripts/init_db
+@@ -218,7 +218,7 @@ changepw/kerberos@$REALM	cil
+ 
+ EOF
+ 
+-eval $LOCAL_MAKE_KEYTAB -princ kadmin/admin -princ kadmin/changepw -princ ovsec_adm/admin -princ ovsec_adm/changepw $K5ROOT/ovsec_adm.srvtab $REDIRECT
++eval $LOCAL_MAKE_KEYTAB -princ kadmin/admin -princ kadmin/changepw -princ ovsec_adm/admin -princ ovsec_adm/changepw $K5ROOT/ovsec_adm.keytab $REDIRECT
+ 
+ # Create $K5ROOT/setup.csh to make it easy to run other programs against
+ # the test db
+diff --git a/src/kadmin/testing/scripts/make-host-keytab.plin b/src/kadmin/testing/scripts/make-host-keytab.plin
+index dfe0b3a01..c77d61c70 100755
+--- a/src/kadmin/testing/scripts/make-host-keytab.plin
++++ b/src/kadmin/testing/scripts/make-host-keytab.plin
+@@ -11,7 +11,7 @@ $usage = "Usage: $whoami [ -server server ] [ -princ principal ]
+ 	Default principals are host/hostname\@SECURE-TEST.OV.COM and
+ 	  test/hostname\@SECURE-TEST.OV.COM.
+ 	If any principals are specified, the default principals are
+-	  not added to the srvtab.
++	  not added to the keytab.
+ 	The string \"xCANONHOSTx\" in a principal specification will be
+ 	  replaced by the canonical host name of the local host.";
+ 
+diff --git a/src/kadmin/testing/scripts/start_servers_local b/src/kadmin/testing/scripts/start_servers_local
+index 0cbed462d..809892974 100755
+--- a/src/kadmin/testing/scripts/start_servers_local
++++ b/src/kadmin/testing/scripts/start_servers_local
+@@ -98,9 +98,6 @@ x=$?
+ rm /tmp/start_servers_local$$
+ if test $x != 0 ; then exit 1 ; fi
+ 
+-# rm -f /etc/v5srvtab
+-# eval $LOCAL_MAKE_KEYTAB -princ host/xCANONHOSTx /etc/v5srvtab $REDIRECT
+-
+ # run the servers (from the build tree)
+ 
+ adm_start_file=/tmp/adm_server_start.$$
+diff --git a/src/kprop/kprop.c b/src/kprop/kprop.c
+index b7fb63777..0b53aae7e 100644
+--- a/src/kprop/kprop.c
++++ b/src/kprop/kprop.c
+@@ -49,7 +49,7 @@ static char *kprop_version = KPROP_PROT_VERSION;
+ 
+ static char *progname = NULL;
+ static int debug = 0;
+-static char *srvtab = NULL;
++static char *keytab_path = NULL;
+ static char *replica_host;
+ static char *realm = NULL;
+ static char *def_realm = NULL;
+@@ -83,7 +83,7 @@ static void update_last_prop_file(char *hostname, char *file_name);
+ static void usage()
+ {
+     fprintf(stderr, _("\nUsage: %s [-r realm] [-f file] [-d] [-P port] "
+-                      "[-s srvtab] replica_host\n\n"), progname);
++                      "[-s keytab] replica_host\n\n"), progname);
+     exit(1);
+ }
+ 
+@@ -140,7 +140,7 @@ parse_args(krb5_context context, int argc, char **argv)
+             port = optarg;
+             break;
+         case 's':
+-            srvtab = optarg;
++            keytab_path = optarg;
+             break;
+         default:
+             usage();
+@@ -191,8 +191,8 @@ get_tickets(krb5_context context)
+         exit(1);
+     }
+ 
+-    if (srvtab != NULL) {
+-        retval = krb5_kt_resolve(context, srvtab, &keytab);
++    if (keytab_path != NULL) {
++        retval = krb5_kt_resolve(context, keytab_path, &keytab);
+         if (retval) {
+             com_err(progname, retval, _("while resolving keytab"));
+             exit(1);
+diff --git a/src/kprop/kpropd.c b/src/kprop/kpropd.c
+index 0c7bffa24..e4aaf553c 100644
+--- a/src/kprop/kpropd.c
++++ b/src/kprop/kpropd.c
+@@ -117,7 +117,7 @@ static kadm5_config_params params;
+ static char *progname;
+ static int debug = 0;
+ static int nodaemon = 0;
+-static char *srvtab = NULL;
++static char *keytab_path = NULL;
+ static int standalone = 0;
+ static const char *pid_file = NULL;
+ 
+@@ -168,7 +168,7 @@ static void
+ usage()
+ {
+     fprintf(stderr,
+-            _("\nUsage: %s [-r realm] [-s srvtab] [-dS] [-f replica_file]\n"),
++            _("\nUsage: %s [-r realm] [-s keytab] [-dS] [-f replica_file]\n"),
+             progname);
+     fprintf(stderr, _("\t[-F kerberos_db_file ] [-p kdb5_util_pathname]\n"));
+     fprintf(stderr, _("\t[-x db_args]* [-P port] [-a acl_file]\n"));
+@@ -701,7 +701,7 @@ reinit:
+                 iprop_svc_princstr);
+     }
+     retval = kadm5_init_with_skey(kpropd_context, iprop_svc_princstr,
+-                                  srvtab,
++                                  keytab_path,
+                                   master_svc_princstr,
+                                   &params,
+                                   KADM5_STRUCT_VERSION,
+@@ -1092,7 +1092,7 @@ parse_args(int argc, char **argv)
+             realm = optarg;
+             break;
+         case 's':
+-            srvtab = optarg;
++            keytab_path = optarg;
+             break;
+         case 'D':
+             nodaemon++;
+@@ -1246,8 +1246,8 @@ kerberos_authenticate(krb5_context context, int fd, krb5_principal *clientp,
+         exit(1);
+     }
+ 
+-    if (srvtab != NULL) {
+-        retval = krb5_kt_resolve(context, srvtab, &keytab);
++    if (keytab_path != NULL) {
++        retval = krb5_kt_resolve(context, keytab_path, &keytab);
+         if (retval) {
+             syslog(LOG_ERR, _("Error in krb5_kt_resolve: %s"),
+                    error_message(retval));
+diff --git a/src/lib/kadm5/unit-test/api.current/init.exp b/src/lib/kadm5/unit-test/api.current/init.exp
+index d9ae3fbd8..f78261376 100644
+--- a/src/lib/kadm5/unit-test/api.current/init.exp
++++ b/src/lib/kadm5/unit-test/api.current/init.exp
+@@ -695,10 +695,10 @@ if {$RPC} {
+     test45_46 ovsec_adm/changepw
+ 
+     # re-extract the keytab so it is right
+-    exec rm $env(K5ROOT)/ovsec_adm.srvtab
++    exec rm $env(K5ROOT)/ovsec_adm.keytab
+     exec $env(MAKE_KEYTAB) -princ ovsec_adm/admin -princ ovsec_adm/changepw \
+ 	    -princ kadmin/admin -princ kadmin/changepw \
+-	    $env(K5ROOT)/ovsec_adm.srvtab
++	    $env(K5ROOT)/ovsec_adm.keytab
+ }
+ 
+ return ""
+diff --git a/src/lib/krb5/keytab/Makefile.in b/src/lib/krb5/keytab/Makefile.in
+index 2a8fceb00..4621bf714 100644
+--- a/src/lib/krb5/keytab/Makefile.in
++++ b/src/lib/krb5/keytab/Makefile.in
+@@ -14,7 +14,6 @@ STLIBOBJS= \
+ 	ktfns.o		\
+ 	kt_file.o	\
+ 	kt_memory.o	\
+-	kt_srvtab.o	\
+ 	read_servi.o
+ 
+ OBJS=	\
+@@ -26,7 +25,6 @@ OBJS=	\
+ 	$(OUTPRE)ktfns.$(OBJEXT)	\
+ 	$(OUTPRE)kt_file.$(OBJEXT)	\
+ 	$(OUTPRE)kt_memory.$(OBJEXT)	\
+-	$(OUTPRE)kt_srvtab.$(OBJEXT)	\
+ 	$(OUTPRE)read_servi.$(OBJEXT)
+ 
+ SRCS=	\
+@@ -38,7 +36,6 @@ SRCS=	\
+ 	$(srcdir)/ktfns.c	\
+ 	$(srcdir)/kt_file.c	\
+ 	$(srcdir)/kt_memory.c	\
+-	$(srcdir)/kt_srvtab.c	\
+ 	$(srcdir)/read_servi.c
+ 
+ EXTRADEPSRCS= \
+diff --git a/src/lib/krb5/keytab/deps b/src/lib/krb5/keytab/deps
+index 4c98188ca..522cad0e8 100644
+--- a/src/lib/krb5/keytab/deps
++++ b/src/lib/krb5/keytab/deps
+@@ -87,17 +87,6 @@ kt_memory.so kt_memory.po $(OUTPRE)kt_memory.$(OBJEXT): \
+   $(top_srcdir)/include/krb5/authdata_plugin.h $(top_srcdir)/include/krb5/plugin.h \
+   $(top_srcdir)/include/port-sockets.h $(top_srcdir)/include/socket-utils.h \
+   kt-int.h kt_memory.c
+-kt_srvtab.so kt_srvtab.po $(OUTPRE)kt_srvtab.$(OBJEXT): \
+-  $(BUILDTOP)/include/autoconf.h $(BUILDTOP)/include/krb5/krb5.h \
+-  $(BUILDTOP)/include/osconf.h $(BUILDTOP)/include/profile.h \
+-  $(COM_ERR_DEPS) $(top_srcdir)/include/k5-buf.h $(top_srcdir)/include/k5-err.h \
+-  $(top_srcdir)/include/k5-gmt_mktime.h $(top_srcdir)/include/k5-int-pkinit.h \
+-  $(top_srcdir)/include/k5-int.h $(top_srcdir)/include/k5-platform.h \
+-  $(top_srcdir)/include/k5-plugin.h $(top_srcdir)/include/k5-thread.h \
+-  $(top_srcdir)/include/k5-trace.h $(top_srcdir)/include/krb5.h \
+-  $(top_srcdir)/include/krb5/authdata_plugin.h $(top_srcdir)/include/krb5/plugin.h \
+-  $(top_srcdir)/include/port-sockets.h $(top_srcdir)/include/socket-utils.h \
+-  kt_srvtab.c
+ read_servi.so read_servi.po $(OUTPRE)read_servi.$(OBJEXT): \
+   $(BUILDTOP)/include/autoconf.h $(BUILDTOP)/include/krb5/krb5.h \
+   $(BUILDTOP)/include/osconf.h $(BUILDTOP)/include/profile.h \
+diff --git a/src/lib/krb5/keytab/kt_srvtab.c b/src/lib/krb5/keytab/kt_srvtab.c
+deleted file mode 100644
+index bbfaadfc2..000000000
+--- a/src/lib/krb5/keytab/kt_srvtab.c
++++ /dev/null
+@@ -1,435 +0,0 @@
+-/* -*- mode: c; c-basic-offset: 4; indent-tabs-mode: nil -*- */
+-/* lib/krb5/keytab/kt_srvtab.c */
+-/*
+- * Copyright 1990,1991,2002,2007,2008 by the Massachusetts Institute of Technology.
+- * All Rights Reserved.
+- *
+- * Export of this software from the United States of America may
+- *   require a specific license from the United States Government.
+- *   It is the responsibility of any person or organization contemplating
+- *   export to obtain such a license before exporting.
+- *
+- * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
+- * distribute this software and its documentation for any purpose and
+- * without fee is hereby granted, provided that the above copyright
+- * notice appear in all copies and that both that copyright notice and
+- * this permission notice appear in supporting documentation, and that
+- * the name of M.I.T. not be used in advertising or publicity pertaining
+- * to distribution of the software without specific, written prior
+- * permission.  Furthermore if you modify this software you must label
+- * your software as modified software and not distribute it in such a
+- * fashion that it might be confused with the original M.I.T. software.
+- * M.I.T. makes no representations about the suitability of
+- * this software for any purpose.  It is provided "as is" without express
+- * or implied warranty.
+- */
+-/*
+- * Copyright (c) Hewlett-Packard Company 1991
+- * Released to the Massachusetts Institute of Technology for inclusion
+- * in the Kerberos source code distribution.
+- *
+- * Copyright 1990,1991 by the Massachusetts Institute of Technology.
+- * All Rights Reserved.
+- *
+- * Export of this software from the United States of America may
+- *   require a specific license from the United States Government.
+- *   It is the responsibility of any person or organization contemplating
+- *   export to obtain such a license before exporting.
+- *
+- * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
+- * distribute this software and its documentation for any purpose and
+- * without fee is hereby granted, provided that the above copyright
+- * notice appear in all copies and that both that copyright notice and
+- * this permission notice appear in supporting documentation, and that
+- * the name of M.I.T. not be used in advertising or publicity pertaining
+- * to distribution of the software without specific, written prior
+- * permission.  Furthermore if you modify this software you must label
+- * your software as modified software and not distribute it in such a
+- * fashion that it might be confused with the original M.I.T. software.
+- * M.I.T. makes no representations about the suitability of
+- * this software for any purpose.  It is provided "as is" without express
+- * or implied warranty.
+- */
+-
+-#include "k5-int.h"
+-#include <stdio.h>
+-
+-#ifndef LEAN_CLIENT
+-
+-/*
+- * Constants
+- */
+-
+-#define KRB5_KT_VNO_1   0x0501  /* krb v5, keytab version 1 (DCE compat) */
+-#define KRB5_KT_VNO     0x0502  /* krb v5, keytab version 2 (standard)  */
+-
+-#define KRB5_KT_DEFAULT_VNO KRB5_KT_VNO
+-
+-/*
+- * Types
+- */
+-typedef struct _krb5_ktsrvtab_data {
+-    char *name;                 /* Name of the file */
+-    FILE *openf;                /* open file, if any. */
+-} krb5_ktsrvtab_data;
+-
+-/*
+- * Macros
+- */
+-#define KTPRIVATE(id) ((krb5_ktsrvtab_data *)(id)->data)
+-#define KTFILENAME(id) (((krb5_ktsrvtab_data *)(id)->data)->name)
+-#define KTFILEP(id) (((krb5_ktsrvtab_data *)(id)->data)->openf)
+-
+-extern const struct _krb5_kt_ops krb5_kts_ops;
+-
+-static krb5_error_code KRB5_CALLCONV
+-krb5_ktsrvtab_resolve(krb5_context, const char *, krb5_keytab *);
+-
+-static krb5_error_code KRB5_CALLCONV
+-krb5_ktsrvtab_get_name(krb5_context, krb5_keytab, char *, unsigned int);
+-
+-static krb5_error_code KRB5_CALLCONV
+-krb5_ktsrvtab_close(krb5_context, krb5_keytab);
+-
+-static krb5_error_code KRB5_CALLCONV
+-krb5_ktsrvtab_get_entry(krb5_context, krb5_keytab, krb5_const_principal,
+-                        krb5_kvno, krb5_enctype, krb5_keytab_entry *);
+-
+-static krb5_error_code KRB5_CALLCONV
+-krb5_ktsrvtab_start_seq_get(krb5_context, krb5_keytab, krb5_kt_cursor *);
+-
+-static krb5_error_code KRB5_CALLCONV
+-krb5_ktsrvtab_get_next(krb5_context, krb5_keytab, krb5_keytab_entry *,
+-                       krb5_kt_cursor *);
+-
+-static krb5_error_code KRB5_CALLCONV
+-krb5_ktsrvtab_end_get(krb5_context, krb5_keytab, krb5_kt_cursor *);
+-
+-static krb5_error_code
+-krb5_ktsrvint_open(krb5_context, krb5_keytab);
+-
+-static krb5_error_code
+-krb5_ktsrvint_close(krb5_context, krb5_keytab);
+-
+-static krb5_error_code
+-krb5_ktsrvint_read_entry(krb5_context, krb5_keytab, krb5_keytab_entry *);
+-
+-/*
+- * This is an implementation specific resolver.  It returns a keytab id
+- * initialized with srvtab keytab routines.
+- */
+-
+-static krb5_error_code KRB5_CALLCONV
+-krb5_ktsrvtab_resolve(krb5_context context, const char *name, krb5_keytab *id)
+-{
+-    krb5_ktsrvtab_data *data;
+-
+-    if ((*id = (krb5_keytab) malloc(sizeof(**id))) == NULL)
+-        return(ENOMEM);
+-
+-    (*id)->ops = &krb5_kts_ops;
+-    data = (krb5_ktsrvtab_data *)malloc(sizeof(krb5_ktsrvtab_data));
+-    if (data == NULL) {
+-        free(*id);
+-        return(ENOMEM);
+-    }
+-
+-    data->name = strdup(name);
+-    if (data->name == NULL) {
+-        free(data);
+-        free(*id);
+-        return(ENOMEM);
+-    }
+-
+-    data->openf = 0;
+-
+-    (*id)->data = (krb5_pointer)data;
+-    (*id)->magic = KV5M_KEYTAB;
+-    return(0);
+-}
+-
+-/*
+- * "Close" a file-based keytab and invalidate the id.  This means
+- * free memory hidden in the structures.
+- */
+-
+-krb5_error_code KRB5_CALLCONV
+-krb5_ktsrvtab_close(krb5_context context, krb5_keytab id)
+-/*
+- * This routine is responsible for freeing all memory allocated
+- * for this keytab.  There are no system resources that need
+- * to be freed nor are there any open files.
+- *
+- * This routine should undo anything done by krb5_ktsrvtab_resolve().
+- */
+-{
+-    free(KTFILENAME(id));
+-    free(id->data);
+-    id->ops = 0;
+-    free(id);
+-    return (0);
+-}
+-
+-/*
+- * This is the get_entry routine for the file based keytab implementation.
+- * It opens the keytab file, and either retrieves the entry or returns
+- * an error.
+- */
+-
+-krb5_error_code KRB5_CALLCONV
+-krb5_ktsrvtab_get_entry(krb5_context context, krb5_keytab id, krb5_const_principal principal, krb5_kvno kvno, krb5_enctype enctype, krb5_keytab_entry *entry)
+-{
+-    krb5_keytab_entry best_entry, ent;
+-    krb5_error_code kerror = 0;
+-    int found_wrong_kvno = 0;
+-
+-    /* Open the srvtab. */
+-    if ((kerror = krb5_ktsrvint_open(context, id)))
+-        return(kerror);
+-
+-    /* srvtab files only have DES_CBC_CRC keys. */
+-    switch (enctype) {
+-    case ENCTYPE_DES_CBC_CRC:
+-    case ENCTYPE_DES_CBC_MD5:
+-    case ENCTYPE_DES_CBC_MD4:
+-    case ENCTYPE_DES_CBC_RAW:
+-    case IGNORE_ENCTYPE:
+-        break;
+-    default:
+-        return KRB5_KT_NOTFOUND;
+-    }
+-
+-    best_entry.principal = 0;
+-    best_entry.vno = 0;
+-    best_entry.key.contents = 0;
+-    while ((kerror = krb5_ktsrvint_read_entry(context, id, &ent)) == 0) {
+-        ent.key.enctype = enctype;
+-        if (krb5_principal_compare(context, principal, ent.principal)) {
+-            if (kvno == IGNORE_VNO || ent.vno == IGNORE_VNO) {
+-                if (!best_entry.principal || (best_entry.vno < ent.vno)) {
+-                    krb5_kt_free_entry(context, &best_entry);
+-                    best_entry = ent;
+-                }
+-            } else {
+-                if (ent.vno == kvno) {
+-                    best_entry = ent;
+-                    break;
+-                } else {
+-                    found_wrong_kvno = 1;
+-                }
+-            }
+-        } else {
+-            krb5_kt_free_entry(context, &ent);
+-        }
+-    }
+-    if (kerror == KRB5_KT_END) {
+-        if (best_entry.principal)
+-            kerror = 0;
+-        else if (found_wrong_kvno)
+-            kerror = KRB5_KT_KVNONOTFOUND;
+-        else
+-            kerror = KRB5_KT_NOTFOUND;
+-    }
+-    if (kerror) {
+-        (void) krb5_ktsrvint_close(context, id);
+-        krb5_kt_free_entry(context, &best_entry);
+-        return kerror;
+-    }
+-    if ((kerror = krb5_ktsrvint_close(context, id)) != 0) {
+-        krb5_kt_free_entry(context, &best_entry);
+-        return kerror;
+-    }
+-    *entry = best_entry;
+-    return 0;
+-}
+-
+-/*
+- * Get the name of the file containing a srvtab-based keytab.
+- */
+-
+-krb5_error_code KRB5_CALLCONV
+-krb5_ktsrvtab_get_name(krb5_context context, krb5_keytab id, char *name, unsigned int len)
+-/*
+- * This routine returns the name of the name of the file associated with
+- * this srvtab-based keytab.  The name is prefixed with PREFIX:, so that
+- * trt will happen if the name is passed back to resolve.
+- */
+-{
+-    int result;
+-
+-    memset(name, 0, len);
+-    result = snprintf(name, len, "%s:%s", id->ops->prefix, KTFILENAME(id));
+-    if (SNPRINTF_OVERFLOW(result, len))
+-        return(KRB5_KT_NAME_TOOLONG);
+-    return(0);
+-}
+-
+-/*
+- * krb5_ktsrvtab_start_seq_get()
+- */
+-
+-krb5_error_code KRB5_CALLCONV
+-krb5_ktsrvtab_start_seq_get(krb5_context context, krb5_keytab id, krb5_kt_cursor *cursorp)
+-{
+-    krb5_error_code retval;
+-    long *fileoff;
+-
+-    if ((retval = krb5_ktsrvint_open(context, id)))
+-        return retval;
+-
+-    if (!(fileoff = (long *)malloc(sizeof(*fileoff)))) {
+-        krb5_ktsrvint_close(context, id);
+-        return ENOMEM;
+-    }
+-    *fileoff = ftell(KTFILEP(id));
+-    *cursorp = (krb5_kt_cursor)fileoff;
+-
+-    return 0;
+-}
+-
+-/*
+- * krb5_ktsrvtab_get_next()
+- */
+-
+-krb5_error_code KRB5_CALLCONV
+-krb5_ktsrvtab_get_next(krb5_context context, krb5_keytab id, krb5_keytab_entry *entry, krb5_kt_cursor *cursor)
+-{
+-    long *fileoff = (long *)*cursor;
+-    krb5_keytab_entry cur_entry;
+-    krb5_error_code kerror;
+-
+-    if (fseek(KTFILEP(id), *fileoff, 0) == -1)
+-        return KRB5_KT_END;
+-    if ((kerror = krb5_ktsrvint_read_entry(context, id, &cur_entry)))
+-        return kerror;
+-    *fileoff = ftell(KTFILEP(id));
+-    *entry = cur_entry;
+-    return 0;
+-}
+-
+-/*
+- * krb5_ktsrvtab_end_get()
+- */
+-
+-krb5_error_code KRB5_CALLCONV
+-krb5_ktsrvtab_end_get(krb5_context context, krb5_keytab id, krb5_kt_cursor *cursor)
+-{
+-    free(*cursor);
+-    return krb5_ktsrvint_close(context, id);
+-}
+-
+-/*
+- * krb5_kts_ops
+- */
+-
+-const struct _krb5_kt_ops krb5_kts_ops = {
+-    0,
+-    "SRVTAB",   /* Prefix -- this string should not appear anywhere else! */
+-    krb5_ktsrvtab_resolve,
+-    krb5_ktsrvtab_get_name,
+-    krb5_ktsrvtab_close,
+-    krb5_ktsrvtab_get_entry,
+-    krb5_ktsrvtab_start_seq_get,
+-    krb5_ktsrvtab_get_next,
+-    krb5_ktsrvtab_end_get,
+-    0,
+-    0,
+-    0
+-};
+-
+-/* formerly: lib/krb5/keytab/srvtab/kts_util.c */
+-
+-#include <stdio.h>
+-
+-/* The maximum sizes for V4 aname, realm, sname, and instance +1 */
+-/* Taken from krb.h */
+-#define         ANAME_SZ        40
+-#define         REALM_SZ        40
+-#define         SNAME_SZ        40
+-#define         INST_SZ         40
+-
+-static krb5_error_code
+-read_field(FILE *fp, char *s, int len)
+-{
+-    int c;
+-
+-    while ((c = getc(fp)) != 0) {
+-        if (c == EOF || len <= 1)
+-            return KRB5_KT_END;
+-        *s = c;
+-        s++;
+-        len--;
+-    }
+-    *s = 0;
+-    return 0;
+-}
+-
+-krb5_error_code
+-krb5_ktsrvint_open(krb5_context context, krb5_keytab id)
+-{
+-    KTFILEP(id) = fopen(KTFILENAME(id), "rb");
+-    if (!KTFILEP(id))
+-        return errno;
+-    set_cloexec_file(KTFILEP(id));
+-    return 0;
+-}
+-
+-krb5_error_code
+-krb5_ktsrvint_close(krb5_context context, krb5_keytab id)
+-{
+-    if (!KTFILEP(id))
+-        return 0;
+-    (void) fclose(KTFILEP(id));
+-    KTFILEP(id) = 0;
+-    return 0;
+-}
+-
+-krb5_error_code
+-krb5_ktsrvint_read_entry(krb5_context context, krb5_keytab id, krb5_keytab_entry *ret_entry)
+-{
+-    FILE *fp;
+-    char name[SNAME_SZ], instance[INST_SZ], realm[REALM_SZ];
+-    unsigned char key[8];
+-    int vno;
+-    krb5_error_code kerror;
+-
+-    /* Read in an entry from the srvtab file. */
+-    fp = KTFILEP(id);
+-    kerror = read_field(fp, name, sizeof(name));
+-    if (kerror != 0)
+-        return kerror;
+-    kerror = read_field(fp, instance, sizeof(instance));
+-    if (kerror != 0)
+-        return kerror;
+-    kerror = read_field(fp, realm, sizeof(realm));
+-    if (kerror != 0)
+-        return kerror;
+-    vno = getc(fp);
+-    if (vno == EOF)
+-        return KRB5_KT_END;
+-    if (fread(key, 1, sizeof(key), fp) != sizeof(key))
+-        return KRB5_KT_END;
+-
+-    /* Fill in ret_entry with the data we read.  Everything maps well
+-     * except for the timestamp, which we don't have a value for.  For
+-     * now we just set it to 0. */
+-    memset(ret_entry, 0, sizeof(*ret_entry));
+-    ret_entry->magic = KV5M_KEYTAB_ENTRY;
+-    kerror = krb5_425_conv_principal(context, name, instance, realm,
+-                                     &ret_entry->principal);
+-    if (kerror != 0)
+-        return kerror;
+-    ret_entry->vno = vno;
+-    ret_entry->timestamp = 0;
+-    ret_entry->key.enctype = ENCTYPE_DES_CBC_CRC;
+-    ret_entry->key.magic = KV5M_KEYBLOCK;
+-    ret_entry->key.length = sizeof(key);
+-    ret_entry->key.contents = k5memdup(key, sizeof(key), &kerror);
+-    if (ret_entry->key.contents == NULL) {
+-        krb5_free_principal(context, ret_entry->principal);
+-        return kerror;
+-    }
+-
+-    return 0;
+-}
+-#endif /* LEAN_CLIENT */
+diff --git a/src/lib/krb5/keytab/ktbase.c b/src/lib/krb5/keytab/ktbase.c
+index 0d39b2940..25752245a 100644
+--- a/src/lib/krb5/keytab/ktbase.c
++++ b/src/lib/krb5/keytab/ktbase.c
+@@ -55,20 +55,15 @@
+ 
+ extern const krb5_kt_ops krb5_ktf_ops;
+ extern const krb5_kt_ops krb5_ktf_writable_ops;
+-extern const krb5_kt_ops krb5_kts_ops;
+ extern const krb5_kt_ops krb5_mkt_ops;
+ 
+ struct krb5_kt_typelist {
+     const krb5_kt_ops *ops;
+     const struct krb5_kt_typelist *next;
+ };
+-const static struct krb5_kt_typelist krb5_kt_typelist_srvtab = {
+-    &krb5_kts_ops,
+-    NULL
+-};
+ const static struct krb5_kt_typelist krb5_kt_typelist_memory = {
+     &krb5_mkt_ops,
+-    &krb5_kt_typelist_srvtab
++    NULL
+ };
+ const static struct krb5_kt_typelist krb5_kt_typelist_wrfile  = {
+     &krb5_ktf_writable_ops,
+diff --git a/src/lib/krb5/krb/in_tkt_sky.c b/src/lib/krb5/krb/in_tkt_sky.c
+index 7a8922623..342fe18dc 100644
+--- a/src/lib/krb5/krb/in_tkt_sky.c
++++ b/src/lib/krb5/krb/in_tkt_sky.c
+@@ -56,9 +56,9 @@ get_as_key_skey(krb5_context context, krb5_principal client,
+   If addrs is non-NULL, it is used for the addresses requested.  If it is
+   null, the system standard addresses are used.
+ 
+-  If keyblock is NULL, an appropriate key for creds->client is retrieved
+-  from the system key store (e.g. /etc/srvtab).  If keyblock is non-NULL,
+-  it is used as the decryption key.
++  If keyblock is NULL, an appropriate key for creds->client is retrieved from
++  the system key store (e.g. /etc/krb5.keytab).  If keyblock is non-NULL, it
++  is used as the decryption key.
+ 
+   A succesful call will place the ticket in the credentials cache ccache.
+ 
+diff --git a/src/lib/krb5/libkrb5.exports b/src/lib/krb5/libkrb5.exports
+index dfdb72daf..038e4de4b 100644
+--- a/src/lib/krb5/libkrb5.exports
++++ b/src/lib/krb5/libkrb5.exports
+@@ -459,7 +459,6 @@ krb5_kt_resolve
+ krb5_kt_start_seq_get
+ krb5_ktf_ops
+ krb5_ktf_writable_ops
+-krb5_kts_ops
+ krb5_kuserok
+ krb5_lock_file
+ krb5_make_authdata_kdc_issued
+diff --git a/src/lib/rpc/unit-test/Makefile.in b/src/lib/rpc/unit-test/Makefile.in
+index 6f29e33c9..46f2f1d4b 100644
+--- a/src/lib/rpc/unit-test/Makefile.in
++++ b/src/lib/rpc/unit-test/Makefile.in
+@@ -45,8 +45,8 @@ PASS=@PASS@
+ unit-test-body:
+ 	$(RM) krb5cc_rpc_test_*
+ 	$(ENV_SETUP) $(VALGRIND) $(START_SERVERS)
+-	RPC_TEST_SRVTAB=/tmp/rpc_test_v5srvtab.$$$$ ; export RPC_TEST_SRVTAB ; \
+-	trap "echo Failed, cleaning up... ; rm -f $$RPC_TEST_SRVTAB ; $(ENV_SETUP) $(STOP_SERVERS) ; trap '' 0 ; exit 1" 0 1 2 3 14 15 ; \
++	RPC_TEST_KEYTAB=/tmp/rpc_test_keytab.$$$$ ; export RPC_TEST_KEYTAB ; \
++	trap "echo Failed, cleaning up... ; rm -f $$RPC_TEST_KEYTAB ; $(ENV_SETUP) $(STOP_SERVERS) ; trap '' 0 ; exit 1" 0 1 2 3 14 15 ; \
+ 	if $(ENV_SETUP) \
+ 		$(RUNTEST) SERVER=./server CLIENT=./client \
+ 		KINIT=$(BUILDTOP)/clients/kinit/kinit \
+@@ -55,7 +55,7 @@ unit-test-body:
+ 		PASS="$(PASS)" --tool rpc_test $(RUNTESTFLAGS) ; \
+ 	then \
+ 		echo Cleaning up... ; \
+-		rm -f $$RPC_TEST_SRVTAB krb5cc_rpc_test_* ; \
++		rm -f $$RPC_TEST_KEYTAB krb5cc_rpc_test_* ; \
+ 		$(ENV_SETUP) $(STOP_SERVERS) ; \
+ 		trap 0 ; exit 0 ; \
+ 	else exit 1 ; fi
+diff --git a/src/lib/rpc/unit-test/config/unix.exp b/src/lib/rpc/unit-test/config/unix.exp
+index ba57b703e..ed179bbe3 100644
+--- a/src/lib/rpc/unit-test/config/unix.exp
++++ b/src/lib/rpc/unit-test/config/unix.exp
+@@ -139,7 +139,7 @@ proc rpc_test_start { } {
+ 
+ 	if [info exists server_pid] { rpc_test_exit }
+ 
+-	set env(KRB5_KTNAME) FILE:$env(RPC_TEST_SRVTAB)
++	set env(KRB5_KTNAME) FILE:$env(RPC_TEST_KEYTAB)
+ 
+  	verbose "% $SERVER" 1
+ 	set server_pid [spawn $SERVER $PROT]
+diff --git a/src/lib/rpc/unit-test/lib/helpers.exp b/src/lib/rpc/unit-test/lib/helpers.exp
+index a1b078374..6ba2b10ae 100644
+--- a/src/lib/rpc/unit-test/lib/helpers.exp
++++ b/src/lib/rpc/unit-test/lib/helpers.exp
+@@ -121,8 +121,8 @@ proc setup_database {} {
+ if ![info exists CANON_HOST] {
+     set CANON_HOST [exec $env(QUALNAME)]
+     setup_database
+-    file delete $env(RPC_TEST_SRVTAB)
+-    exec $env(MAKE_KEYTAB) -princ "server/$CANON_HOST" $env(RPC_TEST_SRVTAB)
++    file delete $env(RPC_TEST_KEYTAB)
++    exec $env(MAKE_KEYTAB) -princ "server/$CANON_HOST" $env(RPC_TEST_KEYTAB)
+ }
+ 
+ 
+diff --git a/src/lib/rpc/unit-test/rpc_test_setup.sh b/src/lib/rpc/unit-test/rpc_test_setup.sh
+index 968f52a67..b610f87ef 100755
+--- a/src/lib/rpc/unit-test/rpc_test_setup.sh
++++ b/src/lib/rpc/unit-test/rpc_test_setup.sh
+@@ -1,7 +1,7 @@
+ #!/bin/sh
+ #
+ # This script performs additional setup for the RPC unit test.  It
+-# assumes that gmake has put TOP and RPC_TEST_SRVTAB into the
++# assumes that gmake has put TOP and RPC_TEST_KEYTAB into the
+ # environment. 
+ #
+ # $Id$
+@@ -42,9 +42,9 @@ if test $? != 0 ; then
+ fi
+ rm /tmp/rpc_test_setup$$
+ 
+-rm -f $RPC_TEST_SRVTAB
++rm -f $RPC_TEST_KEYTAB
+ 
+-eval $MAKE_KEYTAB -princ server/$CANON_HOST $RPC_TEST_SRVTAB $REDIRECT
++eval $MAKE_KEYTAB -princ server/$CANON_HOST $RPC_TEST_KEYTAB $REDIRECT
+ 
+ # grep -s "$CANON_HOST SECURE-TEST.OV.COM" /etc/krb.realms
+ # if [ $? != 0 ]; then
+diff --git a/src/man/ktutil.man b/src/man/ktutil.man
+index 4e174c0fe..233329468 100644
+--- a/src/man/ktutil.man
++++ b/src/man/ktutil.man
+@@ -1,6 +1,6 @@
+ .\" Man page generated from reStructuredText.
+ .
+-.TH "KTUTIL" "1" " " "1.17" "MIT Kerberos"
++.TH "KTUTIL" "1" " " "1.18" "MIT Kerberos"
+ .SH NAME
+ ktutil \- Kerberos keytab file maintenance utility
+ .
+@@ -36,8 +36,8 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+ .SH DESCRIPTION
+ .sp
+ The ktutil command invokes a command interface from which an
+-administrator can read, write, or edit entries in a keytab or Kerberos
+-V4 srvtab file.
++administrator can read, write, or edit entries in a keytab.  (Kerberos
++V4 srvtab files are no longer supported.)
+ .SH COMMANDS
+ .SS list
+ .INDENT 0.0
+@@ -59,16 +59,6 @@ Alias: \fBl\fP
+ Read the Kerberos V5 keytab file \fIkeytab\fP into the current keylist.
+ .sp
+ Alias: \fBrkt\fP
+-.SS read_st
+-.INDENT 0.0
+-.INDENT 3.5
+-\fBread_st\fP \fIsrvtab\fP
+-.UNINDENT
+-.UNINDENT
+-.sp
+-Read the Kerberos V4 srvtab file \fIsrvtab\fP into the current keylist.
+-.sp
+-Alias: \fBrst\fP
+ .SS write_kt
+ .INDENT 0.0
+ .INDENT 3.5
+@@ -79,16 +69,6 @@ Alias: \fBrst\fP
+ Write the current keylist into the Kerberos V5 keytab file \fIkeytab\fP\&.
+ .sp
+ Alias: \fBwkt\fP
+-.SS write_st
+-.INDENT 0.0
+-.INDENT 3.5
+-\fBwrite_st\fP \fIsrvtab\fP
+-.UNINDENT
+-.UNINDENT
+-.sp
+-Write the current keylist into the Kerberos V4 srvtab file \fIsrvtab\fP\&.
+-.sp
+-Alias: \fBwst\fP
+ .SS clear_list
+ .INDENT 0.0
+ .INDENT 3.5
+diff --git a/src/tests/dejagnu/config/default.exp b/src/tests/dejagnu/config/default.exp
+index d7b296516..ea9bedd45 100644
+--- a/src/tests/dejagnu/config/default.exp
++++ b/src/tests/dejagnu/config/default.exp
+@@ -440,8 +440,8 @@ proc delete_db {} {
+ 	$tmppwd/kdc-db.ulog \
+ 	$tmppwd/replica-db $tmppwd/replica-db.ok $tmppwd/replica-db.kadm5 $tmppwd/replica-db.kadm5.lock \
+ 	$tmppwd/replica-db~ $tmppwd/replica-db~.ok $tmppwd/replica-db~.kadm5 $tmppwd/replica-db~.kadm5.lock
+-    # Creating a new database means we need a new srvtab.
+-    file delete $tmppwd/srvtab $tmppwd/cpw_srvtab
++    # Creating a new database means we need a new keytab.
++    file delete $tmppwd/keytab $tmppwd/cpw_keytab
+ }
+ 
+ delete_db
+@@ -1510,11 +1510,9 @@ proc start_kpropd {} {
+ 
+     envstack_push
+     setup_kerberos_env replica
+-    spawn $KPROPD -S -d -t -P [expr 10 + $portbase] -s $tmppwd/srvtab -f $tmppwd/incoming-replica-datatrans -p $KDB5_UTIL -a $tmppwd/kpropd-acl
++    spawn $KPROPD -S -d -t -P [expr 10 + $portbase] -s $tmppwd/keytab -f $tmppwd/incoming-replica-datatrans -p $KDB5_UTIL -a $tmppwd/kpropd-acl
+     set kpropd_pid [exp_pid]
+     set kpropd_spawn_id $spawn_id
+-#    send_user [list $KPROPD -S -d -P [expr 10 + $portbase] -s $tmppwd/srvtab -f $tmppwd/incoming-replica-datatrans -p $KDB5_UTIL -a $tmppwd/kpropd-acl]\n
+-#    spawn_shell
+     envstack_pop
+ }
+ 
+@@ -1859,13 +1857,13 @@ proc add_random_key { kkey standalone } {
+     }
+ }
+ 
+-# setup_srvtab
+-# Set up a srvtab file.  start_kerberos_daemons and add_random_key
++# setup_keytab
++# Set up a keytab file.  start_kerberos_daemons and add_random_key
+ # $id/$hostname must be called before this procedure.  If the
+ # argument is non-zero, call pass at relevant points.  Returns 1 on
+ # success, 0 on failure. If the id field is not provided, host is used.
+ 
+-proc setup_srvtab { standalone {id host} } {
++proc setup_keytab { standalone {id host} } {
+     global REALMNAME
+     global KADMIN_LOCAL
+     global KEY
+@@ -1874,17 +1872,17 @@ proc setup_srvtab { standalone {id host} } {
+     global spawn_id
+     global last_service
+ 
+-    if {!$standalone && [file exists $tmppwd/srvtab] && $last_service == $id} {
++    if {!$standalone && [file exists $tmppwd/keytab] && $last_service == $id} {
+ 	return 1
+     }
+ 
+-    file delete $tmppwd/srvtab $tmppwd/srvtab.old
++    file delete $tmppwd/keytab $tmppwd/keytab.old
+ 
+     if ![get_hostname] {
+ 	return 0
+     }
+ 
+-    file delete $hostname-new-srvtab
++    file delete $hostname-new-keytab
+ 
+     envstack_push
+     setup_kerberos_env kdc
+@@ -1892,40 +1890,40 @@ proc setup_srvtab { standalone {id host} } {
+     envstack_pop
+     expect_after {
+ 	-re "(.*)\r\nkadmin.local:  " {
+-	    fail "kadmin.local srvtab (unmatched output: $expect_out(1,string))"
++	    fail "kadmin.local keytab (unmatched output: $expect_out(1,string))"
+ 	    if {!$standalone} {
+-		file delete $tmppwd/srvtab
++		file delete $tmppwd/keytab
+ 	    }
+ 	    catch "expect_after"
+ 	    return 0
+ 	}
+ 	timeout {
+-	    fail "kadmin.local srvtab"
++	    fail "kadmin.local keytab"
+ 	    if {!$standalone} {
+-		file delete $tmppwd/srvtab
++		file delete $tmppwd/keytab
+ 	    }
+ 	    catch "expect_after"
+ 	    return 0
+ 	}
+ 	eof {
+-	    fail "kadmin.local srvtab"
++	    fail "kadmin.local keytab"
+ 	    if {!$standalone} {
+-		file delete $tmppwd/srvtab
++		file delete $tmppwd/keytab
+ 	    }
+ 	    catch "expect_after"
+ 	    return 0
+ 	}
+     }
+     expect "kadmin.local:  "
+-    send "xst -k $hostname-new-srvtab $id/$hostname kiprop/$hostname\r"
+-    expect "xst -k $hostname-new-srvtab $id/$hostname kiprop/$hostname\r\n"
++    send "xst -k $hostname-new-keytab $id/$hostname kiprop/$hostname\r"
++    expect "xst -k $hostname-new-keytab $id/$hostname kiprop/$hostname\r\n"
+     expect {
+-	-re ".*Entry for principal $id/$hostname.* added to keytab WRFILE:$hostname-new-srvtab." { }
++	-re ".*Entry for principal $id/$hostname.* added to keytab WRFILE:$hostname-new-keytab." { }
+ 	-re "\r\nkadmin.local:  " {
+ 	    if {$standalone} {
+-		fail "kadmin.local srvtab"
++		fail "kadmin.local keytab"
+ 	    } else {
+-		file delete $tmppwd/srvtab
++		file delete $tmppwd/keytab
+ 	    }
+ 	    catch expect_after
+ 	    return 0
+@@ -1935,27 +1933,27 @@ proc setup_srvtab { standalone {id host} } {
+     send "quit\r"
+     expect eof
+     catch expect_after
+-    if ![check_exit_status "kadmin.local srvtab"] {
++    if ![check_exit_status "kadmin.local keytab"] {
+ 	if {!$standalone} {
+-	    file delete $tmppwd/srvtab
++	    file delete $tmppwd/keytab
+ 	}
+ 	return 0
+     }
+ 
+-    catch "exec mv -f $hostname-new-srvtab $tmppwd/srvtab" exec_output
++    catch "exec mv -f $hostname-new-keytab $tmppwd/keytab" exec_output
+     if ![string match "" $exec_output] {
+ 	verbose -log "$exec_output"
+-	perror "can't mv new srvtab"
++	perror "can't mv new keytab"
+ 	return 0
+     }
+ 
+     if {$standalone} {
+-	pass "kadmin.local srvtab"
++	pass "kadmin.local keytab"
+     }
+ 
+-    # Make the srvtab file globally readable in case we are using a
+-    # root shell and the srvtab is NFS mounted.
+-    catch "exec chmod a+r $tmppwd/srvtab"
++    # Make the keytab file globally readable in case we are using a
++    # root shell and the keytab is NFS mounted.
++    catch "exec chmod a+r $tmppwd/keytab"
+ 
+     # Remember what we just extracted
+     set last_service $id
+diff --git a/src/tests/dejagnu/krb-standalone/gssapi.exp b/src/tests/dejagnu/krb-standalone/gssapi.exp
+index 582e08719..e3357e769 100644
+--- a/src/tests/dejagnu/krb-standalone/gssapi.exp
++++ b/src/tests/dejagnu/krb-standalone/gssapi.exp
+@@ -238,9 +238,9 @@ proc doit { } {
+ 	perror "failed to set up gssservice/$hostname key"
+     }
+ 
+-    # Use kdb5_edit to create a srvtab entry for gssservice
+-    if ![setup_srvtab 0 gssservice] {
+-	perror "failed to set up gssservice srvtab"
++    # Use kdb5_edit to create a keytab entry for gssservice
++    if ![setup_keytab 0 gssservice] {
++	perror "failed to set up gssservice keytab"
+     }
+ 
+     catch "exec rm -f $tmppwd/gss_tk_0 $tmppwd/gss_tk_1 $tmppwd/gss_tk_2 $tmppwd/gss_tk_3"
+@@ -278,7 +278,7 @@ proc doit { } {
+     #
+     # set KRB5CCNAME and KRB5_KTNAME
+     #
+-    set env(KRB5_KTNAME) FILE:$tmppwd/srvtab
++    set env(KRB5_KTNAME) FILE:$tmppwd/keytab
+     verbose "KRB5_KTNAME=$env(KRB5_KTNAME)"
+ 
+     # Now start the gss-server.
+diff --git a/src/tests/dejagnu/krb-standalone/kadmin.exp b/src/tests/dejagnu/krb-standalone/kadmin.exp
+index 33fc34a7b..36a345258 100644
+--- a/src/tests/dejagnu/krb-standalone/kadmin.exp
++++ b/src/tests/dejagnu/krb-standalone/kadmin.exp
+@@ -457,62 +457,16 @@ proc kadmin_extract { instance name } {
+     expect -re "assword\[^\r\n\]*: *" {
+ 	send "adminpass$KEY\r"
+     }
+-#    expect -re "kadmin: Entry for principal $name/$instance with kvno [0-9], encryption type .* added to keytab WRFILE:$tmppwd/keytab."
+     expect_after
+     expect eof
+     set k_stat [wait -i $spawn_id]
+     verbose "wait -i $spawn_id returned $k_stat (kadmin xst)"
+     catch "close -i $spawn_id"
+-    catch "exec rm -f $instance-new-srvtab"
++    catch "exec rm -f $instance-new-keytab"
+     pass "kadmin xst $instance $name"
+     return 1
+ }
+ 
+-#++
+-# kadmin_extractv4	- Test extract service key in v4 format function of
+-#			  kadmin.
+-#
+-# Extracts service key for service name $name instance $instance in version
+-# 4 format.  Returns 1 on success.
+-#--
+-#proc kadmin_extractv4 { instance name } {
+-#    global REALMNAME
+-#    global KADMIN
+-#    global KEY
+-#    global spawn_id
+-#
+-#    spawn $KADMIN -p krbtest/admin@$REALMNAME -q "xst4 $instance $name"
+-#    expect_after {
+-#	"Cannot contact any KDC" {
+-#	    fail "kadmin xst4 $instance $name lost KDC"
+-#	    catch "expect_after"
+-#	    return 0
+-#	}
+-#	timeout {
+-#	    fail "kadmin xst4 $instance $name"
+-#	    catch "expect_after"
+-#	    return 0
+-#	}
+-#	eof {
+-#	    fail "kadmin xst4 $instance $name"
+-#	    catch "expect_after"
+-#	    return 0
+-#	}
+-#    }
+-#    expect -re "assword\[^\r\n\]*: *" {
+-#	send "adminpass$KEY\r"
+-#    }
+-#    expect "extracted entry $name to key table $instance-new-v4-srvtab"
+-#    expect_after
+-#    expect eof
+-#    set k_stat [wait -i $spawn_id]
+-#    verbose "wait -i $spawn_id returned $k_stat (kadmin xst4)"
+-#    catch "close -i $spawn_id"
+-#    catch "exec rm -f $instance-new-v4-srvtab"
+-#    pass "kadmin xst4 $instance $name"
+-#    return 1
+-#}
+-
+ #++
+ # kadmin_delete	- Test delete principal function of kadmin.
+ #
+diff --git a/src/tests/dejagnu/krb-standalone/kprop.exp b/src/tests/dejagnu/krb-standalone/kprop.exp
+index 2221a65e4..f71ee8638 100644
+--- a/src/tests/dejagnu/krb-standalone/kprop.exp
++++ b/src/tests/dejagnu/krb-standalone/kprop.exp
+@@ -72,8 +72,8 @@ proc doit { } {
+ 	fail "kprop (host key)"
+ 	return
+     }
+-    if ![setup_srvtab 0] {
+-	fail "kprop (srvtab)"
++    if ![setup_keytab 0] {
++	fail "kprop (keytab)"
+ 	return
+     }
+ 
+@@ -99,7 +99,7 @@ proc doit { } {
+     sleep 1
+ 
+     # Try a propagation.
+-    spawn $KPROP -f $tmppwd/replica_datatrans -P [expr 10 + $portbase] -s $tmppwd/srvtab $hostname
++    spawn $KPROP -f $tmppwd/replica_datatrans -P [expr 10 + $portbase] -s $tmppwd/keytab $hostname
+     expect eof
+     set kprop_exit [check_exit_status "kprop (exit status)"]
+     # log output for debugging
+diff --git a/src/tests/dejagnu/krb-standalone/sample.exp b/src/tests/dejagnu/krb-standalone/sample.exp
+index 326f1848d..93a75f1d0 100644
+--- a/src/tests/dejagnu/krb-standalone/sample.exp
++++ b/src/tests/dejagnu/krb-standalone/sample.exp
+@@ -42,7 +42,7 @@ proc start_sserver_daemon { inetd } {
+     # if inetd = 0, then we are running stand-alone
+     if !{$inetd} {
+ 	    # Start the sserver
+-	    spawn $SSERVER -p [expr 8 + $portbase] -S $tmppwd/srvtab
++	    spawn $SSERVER -p [expr 8 + $portbase] -S $tmppwd/keytab
+ 	    set sserver_pid [exp_pid]
+ 	    set sserver_spawn_id $spawn_id
+ 
+@@ -52,7 +52,7 @@ proc start_sserver_daemon { inetd } {
+ 	    sleep 2
+     } else {
+ 	    # Start the sserver
+-	    spawn $T_INETD [expr 8 + $portbase] $SSERVER sserver -S $tmppwd/srvtab
++	    spawn $T_INETD [expr 8 + $portbase] $SSERVER sserver -S $tmppwd/keytab
+ 	    set sserver_pid [exp_pid]
+ 	    set sserver_spawn_id $spawn_id
+ 
+@@ -166,8 +166,8 @@ proc doit { } {
+ 	return
+     }
+ 
+-    # Use ksrvutil to create a srvtab entry for sample
+-    if ![setup_srvtab 1 sample] {
++    # Use ksrvutil to create a keytab entry for sample
++    if ![setup_keytab 1 sample] {
+ 	return
+     }
+ 
+diff --git a/src/tests/dejagnu/krb-standalone/simple.exp b/src/tests/dejagnu/krb-standalone/simple.exp
+index fa749035f..d8b218248 100644
+--- a/src/tests/dejagnu/krb-standalone/simple.exp
++++ b/src/tests/dejagnu/krb-standalone/simple.exp
+@@ -40,7 +40,7 @@ proc start_sim_server_daemon { } {
+     global portbase
+ 
+     # Start the sim_server
+-    spawn $SIM_SERVER -p [expr 8 + $portbase] -S $tmppwd/srvtab
++    spawn $SIM_SERVER -p [expr 8 + $portbase] -S $tmppwd/keytab
+     set sim_server_pid [exp_pid]
+     set sim_server_spawn_id $spawn_id
+ 
+@@ -179,8 +179,8 @@ proc doit { } {
+ 	return
+     }
+ 
+-    # Use ksrvutil to create a srvtab entry for sample
+-    if ![setup_srvtab 1 sample] {
++    # Use ksrvutil to create a keytab entry for sample
++    if ![setup_keytab 1 sample] {
+ 	return
+     }
+ 
+diff --git a/src/tests/dejagnu/krb-standalone/standalone.exp b/src/tests/dejagnu/krb-standalone/standalone.exp
+index 5b5970fba..d284297e8 100644
+--- a/src/tests/dejagnu/krb-standalone/standalone.exp
++++ b/src/tests/dejagnu/krb-standalone/standalone.exp
+@@ -166,8 +166,8 @@ proc doit { } {
+     verbose "wait -i $spawn_id returned $k_stat (kadmin addpol)"
+     catch "close -i $spawn_id"
+ 
+-    # Use ksrvutil to create a srvtab entry.
+-    if ![setup_srvtab 1] {
++    # Use ksrvutil to create a keytab entry.
++    if ![setup_keytab 1] {
+ 	return
+     }
+ 
+diff --git a/src/tests/dejagnu/krb-standalone/tcp.exp b/src/tests/dejagnu/krb-standalone/tcp.exp
+index db09b895e..df3195bb6 100644
+--- a/src/tests/dejagnu/krb-standalone/tcp.exp
++++ b/src/tests/dejagnu/krb-standalone/tcp.exp
+@@ -33,11 +33,6 @@ proc doit { } {
+ 	return
+     }
+ 
+-    # Use ksrvutil to create a srvtab entry.
+-#    if ![setup_srvtab 1] {
+-#	return
+-#    }
+-
+     # Use kinit to get a ticket.
+     if ![kinit krbtest/admin adminpass$KEY 1] {
+ 	return

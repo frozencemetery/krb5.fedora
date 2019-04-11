@@ -1,4 +1,4 @@
-From d32d0cfbbe1386b2cf9b31682df4c35ccc029bda Mon Sep 17 00:00:00 2001
+From 2a8005296c3da39f6d0c6ecd48b950447897af91 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 8 Jan 2019 17:42:35 -0500
 Subject: [PATCH] Make etype names in KDC logs human-readable

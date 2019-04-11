@@ -1,4 +1,4 @@
-From 40259729fa4fbec2b22e9ca8043202ac914cca24 Mon Sep 17 00:00:00 2001
+From 64c9cb22ec6d7ecdeafaf60bfc8d26780d2cb4ad Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:46:21 -0400
 Subject: [PATCH] krb5-1.3.1-dns.patch

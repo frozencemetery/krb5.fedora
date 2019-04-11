@@ -1,0 +1,34 @@
+From 1f214b1265bde1d8f6c9b99af0755ca8f5463385 Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Wed, 3 Apr 2019 16:01:22 -0400
+Subject: [PATCH] Remove ccapi-related comments in configure.ac
+
+These suggested ccapi is buildable on non-Windows, and empirically it
+is not.
+
+(cherry picked from commit eb48b176bccf3634b9c82f588dce85125a5c4bd8)
+---
+ src/configure.in | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/src/configure.in b/src/configure.in
+index 7c309a26b..8d781a7c8 100644
+--- a/src/configure.in
++++ b/src/configure.in
+@@ -1450,7 +1450,6 @@ V5_AC_OUTPUT_MAKEFILE(.
+ 	lib/crypto/crypto_tests
+ 
+ 	lib/krb5 lib/krb5/error_tables lib/krb5/asn.1 lib/krb5/ccache
+-dnl	lib/krb5/ccache/ccapi
+ 	lib/krb5/keytab lib/krb5/krb lib/krb5/rcache lib/krb5/os
+ 	lib/krb5/unicode
+ 
+@@ -1463,8 +1462,6 @@ dnl	lib/krb5/ccache/ccapi
+ 	lib/krad
+ 	lib/apputils
+ 
+-dnl	ccapi ccapi/lib ccapi/lib/unix ccapi/server ccapi/server/unix ccapi/test
+-
+ 	kdc kprop config-files build-tools man doc include
+ 
+ 	plugins/certauth/test

@@ -1,4 +1,4 @@
-From d6758af31afecc3835043a8e599302f372fcef82 Mon Sep 17 00:00:00 2001
+From 8ee5efa6aec5d02e25081b6dc809cef668ce45ea Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:49:25 -0400
 Subject: [PATCH] krb5-1.9-debuginfo.patch

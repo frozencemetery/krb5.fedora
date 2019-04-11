@@ -1,7 +1,8 @@
-From 1382f982a18aec4bc14780b175638d44969ac1d2 Mon Sep 17 00:00:00 2001
+From 105bd2c8be23ab94ba6e0601ee8e531f013389d6 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 31 Jul 2018 13:47:26 -0400
-Subject: [PATCH] In FIPS mode, add plaintext fallback for RC4 usages and taint
+Subject: [PATCH] krb5-1.17 In FIPS mode, add plaintext fallback for RC4 usages
+ and taint
 
 ---
  src/lib/krad/attr.c      | 45 +++++++++++++++++++++++++++++-----------

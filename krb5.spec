@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 8%{?dist}
+Release: 9%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -52,7 +52,6 @@ Source100: noport.c
 Patch26: krb5-1.12.1-pam.patch
 Patch27: krb5-1.17-beta1-selinux-label.patch
 Patch28: krb5-1.12-ksu-path.patch
-Patch29: krb5-1.12-ktany.patch
 Patch30: krb5-1.15-beta1-buildconf.patch
 Patch31: krb5-1.3.1-dns.patch
 Patch32: krb5-1.12-api.patch
@@ -60,10 +59,10 @@ Patch33: krb5-1.13-dirsrv-accountlock.patch
 Patch34: krb5-1.9-debuginfo.patch
 Patch35: krb5-1.11-run_user_0.patch
 Patch36: krb5-1.11-kpasswdtest.patch
-Patch89: In-FIPS-mode-add-plaintext-fallback-for-RC4-usages-a.patch
+Patch37: krb5-1.17-In-FIPS-mode-add-plaintext-fallback-for-RC.patch
 Patch90: Add-tests-for-KCM-ccache-type.patch
 Patch92: Address-some-optimized-out-memset-calls.patch
-Patch93: Use-openssl-s-PRNG-in-FIPS-mode.patch
+Patch93: krb5-1.17-Use-openssl-s-PRNG-in-FIPS-mode.patch
 Patch94: Avoid-allocating-a-register-in-zap-assembly.patch
 Patch95: In-rd_req_dec-always-log-non-permitted-enctypes.patch
 Patch96: In-kpropd-debug-log-proper-ticket-enctype-names.patch
@@ -72,10 +71,15 @@ Patch98: Make-etype-names-in-KDC-logs-human-readable.patch
 Patch99: Mark-deprecated-enctypes-when-used.patch
 Patch100: Properly-size-ifdef-in-k5_cccol_lock.patch
 Patch101: Fix-memory-leak-in-none-replay-cache-type.patch
-Patch102: Become-FIPS-aware-with-3DES.patch
-Patch103: FIPS-aware-SPAKE-group-negotiation.patch
+Patch102: krb5-1.17-Become-FIPS-aware.patch
+Patch103: krb5-1.17-FIPS-aware-SPAKE-group-negotiation.patch
 Patch104: Clarify-header-comment-for-krb5_cc_start_seq_get.patch
 Patch105: Implement-krb5_cc_remove_cred-for-remaining-types.patch
+Patch106: Remove-srvtab-support.patch
+Patch107: Remove-kadmin-RPC-support-for-setting-v4-key.patch
+Patch108: Remove-ccapi-related-comments-in-configure.ac.patch
+Patch109: Remove-doxygen-generated-HTML-output-for-ccapi.patch
+Patch110: Remove-Kerberos-v4-support-vestiges-from-ccapi.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -254,9 +258,6 @@ interface is not considered stable.
 %prep
 %autosetup -S git -n %{name}-%{version}%{prerelease} -a 3
 ln NOTICE LICENSE
-
-# Take the execute bit off of documentation.
-chmod -x doc/ccapi/*.html
 
 # Generate an FDS-compatible LDIF file.
 inldif=src/plugins/kdb/ldap/libkdb_ldap/kerberos.ldif
@@ -715,6 +716,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Apr 11 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-9
+- Remove Kerberos v4 support vestiges (including ktany support)
+
 * Thu Apr 11 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-8
 - Implement krb5_cc_remove_cred for remaining types
 - Resolves: #1693836

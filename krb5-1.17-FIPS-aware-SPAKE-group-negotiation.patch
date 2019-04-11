@@ -1,7 +1,7 @@
-From 59269fca96168aa89dc32834d188a54eea8953ac Mon Sep 17 00:00:00 2001
+From e039796a0fbefac03a3fd888aef7d192e7c1437e Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Mon, 1 Apr 2019 13:13:09 -0400
-Subject: [PATCH] FIPS-aware SPAKE group negotiation
+Subject: [PATCH] krb5-1.17 FIPS-aware SPAKE group negotiation
 
 ---
  src/plugins/preauth/spake/groups.c | 8 ++++++++

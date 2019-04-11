@@ -1,4 +1,4 @@
-From 28528d8169d9af3830b3a162c525a8e1a71f05f4 Mon Sep 17 00:00:00 2001
+From 6a316b681a2e0b6917285b9a0cdde605d463288b Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Mon, 14 Jan 2019 17:14:42 -0500
 Subject: [PATCH] In rd_req_dec, always log non-permitted enctypes

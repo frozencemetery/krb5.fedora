@@ -1,7 +1,7 @@
-From 9724b7f409410a7c3cc0330089009d7b9aa92ae6 Mon Sep 17 00:00:00 2001
+From e307112cfcc52474d07eac890825303655ef8b6f Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 4 Jan 2019 17:00:15 -0500
-Subject: [PATCH] Use openssl's PRNG in FIPS mode
+Subject: [PATCH] krb5-1.17 Use openssl's PRNG in FIPS mode
 
 ---
  src/lib/crypto/krb/prng.c | 11 ++++++++++-
