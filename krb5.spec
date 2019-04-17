@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 9%{?dist}
+Release: 10%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -80,6 +80,7 @@ Patch107: Remove-kadmin-RPC-support-for-setting-v4-key.patch
 Patch108: Remove-ccapi-related-comments-in-configure.ac.patch
 Patch109: Remove-doxygen-generated-HTML-output-for-ccapi.patch
 Patch110: Remove-Kerberos-v4-support-vestiges-from-ccapi.patch
+Patch111: Fix-config-realm-change-logic-in-FILE-remove_cred.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -716,6 +717,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Apr 17 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-10
+- Fix config realm change logic in FILE remove_cred
+
 * Thu Apr 11 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-9
 - Remove Kerberos v4 support vestiges (including ktany support)
 
