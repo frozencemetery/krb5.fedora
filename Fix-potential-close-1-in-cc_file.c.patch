@@ -1,0 +1,30 @@
+From b2002f8286c0f77e57c7387123328a31125cda2e Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Thu, 18 Apr 2019 13:39:37 -0400
+Subject: [PATCH] Fix potential close(-1) in cc_file.c
+
+As part of error handling in d3b39a8bac6206b5ea78b0bf6a2958c1df0b0dd5,
+an error path in delete_cred() may result in close(-1).  While this
+shouldn't be a prolblem in practice (just returning EBADF), it does
+upset Coverity.
+
+ticket: 8792
+(cherry picked from commit 5ccfbaf2f0c8871d2f0ea87ad4b21cc33392ca2c)
+---
+ src/lib/krb5/ccache/cc_file.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/lib/krb5/ccache/cc_file.c b/src/lib/krb5/ccache/cc_file.c
+index a3f67766e..bf58c1d45 100644
+--- a/src/lib/krb5/ccache/cc_file.c
++++ b/src/lib/krb5/ccache/cc_file.c
+@@ -1122,7 +1122,8 @@ delete_cred(krb5_context context, krb5_ccache cache, krb5_cc_cursor *cursor,
+     }
+ 
+ cleanup:
+-    close(fd);
++    if (fd >= 0)
++        close(fd);
+     zapfree(on_disk, expected.len);
+     k5_buf_free(&expected);
+     k5_buf_free(&overwrite);
