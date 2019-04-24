@@ -18,12 +18,12 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 14%{?dist}
+Release: 15%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
-Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
+Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
 # rharwood has trust path to signing key and verifies on check-in
-Source1: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz.asc
+Source1: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz.asc
 # This source is generated during the build because sphinx doesn't
 # give me architecture-deterministic documentation builds.
 # To override this behavior (e.g., new upstream version), do:
@@ -190,15 +190,6 @@ Requires: /usr/share/dict/words
 # for run-time, and for parts of the test suite
 BuildRequires: libverto-module-base
 Requires: libverto-module-base
-%ifarch x86_64
-Obsoletes: %{name}-server-%{version}-%{release}.i686
-%endif
-%ifarch ppc64
-Obsoletes: %{name}-server-%{version}-%{release}.ppc
-%endif
-%ifarch s390x
-Obsoletes: %{name}-server-%{version}-%{release}.s390
-%endif
 Requires: libkadm5%{?_isa} = %{version}-%{release}
 
 %description server
@@ -213,15 +204,6 @@ Summary: The LDAP storage plugin for the Kerberos 5 KDC
 Requires: %{name}-server%{?_isa} = %{version}-%{release}
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 Requires: libkadm5%{?_isa} = %{version}-%{release}
-%ifarch x86_64
-Obsoletes: %{name}-server-ldap-%{version}-%{release}.i686
-%endif
-%ifarch ppc64
-Obsoletes: %{name}-server-ldap-%{version}-%{release}.ppc
-%endif
-%ifarch s390x
-Obsoletes: %{name}-server-ldap-%{version}-%{release}.s390
-%endif
 
 %description server-ldap
 Kerberos is a network authentication system. The krb5-server package
@@ -272,9 +254,7 @@ cat > '60kerberos.ldif' << EOF
 # This is a variation on kerberos.ldif which 389 Directory Server will like.
 dn: cn=schema
 EOF
-egrep -iv '(^$|^dn:|^changetype:|^add:)' $inldif | \
-sed -r 's,^		,                ,g' | \
-sed -r 's,^	,        ,g' >> 60kerberos.ldif
+grep -Eiv '(^$|^dn:|^changetype:|^add:)' $inldif >> 60kerberos.ldif
 touch -r $inldif 60kerberos.ldif
 
 # Rebuild the configure scripts.
@@ -316,32 +296,32 @@ INCLUDES=-I%{_includedir}/et
 CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC -fno-strict-aliasing -fstack-protector-all`"
 CPPFLAGS="`echo $DEFINES $INCLUDES`"
 %configure \
-	CC="%{__cc}" \
-	CFLAGS="$CFLAGS" \
-	CPPFLAGS="$CPPFLAGS" \
-	SS_LIB="-lss" \
-	--enable-shared \
-	--localstatedir=%{_var}/kerberos \
-	--disable-rpath \
-	--without-krb5-config \
-	--with-system-et \
-	--with-system-ss \
-	--with-netlib=-lresolv \
-	--with-tcl \
-	--enable-dns-for-realm \
-	--with-ldap \
+    CC="%{__cc}" \
+    CFLAGS="$CFLAGS" \
+    CPPFLAGS="$CPPFLAGS" \
+    SS_LIB="-lss" \
+    --enable-shared \
+    --localstatedir=%{_var}/kerberos \
+    --disable-rpath \
+    --without-krb5-config \
+    --with-system-et \
+    --with-system-ss \
+    --with-netlib=-lresolv \
+    --with-tcl \
+    --enable-dns-for-realm \
+    --with-ldap \
 %if %{WITH_DIRSRV}
-	--with-dirsrv-account-locking \
+    --with-dirsrv-account-locking \
 %endif
-	--enable-pkinit \
-	--with-crypto-impl=openssl \
-	--with-pkinit-crypto-impl=openssl \
-	--with-tls-impl=openssl \
-	--with-system-verto \
-	--with-pam \
-	--with-selinux \
-	--with-prng-alg=os \
-	|| (cat config.log; exit 1)
+    --enable-pkinit \
+    --with-crypto-impl=openssl \
+    --with-pkinit-crypto-impl=openssl \
+    --with-tls-impl=openssl \
+    --with-system-verto \
+    --with-pam \
+    --with-selinux \
+    --with-prng-alg=os \
+    || (cat config.log; exit 1)
 # Now build it.
 make
 popd
@@ -350,7 +330,7 @@ popd
 configured_kdcrundir=`grep KDC_RUN_DIR src/include/osconf.h | awk '{print $NF}'`
 configured_kdcrundir=`eval echo $configured_kdcrundir`
 if test "$configured_kdcrundir" != %{_localstatedir}/run/krb5kdc ; then
-	exit 1
+    exit 1
 fi
 
 # Build the docs.
@@ -365,11 +345,11 @@ sphinx-build -a -b latex -t pathsubs doc build-pdf
 for pdf in admin appdev basic build plugindev user ; do
     test -s build-pdf/$pdf.pdf || make -C build-pdf
 done
-# new krb5-%{version}-pdf
+# new krb5-version-pdf
 tar -cf "krb5-%{version}%{prerelease}-pdfs.tar.new" build-pdf/*.pdf
 
 # We need to cut off any access to locally-running nameservers, too.
-%{__cc} -fPIC -shared -o noport.so -Wall -Wextra $RPM_SOURCE_DIR/noport.c
+%{__cc} -fPIC -shared -o noport.so -Wall -Wextra %{SOURCE100}
 
 %check
 mkdir nss_wrapper
@@ -441,42 +421,38 @@ grep default_ccache_name $RPM_BUILD_ROOT/etc/krb5.conf
 # Server init scripts (krb5kdc,kadmind,kpropd) and their sysconfig files.
 mkdir -p $RPM_BUILD_ROOT%{_unitdir}
 for unit in \
-	%{SOURCE5}\
-	%{SOURCE4} \
-	%{SOURCE2} ; do
-	# In the past, the init script was supposed to be named after the
-	# service that the started daemon provided.  Changing their names
-	# is an upgrade-time problem I'm in no hurry to deal with.
-	install -pm 644 ${unit} $RPM_BUILD_ROOT%{_unitdir}
+    %{SOURCE5}\
+     %{SOURCE4} \
+     %{SOURCE2} ; do
+    # In the past, the init script was supposed to be named after the service
+    # that the started daemon provided.  Changing their names is an
+    # upgrade-time problem I'm in no hurry to deal with.
+    install -pm 644 ${unit} $RPM_BUILD_ROOT%{_unitdir}
 done
 mkdir -p $RPM_BUILD_ROOT/%{_tmpfilesdir}
 install -pm 644 %{SOURCE39} $RPM_BUILD_ROOT/%{_tmpfilesdir}/
 mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/run/krb5kdc
 
 mkdir -p $RPM_BUILD_ROOT/etc/sysconfig
-for sysconfig in \
-	%{SOURCE19}\
-	%{SOURCE20}\
-	%{SOURCE21} ; do
-	install -pm 644 ${sysconfig} \
-	$RPM_BUILD_ROOT/etc/sysconfig/`basename ${sysconfig} .sysconfig`
+for sysconfig in %{SOURCE19} %{SOURCE20} %{SOURCE21} ; do
+    install -pm 644 ${sysconfig} \
+            $RPM_BUILD_ROOT/etc/sysconfig/`basename ${sysconfig} .sysconfig`
 done
 
 # logrotate configuration files
 mkdir -p $RPM_BUILD_ROOT/etc/logrotate.d/
 for logrotate in \
-	%{SOURCE33} \
-	%{SOURCE34} ; do
-	install -pm 644 ${logrotate} \
-	$RPM_BUILD_ROOT/etc/logrotate.d/`basename ${logrotate} .logrotate`
+    %{SOURCE33} \
+     %{SOURCE34} ; do
+    install -pm 644 ${logrotate} \
+            $RPM_BUILD_ROOT/etc/logrotate.d/`basename ${logrotate} .logrotate`
 done
 
 # PAM configuration files.
 mkdir -p $RPM_BUILD_ROOT/etc/pam.d/
-for pam in \
-	%{SOURCE29} ; do
-	install -pm 644 ${pam} \
-	$RPM_BUILD_ROOT/etc/pam.d/`basename ${pam} .pamd`
+for pam in %{SOURCE29} ; do
+    install -pm 644 ${pam} \
+            $RPM_BUILD_ROOT/etc/pam.d/`basename ${pam} .pamd`
 done
 
 # Plug-in directories.
@@ -497,19 +473,24 @@ sed -r -i -e 's|^libdir=/usr/lib(64)?$|libdir=/usr/lib|g' $RPM_BUILD_ROOT%{_bind
 sed -r -i -e "s/-specs=\/.+?\/redhat-hardened-ld//g" $RPM_BUILD_ROOT%{_bindir}/krb5-config
 
 if [[ "$(< $RPM_BUILD_ROOT%{_bindir}/krb5-config )" == *redhat-hardened-ld* ]] ; then
-	printf '# redhat-hardened-ld for krb5-config failed' 1>&2
-	exit 1
+    printf '# redhat-hardened-ld for krb5-config failed' 1>&2
+    exit 1
 fi
 
 # Install processed man pages.
 for section in 1 5 8 ; do
-	install -m 644 build-man/*.${section} \
-		       $RPM_BUILD_ROOT/%{_mandir}/man${section}/
+    install -m 644 build-man/*.${section} \
+            $RPM_BUILD_ROOT/%{_mandir}/man${section}/
 done
 
-# This script just tells you to send bug reports to krb5-bugs@mit.edu, but
-# since we don't have a man page for it, just drop it.
+# I'm tired of warnings about these not having man pages
 rm -- "$RPM_BUILD_ROOT/%{_sbindir}/krb5-send-pr"
+rm -- "$RPM_BUILD_ROOT/%{_sbindir}/sim_server"
+rm -- "$RPM_BUILD_ROOT/%{_sbindir}/gss-server"
+rm -- "$RPM_BUILD_ROOT/%{_sbindir}/uuserver"
+rm -- "$RPM_BUILD_ROOT/%{_bindir}/sim_client"
+rm -- "$RPM_BUILD_ROOT/%{_bindir}/gss-client"
+rm -- "$RPM_BUILD_ROOT/%{_bindir}/uuclient"
 
 # These files are already packaged elsewhere
 rm -- "$RPM_BUILD_ROOT/%{_docdir}/krb5-libs/examples/kdc.conf"
@@ -704,16 +685,6 @@ exit 0
 %{_bindir}/krb5-config
 %{_mandir}/man1/krb5-config.1*
 
-# Protocol test clients.
-%{_bindir}/sim_client
-%{_bindir}/gss-client
-%{_bindir}/uuclient
-
-# Protocol test servers.
-%{_sbindir}/sim_server
-%{_sbindir}/gss-server
-%{_sbindir}/uuserver
-
 %files -n libkadm5
 %{_libdir}/libkadm5clnt.so
 %{_libdir}/libkadm5clnt_mit.so
@@ -723,6 +694,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Apr 24 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-15
+- Fix us up real nice with rpmlint
+
 * Wed Apr 24 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-14
 - Add dns_canonicalize_hostname=fallback support
 
@@ -2429,7 +2403,7 @@ exit 0
 
 * Thu Feb 25 2010 Nalin Dahyabhai <nalin@redhat.com> - 1.7.1-4
 - move the package changelog to the end to match the usual style (jdennis)
-- scrub out references to $RPM_SOURCE_DIR (jdennis)
+- scrub out references to RPM_SOURCE_DIR (jdennis)
 - include a symlink to the readme with the name LICENSE so that people can
   find it more easily (jdennis)
 
