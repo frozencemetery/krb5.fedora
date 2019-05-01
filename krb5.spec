@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 15%{?dist}
+Release: 16%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -87,6 +87,7 @@ Patch114: Fix-potential-close-1-in-cc_file.c.patch
 Patch115: Check-more-errors-in-OpenSSL-crypto-backend.patch
 Patch116: Clear-forwardable-flag-instead-of-denying-request.patch
 Patch117: Add-dns_canonicalize_hostname-fallback-support.patch
+Patch118: Use-secure_getenv-where-appropriate.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -694,6 +695,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed May 01 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-16
+- Use secure_getenv() where appropriate
+
 * Wed Apr 24 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-15
 - Fix us up real nice with rpmlint
 
