@@ -316,7 +316,6 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 %endif
     --enable-pkinit \
     --with-crypto-impl=openssl \
-    --with-pkinit-crypto-impl=openssl \
     --with-tls-impl=openssl \
     --with-system-verto \
     --with-pam \
