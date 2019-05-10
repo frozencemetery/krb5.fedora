@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 17%{?dist}
+Release: 18%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -62,7 +62,6 @@ Patch36: krb5-1.11-kpasswdtest.patch
 Patch37: krb5-1.17-In-FIPS-mode-add-plaintext-fallback-for-RC.patch
 Patch90: Add-tests-for-KCM-ccache-type.patch
 Patch92: Address-some-optimized-out-memset-calls.patch
-Patch93: krb5-1.17-Use-openssl-s-PRNG-in-FIPS-mode.patch
 Patch94: Avoid-allocating-a-register-in-zap-assembly.patch
 Patch95: In-rd_req_dec-always-log-non-permitted-enctypes.patch
 Patch96: In-kpropd-debug-log-proper-ticket-enctype-names.patch
@@ -71,8 +70,6 @@ Patch98: Make-etype-names-in-KDC-logs-human-readable.patch
 Patch99: Mark-deprecated-enctypes-when-used.patch
 Patch100: Properly-size-ifdef-in-k5_cccol_lock.patch
 Patch101: Fix-memory-leak-in-none-replay-cache-type.patch
-Patch102: krb5-1.17-Become-FIPS-aware.patch
-Patch103: krb5-1.17-FIPS-aware-SPAKE-group-negotiation.patch
 Patch104: Clarify-header-comment-for-krb5_cc_start_seq_get.patch
 Patch105: Implement-krb5_cc_remove_cred-for-remaining-types.patch
 Patch106: Remove-srvtab-support.patch
@@ -88,6 +85,15 @@ Patch115: Check-more-errors-in-OpenSSL-crypto-backend.patch
 Patch116: Clear-forwardable-flag-instead-of-denying-request.patch
 Patch117: Add-dns_canonicalize_hostname-fallback-support.patch
 Patch118: Use-secure_getenv-where-appropriate.patch
+Patch119: Initialize-some-data-structure-magic-fields.patch
+Patch120: Fix-some-return-code-handling-bugs.patch
+Patch121: Modernize-exit-path-in-gss_krb5int_copy_ccache.patch
+Patch122: Simplify-SAM-2-as_key-handling.patch
+Patch123: Avoid-alignment-warnings-in-openssl-rc4.c.patch
+Patch124: Simply-OpenSSL-PKCS7-decryption-code.patch
+Patch125: Improve-error-messages-from-kadmin-change_password.patch
+Patch126: Remove-more-dead-code.patch
+Patch127: krb5-1.17post1-FIPS-with-PRNG-and-SPAKE.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -694,6 +700,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri May 10 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-18
+- Pull in 2019-05-02 static analysis updates
+
 * Fri May 03 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-17
 - Move krb5-kdb-version provide into krb5-server for freeipa
 

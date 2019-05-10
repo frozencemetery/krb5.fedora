@@ -1,0 +1,103 @@
+From 202a4ef4b2d1fa88d1a5c7f0b673bc4f563c57cd Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Thu, 2 May 2019 14:05:38 -0400
+Subject: [PATCH] Fix some return code handling bugs
+
+Fix five cases where return codes could be set (in unlikely cases) but
+did not result in error exits.
+
+[ghudson@mit.edu: squashed commits and rewrote commit message]
+
+ticket: 8801 (new)
+tags: pullup
+target_version: 1.17-next
+target_version: 1.16-next
+
+(cherry picked from commit 7c26740f9df3c79c3f01c3a4dda4d9dabba5298d)
+---
+ src/kdc/fast_util.c               | 16 ++++++++--------
+ src/lib/gssapi/krb5/k5unsealiov.c |  1 +
+ src/lib/kadm5/clnt/client_init.c  |  3 +++
+ src/tests/gssapi/t_pcontok.c      |  1 +
+ 4 files changed, 13 insertions(+), 8 deletions(-)
+
+diff --git a/src/kdc/fast_util.c b/src/kdc/fast_util.c
+index 6a3fc11b9..c9ba83e5e 100644
+--- a/src/kdc/fast_util.c
++++ b/src/kdc/fast_util.c
+@@ -47,9 +47,10 @@ static krb5_error_code armor_ap_request
+     if (retval == 0)
+         retval = krb5_auth_con_setflags(kdc_context,
+                                         authcontext, 0); /*disable replay cache*/
+-    retval = krb5_rd_req(kdc_context, &authcontext,
+-                         &armor->armor_value, NULL /*server*/,
+-                         kdc_active_realm->realm_keytab,  NULL, &ticket);
++    if (retval == 0)
++        retval = krb5_rd_req(kdc_context, &authcontext, &armor->armor_value,
++                             NULL /*server*/, kdc_active_realm->realm_keytab,
++                             NULL, &ticket);
+     if (retval != 0) {
+         const char * errmsg = krb5_get_error_message(kdc_context, retval);
+         k5_setmsg(kdc_context, retval, _("%s while handling ap-request armor"),
+@@ -132,7 +133,7 @@ kdc_find_fast(krb5_kdc_req **requestptr,
+ {
+     krb5_error_code retval = 0;
+     krb5_pa_data *fast_padata;
+-    krb5_data scratch, *inner_body = NULL;
++    krb5_data scratch, plaintext, *inner_body = NULL;
+     krb5_fast_req * fast_req = NULL;
+     krb5_kdc_req *request = *requestptr;
+     krb5_fast_armored_req *fast_armored_req = NULL;
+@@ -183,11 +184,10 @@ kdc_find_fast(krb5_kdc_req **requestptr,
+             }
+         }
+         if (retval == 0) {
+-            krb5_data plaintext;
+             plaintext.length = fast_armored_req->enc_part.ciphertext.length;
+-            plaintext.data = malloc(plaintext.length);
+-            if (plaintext.data == NULL)
+-                retval = ENOMEM;
++            plaintext.data = k5alloc(plaintext.length, &retval);
++        }
++        if (retval == 0) {
+             retval = krb5_c_decrypt(kdc_context,
+                                     state->armor_key,
+                                     KRB5_KEYUSAGE_FAST_ENC, NULL,
+diff --git a/src/lib/gssapi/krb5/k5unsealiov.c b/src/lib/gssapi/krb5/k5unsealiov.c
+index 8b6704274..f15d2db69 100644
+--- a/src/lib/gssapi/krb5/k5unsealiov.c
++++ b/src/lib/gssapi/krb5/k5unsealiov.c
+@@ -281,6 +281,7 @@ kg_unseal_v1_iov(krb5_context context,
+         (!ctx->initiate && direction != 0)) {
+         *minor_status = (OM_uint32)G_BAD_DIRECTION;
+         retval = GSS_S_BAD_SIG;
++        goto cleanup;
+     }
+ 
+     code = 0;
+diff --git a/src/lib/kadm5/clnt/client_init.c b/src/lib/kadm5/clnt/client_init.c
+index 6f10db018..aa08918e2 100644
+--- a/src/lib/kadm5/clnt/client_init.c
++++ b/src/lib/kadm5/clnt/client_init.c
+@@ -465,6 +465,9 @@ gic_iter(kadm5_server_handle_t handle, enum init_type init_type,
+     /* Credentials for kadmin don't need to be forwardable or proxiable. */
+     if (init_type != INIT_CREDS) {
+         code = krb5_get_init_creds_opt_alloc(ctx, &opt);
++        if (code)
++            goto error;
++
+         krb5_get_init_creds_opt_set_forwardable(opt, 0);
+         krb5_get_init_creds_opt_set_proxiable(opt, 0);
+         krb5_get_init_creds_opt_set_out_ccache(ctx, opt, ccache);
+diff --git a/src/tests/gssapi/t_pcontok.c b/src/tests/gssapi/t_pcontok.c
+index b966f8129..c40ea434c 100644
+--- a/src/tests/gssapi/t_pcontok.c
++++ b/src/tests/gssapi/t_pcontok.c
+@@ -126,6 +126,7 @@ make_delete_token(gss_krb5_lucid_context_v1_t *lctx, gss_buffer_desc *out)
+         iov.flags = KRB5_CRYPTO_TYPE_DATA;
+         iov.data = make_data(cksum.contents, 16);
+         ret = krb5_k_encrypt_iov(context, seq, 0, NULL, &iov, 1);
++        check_k5err(context, "krb5_k_encrypt_iov", ret);
+         memcpy(ptr + 8, cksum.contents + 8, 8);
+     } else {
+         memcpy(ptr + 8, cksum.contents, cksize);

@@ -1,7 +1,10 @@
-From 15c0aec4315cc5cfae864b179848f043e2b100c6 Mon Sep 17 00:00:00 2001
+From dff44c20d9d9ed6a3e71888406b2913d9309e738 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 9 Nov 2018 15:12:21 -0500
-Subject: [PATCH] krb5-1.17 Become FIPS-aware
+Subject: [PATCH] krb5-1.17post1 FIPS with PRNG and SPAKE
+
+NB: Use openssl's PRNG in FIPS mode, and be aware during SPAKE group
+negotiation.
 
 A lot of the FIPS error conditions from OpenSSL are incredibly
 mysterious (at best, things return NULL unexpectedly; at worst,
@@ -10,17 +13,50 @@ ENOMEM).  In order to cope with this, we need to have some level of
 awareness of what we can and can't safely call.
 
 This will slow down some calls slightly (FIPS_mode() takes multiple
-locks), but not for any crypto we care about - which is to say that
-AES is fine.
+locks), but not for any ciphers we care about - which is to say that
+AES is fine.  Shame about the SPAKE groups though.
 ---
+ src/lib/crypto/krb/prng.c                       | 11 ++++++++++-
  src/lib/crypto/openssl/enc_provider/camellia.c  |  6 ++++++
  src/lib/crypto/openssl/enc_provider/des.c       |  9 +++++++++
  src/lib/crypto/openssl/enc_provider/des3.c      |  6 ++++++
  src/lib/crypto/openssl/enc_provider/rc4.c       | 13 ++++++++++++-
  src/lib/crypto/openssl/hash_provider/hash_evp.c |  4 ++++
  src/lib/crypto/openssl/hmac.c                   |  6 +++++-
- 6 files changed, 42 insertions(+), 2 deletions(-)
+ src/plugins/preauth/spake/groups.c              |  8 ++++++++
+ 8 files changed, 60 insertions(+), 3 deletions(-)
 
+diff --git a/src/lib/crypto/krb/prng.c b/src/lib/crypto/krb/prng.c
+index cb9ca9b98..f0e9984ca 100644
+--- a/src/lib/crypto/krb/prng.c
++++ b/src/lib/crypto/krb/prng.c
+@@ -26,6 +26,8 @@
+ 
+ #include "crypto_int.h"
+ 
++#include <openssl/rand.h>
++
+ krb5_error_code KRB5_CALLCONV
+ krb5_c_random_seed(krb5_context context, krb5_data *data)
+ {
+@@ -99,9 +101,16 @@ krb5_boolean
+ k5_get_os_entropy(unsigned char *buf, size_t len, int strong)
+ {
+     const char *device;
+-#if defined(__linux__) && defined(SYS_getrandom)
+     int r;
+ 
++    /* A wild FIPS mode appeared! */
++    if (FIPS_mode()) {
++        /* The return codes on this API are not good */
++        r = RAND_bytes(buf, len);
++        return r == 1;
++    }
++
++#if defined(__linux__) && defined(SYS_getrandom)
+     while (len > 0) {
+         /*
+          * Pull from the /dev/urandom pool, but require it to have been seeded.
 diff --git a/src/lib/crypto/openssl/enc_provider/camellia.c b/src/lib/crypto/openssl/enc_provider/camellia.c
 index 2da691329..f79679a0b 100644
 --- a/src/lib/crypto/openssl/enc_provider/camellia.c
@@ -104,30 +140,30 @@ index 1c439c2cd..8be555a8d 100644
      if (ret != 0 || empty)
          return ret;
 diff --git a/src/lib/crypto/openssl/enc_provider/rc4.c b/src/lib/crypto/openssl/enc_provider/rc4.c
-index 7f3c086ed..a3f2a7442 100644
+index a65d57b7a..6ccaca94a 100644
 --- a/src/lib/crypto/openssl/enc_provider/rc4.c
 +++ b/src/lib/crypto/openssl/enc_provider/rc4.c
-@@ -66,6 +66,9 @@ k5_arcfour_docrypt(krb5_key key,const krb5_data *state, krb5_crypto_iov *data,
+@@ -66,6 +66,9 @@ k5_arcfour_docrypt(krb5_key key, const krb5_data *state, krb5_crypto_iov *data,
      EVP_CIPHER_CTX *ctx = NULL;
      struct arcfour_state *arcstate;
  
 +    if (FIPS_mode())
 +        return KRB5_CRYPTO_INTERNAL;
 +
-     arcstate = (state != NULL) ? (struct arcfour_state *) state->data : NULL;
+     arcstate = (state != NULL) ? (void *)state->data : NULL;
      if (arcstate != NULL) {
          ctx = arcstate->ctx;
-@@ -113,7 +116,12 @@ k5_arcfour_docrypt(krb5_key key,const krb5_data *state, krb5_crypto_iov *data,
+@@ -113,7 +116,12 @@ k5_arcfour_docrypt(krb5_key key, const krb5_data *state, krb5_crypto_iov *data,
  static void
  k5_arcfour_free_state(krb5_data *state)
  {
--    struct arcfour_state *arcstate = (struct arcfour_state *) state->data;
+-    struct arcfour_state *arcstate = (void *)state->data;
 +    struct arcfour_state *arcstate;
 +
 +    if (FIPS_mode())
 +        return;
 +
-+    arcstate = (struct arcfour_state *) state->data;
++    arcstate = (void *) state->data;
  
      EVP_CIPHER_CTX_free(arcstate->ctx);
      free(arcstate);
@@ -138,9 +174,9 @@ index 7f3c086ed..a3f2a7442 100644
 +    if (FIPS_mode())
 +        return KRB5_CRYPTO_INTERNAL;
 +
-     /* Create a state structure with an uninitialized context. */
-     arcstate = calloc(1, sizeof(*arcstate));
-     if (arcstate == NULL)
+     /*
+      * The cipher state here is a saved pointer to a struct arcfour_state
+      * object, rather than a flat byte array as in most enc providers.  The
 diff --git a/src/lib/crypto/openssl/hash_provider/hash_evp.c b/src/lib/crypto/openssl/hash_provider/hash_evp.c
 index 957ed8d9c..8c1fd7f59 100644
 --- a/src/lib/crypto/openssl/hash_provider/hash_evp.c
@@ -163,7 +199,7 @@ index 957ed8d9c..8c1fd7f59 100644
  }
  
 diff --git a/src/lib/crypto/openssl/hmac.c b/src/lib/crypto/openssl/hmac.c
-index b2db6ec02..d94d9ac94 100644
+index 7dc59dcc0..769a50c00 100644
 --- a/src/lib/crypto/openssl/hmac.c
 +++ b/src/lib/crypto/openssl/hmac.c
 @@ -103,7 +103,11 @@ map_digest(const struct krb5_hash_provider *hash)
@@ -179,3 +215,36 @@ index b2db6ec02..d94d9ac94 100644
          return EVP_md5();
      else if (!strncmp(hash->hash_name, "MD4", 3))
          return EVP_md4();
+diff --git a/src/plugins/preauth/spake/groups.c b/src/plugins/preauth/spake/groups.c
+index a195cc195..8a913cb5a 100644
+--- a/src/plugins/preauth/spake/groups.c
++++ b/src/plugins/preauth/spake/groups.c
+@@ -56,6 +56,8 @@
+ #include "trace.h"
+ #include "groups.h"
+ 
++#include <openssl/crypto.h>
++
+ #define DEFAULT_GROUPS_CLIENT "edwards25519"
+ #define DEFAULT_GROUPS_KDC ""
+ 
+@@ -102,6 +104,9 @@ find_gdef(int32_t group)
+ {
+     size_t i;
+ 
++    if (group == builtin_edwards25519.reg->id && FIPS_mode())
++        return NULL;
++
+     for (i = 0; groupdefs[i] != NULL; i++) {
+         if (groupdefs[i]->reg->id == group)
+             return groupdefs[i];
+@@ -116,6 +121,9 @@ find_gnum(const char *name)
+ {
+     size_t i;
+ 
++    if (strcasecmp(name, builtin_edwards25519.reg->name) == 0 && FIPS_mode())
++        return 0;
++
+     for (i = 0; groupdefs[i] != NULL; i++) {
+         if (strcasecmp(name, groupdefs[i]->reg->name) == 0)
+             return groupdefs[i]->reg->id;

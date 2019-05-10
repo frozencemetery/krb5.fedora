@@ -1,0 +1,276 @@
+From eb6d9cd533d087d38b7f3c1b7086a712cb0bfe46 Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Thu, 9 May 2019 14:07:24 -0400
+Subject: [PATCH] Remove more dead code
+
+(cherry picked from commit 0269810b1aec6c554fb746433f045d59fd34ab3a)
+---
+ src/clients/klist/klist.c                     |  5 ---
+ src/kadmin/dbutil/kdb5_mkey.c                 |  2 --
+ src/kadmin/server/ipropd_svc.c                |  4 ---
+ src/lib/gssapi/krb5/gssapi_krb5.c             |  2 +-
+ src/lib/gssapi/krb5/k5sealv3.c                |  5 ++-
+ src/lib/gssapi/krb5/k5sealv3iov.c             |  5 ++-
+ src/lib/kdb/kdb_convert.c                     | 36 +++----------------
+ .../kdb/ldap/ldap_util/kdb5_ldap_services.c   |  4 ---
+ .../kdb/ldap/libkdb_ldap/ldap_create.c        | 10 ------
+ src/plugins/preauth/pkinit/pkinit_srv.c       |  8 -----
+ src/tests/hammer/kdc5_hammer.c                |  4 +--
+ 11 files changed, 10 insertions(+), 75 deletions(-)
+
+diff --git a/src/clients/klist/klist.c b/src/clients/klist/klist.c
+index 8c307151a..4261ac96c 100644
+--- a/src/clients/klist/klist.c
++++ b/src/clients/klist/klist.c
+@@ -720,11 +720,6 @@ show_credential(krb5_creds *cred)
+         extra_field += 2;
+     }
+ 
+-    if (extra_field > 3) {
+-        fputs("\n", stdout);
+-        extra_field = 0;
+-    }
+-
+     if (show_flags) {
+         flags = flags_string(cred);
+         if (flags && *flags) {
+diff --git a/src/kadmin/dbutil/kdb5_mkey.c b/src/kadmin/dbutil/kdb5_mkey.c
+index 19796c202..aceb0a9b8 100644
+--- a/src/kadmin/dbutil/kdb5_mkey.c
++++ b/src/kadmin/dbutil/kdb5_mkey.c
+@@ -1240,7 +1240,6 @@ kdb5_purge_mkeys(int argc, char *argv[])
+                             if (actkvno_entry == actkvno_list) {
+                                 /* remove from head */
+                                 actkvno_list = actkvno_entry->next;
+-                                prev_actkvno_entry = actkvno_list;
+                             } else if (actkvno_entry->next == NULL) {
+                                 /* remove from tail */
+                                 prev_actkvno_entry->next = NULL;
+@@ -1263,7 +1262,6 @@ kdb5_purge_mkeys(int argc, char *argv[])
+                         if (mkey_aux_entry->mkey_kvno == args.kvnos[j].kvno) {
+                             if (mkey_aux_entry == mkey_aux_list) {
+                                 mkey_aux_list = mkey_aux_entry->next;
+-                                prev_mkey_aux_entry = mkey_aux_list;
+                             } else if (mkey_aux_entry->next == NULL) {
+                                 prev_mkey_aux_entry->next = NULL;
+                             } else {
+diff --git a/src/kadmin/server/ipropd_svc.c b/src/kadmin/server/ipropd_svc.c
+index dc9984c2c..56e9b90b2 100644
+--- a/src/kadmin/server/ipropd_svc.c
++++ b/src/kadmin/server/ipropd_svc.c
+@@ -263,8 +263,6 @@ ipropx_resync(uint32_t vers, struct svc_req *rqstp)
+     int pret, fret;
+     FILE *p;
+     kadm5_server_handle_t handle = global_server_handle;
+-    OM_uint32 min_stat;
+-    gss_name_t name = NULL;
+     char *client_name = NULL, *service_name = NULL;
+     char *whoami = "iprop_full_resync_1";
+ 
+@@ -440,8 +438,6 @@ out:
+ 	debprret(whoami, ret.ret, 0);
+     free(client_name);
+     free(service_name);
+-    if (name)
+-	gss_release_name(&min_stat, &name);
+     free(ubuf);
+     return (&ret);
+ }
+diff --git a/src/lib/gssapi/krb5/gssapi_krb5.c b/src/lib/gssapi/krb5/gssapi_krb5.c
+index 79b83e0c6..f09cda007 100644
+--- a/src/lib/gssapi/krb5/gssapi_krb5.c
++++ b/src/lib/gssapi/krb5/gssapi_krb5.c
+@@ -780,7 +780,7 @@ krb5_gss_localname(OM_uint32 *minor,
+     localname->value = gssalloc_strdup(lname);
+     localname->length = strlen(lname);
+ 
+-    return (code == 0) ? GSS_S_COMPLETE : GSS_S_FAILURE;
++    return GSS_S_COMPLETE;
+ }
+ 
+ 
+diff --git a/src/lib/gssapi/krb5/k5sealv3.c b/src/lib/gssapi/krb5/k5sealv3.c
+index 25d9f2711..3b4f8cb83 100644
+--- a/src/lib/gssapi/krb5/k5sealv3.c
++++ b/src/lib/gssapi/krb5/k5sealv3.c
+@@ -145,9 +145,8 @@ gss_krb5int_make_seal_token_v3 (krb5_context context,
+         /* TOK_ID */
+         store_16_be(KG2_TOK_WRAP_MSG, outbuf);
+         /* flags */
+-        outbuf[2] = (acceptor_flag
+-                     | (conf_req_flag ? FLAG_WRAP_CONFIDENTIAL : 0)
+-                     | (ctx->have_acceptor_subkey ? FLAG_ACCEPTOR_SUBKEY : 0));
++        outbuf[2] = (acceptor_flag | FLAG_WRAP_CONFIDENTIAL |
++                     (ctx->have_acceptor_subkey ? FLAG_ACCEPTOR_SUBKEY : 0));
+         /* filler */
+         outbuf[3] = 0xff;
+         /* EC */
+diff --git a/src/lib/gssapi/krb5/k5sealv3iov.c b/src/lib/gssapi/krb5/k5sealv3iov.c
+index a73edb6a4..333ee124d 100644
+--- a/src/lib/gssapi/krb5/k5sealv3iov.c
++++ b/src/lib/gssapi/krb5/k5sealv3iov.c
+@@ -144,9 +144,8 @@ gss_krb5int_make_seal_token_v3_iov(krb5_context context,
+         /* TOK_ID */
+         store_16_be(KG2_TOK_WRAP_MSG, outbuf);
+         /* flags */
+-        outbuf[2] = (acceptor_flag
+-                     | (conf_req_flag ? FLAG_WRAP_CONFIDENTIAL : 0)
+-                     | (ctx->have_acceptor_subkey ? FLAG_ACCEPTOR_SUBKEY : 0));
++        outbuf[2] = (acceptor_flag | FLAG_WRAP_CONFIDENTIAL |
++                     (ctx->have_acceptor_subkey ? FLAG_ACCEPTOR_SUBKEY : 0));
+         /* filler */
+         outbuf[3] = 0xFF;
+         /* EC */
+diff --git a/src/lib/kdb/kdb_convert.c b/src/lib/kdb/kdb_convert.c
+index 76140732f..e1bf1919f 100644
+--- a/src/lib/kdb/kdb_convert.c
++++ b/src/lib/kdb/kdb_convert.c
+@@ -305,8 +305,6 @@ ulog_conv_2logentry(krb5_context context, krb5_db_entry *entry,
+     krb5_error_code ret;
+     kdbe_attr_type_t *attr_types;
+     int kadm_data_yes;
+-    /* always exclude non-replicated attributes, for now */
+-    krb5_boolean exclude_nra = TRUE;
+ 
+     nattrs = tmpint = 0;
+     final = -1;
+@@ -356,7 +354,8 @@ ulog_conv_2logentry(krb5_context context, krb5_db_entry *entry,
+             nattrs++;
+         }
+     } else {
+-        find_changed_attrs(curr, entry, exclude_nra, attr_types, &nattrs);
++        /* Always exclude non-replicated attributes for now. */
++        find_changed_attrs(curr, entry, TRUE, attr_types, &nattrs);
+         krb5_db_free_principal(context, curr);
+     }
+ 
+@@ -402,31 +401,6 @@ ulog_conv_2logentry(krb5_context context, krb5_db_entry *entry,
+             }
+             break;
+ 
+-        case AT_LAST_SUCCESS:
+-            if (!exclude_nra && entry->last_success >= 0) {
+-                ULOG_ENTRY_TYPE(update, ++final).av_type = AT_LAST_SUCCESS;
+-                ULOG_ENTRY(update, final).av_last_success =
+-                    (uint32_t)entry->last_success;
+-            }
+-            break;
+-
+-        case AT_LAST_FAILED:
+-            if (!exclude_nra && entry->last_failed >= 0) {
+-                ULOG_ENTRY_TYPE(update, ++final).av_type = AT_LAST_FAILED;
+-                ULOG_ENTRY(update, final).av_last_failed =
+-                    (uint32_t)entry->last_failed;
+-            }
+-            break;
+-
+-        case AT_FAIL_AUTH_COUNT:
+-            if (!exclude_nra) {
+-                ULOG_ENTRY_TYPE(update, ++final).av_type =
+-                    AT_FAIL_AUTH_COUNT;
+-                ULOG_ENTRY(update, final).av_fail_auth_count =
+-                    (uint32_t)entry->fail_auth_count;
+-            }
+-            break;
+-
+         case AT_PRINC:
+             if (entry->princ->length > 0) {
+                 ULOG_ENTRY_TYPE(update, ++final).av_type = AT_PRINC;
+@@ -552,10 +526,8 @@ ulog_conv_2logentry(krb5_context context, krb5_db_entry *entry,
+ /* END CSTYLED */
+ 
+         case AT_LEN:
+-            if (entry->len >= 0) {
+-                ULOG_ENTRY_TYPE(update, ++final).av_type = AT_LEN;
+-                ULOG_ENTRY(update, final).av_len = (int16_t)entry->len;
+-            }
++            ULOG_ENTRY_TYPE(update, ++final).av_type = AT_LEN;
++            ULOG_ENTRY(update, final).av_len = (int16_t)entry->len;
+             break;
+ 
+         default:
+diff --git a/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c b/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c
+index ce038fc3d..0a95101ad 100644
+--- a/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c
++++ b/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c
+@@ -135,10 +135,6 @@ kdb5_ldap_stash_service_password(int argc, char **argv)
+             print_usage = TRUE;
+             goto cleanup;
+         }
+-        if (file_name == NULL) {
+-            com_err(me, ENOMEM, _("while setting service object password"));
+-            goto cleanup;
+-        }
+     } else { /* argc == 2 */
+         service_object = strdup (argv[1]);
+         if (service_object == NULL) {
+diff --git a/src/plugins/kdb/ldap/libkdb_ldap/ldap_create.c b/src/plugins/kdb/ldap/libkdb_ldap/ldap_create.c
+index 1e6fffee5..5b57c799a 100644
+--- a/src/plugins/kdb/ldap/libkdb_ldap/ldap_create.c
++++ b/src/plugins/kdb/ldap/libkdb_ldap/ldap_create.c
+@@ -56,7 +56,6 @@ krb5_ldap_create(krb5_context context, char *conf_section, char **db_args)
+     krb5_ldap_realm_params *rparams = NULL;
+     krb5_ldap_context *ldap_context=NULL;
+     krb5_boolean realm_obj_created = FALSE;
+-    krb5_boolean krbcontainer_obj_created = FALSE;
+     int mask = 0;
+ 
+     /* Clear the global error string */
+@@ -121,15 +120,6 @@ krb5_ldap_create(krb5_context context, char *conf_section, char **db_args)
+         goto cleanup;
+ 
+ cleanup:
+-    /* If the krbcontainer/realm creation is not complete, do the roll-back here */
+-    if ((krbcontainer_obj_created) && (!realm_obj_created)) {
+-        int rc;
+-        rc = krb5_ldap_delete_krbcontainer(context,
+-                                           ldap_context->container_dn);
+-        k5_setmsg(context, rc, _("could not complete roll-back, error "
+-                                 "deleting Kerberos Container"));
+-    }
+-
+     if (rparams)
+         krb5_ldap_free_realm_params(rparams);
+ 
+diff --git a/src/plugins/preauth/pkinit/pkinit_srv.c b/src/plugins/preauth/pkinit/pkinit_srv.c
+index 27e6ef4d2..6aa646cc6 100644
+--- a/src/plugins/preauth/pkinit/pkinit_srv.c
++++ b/src/plugins/preauth/pkinit/pkinit_srv.c
+@@ -258,15 +258,7 @@ verify_client_san(krb5_context context,
+     }
+     pkiDebug("%s: no upn san match found\n", __FUNCTION__);
+ 
+-    /* We found no match */
+-    if (princs != NULL || upns != NULL) {
+-        *valid_san = 0;
+-        /* XXX ??? If there was one or more name in the cert, but
+-         * none matched the client name, then return mismatch? */
+-        retval = KRB5KDC_ERR_CLIENT_NAME_MISMATCH;
+-    }
+     retval = 0;
+-
+ out:
+     if (princs != NULL) {
+         for (i = 0; princs[i] != NULL; i++)
+diff --git a/src/tests/hammer/kdc5_hammer.c b/src/tests/hammer/kdc5_hammer.c
+index 086c21d1c..8220fd97b 100644
+--- a/src/tests/hammer/kdc5_hammer.c
++++ b/src/tests/hammer/kdc5_hammer.c
+@@ -439,7 +439,6 @@ int get_tgt (context, p_client_str, p_client, ccache)
+     krb5_principal *p_client;
+     krb5_ccache ccache;
+ {
+-    char *cache_name = NULL;		/* -f option */
+     long lifetime = KRB5_DEFAULT_LIFE;	/* -l option */
+     krb5_error_code code;
+     krb5_creds my_creds;
+@@ -464,8 +463,7 @@ int get_tgt (context, p_client_str, p_client, ccache)
+ 
+     code = krb5_cc_initialize (context, ccache, *p_client);
+     if (code != 0) {
+-	com_err (prog, code, "when initializing cache %s",
+-		 cache_name?cache_name:"");
++	com_err (prog, code, "when initializing cache");
+ 	return(-1);
+     }
+ 

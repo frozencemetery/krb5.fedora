@@ -1,4 +1,4 @@
-From a2fc99321c797c1534f6314d17560c622ec93418 Mon Sep 17 00:00:00 2001
+From 76b39ce5081eb3b288532d615c356ab508e93495 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 4 Apr 2019 16:14:46 -0400
 Subject: [PATCH] Remove kadmin RPC support for setting v4 key

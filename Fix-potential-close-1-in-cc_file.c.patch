@@ -1,4 +1,4 @@
-From b2002f8286c0f77e57c7387123328a31125cda2e Mon Sep 17 00:00:00 2001
+From c1fe784e79b847a7e9ae9009193dee66bc1b6164 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 18 Apr 2019 13:39:37 -0400
 Subject: [PATCH] Fix potential close(-1) in cc_file.c

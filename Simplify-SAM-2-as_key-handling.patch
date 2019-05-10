@@ -1,0 +1,76 @@
+From 4f9e21c9daf505f5147dcab2fb4d1b241e1b90f8 Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Sun, 5 May 2019 18:53:27 -0400
+Subject: [PATCH] Simplify SAM-2 as_key handling
+
+The ctx->gak_fct() call in sam2_process() used an empty salt instead
+of the default salt when the KDC did not supply an explicit salt.
+This bug arose when commit bc096a77ffdab283d77c2e0fc1fdd15b9f77eb41
+changed the internal contracts around salts but did not adjust the
+SAM-2 code.  Commit e9aa891fcdb4c08d39902ab89afb268042b60c86 fixed the
+resulting bug, but mistakenly did not adjust the gak_fct call to use
+the correct salt.
+
+Later on, the code contains a redundant call to krb5_c_string_to_key()
+in the non-USE_SAD_AS_KEY modes, replacing ctx->as_key.  This call was
+properly adjusted by commit e9aa891fcdb4c08d39902ab89afb268042b60c86,
+so the improper gak_fct call did not manifest as a bug.
+
+Fix the gak_fct call to supply the correct salt, and remove the
+redundant string_to_key operation.
+
+(cherry picked from commit d48670c51460e9a74b4f4a9966f85ca6f77c1d8b)
+---
+ src/lib/krb5/krb/preauth_sam2.c | 25 +++----------------------
+ 1 file changed, 3 insertions(+), 22 deletions(-)
+
+diff --git a/src/lib/krb5/krb/preauth_sam2.c b/src/lib/krb5/krb/preauth_sam2.c
+index 4c70021a9..c7484c47e 100644
+--- a/src/lib/krb5/krb/preauth_sam2.c
++++ b/src/lib/krb5/krb/preauth_sam2.c
+@@ -95,7 +95,6 @@ sam2_process(krb5_context context, krb5_clpreauth_moddata moddata,
+     krb5_prompt kprompt;
+     krb5_prompt_type prompt_type;
+     krb5_data defsalt, *salt;
+-    struct gak_password *gakpw;
+     krb5_checksum **cksum;
+     krb5_data *scratch = NULL;
+     krb5_boolean valid_cksum = 0;
+@@ -152,9 +151,8 @@ sam2_process(krb5_context context, krb5_clpreauth_moddata moddata,
+ 
+         salt = ctx->default_salt ? NULL : &ctx->salt;
+         retval = ctx->gak_fct(context, request->client, sc2b->sam_etype,
+-                              prompter, prompter_data, &ctx->salt,
+-                              &ctx->s2kparams, &ctx->as_key,
+-                              ctx->gak_data, ctx->rctx.items);
++                              prompter, prompter_data, salt, &ctx->s2kparams,
++                              &ctx->as_key, ctx->gak_data, ctx->rctx.items);
+         if (retval) {
+             krb5_free_sam_challenge_2(context, sc2);
+             krb5_free_sam_challenge_2_body(context, sc2b);
+@@ -212,24 +210,7 @@ sam2_process(krb5_context context, krb5_clpreauth_moddata moddata,
+ 
+     /* Get encryption key to be used for checksum and sam_response */
+     if (!(sc2b->sam_flags & KRB5_SAM_USE_SAD_AS_KEY)) {
+-        /* as_key = string_to_key(password) */
+-
+-        if (ctx->as_key.length) {
+-            krb5_free_keyblock_contents(context, &ctx->as_key);
+-            ctx->as_key.length = 0;
+-        }
+-
+-        /* generate a key using the supplied password */
+-        gakpw = ctx->gak_data;
+-        retval = krb5_c_string_to_key(context, sc2b->sam_etype,
+-                                      gakpw->password, salt, &ctx->as_key);
+-
+-        if (retval) {
+-            krb5_free_sam_challenge_2(context, sc2);
+-            krb5_free_sam_challenge_2_body(context, sc2b);
+-            if (defsalt.length) free(defsalt.data);
+-            return(retval);
+-        }
++        /* Retain as_key from above gak_fct call. */
+ 
+         if (!(sc2b->sam_flags & KRB5_SAM_SEND_ENCRYPTED_SAD)) {
+             /* as_key = combine_key (as_key, string_to_key(SAD)) */

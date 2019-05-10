@@ -1,4 +1,4 @@
-From 27bc3f5a90533af509202d851374ea40f3982864 Mon Sep 17 00:00:00 2001
+From b87d0cd119732b9066606d388b4fdebde2facbe5 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Mon, 22 Apr 2019 14:26:42 -0400
 Subject: [PATCH] Check more errors in OpenSSL crypto backend
@@ -18,10 +18,10 @@ ticket: 8799 (new)
  2 files changed, 14 insertions(+), 13 deletions(-)
 
 diff --git a/src/lib/crypto/openssl/hmac.c b/src/lib/crypto/openssl/hmac.c
-index d94d9ac94..769a50c00 100644
+index b2db6ec02..7dc59dcc0 100644
 --- a/src/lib/crypto/openssl/hmac.c
 +++ b/src/lib/crypto/openssl/hmac.c
-@@ -121,7 +121,7 @@ krb5int_hmac_keyblock(const struct krb5_hash_provider *hash,
+@@ -117,7 +117,7 @@ krb5int_hmac_keyblock(const struct krb5_hash_provider *hash,
                        const krb5_crypto_iov *data, size_t num_data,
                        krb5_data *output)
  {
@@ -30,7 +30,7 @@ index d94d9ac94..769a50c00 100644
      unsigned char md[EVP_MAX_MD_SIZE];
      HMAC_CTX *ctx;
      size_t hashsize, blocksize;
-@@ -141,22 +141,22 @@ krb5int_hmac_keyblock(const struct krb5_hash_provider *hash,
+@@ -137,22 +137,22 @@ krb5int_hmac_keyblock(const struct krb5_hash_provider *hash,
      if (ctx == NULL)
          return ENOMEM;
  
