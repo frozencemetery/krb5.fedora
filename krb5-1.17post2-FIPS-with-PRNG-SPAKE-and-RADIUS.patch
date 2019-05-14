@@ -1,19 +1,227 @@
-From 105bd2c8be23ab94ba6e0601ee8e531f013389d6 Mon Sep 17 00:00:00 2001
+From 0c6860f5213e35226670772b53d70c858258a63e Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
-Date: Tue, 31 Jul 2018 13:47:26 -0400
-Subject: [PATCH] krb5-1.17 In FIPS mode, add plaintext fallback for RC4 usages
- and taint
+Date: Fri, 9 Nov 2018 15:12:21 -0500
+Subject: [PATCH] krb5-1.17post2 FIPS with PRNG, SPAKE, and RADIUS
 
+NB: Use openssl's PRNG in FIPS mode, be aware during SPAKE group
+negotiation, and taint within krad.
+
+A lot of the FIPS error conditions from OpenSSL are incredibly
+mysterious (at best, things return NULL unexpectedly; at worst,
+internal assertions are tripped; most of the time, you just get
+ENOMEM).  In order to cope with this, we need to have some level of
+awareness of what we can and can't safely call.
+
+This will slow down some calls slightly (FIPS_mode() takes multiple
+locks), but not for any ciphers we care about - which is to say that
+AES is fine.  Shame about the SPAKE groups though.
 ---
- src/lib/krad/attr.c      | 45 +++++++++++++++++++++++++++++-----------
- src/lib/krad/attrset.c   |  5 +++--
- src/lib/krad/internal.h  | 13 ++++++++++--
- src/lib/krad/packet.c    | 22 +++++++++++---------
- src/lib/krad/remote.c    | 10 +++++++--
- src/lib/krad/t_attr.c    |  3 ++-
- src/lib/krad/t_attrset.c |  4 +++-
- 7 files changed, 72 insertions(+), 30 deletions(-)
+ src/lib/crypto/krb/prng.c                     | 11 ++++-
+ .../crypto/openssl/enc_provider/camellia.c    |  6 +++
+ src/lib/crypto/openssl/enc_provider/des.c     |  9 ++++
+ src/lib/crypto/openssl/enc_provider/des3.c    |  6 +++
+ src/lib/crypto/openssl/enc_provider/rc4.c     | 13 +++++-
+ .../crypto/openssl/hash_provider/hash_evp.c   |  4 ++
+ src/lib/crypto/openssl/hmac.c                 |  6 ++-
+ src/lib/krad/attr.c                           | 45 ++++++++++++++-----
+ src/lib/krad/attrset.c                        |  5 ++-
+ src/lib/krad/internal.h                       | 13 +++++-
+ src/lib/krad/packet.c                         | 22 ++++-----
+ src/lib/krad/remote.c                         | 10 ++++-
+ src/lib/krad/t_attr.c                         |  3 +-
+ src/lib/krad/t_attrset.c                      |  4 +-
+ src/plugins/preauth/spake/groups.c            |  8 ++++
+ 15 files changed, 132 insertions(+), 33 deletions(-)
 
+diff --git a/src/lib/crypto/krb/prng.c b/src/lib/crypto/krb/prng.c
+index cb9ca9b98..f0e9984ca 100644
+--- a/src/lib/crypto/krb/prng.c
++++ b/src/lib/crypto/krb/prng.c
+@@ -26,6 +26,8 @@
+ 
+ #include "crypto_int.h"
+ 
++#include <openssl/rand.h>
++
+ krb5_error_code KRB5_CALLCONV
+ krb5_c_random_seed(krb5_context context, krb5_data *data)
+ {
+@@ -99,9 +101,16 @@ krb5_boolean
+ k5_get_os_entropy(unsigned char *buf, size_t len, int strong)
+ {
+     const char *device;
+-#if defined(__linux__) && defined(SYS_getrandom)
+     int r;
+ 
++    /* A wild FIPS mode appeared! */
++    if (FIPS_mode()) {
++        /* The return codes on this API are not good */
++        r = RAND_bytes(buf, len);
++        return r == 1;
++    }
++
++#if defined(__linux__) && defined(SYS_getrandom)
+     while (len > 0) {
+         /*
+          * Pull from the /dev/urandom pool, but require it to have been seeded.
+diff --git a/src/lib/crypto/openssl/enc_provider/camellia.c b/src/lib/crypto/openssl/enc_provider/camellia.c
+index 2da691329..f79679a0b 100644
+--- a/src/lib/crypto/openssl/enc_provider/camellia.c
++++ b/src/lib/crypto/openssl/enc_provider/camellia.c
+@@ -304,6 +304,9 @@ krb5int_camellia_cbc_mac(krb5_key key, const krb5_crypto_iov *data,
+     unsigned char blockY[CAMELLIA_BLOCK_SIZE], blockB[CAMELLIA_BLOCK_SIZE];
+     struct iov_cursor cursor;
+ 
++    if (FIPS_mode())
++        return KRB5_CRYPTO_INTERNAL;
++
+     if (output->length < CAMELLIA_BLOCK_SIZE)
+         return KRB5_BAD_MSIZE;
+ 
+@@ -331,6 +334,9 @@ static krb5_error_code
+ krb5int_camellia_init_state (const krb5_keyblock *key, krb5_keyusage usage,
+                              krb5_data *state)
+ {
++    if (FIPS_mode())
++        return KRB5_CRYPTO_INTERNAL;
++
+     state->length = 16;
+     state->data = (void *) malloc(16);
+     if (state->data == NULL)
+diff --git a/src/lib/crypto/openssl/enc_provider/des.c b/src/lib/crypto/openssl/enc_provider/des.c
+index a662db512..7d17d287e 100644
+--- a/src/lib/crypto/openssl/enc_provider/des.c
++++ b/src/lib/crypto/openssl/enc_provider/des.c
+@@ -85,6 +85,9 @@ k5_des_encrypt(krb5_key key, const krb5_data *ivec, krb5_crypto_iov *data,
+     EVP_CIPHER_CTX *ctx;
+     krb5_boolean empty;
+ 
++    if (FIPS_mode())
++        return KRB5_CRYPTO_INTERNAL;
++
+     ret = validate(key, ivec, data, num_data, &empty);
+     if (ret != 0 || empty)
+         return ret;
+@@ -133,6 +136,9 @@ k5_des_decrypt(krb5_key key, const krb5_data *ivec, krb5_crypto_iov *data,
+     EVP_CIPHER_CTX *ctx;
+     krb5_boolean empty;
+ 
++    if (FIPS_mode())
++        return KRB5_CRYPTO_INTERNAL;
++
+     ret = validate(key, ivec, data, num_data, &empty);
+     if (ret != 0 || empty)
+         return ret;
+@@ -182,6 +188,9 @@ k5_des_cbc_mac(krb5_key key, const krb5_crypto_iov *data, size_t num_data,
+     DES_key_schedule sched;
+     krb5_boolean empty;
+ 
++    if (FIPS_mode())
++        return KRB5_CRYPTO_INTERNAL;
++
+     ret = validate(key, ivec, data, num_data, &empty);
+     if (ret != 0)
+         return ret;
+diff --git a/src/lib/crypto/openssl/enc_provider/des3.c b/src/lib/crypto/openssl/enc_provider/des3.c
+index 1c439c2cd..8be555a8d 100644
+--- a/src/lib/crypto/openssl/enc_provider/des3.c
++++ b/src/lib/crypto/openssl/enc_provider/des3.c
+@@ -84,6 +84,9 @@ k5_des3_encrypt(krb5_key key, const krb5_data *ivec, krb5_crypto_iov *data,
+     EVP_CIPHER_CTX *ctx;
+     krb5_boolean empty;
+ 
++    if (FIPS_mode())
++        return KRB5_CRYPTO_INTERNAL;
++
+     ret = validate(key, ivec, data, num_data, &empty);
+     if (ret != 0 || empty)
+         return ret;
+@@ -133,6 +136,9 @@ k5_des3_decrypt(krb5_key key, const krb5_data *ivec, krb5_crypto_iov *data,
+     EVP_CIPHER_CTX *ctx;
+     krb5_boolean empty;
+ 
++    if (FIPS_mode())
++        return KRB5_CRYPTO_INTERNAL;
++
+     ret = validate(key, ivec, data, num_data, &empty);
+     if (ret != 0 || empty)
+         return ret;
+diff --git a/src/lib/crypto/openssl/enc_provider/rc4.c b/src/lib/crypto/openssl/enc_provider/rc4.c
+index a65d57b7a..6ccaca94a 100644
+--- a/src/lib/crypto/openssl/enc_provider/rc4.c
++++ b/src/lib/crypto/openssl/enc_provider/rc4.c
+@@ -66,6 +66,9 @@ k5_arcfour_docrypt(krb5_key key, const krb5_data *state, krb5_crypto_iov *data,
+     EVP_CIPHER_CTX *ctx = NULL;
+     struct arcfour_state *arcstate;
+ 
++    if (FIPS_mode())
++        return KRB5_CRYPTO_INTERNAL;
++
+     arcstate = (state != NULL) ? (void *)state->data : NULL;
+     if (arcstate != NULL) {
+         ctx = arcstate->ctx;
+@@ -113,7 +116,12 @@ k5_arcfour_docrypt(krb5_key key, const krb5_data *state, krb5_crypto_iov *data,
+ static void
+ k5_arcfour_free_state(krb5_data *state)
+ {
+-    struct arcfour_state *arcstate = (void *)state->data;
++    struct arcfour_state *arcstate;
++
++    if (FIPS_mode())
++        return;
++
++    arcstate = (void *) state->data;
+ 
+     EVP_CIPHER_CTX_free(arcstate->ctx);
+     free(arcstate);
+@@ -125,6 +133,9 @@ k5_arcfour_init_state(const krb5_keyblock *key,
+ {
+     struct arcfour_state *arcstate;
+ 
++    if (FIPS_mode())
++        return KRB5_CRYPTO_INTERNAL;
++
+     /*
+      * The cipher state here is a saved pointer to a struct arcfour_state
+      * object, rather than a flat byte array as in most enc providers.  The
+diff --git a/src/lib/crypto/openssl/hash_provider/hash_evp.c b/src/lib/crypto/openssl/hash_provider/hash_evp.c
+index 957ed8d9c..8c1fd7f59 100644
+--- a/src/lib/crypto/openssl/hash_provider/hash_evp.c
++++ b/src/lib/crypto/openssl/hash_provider/hash_evp.c
+@@ -64,12 +64,16 @@ hash_evp(const EVP_MD *type, const krb5_crypto_iov *data, size_t num_data,
+ static krb5_error_code
+ hash_md4(const krb5_crypto_iov *data, size_t num_data, krb5_data *output)
+ {
++    if (FIPS_mode())
++        return KRB5_CRYPTO_INTERNAL;
+     return hash_evp(EVP_md4(), data, num_data, output);
+ }
+ 
+ static krb5_error_code
+ hash_md5(const krb5_crypto_iov *data, size_t num_data, krb5_data *output)
+ {
++    if (FIPS_mode())
++        return KRB5_CRYPTO_INTERNAL;
+     return hash_evp(EVP_md5(), data, num_data, output);
+ }
+ 
+diff --git a/src/lib/crypto/openssl/hmac.c b/src/lib/crypto/openssl/hmac.c
+index 7dc59dcc0..769a50c00 100644
+--- a/src/lib/crypto/openssl/hmac.c
++++ b/src/lib/crypto/openssl/hmac.c
+@@ -103,7 +103,11 @@ map_digest(const struct krb5_hash_provider *hash)
+         return EVP_sha256();
+     else if (!strncmp(hash->hash_name, "SHA-384",7))
+         return EVP_sha384();
+-    else if (!strncmp(hash->hash_name, "MD5", 3))
++
++    if (FIPS_mode())
++        return NULL;
++
++    if (!strncmp(hash->hash_name, "MD5", 3))
+         return EVP_md5();
+     else if (!strncmp(hash->hash_name, "MD4", 3))
+         return EVP_md4();
 diff --git a/src/lib/krad/attr.c b/src/lib/krad/attr.c
 index 9c13d9d75..275327e67 100644
 --- a/src/lib/krad/attr.c
@@ -351,3 +559,36 @@ index 7928335ca..0f9576253 100644
      krad_attrset_free(set);
  
      /* Manually encode User-Name. */
+diff --git a/src/plugins/preauth/spake/groups.c b/src/plugins/preauth/spake/groups.c
+index a195cc195..8a913cb5a 100644
+--- a/src/plugins/preauth/spake/groups.c
++++ b/src/plugins/preauth/spake/groups.c
+@@ -56,6 +56,8 @@
+ #include "trace.h"
+ #include "groups.h"
+ 
++#include <openssl/crypto.h>
++
+ #define DEFAULT_GROUPS_CLIENT "edwards25519"
+ #define DEFAULT_GROUPS_KDC ""
+ 
+@@ -102,6 +104,9 @@ find_gdef(int32_t group)
+ {
+     size_t i;
+ 
++    if (group == builtin_edwards25519.reg->id && FIPS_mode())
++        return NULL;
++
+     for (i = 0; groupdefs[i] != NULL; i++) {
+         if (groupdefs[i]->reg->id == group)
+             return groupdefs[i];
+@@ -116,6 +121,9 @@ find_gnum(const char *name)
+ {
+     size_t i;
+ 
++    if (strcasecmp(name, builtin_edwards25519.reg->name) == 0 && FIPS_mode())
++        return 0;
++
+     for (i = 0; groupdefs[i] != NULL; i++) {
+         if (strcasecmp(name, groupdefs[i]->reg->name) == 0)
+             return groupdefs[i]->reg->id;

@@ -1,4 +1,4 @@
-From ae9b51bc4f4ca5e88d7675d373e35fde8470e223 Mon Sep 17 00:00:00 2001
+From 50116db1dcf88ad7a5fbe03e5045c6d3059e2bb0 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 2 May 2019 14:32:33 -0400
 Subject: [PATCH] Modernize exit path in gss_krb5int_copy_ccache()

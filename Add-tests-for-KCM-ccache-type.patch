@@ -1,4 +1,4 @@
-From 306c0260dca7809c90dfa9e8889a6bd2401cee84 Mon Sep 17 00:00:00 2001
+From deedc59d6ab6dd4f988db931a3a0d43f977ca708 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Thu, 22 Nov 2018 00:27:35 -0500
 Subject: [PATCH] Add tests for KCM ccache type

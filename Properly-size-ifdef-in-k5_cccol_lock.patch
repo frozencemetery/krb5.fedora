@@ -1,4 +1,4 @@
-From 85577bdae928613c87828fff79d5d6c6b9b8b291 Mon Sep 17 00:00:00 2001
+From 3e750e184a870a7bc96dac75e2da61ca4414ddd1 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 14 Feb 2019 11:50:35 -0500
 Subject: [PATCH] Properly size #ifdef in k5_cccol_lock()

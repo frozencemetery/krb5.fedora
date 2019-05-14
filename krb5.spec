@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 19%{?dist}
+Release: 20%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -59,7 +59,6 @@ Patch33: krb5-1.13-dirsrv-accountlock.patch
 Patch34: krb5-1.9-debuginfo.patch
 Patch35: krb5-1.11-run_user_0.patch
 Patch36: krb5-1.11-kpasswdtest.patch
-Patch37: krb5-1.17-In-FIPS-mode-add-plaintext-fallback-for-RC.patch
 Patch90: Add-tests-for-KCM-ccache-type.patch
 Patch92: Address-some-optimized-out-memset-calls.patch
 Patch94: Avoid-allocating-a-register-in-zap-assembly.patch
@@ -93,12 +92,12 @@ Patch123: Avoid-alignment-warnings-in-openssl-rc4.c.patch
 Patch124: Simply-OpenSSL-PKCS7-decryption-code.patch
 Patch125: Improve-error-messages-from-kadmin-change_password.patch
 Patch126: Remove-more-dead-code.patch
-Patch127: krb5-1.17post1-FIPS-with-PRNG-and-SPAKE.patch
+Patch127: krb5-1.17post2-FIPS-with-PRNG-SPAKE-and-RADIUS.patch
 Patch128: Remove-checksum-type-profile-variables.patch
 Patch129: Remove-dead-variable-def_kslist-from-two-files.patch
 
 License: MIT
-URL: http://web.mit.edu/kerberos/www/
+URL: https://web.mit.edu/kerberos/www/
 BuildRequires: autoconf, bison, cmake, flex, gawk, gettext, pkgconfig, sed
 BuildRequires: gcc
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
@@ -702,6 +701,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue May 14 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-20
+- (Patch consolidation; hopefully no changes)
+
 * Tue May 14 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-19
 - Remove checksum type profile variables
 
