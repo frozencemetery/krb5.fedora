@@ -1,0 +1,428 @@
+From 443b8989c5d554f5347b72364d704d4626ca9a92 Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Mon, 13 May 2019 14:19:57 -0400
+Subject: [PATCH] Remove checksum type profile variables
+
+Remove support for the krb5.conf relations ap_req_checksum_type,
+kdc_req_checksum_type, and safe_checksum_type.  These values were
+useful for interoperating with very old KDCs, which should no longer
+be deployed.
+
+Additionally, kdc_req_checksum_type was incorrectly documented as only
+applying to single-DES keys; in practice it also worked for RC4.  The
+other two were not clearly documented, but safe_checksum_type did
+allow use of hmac-md5-rc4 for any enctype, and ap_req_checksum_type
+did not impose any limitations.
+
+[ghudson@mit.edu: edited commit message]
+
+ticket: 8804 (new)
+(cherry picked from commit a5a140dc85201faf1ba3a687553058354722a1b4)
+---
+ doc/admin/conf_files/krb5_conf.rst | 37 ------------
+ src/include/k5-int.h               |  6 --
+ src/lib/krb5/krb/auth_con.c        |  2 -
+ src/lib/krb5/krb/init_ctx.c        | 13 -----
+ src/lib/krb5/krb/send_tgs.c        | 19 +------
+ src/lib/krb5/krb/ser_ctx.c         | 38 +------------
+ src/lib/krb5/krb/t_copy_context.c  |  6 --
+ src/man/krb5.conf.man              | 90 ++----------------------------
+ 8 files changed, 7 insertions(+), 204 deletions(-)
+
+diff --git a/doc/admin/conf_files/krb5_conf.rst b/doc/admin/conf_files/krb5_conf.rst
+index e9f7e8c59..5df3bfe36 100644
+--- a/doc/admin/conf_files/krb5_conf.rst
++++ b/doc/admin/conf_files/krb5_conf.rst
+@@ -111,14 +111,6 @@ The libdefaults section may contain any of the following relations:
+     strong crypto.  Users in affected environments should set this tag
+     to true until their infrastructure adopts stronger ciphers.
+ 
+-**ap_req_checksum_type**
+-    An integer which specifies the type of AP-REQ checksum to use in
+-    authenticators.  This variable should be unset so the appropriate
+-    checksum for the encryption key in use will be used.  This can be
+-    set if backward compatibility requires a specific checksum type.
+-    See the **kdc_req_checksum_type** configuration option for the
+-    possible values and their meanings.
+-
+ **canonicalize**
+     If this flag is set to true, initial ticket requests to the KDC
+     will request canonicalization of the client principal name, and
+@@ -297,26 +289,6 @@ The libdefaults section may contain any of the following relations:
+     corrective factor is only used by the Kerberos library; it is not
+     used to change the system clock.  The default value is 1.
+ 
+-**kdc_req_checksum_type**
+-    An integer which specifies the type of checksum to use for the KDC
+-    requests, for compatibility with very old KDC implementations.
+-    This value is only used for DES keys; other keys use the preferred
+-    checksum type for those keys.
+-
+-    The possible values and their meanings are as follows.
+-
+-    ======== ===============================
+-    1        CRC32
+-    2        RSA MD4
+-    3        RSA MD4 DES
+-    4        DES CBC
+-    7        RSA MD5
+-    8        RSA MD5 DES
+-    9        NIST SHA
+-    12       HMAC SHA1 DES3
+-    -138     Microsoft MD5 HMAC checksum type
+-    ======== ===============================
+-
+ **noaddresses**
+     If this flag is true, requests for initial tickets will not be
+     made with address restrictions set, allowing the tickets to be
+@@ -365,15 +337,6 @@ The libdefaults section may contain any of the following relations:
+     (:ref:`duration` string.)  Sets the default renewable lifetime
+     for initial ticket requests.  The default value is 0.
+ 
+-**safe_checksum_type**
+-    An integer which specifies the type of checksum to use for the
+-    KRB-SAFE requests.  By default it is set to 8 (RSA MD5 DES).  For
+-    compatibility with applications linked against DCE version 1.1 or
+-    earlier Kerberos libraries, use a value of 3 to use the RSA MD4
+-    DES instead.  This field is ignored when its value is incompatible
+-    with the session key type.  See the **kdc_req_checksum_type**
+-    configuration option for the possible values and their meanings.
+-
+ **spake_preauth_groups**
+     A whitespace or comma-separated list of words which specifies the
+     groups allowed for SPAKE preauthentication.  The possible values
+diff --git a/src/include/k5-int.h b/src/include/k5-int.h
+index 1e6a739e9..1a78fd7a9 100644
+--- a/src/include/k5-int.h
++++ b/src/include/k5-int.h
+@@ -182,7 +182,6 @@ typedef unsigned char   u_char;
+ #define KRB5_CONF_ACL_FILE                     "acl_file"
+ #define KRB5_CONF_ADMIN_SERVER                 "admin_server"
+ #define KRB5_CONF_ALLOW_WEAK_CRYPTO            "allow_weak_crypto"
+-#define KRB5_CONF_AP_REQ_CHECKSUM_TYPE         "ap_req_checksum_type"
+ #define KRB5_CONF_AUTH_TO_LOCAL                "auth_to_local"
+ #define KRB5_CONF_AUTH_TO_LOCAL_NAMES          "auth_to_local_names"
+ #define KRB5_CONF_CANONICALIZE                 "canonicalize"
+@@ -241,7 +240,6 @@ typedef unsigned char   u_char;
+ #define KRB5_CONF_KDC_LISTEN                   "kdc_listen"
+ #define KRB5_CONF_KDC_MAX_DGRAM_REPLY_SIZE     "kdc_max_dgram_reply_size"
+ #define KRB5_CONF_KDC_PORTS                    "kdc_ports"
+-#define KRB5_CONF_KDC_REQ_CHECKSUM_TYPE        "kdc_req_checksum_type"
+ #define KRB5_CONF_KDC_TCP_PORTS                "kdc_tcp_ports"
+ #define KRB5_CONF_KDC_TCP_LISTEN               "kdc_tcp_listen"
+ #define KRB5_CONF_KDC_TCP_LISTEN_BACKLOG       "kdc_tcp_listen_backlog"
+@@ -289,7 +287,6 @@ typedef unsigned char   u_char;
+ #define KRB5_CONF_REJECT_BAD_TRANSIT           "reject_bad_transit"
+ #define KRB5_CONF_RENEW_LIFETIME               "renew_lifetime"
+ #define KRB5_CONF_RESTRICT_ANONYMOUS_TO_TGT    "restrict_anonymous_to_tgt"
+-#define KRB5_CONF_SAFE_CHECKSUM_TYPE           "safe_checksum_type"
+ #define KRB5_CONF_SUPPORTED_ENCTYPES           "supported_enctypes"
+ #define KRB5_CONF_SPAKE_PREAUTH_INDICATOR      "spake_preauth_indicator"
+ #define KRB5_CONF_SPAKE_PREAUTH_KDC_CHALLENGE  "spake_preauth_kdc_challenge"
+@@ -1185,9 +1182,6 @@ struct _krb5_context {
+     void            *ser_ctx;
+     /* allowable clock skew */
+     krb5_deltat     clockskew;
+-    krb5_cksumtype  kdc_req_sumtype;
+-    krb5_cksumtype  default_ap_req_sumtype;
+-    krb5_cksumtype  default_safe_sumtype;
+     krb5_flags      kdc_default_options;
+     krb5_flags      library_options;
+     krb5_boolean    profile_secure;
+diff --git a/src/lib/krb5/krb/auth_con.c b/src/lib/krb5/krb/auth_con.c
+index c86a4af63..1dfce631c 100644
+--- a/src/lib/krb5/krb/auth_con.c
++++ b/src/lib/krb5/krb/auth_con.c
+@@ -40,8 +40,6 @@ krb5_auth_con_init(krb5_context context, krb5_auth_context *auth_context)
+     (*auth_context)->auth_context_flags =
+         KRB5_AUTH_CONTEXT_DO_TIME |  KRB5_AUTH_CONN_INITIALIZED;
+ 
+-    (*auth_context)->req_cksumtype = context->default_ap_req_sumtype;
+-    (*auth_context)->safe_cksumtype = context->default_safe_sumtype;
+     (*auth_context)->checksum_func = NULL;
+     (*auth_context)->checksum_func_data = NULL;
+     (*auth_context)->negotiated_etype = ENCTYPE_NULL;
+diff --git a/src/lib/krb5/krb/init_ctx.c b/src/lib/krb5/krb/init_ctx.c
+index d263d5cc5..37405728c 100644
+--- a/src/lib/krb5/krb/init_ctx.c
++++ b/src/lib/krb5/krb/init_ctx.c
+@@ -258,19 +258,6 @@ krb5_init_context_profile(profile_t profile, krb5_flags flags,
+     get_integer(ctx, KRB5_CONF_CLOCKSKEW, DEFAULT_CLOCKSKEW, &tmp);
+     ctx->clockskew = tmp;
+ 
+-    /* DCE 1.1 and below only support CKSUMTYPE_RSA_MD4 (2)  */
+-    /* DCE add kdc_req_checksum_type = 2 to krb5.conf */
+-    get_integer(ctx, KRB5_CONF_KDC_REQ_CHECKSUM_TYPE, CKSUMTYPE_RSA_MD5,
+-                &tmp);
+-    ctx->kdc_req_sumtype = tmp;
+-
+-    get_integer(ctx, KRB5_CONF_AP_REQ_CHECKSUM_TYPE, 0, &tmp);
+-    ctx->default_ap_req_sumtype = tmp;
+-
+-    get_integer(ctx, KRB5_CONF_SAFE_CHECKSUM_TYPE, CKSUMTYPE_RSA_MD5_DES,
+-                &tmp);
+-    ctx->default_safe_sumtype = tmp;
+-
+     get_integer(ctx, KRB5_CONF_KDC_DEFAULT_OPTIONS, KDC_OPT_RENEWABLE_OK,
+                 &tmp);
+     ctx->kdc_default_options = tmp;
+diff --git a/src/lib/krb5/krb/send_tgs.c b/src/lib/krb5/krb/send_tgs.c
+index e43a5cc5b..3dda2fdaa 100644
+--- a/src/lib/krb5/krb/send_tgs.c
++++ b/src/lib/krb5/krb/send_tgs.c
+@@ -53,7 +53,6 @@ tgs_construct_ap_req(krb5_context context, krb5_data *checksum_data,
+                      krb5_creds *tgt, krb5_keyblock *subkey,
+                      krb5_data **ap_req_asn1_out)
+ {
+-    krb5_cksumtype cksumtype;
+     krb5_error_code ret;
+     krb5_checksum checksum;
+     krb5_authenticator authent;
+@@ -67,24 +66,8 @@ tgs_construct_ap_req(krb5_context context, krb5_data *checksum_data,
+     memset(&ap_req, 0, sizeof(ap_req));
+     memset(&authent_enc, 0, sizeof(authent_enc));
+ 
+-    /* Determine the authenticator checksum type. */
+-    switch (tgt->keyblock.enctype) {
+-    case ENCTYPE_DES_CBC_CRC:
+-    case ENCTYPE_DES_CBC_MD4:
+-    case ENCTYPE_DES_CBC_MD5:
+-    case ENCTYPE_ARCFOUR_HMAC:
+-    case ENCTYPE_ARCFOUR_HMAC_EXP:
+-        cksumtype = context->kdc_req_sumtype;
+-        break;
+-    default:
+-        ret = krb5int_c_mandatory_cksumtype(context, tgt->keyblock.enctype,
+-                                            &cksumtype);
+-        if (ret)
+-            goto cleanup;
+-    }
+-
+     /* Generate checksum. */
+-    ret = krb5_c_make_checksum(context, cksumtype, &tgt->keyblock,
++    ret = krb5_c_make_checksum(context, 0, &tgt->keyblock,
+                                KRB5_KEYUSAGE_TGS_REQ_AUTH_CKSUM, checksum_data,
+                                &checksum);
+     if (ret)
+diff --git a/src/lib/krb5/krb/ser_ctx.c b/src/lib/krb5/krb/ser_ctx.c
+index a9f50b239..39f656322 100644
+--- a/src/lib/krb5/krb/ser_ctx.c
++++ b/src/lib/krb5/krb/ser_ctx.c
+@@ -124,9 +124,6 @@ krb5_context_size(krb5_context kcontext, krb5_pointer arg, size_t *sizep)
+      *  krb5_int32                      for n_tgs_etypes*sizeof(krb5_int32)
+      *  nktypes*sizeof(krb5_int32)      for tgs_etypes.
+      *  krb5_int32                      for clockskew
+-     *  krb5_int32                      for kdc_req_sumtype
+-     *  krb5_int32                      for ap_req_sumtype
+-     *  krb5_int32                      for safe_sumtype
+      *  krb5_int32                      for kdc_default_options
+      *  krb5_int32                      for library_options
+      *  krb5_int32                      for profile_secure
+@@ -139,7 +136,7 @@ krb5_context_size(krb5_context kcontext, krb5_pointer arg, size_t *sizep)
+     kret = EINVAL;
+     if ((context = (krb5_context) arg)) {
+         /* Calculate base length */
+-        required = (14 * sizeof(krb5_int32) +
++        required = (11 * sizeof(krb5_int32) +
+                     (etypes_len(context->in_tkt_etypes) * sizeof(krb5_int32)) +
+                     (etypes_len(context->tgs_etypes) * sizeof(krb5_int32)));
+ 
+@@ -255,24 +252,6 @@ krb5_context_externalize(krb5_context kcontext, krb5_pointer arg, krb5_octet **b
+     if (kret)
+         return (kret);
+ 
+-    /* Now kdc_req_sumtype */
+-    kret = krb5_ser_pack_int32((krb5_int32) context->kdc_req_sumtype,
+-                               &bp, &remain);
+-    if (kret)
+-        return (kret);
+-
+-    /* Now default ap_req_sumtype */
+-    kret = krb5_ser_pack_int32((krb5_int32) context->default_ap_req_sumtype,
+-                               &bp, &remain);
+-    if (kret)
+-        return (kret);
+-
+-    /* Now default safe_sumtype */
+-    kret = krb5_ser_pack_int32((krb5_int32) context->default_safe_sumtype,
+-                               &bp, &remain);
+-    if (kret)
+-        return (kret);
+-
+     /* Now kdc_default_options */
+     kret = krb5_ser_pack_int32((krb5_int32) context->kdc_default_options,
+                                &bp, &remain);
+@@ -426,21 +405,6 @@ krb5_context_internalize(krb5_context kcontext, krb5_pointer *argp, krb5_octet *
+         goto cleanup;
+     context->clockskew = (krb5_deltat) ibuf;
+ 
+-    /* kdc_req_sumtype */
+-    if ((kret = krb5_ser_unpack_int32(&ibuf, &bp, &remain)))
+-        goto cleanup;
+-    context->kdc_req_sumtype = (krb5_cksumtype) ibuf;
+-
+-    /* default ap_req_sumtype */
+-    if ((kret = krb5_ser_unpack_int32(&ibuf, &bp, &remain)))
+-        goto cleanup;
+-    context->default_ap_req_sumtype = (krb5_cksumtype) ibuf;
+-
+-    /* default_safe_sumtype */
+-    if ((kret = krb5_ser_unpack_int32(&ibuf, &bp, &remain)))
+-        goto cleanup;
+-    context->default_safe_sumtype = (krb5_cksumtype) ibuf;
+-
+     /* kdc_default_options */
+     if ((kret = krb5_ser_unpack_int32(&ibuf, &bp, &remain)))
+         goto cleanup;
+diff --git a/src/lib/krb5/krb/t_copy_context.c b/src/lib/krb5/krb/t_copy_context.c
+index a6e48cd25..22be2198b 100644
+--- a/src/lib/krb5/krb/t_copy_context.c
++++ b/src/lib/krb5/krb/t_copy_context.c
+@@ -77,9 +77,6 @@ check_context(krb5_context c, krb5_context r)
+     check(c->os_context.os_flags == r->os_context.os_flags);
+     compare_string(c->os_context.default_ccname, r->os_context.default_ccname);
+     check(c->clockskew == r->clockskew);
+-    check(c->kdc_req_sumtype == r->kdc_req_sumtype);
+-    check(c->default_ap_req_sumtype == r->default_ap_req_sumtype);
+-    check(c->default_safe_sumtype == r->default_safe_sumtype);
+     check(c->kdc_default_options == r->kdc_default_options);
+     check(c->library_options == r->library_options);
+     check(c->profile_secure == r->profile_secure);
+@@ -136,9 +133,6 @@ main(int argc, char **argv)
+     check(krb5_cc_set_default_name(ctx, "defccname") == 0);
+     check(krb5_set_default_realm(ctx, "defrealm") == 0);
+     ctx->clockskew = 18;
+-    ctx->kdc_req_sumtype = CKSUMTYPE_NIST_SHA;
+-    ctx->default_ap_req_sumtype = CKSUMTYPE_HMAC_SHA1_96_AES128;
+-    ctx->default_safe_sumtype = CKSUMTYPE_HMAC_SHA1_96_AES256;
+     ctx->kdc_default_options = KDC_OPT_FORWARDABLE;
+     ctx->library_options = 0;
+     ctx->profile_secure = TRUE;
+diff --git a/src/man/krb5.conf.man b/src/man/krb5.conf.man
+index d431dce75..aafdf7f83 100644
+--- a/src/man/krb5.conf.man
++++ b/src/man/krb5.conf.man
+@@ -1,6 +1,6 @@
+ .\" Man page generated from reStructuredText.
+ .
+-.TH "KRB5.CONF" "5" " " "1.17" "MIT Kerberos"
++.TH "KRB5.CONF" "5" " " "1.18" "MIT Kerberos"
+ .SH NAME
+ krb5.conf \- Kerberos configuration file
+ .
+@@ -202,14 +202,6 @@ failures in existing Kerberos infrastructures that do not support
+ strong crypto.  Users in affected environments should set this tag
+ to true until their infrastructure adopts stronger ciphers.
+ .TP
+-\fBap_req_checksum_type\fP
+-An integer which specifies the type of AP\-REQ checksum to use in
+-authenticators.  This variable should be unset so the appropriate
+-checksum for the encryption key in use will be used.  This can be
+-set if backward compatibility requires a specific checksum type.
+-See the \fBkdc_req_checksum_type\fP configuration option for the
+-possible values and their meanings.
+-.TP
+ \fBcanonicalize\fP
+ If this flag is set to true, initial ticket requests to the KDC
+ will request canonicalization of the client principal name, and
+@@ -291,6 +283,10 @@ hostnames for use in service principal names.  Setting this flag
+ to false can improve security by reducing reliance on DNS, but
+ means that short hostnames will not be canonicalized to
+ fully\-qualified hostnames.  The default value is true.
++.sp
++If this option is set to \fBfallback\fP (new in release 1.18), DNS
++canonicalization will only be performed the server hostname is not
++found with the original name when requesting credentials.
+ .TP
+ \fBdns_lookup_kdc\fP
+ Indicate whether DNS SRV records should be used to locate the KDCs
+@@ -384,73 +380,6 @@ requesting service tickets or authenticating to services.  This
+ corrective factor is only used by the Kerberos library; it is not
+ used to change the system clock.  The default value is 1.
+ .TP
+-\fBkdc_req_checksum_type\fP
+-An integer which specifies the type of checksum to use for the KDC
+-requests, for compatibility with very old KDC implementations.
+-This value is only used for DES keys; other keys use the preferred
+-checksum type for those keys.
+-.sp
+-The possible values and their meanings are as follows.
+-.TS
+-center;
+-|l|l|.
+-_
+-T{
+-1
+-T}	T{
+-CRC32
+-T}
+-_
+-T{
+-2
+-T}	T{
+-RSA MD4
+-T}
+-_
+-T{
+-3
+-T}	T{
+-RSA MD4 DES
+-T}
+-_
+-T{
+-4
+-T}	T{
+-DES CBC
+-T}
+-_
+-T{
+-7
+-T}	T{
+-RSA MD5
+-T}
+-_
+-T{
+-8
+-T}	T{
+-RSA MD5 DES
+-T}
+-_
+-T{
+-9
+-T}	T{
+-NIST SHA
+-T}
+-_
+-T{
+-12
+-T}	T{
+-HMAC SHA1 DES3
+-T}
+-_
+-T{
+-\-138
+-T}	T{
+-Microsoft MD5 HMAC checksum type
+-T}
+-_
+-.TE
+-.TP
+ \fBnoaddresses\fP
+ If this flag is true, requests for initial tickets will not be
+ made with address restrictions set, allowing the tickets to be
+@@ -499,15 +428,6 @@ set.  The default is not to search domain components.
+ (duration string.)  Sets the default renewable lifetime
+ for initial ticket requests.  The default value is 0.
+ .TP
+-\fBsafe_checksum_type\fP
+-An integer which specifies the type of checksum to use for the
+-KRB\-SAFE requests.  By default it is set to 8 (RSA MD5 DES).  For
+-compatibility with applications linked against DCE version 1.1 or
+-earlier Kerberos libraries, use a value of 3 to use the RSA MD4
+-DES instead.  This field is ignored when its value is incompatible
+-with the session key type.  See the \fBkdc_req_checksum_type\fP
+-configuration option for the possible values and their meanings.
+-.TP
+ \fBspake_preauth_groups\fP
+ A whitespace or comma\-separated list of words which specifies the
+ groups allowed for SPAKE preauthentication.  The possible values
