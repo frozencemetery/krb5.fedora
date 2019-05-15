@@ -1,4 +1,4 @@
-From 7973ef9891219a5179592db7081b7ffd6db95103 Mon Sep 17 00:00:00 2001
+From da7349429a2985423ad006cc1f9d149e594118b7 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 2 May 2019 13:36:38 -0400
 Subject: [PATCH] Initialize some data structure magic fields

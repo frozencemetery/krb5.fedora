@@ -1,4 +1,4 @@
-From fad2355105eaa8ec34cd4c4d3bed05f66d0157ce Mon Sep 17 00:00:00 2001
+From 32b05ffd5f0d6eff5f989a8c30a030a3e1972e5d Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Wed, 3 Apr 2019 16:01:22 -0400
 Subject: [PATCH] Remove ccapi-related comments in configure.ac

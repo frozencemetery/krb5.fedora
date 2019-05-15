@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 21%{?dist}
+Release: 22%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -54,7 +54,6 @@ Patch27: krb5-1.17-beta1-selinux-label.patch
 Patch28: krb5-1.12-ksu-path.patch
 Patch30: krb5-1.15-beta1-buildconf.patch
 Patch31: krb5-1.3.1-dns.patch
-Patch32: krb5-1.12-api.patch
 Patch33: krb5-1.13-dirsrv-accountlock.patch
 Patch34: krb5-1.9-debuginfo.patch
 Patch35: krb5-1.11-run_user_0.patch
@@ -704,6 +703,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed May 15 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-22
+- Drop krb5_realm_compare() etc. NULL check patches
+
+
 * Wed May 15 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-21
 - Re-provide krb5-kdb-version in -devel as well (IPA wants it)
 

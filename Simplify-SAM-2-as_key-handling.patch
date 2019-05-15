@@ -1,4 +1,4 @@
-From c63484d9ff8199261e778169474af50883ea11f5 Mon Sep 17 00:00:00 2001
+From 251694f155bd132a162f876e59abf5caf7140c70 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Sun, 5 May 2019 18:53:27 -0400
 Subject: [PATCH] Simplify SAM-2 as_key handling

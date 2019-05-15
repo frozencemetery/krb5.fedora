@@ -1,4 +1,4 @@
-From b804c5ec00580cf62fd3660939f0f3baf71822fe Mon Sep 17 00:00:00 2001
+From f6f799d2581251529c28bbb4644e42e19c6980ab Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 2 Apr 2019 14:18:57 -0400
 Subject: [PATCH] Clarify header comment for krb5_cc_start_seq_get()

@@ -1,4 +1,4 @@
-From dbc7e1a5ca3afad7ac6d057266358c6cbe517db5 Mon Sep 17 00:00:00 2001
+From f708c93e82dc34c6ab2bd04be2149bd539faec4d Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 9 May 2019 14:07:24 -0400
 Subject: [PATCH] Remove more dead code

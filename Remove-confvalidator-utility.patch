@@ -1,4 +1,4 @@
-From 6d289b110c39c1d617c5e8252cc0bb1d25450b0e Mon Sep 17 00:00:00 2001
+From 2ea1badfb30f8549a5ec00dc8c5f5e58caea5a03 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Wed, 3 Apr 2019 14:58:19 -0400
 Subject: [PATCH] Remove confvalidator utility
