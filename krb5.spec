@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 22%{?dist}
+Release: 23%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -94,6 +94,9 @@ Patch126: Remove-more-dead-code.patch
 Patch127: krb5-1.17post2-FIPS-with-PRNG-SPAKE-and-RADIUS.patch
 Patch128: Remove-checksum-type-profile-variables.patch
 Patch129: Remove-dead-variable-def_kslist-from-two-files.patch
+Patch130: Mark-the-doc-kadm5-tex-files-as-historic.patch
+Patch131: Modernize-example-enctypes-in-documentation.patch
+Patch132: Update-ASN.1-SAM-tests-to-use-a-modern-enctype.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -703,6 +706,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon May 20 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-23
+- Test & docs fixes in preparation for DES removal
+
 * Wed May 15 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-22
 - Drop krb5_realm_compare() etc. NULL check patches
 

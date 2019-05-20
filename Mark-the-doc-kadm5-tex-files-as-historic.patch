@@ -1,0 +1,139 @@
+From 7385ae430280e839a2a0b5a7c5a6be1b2b24aef4 Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Thu, 11 Apr 2019 18:33:04 -0400
+Subject: [PATCH] Mark the doc/kadm5 tex files as historic
+
+Remove rcsid.sty and the uses of the \rcsId macro as git does not
+perform the keyword expansion necessary to make it work.  Add comments
+indicating the historic status of the kadm5 documentation.
+
+[ghudson@mit.edu: fix the tex files instead of marking them as
+non-building]
+
+(cherry picked from commit e6047bdd6dec0d104417f9a1318bbafe022b81c1)
+---
+ doc/kadm5/adb-unit-test.tex     | 7 ++++---
+ doc/kadm5/api-funcspec.tex      | 9 +++++----
+ doc/kadm5/api-server-design.tex | 9 +++++----
+ doc/kadm5/api-unit-test.tex     | 7 ++++---
+ doc/kadm5/rcsid.sty             | 5 -----
+ 5 files changed, 18 insertions(+), 19 deletions(-)
+ delete mode 100644 doc/kadm5/rcsid.sty
+
+diff --git a/doc/kadm5/adb-unit-test.tex b/doc/kadm5/adb-unit-test.tex
+index d401342df..987af1a5e 100644
+--- a/doc/kadm5/adb-unit-test.tex
++++ b/doc/kadm5/adb-unit-test.tex
+@@ -1,6 +1,7 @@
+-\documentstyle[times,fullpage,rcsid]{article}
++% This document is included for historical purposes only, and does not
++% apply to krb5 today.
+ 
+-\rcs$Id$
++\documentstyle[times,fullpage]{article}
+ 
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ %% Make _ actually generate an _, and allow line-breaking after it.
+@@ -39,7 +40,7 @@
+ %\newcommand{\Priority}[1]{}
+ 
+ \title{OpenV*Secure Admin Database API\\
+-Unit Test Description\footnote{\rcsId}}
++Unit Test Description}
+ \author{Jonathan I. Kamens}
+ 
+ \begin{document}
+diff --git a/doc/kadm5/api-funcspec.tex b/doc/kadm5/api-funcspec.tex
+index c13090a51..76d2bb5d0 100644
+--- a/doc/kadm5/api-funcspec.tex
++++ b/doc/kadm5/api-funcspec.tex
+@@ -1,4 +1,7 @@
+-\documentstyle[12pt,fullpage,rcsid]{article}
++% This document is included for historical purposes only, and does not
++% apply to krb5 today.
++
++\documentstyle[12pt,fullpage]{article}
+ 
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ %% Make _ actually generate an _, and allow line-breaking after it.
+@@ -7,15 +10,13 @@
+ \def_{\underscore\penalty75\relax}
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ 
+-\rcs$Id$
+-
+ \setlength{\parskip}{.7\baselineskip}
+ \setlength{\parindent}{0pt}
+ 
+ \def\v#1{\verb+#1+}
+ 
+ \title{Kerberos Administration System \\
+-        KADM5 API Functional Specifications\thanks{\rcsId}}
++        KADM5 API Functional Specifications}
+ \author{Barry Jaspan}
+ 
+ \begin{document}
+diff --git a/doc/kadm5/api-server-design.tex b/doc/kadm5/api-server-design.tex
+index 228e83113..94e05b877 100644
+--- a/doc/kadm5/api-server-design.tex
++++ b/doc/kadm5/api-server-design.tex
+@@ -1,4 +1,7 @@
+-\documentstyle[12pt,fullpage,rcsid]{article}
++% This document is included for historical purposes only, and does not
++% apply to krb5 today.
++
++\documentstyle[12pt,fullpage]{article}
+ 
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ %% Make _ actually generate an _, and allow line-breaking after it.
+@@ -7,15 +10,13 @@
+ \def_{\underscore\penalty75\relax}
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ 
+-\rcs$Id$
+-
+ \setlength{\parskip}{.7\baselineskip}
+ \setlength{\parindent}{0pt}
+ 
+ \def\v#1{\verb+#1+}
+ \def\k#1{K$_#1$}
+ 
+-\title{KADM5 Library and Server \\ Implementation Design\thanks{\rcsId}}
++\title{KADM5 Library and Server \\ Implementation Design}
+ \author{Barry Jaspan}
+ 
+ \begin{document}
+diff --git a/doc/kadm5/api-unit-test.tex b/doc/kadm5/api-unit-test.tex
+index 3e0eb503e..bfd6280bb 100644
+--- a/doc/kadm5/api-unit-test.tex
++++ b/doc/kadm5/api-unit-test.tex
+@@ -1,6 +1,7 @@
+-\documentstyle[times,fullpage,rcsid]{article}
++% This document is included for historical purposes only, and does not
++% apply to krb5 today.
+ 
+-\rcs$Id$
++\documentstyle[times,fullpage]{article}
+ 
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ %% Make _ actually generate an _, and allow line-breaking after it.
+@@ -41,7 +42,7 @@
+ %\newcommand{\Priority}[1]{}
+ 
+ \title{KADM5 Admin API\\
+-Unit Test Description\footnote{\rcsId}}
++Unit Test Description}
+ \author{Jonathan I. Kamens}
+ 
+ \begin{document}
+diff --git a/doc/kadm5/rcsid.sty b/doc/kadm5/rcsid.sty
+deleted file mode 100644
+index 3ad7826ff..000000000
+--- a/doc/kadm5/rcsid.sty
++++ /dev/null
+@@ -1,5 +0,0 @@
+-\def\rcs$#1: #2${\expandafter\def\csname rcs#1\endcsname{#2}}
+-
+-% example usage:
+-% \rcs$Version$
+-% Version \rcsVersion
