@@ -1,4 +1,4 @@
-From 42b1d879cf0705d3bc76c4b546275f1c608ebda9 Mon Sep 17 00:00:00 2001
+From 0869d133743446612c512ce9aec5832ce10e282b Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Mon, 9 Oct 2017 15:58:33 -0400
 Subject: [PATCH] Remove srvtab support

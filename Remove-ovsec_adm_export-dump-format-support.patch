@@ -1,4 +1,4 @@
-From 56be395114bed8e8dd41b91e41e233637488d3ab Mon Sep 17 00:00:00 2001
+From 6f9222fb372af6d7988c65cc4ec3cb56f6cc747a Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 22 Jan 2019 18:34:58 -0500
 Subject: [PATCH] Remove ovsec_adm_export dump format support

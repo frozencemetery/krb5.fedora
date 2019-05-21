@@ -1,4 +1,4 @@
-From ff88e21470d374f057107148de8b972a04f59641 Mon Sep 17 00:00:00 2001
+From ff011e05cfb28b408778f4ace22a745f19c0bdd2 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 4 Apr 2019 14:37:38 -0400
 Subject: [PATCH] Remove Kerberos v4 support vestiges from ccapi

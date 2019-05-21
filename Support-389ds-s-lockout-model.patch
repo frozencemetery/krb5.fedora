@@ -1,0 +1,63 @@
+From 5673f1c22b602ac4b72e59c84b70ecedf3132c11 Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Tue, 23 Aug 2016 16:47:44 -0400
+Subject: [PATCH] Support 389ds's lockout model
+
+Handle the attribute 'nsAccountLock' from Netscape derivatives.  Based
+on a patch by Nalin Dahyabhai and Simo Sorce.
+
+ticket: 5891
+(cherry picked from commit 6ad061e24eca41a61eebed61db39768bfa51a084)
+---
+ src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c   | 18 ++++++++++++++++++
+ .../kdb/ldap/libkdb_ldap/ldap_principal.c      |  1 +
+ 2 files changed, 19 insertions(+)
+
+diff --git a/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c b/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c
+index 5b9d1e9fa..2ade63719 100644
+--- a/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c
++++ b/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c
+@@ -1420,6 +1420,7 @@ populate_krb5_db_entry(krb5_context context, krb5_ldap_context *ldap_context,
+     struct berval **ber_key_data = NULL, **ber_tl_data = NULL;
+     krb5_tl_data userinfo_tl_data = { NULL }, **endp, *tl;
+     osa_princ_ent_rec princ_ent;
++    char *is_login_disabled = NULL;
+ 
+     memset(&princ_ent, 0, sizeof(princ_ent));
+ 
+@@ -1653,6 +1654,23 @@ populate_krb5_db_entry(krb5_context context, krb5_ldap_context *ldap_context,
+     if (ret)
+         goto cleanup;
+ 
++    /*
++     * 389ds and other Netscape directory server derivatives support an
++     * attribute "nsAccountLock" which functions similarly to eDirectory's
++     * "loginDisabled".  When the user's account object is also a
++     * krbPrincipalAux object, the kdb entry should be treated as if
++     * DISALLOW_ALL_TIX has been set.
++     */
++    ret = krb5_ldap_get_string(ld, ent, "nsAccountLock", &is_login_disabled,
++                               &attr_present);
++    if (ret)
++        goto cleanup;
++    if (attr_present == TRUE) {
++        if (strcasecmp(is_login_disabled, "TRUE") == 0)
++            entry->attributes |= KRB5_KDB_DISALLOW_ALL_TIX;
++        free(is_login_disabled);
++    }
++
+     ret = krb5_read_tkt_policy(context, ldap_context, entry, tktpolname);
+     if (ret)
+         goto cleanup;
+diff --git a/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c b/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c
+index d722dbfa6..a5180c73f 100644
+--- a/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c
++++ b/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal.c
+@@ -54,6 +54,7 @@ char     *principal_attributes[] = { "krbprincipalname",
+                                      "krbLastFailedAuth",
+                                      "krbLoginFailedCount",
+                                      "krbLastSuccessfulAuth",
++                                     "nsAccountLock",
+                                      "krbLastPwdChange",
+                                      "krbLastAdminUnlock",
+                                      "krbPrincipalAuthInd",

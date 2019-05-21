@@ -1,4 +1,4 @@
-From 43fa850e47233f95c429c5b06fc74130a9c2b2b1 Mon Sep 17 00:00:00 2001
+From f001aa86071aabc398b0d7c38033c26b21fe85f2 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Mon, 22 Apr 2019 14:26:42 -0400
 Subject: [PATCH] Check more errors in OpenSSL crypto backend

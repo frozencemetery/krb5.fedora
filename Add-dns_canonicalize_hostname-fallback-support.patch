@@ -1,4 +1,4 @@
-From 770a525f940a319b4f9a91423a9f48bde28429b9 Mon Sep 17 00:00:00 2001
+From 8ec4a9ab41c73e7955ed7929a3d2a19592811596 Mon Sep 17 00:00:00 2001
 From: Simo Sorce <simo@redhat.com>
 Date: Tue, 4 Dec 2018 15:22:55 -0500
 Subject: [PATCH] Add dns_canonicalize_hostname=fallback support

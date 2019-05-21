@@ -1,4 +1,4 @@
-From e196f175f5b551290efab029295dcf728feb4fac Mon Sep 17 00:00:00 2001
+From b7bbc88f5ebc6000a8dec95e7f0ff92bbeb54ad4 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 2 May 2019 14:05:38 -0400
 Subject: [PATCH] Fix some return code handling bugs
