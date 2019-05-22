@@ -1,4 +1,4 @@
-From a642ac26ca00d4cfaae84398372035b0c1e444ed Mon Sep 17 00:00:00 2001
+From 69bd1ba5a7002856778cf1d46082423ef89a0c0c Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Mon, 13 May 2019 14:19:57 -0400
 Subject: [PATCH] Remove checksum type profile variables

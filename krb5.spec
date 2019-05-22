@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 24%{?dist}
+Release: 25%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -51,7 +51,6 @@ Source100: noport.c
 
 Patch26: krb5-1.12.1-pam.patch
 Patch27: krb5-1.17-beta1-selinux-label.patch
-Patch28: krb5-1.12-ksu-path.patch
 Patch30: krb5-1.15-beta1-buildconf.patch
 Patch31: krb5-1.3.1-dns.patch
 Patch34: krb5-1.9-debuginfo.patch
@@ -98,6 +97,8 @@ Patch131: Modernize-example-enctypes-in-documentation.patch
 Patch132: Update-ASN.1-SAM-tests-to-use-a-modern-enctype.patch
 Patch133: Update-default-krb5kdc-mkey-manual-entry-enctype.patch
 Patch134: Support-389ds-s-lockout-model.patch
+Patch135: Add-missing-newlines-to-deprecation-warnings.patch
+Patch136: Set-a-more-modern-default-ksu-CMD_PATH.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -707,6 +708,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed May 22 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-25
+- Add missing newlines to deprecation warnings
+- Switch to upstream's ksu path patch
+
 * Tue May 21 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-24
 - Update default krb5kdc mkey manual-entry enctype
 - Also update account lockout patch to upstream version

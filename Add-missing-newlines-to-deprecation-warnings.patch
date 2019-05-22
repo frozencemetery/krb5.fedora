@@ -1,0 +1,37 @@
+From d60851da93427e05793d52825ebc49448ae365b2 Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Tue, 21 May 2019 12:52:26 -0400
+Subject: [PATCH] Add missing newlines to deprecation warnings
+
+Commit 8d8e68283b599e680f9fe45eff8af397e827bd6c omitted newlines in
+two warning messages sent to stderr.  Add them now.
+
+ticket: 8773
+(cherry picked from commit 274fee295d1429668b31c6ed898fc5d11a7e3589)
+---
+ src/kdc/main.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/kdc/main.c b/src/kdc/main.c
+index 04393772f..1596c1c5b 100644
+--- a/src/kdc/main.c
++++ b/src/kdc/main.c
+@@ -223,7 +223,8 @@ init_realm(kdc_realm_t * rdp, krb5_pointer aprof, char *realm,
+         if (krb5_enctype_to_name(def_enctype, FALSE, ename, sizeof(ename)))
+             ename[0] = '\0';
+         fprintf(stderr,
+-                _("Requested master password enctype %s in %s is DEPRECATED!"),
++                _("Requested master password enctype %s in %s is "
++                  "DEPRECATED!\n"),
+                 ename, realm);
+     }
+ 
+@@ -385,7 +386,7 @@ init_realm(kdc_realm_t * rdp, krb5_pointer aprof, char *realm,
+         if (krb5_enctype_to_name(rdp->realm_mkey.enctype, FALSE, ename,
+                                  sizeof(ename)))
+             ename[0] = '\0';
+-        fprintf(stderr, _("Stash file %s uses DEPRECATED enctype %s!"),
++        fprintf(stderr, _("Stash file %s uses DEPRECATED enctype %s!\n"),
+                 rdp->realm_stash, ename);
+     }
+ 

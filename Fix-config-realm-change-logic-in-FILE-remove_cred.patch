@@ -1,4 +1,4 @@
-From 2f5531f3cffb497902241e4932db20617f4d30eb Mon Sep 17 00:00:00 2001
+From 7ed0d71eb3eef640e57f3c55f8aeac636cce3110 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Tue, 16 Apr 2019 10:47:35 -0400
 Subject: [PATCH] Fix config realm change logic in FILE remove_cred

@@ -1,4 +1,4 @@
-From cf25d152b2b1f54bbd92e235a30de20e154f3e7a Mon Sep 17 00:00:00 2001
+From 8629596d91d41914a6996b897845f601af7b59fc Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 4 Apr 2019 14:15:58 -0400
 Subject: [PATCH] Remove doxygen-generated HTML output for ccapi

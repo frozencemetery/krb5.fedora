@@ -1,4 +1,4 @@
-From 4ed88289e0b3c5a6fcda13078abf211fb8e4f84c Mon Sep 17 00:00:00 2001
+From 13cc24f4e631ee54176430eac73be14bcd9052d3 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Wed, 24 Apr 2019 16:19:50 -0400
 Subject: [PATCH] Use secure_getenv() where appropriate

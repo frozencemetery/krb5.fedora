@@ -1,4 +1,4 @@
-From 7d3da40bd7f44f2d6960b5a9245a1d773c4ee1a0 Mon Sep 17 00:00:00 2001
+From ebc913ea73bfc439f293831f19db83ec83622d51 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Mon, 1 Apr 2019 14:28:48 -0400
 Subject: [PATCH] Implement krb5_cc_remove_cred for remaining types

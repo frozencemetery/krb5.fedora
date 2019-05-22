@@ -1,4 +1,4 @@
-From 28a605c2411c3def3e5eaa19be5326777e959a1a Mon Sep 17 00:00:00 2001
+From 1b138c349fa167f713572c8a37bc6fa39280396c Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 11 Apr 2019 18:33:04 -0400
 Subject: [PATCH] Mark the doc/kadm5 tex files as historic

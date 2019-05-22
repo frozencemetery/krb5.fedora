@@ -1,4 +1,4 @@
-From 0b4433c4ab9653eb298e2b7d959e957d468fd3f9 Mon Sep 17 00:00:00 2001
+From 172390c584726ecd5747b064587acc1db44a98ca Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Mon, 6 May 2019 13:13:06 -0400
 Subject: [PATCH] Simply OpenSSL PKCS7 decryption code

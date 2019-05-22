@@ -1,9 +1,13 @@
-From e62b5022c129229e86f40f97d2e1c71a01d7227b Mon Sep 17 00:00:00 2001
+From 4b11c083e2019ece267cfa5379bd417334e2038e Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:32:09 -0400
-Subject: [PATCH] krb5-1.12-ksu-path.patch
+Subject: [PATCH] Set a more modern default ksu CMD_PATH
 
-Set the default PATH to the one set by login.
+ksu uses CMD_PATH to expand command names in .k5users.  Include the /usr
+tree and .../sbin variants.  Drop nonstandard /local.
+
+ticket: 8807 (new)
+(cherry picked from commit 9eb937a6e1f740d323221813e5da096d30bd68de)
 ---
  src/clients/ksu/Makefile.in | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
