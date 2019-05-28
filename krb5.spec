@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 25%{?dist}
+Release: 26%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -89,7 +89,6 @@ Patch123: Avoid-alignment-warnings-in-openssl-rc4.c.patch
 Patch124: Simply-OpenSSL-PKCS7-decryption-code.patch
 Patch125: Improve-error-messages-from-kadmin-change_password.patch
 Patch126: Remove-more-dead-code.patch
-Patch127: krb5-1.17post2-FIPS-with-PRNG-SPAKE-and-RADIUS.patch
 Patch128: Remove-checksum-type-profile-variables.patch
 Patch129: Remove-dead-variable-def_kslist-from-two-files.patch
 Patch130: Mark-the-doc-kadm5-tex-files-as-historic.patch
@@ -99,6 +98,11 @@ Patch133: Update-default-krb5kdc-mkey-manual-entry-enctype.patch
 Patch134: Support-389ds-s-lockout-model.patch
 Patch135: Add-missing-newlines-to-deprecation-warnings.patch
 Patch136: Set-a-more-modern-default-ksu-CMD_PATH.patch
+Patch137: Remove-the-v4-and-afs3-salt-types.patch
+Patch138: Update-test-suite-to-avoid-single-DES-enctypes.patch
+Patch139: Remove-support-for-single-DES-and-CRC.patch
+Patch140: Display-unsupported-enctype-names.patch
+Patch141: krb5-1.17post3-FIPS-with-PRNG-SPAKE-and-RADIUS.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -708,6 +712,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue May 28 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-26
+- Remove support for single-DES and CRC
+
 * Wed May 22 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-25
 - Add missing newlines to deprecation warnings
 - Switch to upstream's ksu path patch

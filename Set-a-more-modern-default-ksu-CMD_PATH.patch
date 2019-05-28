@@ -1,4 +1,4 @@
-From 4b11c083e2019ece267cfa5379bd417334e2038e Mon Sep 17 00:00:00 2001
+From 6b50f9c5b2a1b856e65fa69de05e7c05d2b89614 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:32:09 -0400
 Subject: [PATCH] Set a more modern default ksu CMD_PATH

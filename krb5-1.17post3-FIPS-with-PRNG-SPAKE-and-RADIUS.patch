@@ -1,7 +1,7 @@
-From 35dbfaa4a224bbbdd0d75a0383fbe09d7deb389f Mon Sep 17 00:00:00 2001
+From b52fa25acec9c0302532e1610ffe390d714e8f7a Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 9 Nov 2018 15:12:21 -0500
-Subject: [PATCH] krb5-1.17post2 FIPS with PRNG, SPAKE, and RADIUS
+Subject: [PATCH] krb5-1.17post3 FIPS with PRNG, SPAKE, and RADIUS
 
 NB: Use openssl's PRNG in FIPS mode, be aware during SPAKE group
 negotiation, and taint within krad.
@@ -15,10 +15,11 @@ awareness of what we can and can't safely call.
 This will slow down some calls slightly (FIPS_mode() takes multiple
 locks), but not for any ciphers we care about - which is to say that
 AES is fine.  Shame about the SPAKE groups though.
+
+post3 is (confusingly) on top of the 1DES removal.
 ---
  src/lib/crypto/krb/prng.c                     | 11 ++++-
  .../crypto/openssl/enc_provider/camellia.c    |  6 +++
- src/lib/crypto/openssl/enc_provider/des.c     |  9 ++++
  src/lib/crypto/openssl/enc_provider/des3.c    |  6 +++
  src/lib/crypto/openssl/enc_provider/rc4.c     | 13 +++++-
  .../crypto/openssl/hash_provider/hash_evp.c   |  4 ++
@@ -31,7 +32,7 @@ AES is fine.  Shame about the SPAKE groups though.
  src/lib/krad/t_attr.c                         |  3 +-
  src/lib/krad/t_attrset.c                      |  4 +-
  src/plugins/preauth/spake/groups.c            |  8 ++++
- 15 files changed, 132 insertions(+), 33 deletions(-)
+ 14 files changed, 123 insertions(+), 33 deletions(-)
 
 diff --git a/src/lib/crypto/krb/prng.c b/src/lib/crypto/krb/prng.c
 index cb9ca9b98..f0e9984ca 100644
@@ -88,40 +89,6 @@ index 2da691329..f79679a0b 100644
      state->length = 16;
      state->data = (void *) malloc(16);
      if (state->data == NULL)
-diff --git a/src/lib/crypto/openssl/enc_provider/des.c b/src/lib/crypto/openssl/enc_provider/des.c
-index a662db512..7d17d287e 100644
---- a/src/lib/crypto/openssl/enc_provider/des.c
-+++ b/src/lib/crypto/openssl/enc_provider/des.c
-@@ -85,6 +85,9 @@ k5_des_encrypt(krb5_key key, const krb5_data *ivec, krb5_crypto_iov *data,
-     EVP_CIPHER_CTX *ctx;
-     krb5_boolean empty;
- 
-+    if (FIPS_mode())
-+        return KRB5_CRYPTO_INTERNAL;
-+
-     ret = validate(key, ivec, data, num_data, &empty);
-     if (ret != 0 || empty)
-         return ret;
-@@ -133,6 +136,9 @@ k5_des_decrypt(krb5_key key, const krb5_data *ivec, krb5_crypto_iov *data,
-     EVP_CIPHER_CTX *ctx;
-     krb5_boolean empty;
- 
-+    if (FIPS_mode())
-+        return KRB5_CRYPTO_INTERNAL;
-+
-     ret = validate(key, ivec, data, num_data, &empty);
-     if (ret != 0 || empty)
-         return ret;
-@@ -182,6 +188,9 @@ k5_des_cbc_mac(krb5_key key, const krb5_crypto_iov *data, size_t num_data,
-     DES_key_schedule sched;
-     krb5_boolean empty;
- 
-+    if (FIPS_mode())
-+        return KRB5_CRYPTO_INTERNAL;
-+
-     ret = validate(key, ivec, data, num_data, &empty);
-     if (ret != 0)
-         return ret;
 diff --git a/src/lib/crypto/openssl/enc_provider/des3.c b/src/lib/crypto/openssl/enc_provider/des3.c
 index 1c439c2cd..8be555a8d 100644
 --- a/src/lib/crypto/openssl/enc_provider/des3.c

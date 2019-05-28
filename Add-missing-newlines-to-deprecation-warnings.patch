@@ -1,4 +1,4 @@
-From d60851da93427e05793d52825ebc49448ae365b2 Mon Sep 17 00:00:00 2001
+From 4928699bdfd051bf0d69afee0b15574c15f40a48 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Tue, 21 May 2019 12:52:26 -0400
 Subject: [PATCH] Add missing newlines to deprecation warnings

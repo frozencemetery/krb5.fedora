@@ -1,0 +1,508 @@
+From 35395701a34f68e99abfe23d07b93c59cd63ad50 Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Fri, 24 May 2019 13:11:44 -0400
+Subject: [PATCH] Remove the v4 and afs3 salt types
+
+In preparation for removing single-DES support, remove the v4 and afs3
+salt types.  The afs3 salt type could only be used with single-DES
+keys, and the v4 salt type was only useful for single-DES keys from
+krb4 databases.
+
+[ghudson@mit.edu: wrote commit message]
+
+ticket: 8808
+(cherry picked from commit e0a35ff48c09a26ebb9aefd7e98855a84574b8be)
+---
+ doc/admin/conf_files/kdc_conf.rst             |  2 -
+ src/include/kdb.h                             |  4 +-
+ src/kadmin/testing/proto/kdc.conf.proto       |  2 +-
+ src/kdc/kdc_preauth.c                         | 40 +++++--------------
+ .../api.current/chpass-principal-v2.exp       |  8 ++--
+ .../api.current/get-principal-v2.exp          |  4 +-
+ src/lib/kdb/kdb5.c                            |  4 --
+ src/lib/kdb/kdb_cpw.c                         | 16 +-------
+ src/lib/krb5/krb/str_conv.c                   |  2 -
+ src/lib/krb5/krb/t_get_etype_info.py          |  7 ----
+ src/man/kdc.conf.man                          | 14 +------
+ src/tests/dejagnu/config/default.exp          | 17 --------
+ src/tests/t_etype_info.py                     | 24 +----------
+ src/tests/t_keytab.py                         |  5 ---
+ src/tests/t_renprinc.py                       |  2 +-
+ src/tests/t_salt.py                           | 26 +-----------
+ src/util/k5test.py                            | 11 -----
+ 17 files changed, 24 insertions(+), 164 deletions(-)
+
+diff --git a/doc/admin/conf_files/kdc_conf.rst b/doc/admin/conf_files/kdc_conf.rst
+index c73791ceb..62d1bfc05 100644
+--- a/doc/admin/conf_files/kdc_conf.rst
++++ b/doc/admin/conf_files/kdc_conf.rst
+@@ -917,10 +917,8 @@ follows:
+ 
+ ================= ============================================
+ normal            default for Kerberos Version 5
+-v4                the only type used by Kerberos Version 4 (no salt)
+ norealm           same as the default, without using realm information
+ onlyrealm         uses only realm information as the salt
+-afs3              AFS version 3, only used for compatibility with Kerberos 4 in AFS
+ special           generate a random salt
+ ================= ============================================
+ 
+diff --git a/src/include/kdb.h b/src/include/kdb.h
+index 9812a35e6..7749cfc99 100644
+--- a/src/include/kdb.h
++++ b/src/include/kdb.h
+@@ -73,11 +73,11 @@
+ 
+ /* Salt types */
+ #define KRB5_KDB_SALTTYPE_NORMAL        0
+-#define KRB5_KDB_SALTTYPE_V4            1
++/* #define KRB5_KDB_SALTTYPE_V4            1 */
+ #define KRB5_KDB_SALTTYPE_NOREALM       2
+ #define KRB5_KDB_SALTTYPE_ONLYREALM     3
+ #define KRB5_KDB_SALTTYPE_SPECIAL       4
+-#define KRB5_KDB_SALTTYPE_AFS3          5
++/* #define KRB5_KDB_SALTTYPE_AFS3          5 */
+ #define KRB5_KDB_SALTTYPE_CERTHASH      6
+ 
+ /* Attributes */
+diff --git a/src/kadmin/testing/proto/kdc.conf.proto b/src/kadmin/testing/proto/kdc.conf.proto
+index 61283ac77..45df78b91 100644
+--- a/src/kadmin/testing/proto/kdc.conf.proto
++++ b/src/kadmin/testing/proto/kdc.conf.proto
+@@ -12,5 +12,5 @@
+ 		kadmind_port = 1751
+ 		kpasswd_port = 1752
+ 		master_key_type = des3-hmac-sha1
+-		supported_enctypes = des3-hmac-sha1:normal des-cbc-crc:normal des-cbc-crc:v4 des-cbc-md5:normal des-cbc-raw:normal
++		supported_enctypes = des3-hmac-sha1:normal des-cbc-crc:normal des-cbc-md5:normal des-cbc-raw:normal
+ 	}
+diff --git a/src/kdc/kdc_preauth.c b/src/kdc/kdc_preauth.c
+index caf133c14..508a5cf89 100644
+--- a/src/kdc/kdc_preauth.c
++++ b/src/kdc/kdc_preauth.c
+@@ -781,8 +781,8 @@ add_etype_info(krb5_context context, krb5_kdcpreauth_rock rock,
+     return add_pa_data_element(pa_list, pa);
+ }
+ 
+-/* Add PW-SALT or AFS3-SALT entries to pa_list as appropriate for the request
+- * and client principal. */
++/* Add PW-SALT entries to pa_list as appropriate for the request and client
++ * principal. */
+ static krb5_error_code
+ add_pw_salt(krb5_context context, krb5_kdcpreauth_rock rock,
+             krb5_pa_data ***pa_list)
+@@ -801,21 +801,13 @@ add_pw_salt(krb5_context context, krb5_kdcpreauth_rock rock,
+     if (ret)
+         return 0;
+ 
+-    if (salttype == KRB5_KDB_SALTTYPE_AFS3) {
+-        ret = alloc_pa_data(KRB5_PADATA_AFS3_SALT, salt->length + 1, &pa);
+-        if (ret)
+-            goto cleanup;
+-        memcpy(pa->contents, salt->data, salt->length);
+-        pa->contents[salt->length] = '\0';
+-    } else {
+-        /* Steal memory from salt to make the pa-data entry. */
+-        ret = alloc_pa_data(KRB5_PADATA_PW_SALT, 0, &pa);
+-        if (ret)
+-            goto cleanup;
+-        pa->length = salt->length;
+-        pa->contents = (uint8_t *)salt->data;
+-        salt->data = NULL;
+-    }
++    /* Steal memory from salt to make the pa-data entry. */
++    ret = alloc_pa_data(KRB5_PADATA_PW_SALT, 0, &pa);
++    if (ret)
++        goto cleanup;
++    pa->length = salt->length;
++    pa->contents = (uint8_t *)salt->data;
++    salt->data = NULL;
+ 
+     /* add_pa_data_element() claims pa on success or failure. */
+     ret = add_pa_data_element(pa_list, pa);
+@@ -1545,20 +1537,6 @@ _make_etype_info_entry(krb5_context context,
+                                    &salttype, &salt);
+     if (retval)
+         goto cleanup;
+-    if (etype_info2 && salttype == KRB5_KDB_SALTTYPE_AFS3) {
+-        switch (etype) {
+-        case ENCTYPE_DES_CBC_CRC:
+-        case ENCTYPE_DES_CBC_MD4:
+-        case ENCTYPE_DES_CBC_MD5:
+-            retval = alloc_data(&entry->s2kparams, 1);
+-            if (retval)
+-                goto cleanup;
+-            entry->s2kparams.data[0] = 1;
+-            break;
+-        default:
+-            break;
+-        }
+-    }
+ 
+     entry->length = salt->length;
+     entry->salt = (unsigned char *)salt->data;
+diff --git a/src/lib/kadm5/unit-test/api.current/chpass-principal-v2.exp b/src/lib/kadm5/unit-test/api.current/chpass-principal-v2.exp
+index 8361fb085..db899a1dc 100644
+--- a/src/lib/kadm5/unit-test/api.current/chpass-principal-v2.exp
++++ b/src/lib/kadm5/unit-test/api.current/chpass-principal-v2.exp
+@@ -18,8 +18,8 @@ proc test200 {} {
+ 
+     # I'd like to specify a long list of keysalt tuples and make sure
+     # that chpass does the right thing, but we can only use those
+-    # enctypes that krbtgt has a key for: des-cbc-crc:normal and
+-    # des-cbc-crc:v4, according to the prototype kdc.conf.
++    # enctypes that krbtgt has a key for: des-cbc-crc:normal
++    # according to the prototype kdc.conf.
+     if {! [cmd [format {
+ 	kadm5_init admin admin $KADM5_ADMIN_SERVICE null \
+ 		$KADM5_STRUCT_VERSION $KADM5_API_VERSION_3 \
+@@ -53,10 +53,10 @@ proc test200 {} {
+     }
+ 
+     # XXX Perhaps I should actually check the key type returned.
+-    if {$num_keys == 3} {
++    if {$num_keys == 2} {
+ 	pass "$test"
+     } else {
+-	fail "$test: $num_keys keys, should be 3"
++	fail "$test: $num_keys keys, should be 2"
+     }
+     if { ! [cmd {kadm5_destroy $server_handle}]} {
+ 	perror "$test: unexpected failure in destroy"
+diff --git a/src/lib/kadm5/unit-test/api.current/get-principal-v2.exp b/src/lib/kadm5/unit-test/api.current/get-principal-v2.exp
+index 86c45f49e..8526897ed 100644
+--- a/src/lib/kadm5/unit-test/api.current/get-principal-v2.exp
++++ b/src/lib/kadm5/unit-test/api.current/get-principal-v2.exp
+@@ -143,8 +143,8 @@ proc test101_102 {rpc} {
+     }
+ 
+     set failed 0
+-    if {$num_keys != 3} {
+-	fail "$test: num_keys $num_keys should be 3"
++    if {$num_keys != 2} {
++	fail "$test: num_keys $num_keys should be 2"
+ 	set failed 1
+     }
+     for {set i 0} {$i < $num_keys} {incr i} {
+diff --git a/src/lib/kdb/kdb5.c b/src/lib/kdb/kdb5.c
+index da5332217..b81a44312 100644
+--- a/src/lib/kdb/kdb5.c
++++ b/src/lib/kdb/kdb5.c
+@@ -2312,15 +2312,11 @@ krb5_dbe_compute_salt(krb5_context context, const krb5_key_data *key,
+         if (retval)
+             return retval;
+         break;
+-    case KRB5_KDB_SALTTYPE_V4:
+-        sdata = empty_data();
+-        break;
+     case KRB5_KDB_SALTTYPE_NOREALM:
+         retval = krb5_principal2salt_norealm(context, princ, &sdata);
+         if (retval)
+             return retval;
+         break;
+-    case KRB5_KDB_SALTTYPE_AFS3:
+     case KRB5_KDB_SALTTYPE_ONLYREALM:
+         return krb5_copy_data(context, &princ->realm, salt_out);
+     case KRB5_KDB_SALTTYPE_SPECIAL:
+diff --git a/src/lib/kdb/kdb_cpw.c b/src/lib/kdb/kdb_cpw.c
+index 03efc28ed..450860f47 100644
+--- a/src/lib/kdb/kdb_cpw.c
++++ b/src/lib/kdb/kdb_cpw.c
+@@ -260,7 +260,6 @@ add_key_pwd(context, master_key, ks_tuple, ks_tuple_count, passwd,
+     krb5_keysalt          key_salt;
+     krb5_keyblock         key;
+     krb5_data             pwd;
+-    krb5_data             afs_params = string2data("\1"), *s2k_params;
+     int                   i, j;
+     krb5_key_data        *kd_slot;
+ 
+@@ -268,7 +267,6 @@ add_key_pwd(context, master_key, ks_tuple, ks_tuple_count, passwd,
+         krb5_boolean similar;
+ 
+         similar = 0;
+-        s2k_params = NULL;
+ 
+         /*
+          * We could use krb5_keysalt_iterate to replace this loop, or use
+@@ -316,18 +314,6 @@ add_key_pwd(context, master_key, ks_tuple, ks_tuple_count, passwd,
+                                               &key_salt.data)))
+                 return(retval);
+             break;
+-        case KRB5_KDB_SALTTYPE_V4:
+-            key_salt.data.length = 0;
+-            key_salt.data.data = 0;
+-            break;
+-        case KRB5_KDB_SALTTYPE_AFS3:
+-            retval = krb5int_copy_data_contents(context,
+-                                                &db_entry->princ->realm,
+-                                                &key_salt.data);
+-            if (retval)
+-                return retval;
+-            s2k_params = &afs_params;
+-            break;
+         case KRB5_KDB_SALTTYPE_SPECIAL:
+             retval = make_random_salt(context, &key_salt);
+             if (retval)
+@@ -342,7 +328,7 @@ add_key_pwd(context, master_key, ks_tuple, ks_tuple_count, passwd,
+         retval = krb5_c_string_to_key_with_params(context,
+                                                   ks_tuple[i].ks_enctype,
+                                                   &pwd, &key_salt.data,
+-                                                  s2k_params, &key);
++                                                  NULL, &key);
+         if (retval) {
+             free(key_salt.data.data);
+             return retval;
+diff --git a/src/lib/krb5/krb/str_conv.c b/src/lib/krb5/krb/str_conv.c
+index 3d057241b..c8421a8c1 100644
+--- a/src/lib/krb5/krb/str_conv.c
++++ b/src/lib/krb5/krb/str_conv.c
+@@ -61,11 +61,9 @@ struct salttype_lookup_entry {
+ #include "kdb.h"
+ static const struct salttype_lookup_entry salttype_table[] = {
+     { KRB5_KDB_SALTTYPE_NORMAL,     "normal"     },
+-    { KRB5_KDB_SALTTYPE_V4,         "v4",        },
+     { KRB5_KDB_SALTTYPE_NOREALM,    "norealm",   },
+     { KRB5_KDB_SALTTYPE_ONLYREALM,  "onlyrealm", },
+     { KRB5_KDB_SALTTYPE_SPECIAL,    "special",   },
+-    { KRB5_KDB_SALTTYPE_AFS3,       "afs3",      },
+ };
+ static const int salttype_table_nents = sizeof(salttype_table)/
+     sizeof(salttype_table[0]);
+diff --git a/src/lib/krb5/krb/t_get_etype_info.py b/src/lib/krb5/krb/t_get_etype_info.py
+index 7c400be86..3c9168591 100644
+--- a/src/lib/krb5/krb/t_get_etype_info.py
++++ b/src/lib/krb5/krb/t_get_etype_info.py
+@@ -9,9 +9,6 @@ realm.run([kadminl, 'ank', '-nokey', '+preauth', 'pnokey'])
+ realm.run([kadminl, 'ank', '-e', 'aes256-cts:special', '-pw', 'pw', 'exp'])
+ realm.run([kadminl, 'ank', '-e', 'aes256-cts:special', '-pw', 'pw', '+preauth',
+            'pexp'])
+-realm.run([kadminl, 'ank', '-e', 'des-cbc-crc:afs3', '-pw', 'pw', 'afs'])
+-realm.run([kadminl, 'ank', '-e', 'des-cbc-crc:afs3', '-pw', 'pw', '+preauth',
+-           'pafs'])
+ 
+ # Extract the explicit salt values from the database.
+ out = realm.run([kdb5_util, 'tabdump', 'keyinfo'])
+@@ -56,8 +53,4 @@ realm.run(['./t_get_etype_info', 'exp'],
+ realm.run(['./t_get_etype_info', 'pexp'],
+           expected_msg='etype: aes256-cts\nsalt: ' + pexp_salt + '\n')
+ 
+-msg = 'etype: des-cbc-crc\nsalt: KRBTEST.COM\ns2kparams: 01\n'
+-realm.run(['./t_get_etype_info', 'afs'], expected_msg=msg)
+-realm.run(['./t_get_etype_info', 'pafs'], expected_msg=msg)
+-
+ success('krb5_get_etype_info() tests')
+diff --git a/src/man/kdc.conf.man b/src/man/kdc.conf.man
+index ab3ee0289..4a75be8cb 100644
+--- a/src/man/kdc.conf.man
++++ b/src/man/kdc.conf.man
+@@ -1,6 +1,6 @@
+ .\" Man page generated from reStructuredText.
+ .
+-.TH "KDC.CONF" "5" " " "1.17" "MIT Kerberos"
++.TH "KDC.CONF" "5" " " "1.18" "MIT Kerberos"
+ .SH NAME
+ kdc.conf \- Kerberos V5 KDC configuration file
+ .
+@@ -1148,12 +1148,6 @@ default for Kerberos Version 5
+ T}
+ _
+ T{
+-v4
+-T}	T{
+-the only type used by Kerberos Version 4 (no salt)
+-T}
+-_
+-T{
+ norealm
+ T}	T{
+ same as the default, without using realm information
+@@ -1166,12 +1160,6 @@ uses only realm information as the salt
+ T}
+ _
+ T{
+-afs3
+-T}	T{
+-AFS version 3, only used for compatibility with Kerberos 4 in AFS
+-T}
+-_
+-T{
+ special
+ T}	T{
+ generate a random salt
+diff --git a/src/tests/dejagnu/config/default.exp b/src/tests/dejagnu/config/default.exp
+index ea9bedd45..c061d764e 100644
+--- a/src/tests/dejagnu/config/default.exp
++++ b/src/tests/dejagnu/config/default.exp
+@@ -238,22 +238,6 @@ set passes {
+ 	{master_key_type=aes256-cts-hmac-sha1-96}
+ 	{dummy=[verbose -log "AES + DES enctypes, DES3 TGT"]}
+     }
+-    {
+-	des-v4
+-	mode=udp
+-	des3_krbtgt=0
+-	{supported_enctypes=des-cbc-crc:v4}
+-	{default_tkt_enctypes(client)=des-cbc-crc}
+-	{dummy=[verbose -log "DES TGT, DES-CRC enctype, V4 salt"]}
+-    }
+-    {
+-	des-md5-v4
+-	mode=udp
+-	des3_krbtgt=0
+-	{supported_enctypes=des-cbc-md5:v4 des-cbc-crc:v4}
+-	{default_tkt_enctypes(client)=des-cbc-md5 des-cbc-crc}
+-	{dummy=[verbose -log "DES TGT, DES-MD5 and -CRC enctypes, V4 salt"]}
+-    }
+     {
+ 	all-enctypes
+ 	mode=udp
+@@ -356,7 +340,6 @@ set unused_passes {
+ 	aes128-cts-hmac-sha1-96:normal aes128-cts-hmac-sha1-96:norealm \
+ 	des3-cbc-sha1:normal des3-cbc-sha1:none \
+ 	des-cbc-md5:normal des-cbc-md4:normal des-cbc-crc:normal \
+-	des-cbc-md5:v4 des-cbc-md4:v4 des-cbc-crc:v4 \
+ 	}
+ 	{dummy=[verbose -log "DES3 TGT, default enctypes"]}
+     }
+diff --git a/src/tests/t_etype_info.py b/src/tests/t_etype_info.py
+index 2026e7876..c21d054f1 100644
+--- a/src/tests/t_etype_info.py
++++ b/src/tests/t_etype_info.py
+@@ -1,6 +1,6 @@
+ from k5test import *
+ 
+-supported_enctypes = 'aes128-cts des3-cbc-sha1 rc4-hmac des-cbc-crc:afs3'
++supported_enctypes = 'aes128-cts des3-cbc-sha1 rc4-hmac'
+ conf = {'libdefaults': {'allow_weak_crypto': 'true'},
+         'realms': {'$realm': {'supported_enctypes': supported_enctypes}}}
+ realm = K5Realm(create_host=False, get_creds=False, krb5_conf=conf)
+@@ -43,28 +43,6 @@ test_etinfo('preauthuser', 'rc4-hmac-exp des3 rc4 des-cbc-crc',
+ test_etinfo('preauthuser', 'rc4 aes256-cts',
+             ['error etype_info2 rc4-hmac KRBTEST.COMpreauthuser'])
+ 
+-# AFS3 salt for DES enctypes is conveyed using s2kparams in
+-# PA-ETYPE-INFO2, not at all in PA-ETYPE-INFO, and with a special padata
+-# type instead of PA-PW-SALT.
+-test_etinfo('user', 'des-cbc-crc rc4',
+-            ['asrep etype_info2 des-cbc-crc KRBTEST.COM 01',
+-             'asrep etype_info des-cbc-crc KRBTEST.COM',
+-             'asrep afs3_salt KRBTEST.COM'])
+-test_etinfo('preauthuser', 'des-cbc-crc rc4',
+-            ['error etype_info2 des-cbc-crc KRBTEST.COM 01',
+-             'error etype_info des-cbc-crc KRBTEST.COM'])
+-
+-# DES keys can be used with other DES enctypes.  The requested enctype
+-# shows up in the etype-info, not the database key enctype.
+-test_etinfo('user', 'des-cbc-md4 rc4',
+-            ['asrep etype_info2 des-cbc-md4 KRBTEST.COM 01',
+-             'asrep etype_info des-cbc-md4 KRBTEST.COM',
+-             'asrep afs3_salt KRBTEST.COM'])
+-test_etinfo('user', 'des-cbc-md5 rc4',
+-            ['asrep etype_info2 des KRBTEST.COM 01',
+-             'asrep etype_info des KRBTEST.COM',
+-             'asrep afs3_salt KRBTEST.COM'])
+-
+ # If no keys are found matching the request enctypes, a
+ # preauth-required error can be generated with no etype-info at all
+ # (to allow for preauth mechs which don't depend on long-term keys).
+diff --git a/src/tests/t_keytab.py b/src/tests/t_keytab.py
+index 72e09daac..633f7c7ef 100755
+--- a/src/tests/t_keytab.py
++++ b/src/tests/t_keytab.py
+@@ -155,9 +155,6 @@ realm.run([kadminl, 'ank', '-pw', 'pw', 'default'])
+ realm.run([kadminl, 'ank', '-e', 'aes256-cts:special', '-pw', 'pw', 'exp'])
+ realm.run([kadminl, 'ank', '-e', 'aes256-cts:special', '-pw', 'pw', '+preauth',
+            'pexp'])
+-realm.run([kadminl, 'ank', '-e', 'des-cbc-crc:afs3', '-pw', 'pw', 'afs'])
+-realm.run([kadminl, 'ank', '-e', 'des-cbc-crc:afs3', '-pw', 'pw', '+preauth',
+-           'pafs'])
+ 
+ # Extract one of the explicit salt values from the database.
+ out = realm.run([kdb5_util, 'tabdump', 'keyinfo'])
+@@ -187,8 +184,6 @@ test_addent(realm, 'default', '-f')
+ test_addent(realm, 'default', '-f -e aes128-cts')
+ test_addent(realm, 'exp', '-f')
+ test_addent(realm, 'pexp', '-f')
+-test_addent(realm, 'afs', '-f')
+-test_addent(realm, 'pafs', '-f')
+ 
+ success('Keytab-related tests')
+ success('Keytab-related tests')
+diff --git a/src/tests/t_renprinc.py b/src/tests/t_renprinc.py
+index 46cbed441..3dbb3e77e 100755
+--- a/src/tests/t_renprinc.py
++++ b/src/tests/t_renprinc.py
+@@ -25,7 +25,7 @@ from k5test import *
+ enctype = "aes128-cts"
+ 
+ realm = K5Realm(create_host=False, create_user=False)
+-salttypes = ('normal', 'v4', 'norealm', 'onlyrealm')
++salttypes = ('normal', 'norealm', 'onlyrealm')
+ 
+ # For a variety of salt types, test that we can rename a principal and
+ # still get tickets with the same password.
+diff --git a/src/tests/t_salt.py b/src/tests/t_salt.py
+index 278911a22..008efcb03 100755
+--- a/src/tests/t_salt.py
++++ b/src/tests/t_salt.py
+@@ -15,13 +15,9 @@ def test_salt(realm, e1, salt, e2):
+     realm.run([kadminl, 'delprinc', 'user'])
+ 
+ # Enctype/salt pairs chosen with non-default salt types.
+-# The enctypes are mostly arbitrary, though afs3 must only be used with des.
+-# We do not enforce that v4 salts must only be used with des, but it seems
+-# like a good idea.
+-salts = [('des-cbc-crc', 'afs3'),
+-         ('des3-cbc-sha1', 'norealm'),
++# The enctypes are mostly arbitrary.
++salts = [('des3-cbc-sha1', 'norealm'),
+          ('arcfour-hmac', 'onlyrealm'),
+-         ('des-cbc-crc', 'v4'),
+          ('aes128-cts-hmac-sha1-96', 'special')]
+ # These enctypes are chosen to cover the different string-to-key routines.
+ # Omit ":normal" from aes256 to check that salttype defaulting works.
+@@ -56,22 +52,4 @@ dup_kstypes = ['arcfour-hmac-md5:normal,rc4-hmac:normal',
+ for ks in dup_kstypes:
+     test_dup(realm, ks)
+ 
+-# Attempt to create a principal with a non-des enctype and the afs3 salt,
+-# verifying that the expected error is received and the principal creation
+-# fails.
+-def test_reject_afs3(realm, etype):
+-    query = 'ank -e ' + etype + ':afs3 -pw password princ1'
+-    realm.run([kadminl, 'ank', '-e', etype + ':afs3', '-pw', 'password',
+-               'princ1'], expected_code=1,
+-              expected_msg='Invalid key generation parameters from KDC')
+-    realm.run([kadminl, 'getprinc', 'princ1'], expected_code=1,
+-              expected_msg='Principal does not exist')
+-
+-# Verify that the afs3 salt is rejected for arcfour and pbkdf2 enctypes.
+-# We do not currently do any verification on the key-generation parameters
+-# for the triple-DES enctypes, so that test is commented out.
+-test_reject_afs3(realm, 'arcfour-hmac')
+-test_reject_afs3(realm, 'aes256-cts-hmac-sha1-96')
+-#test_reject_afs3(realm, 'des3-cbc-sha1')
+-
+ success("Salt types")
+diff --git a/src/util/k5test.py b/src/util/k5test.py
+index 3aec1ef92..b6d93f1d8 100644
+--- a/src/util/k5test.py
++++ b/src/util/k5test.py
+@@ -1246,17 +1246,6 @@ _passes = [
+     # No special settings; exercises AES256.
+     ('default', None, None, None),
+ 
+-    # Exercise a DES enctype and the v4 salt type.
+-    ('desv4', None,
+-     {'libdefaults': {
+-                'default_tgs_enctypes': 'des-cbc-crc',
+-                'default_tkt_enctypes': 'des-cbc-crc',
+-                'permitted_enctypes': 'des-cbc-crc',
+-                'allow_weak_crypto': 'true'}},
+-     {'realms': {'$realm': {
+-                    'supported_enctypes': 'des-cbc-crc:v4',
+-                    'master_key_type': 'des-cbc-crc'}}}),
+-
+     # Exercise the DES3 enctype.
+     ('des3', None,
+      {'libdefaults': {

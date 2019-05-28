@@ -1,4 +1,4 @@
-From c60e5d66e2aaa9123a333c4f7d5a44fdc735ec66 Mon Sep 17 00:00:00 2001
+From eb4fb8cb24e6cac194acc2c507b334658fc5431d Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 11 Apr 2019 18:25:41 -0400
 Subject: [PATCH] Modernize example enctypes in documentation
