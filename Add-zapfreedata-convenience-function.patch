@@ -1,0 +1,31 @@
+From c83490ced3ef77d1933caa893efbc4a54d03a1ad Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Thu, 14 Mar 2019 11:26:44 -0400
+Subject: [PATCH] Add zapfreedata() convenience function
+
+(cherry picked from commit abd974cf867db5a398aa87ba9b9aaa34346e12a4)
+---
+ src/include/k5-int.h | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/src/include/k5-int.h b/src/include/k5-int.h
+index e0c557554..2bc59e636 100644
+--- a/src/include/k5-int.h
++++ b/src/include/k5-int.h
+@@ -663,6 +663,16 @@ zapfreestr(void *str)
+     }
+ }
+ 
++/* Convenience function: zap and free krb5_data pointer if it is non-NULL. */
++static inline void
++zapfreedata(krb5_data *data)
++{
++    if (data != NULL) {
++        zapfree(data->data, data->length);
++        free(data);
++    }
++}
++
+ /*
+  * Combine two keys (normally used by the hardware preauth mechanism)
+  */

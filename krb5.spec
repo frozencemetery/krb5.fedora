@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 26%{?dist}
+Release: 27%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -103,6 +103,9 @@ Patch138: Update-test-suite-to-avoid-single-DES-enctypes.patch
 Patch139: Remove-support-for-single-DES-and-CRC.patch
 Patch140: Display-unsupported-enctype-names.patch
 Patch141: krb5-1.17post3-FIPS-with-PRNG-SPAKE-and-RADIUS.patch
+Patch142: Add-zapfreedata-convenience-function.patch
+Patch143: Remove-support-for-no-flags-SAM-2-preauth.patch
+Patch144: Remove-krb5int_c_combine_keys.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -712,6 +715,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu May 30 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-27
+- Remove krb5int_c_combine_keys() and no-flags SAM-2 preauth
+
 * Tue May 28 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-26
 - Remove support for single-DES and CRC
 
