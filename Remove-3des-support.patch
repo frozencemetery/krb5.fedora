@@ -1,4 +1,4 @@
-From 44511dc2463b516065f5b88b6d2a61045b1333f2 Mon Sep 17 00:00:00 2001
+From c6e61b6ce3f305765dab2acf05a676172c596ddd Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 26 Mar 2019 18:51:10 -0400
 Subject: [PATCH] Remove 3des support
@@ -16,7 +16,7 @@ their constants.
  doc/mitK5features.rst                         |   2 +-
  src/Makefile.in                               |   4 +-
  src/configure.in                              |   1 -
- src/include/krb5/krb5.hin                     |  12 +-
+ src/include/krb5/krb5.hin                     |  10 +-
  src/kadmin/testing/proto/kdc.conf.proto       |   4 +-
  src/kdc/kdc_util.c                            |   4 -
  src/lib/crypto/Makefile.in                    |   8 +-
@@ -103,7 +103,7 @@ their constants.
  src/tests/t_salt.py                           |   5 +-
  src/util/k5test.py                            |  10 -
  .../leash/htmlhelp/html/Encryption_Types.htm  |  13 -
- 95 files changed, 163 insertions(+), 4837 deletions(-)
+ 95 files changed, 162 insertions(+), 4836 deletions(-)
  delete mode 100644 src/lib/crypto/builtin/des/ISSUES
  delete mode 100644 src/lib/crypto/builtin/des/Makefile.in
  delete mode 100644 src/lib/crypto/builtin/des/d3_aead.c
@@ -300,15 +300,9 @@ index 8d781a7c8..a19a0ea97 100644
          lib/crypto/$CRYPTO_IMPL/sha1 lib/crypto/$CRYPTO_IMPL/sha2
  	lib/crypto/$CRYPTO_IMPL/aes lib/crypto/$CRYPTO_IMPL/camellia
 diff --git a/src/include/krb5/krb5.hin b/src/include/krb5/krb5.hin
-index 5f596d1fc..ca7eb6a80 100644
+index 5f596d1fc..9a05ce32d 100644
 --- a/src/include/krb5/krb5.hin
 +++ b/src/include/krb5/krb5.hin
-@@ -1,4 +1,4 @@
--/* -*- mode: c; c-basic-offset: 4; indent-tabs-mode: nil -*- */
-+./* -*- mode: c; c-basic-offset: 4; indent-tabs-mode: nil -*- */
- /* General definitions for Kerberos version 5. */
- /*
-  * Copyright 1989, 1990, 1995, 2001, 2003, 2007, 2011 by the Massachusetts
 @@ -426,8 +426,8 @@ typedef struct _krb5_crypto_iov {
  #define ENCTYPE_DES_CBC_MD4     0x0002  /**< @deprecated no longer supported */
  #define ENCTYPE_DES_CBC_MD5     0x0003  /**< @deprecated no longer supported */

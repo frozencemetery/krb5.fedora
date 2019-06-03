@@ -1,4 +1,4 @@
-From ebcc57122e6f2325c9b0b3cb7c600d38c013a05a Mon Sep 17 00:00:00 2001
+From a57e6f65c6368b3fe99baaaeafccd166dad006b4 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 9 Nov 2018 15:12:21 -0500
 Subject: [PATCH] krb5-1.17post4 FIPS with PRNG, SPAKE, and RADIUS
