@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 29%{?dist}
+Release: 30%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -716,6 +716,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Jun 07 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-30
+- Remove 3des from kdc.conf example
+
 * Mon Jun 03 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-29
 - Remove 3DES support
 
