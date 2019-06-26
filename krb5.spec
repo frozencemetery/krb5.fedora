@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 31%{?dist}
+Release: 32%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -105,9 +105,11 @@ Patch140: Display-unsupported-enctype-names.patch
 Patch142: Add-zapfreedata-convenience-function.patch
 Patch143: Remove-support-for-no-flags-SAM-2-preauth.patch
 Patch144: Remove-krb5int_c_combine_keys.patch
-Patch145: Remove-3des-support.patch
 Patch146: krb5-1.17post4-FIPS-with-PRNG-SPAKE-and-RADIUS.patch
 Patch147: Remove-strerror-calls-from-k5_get_error.patch
+Patch148: Remove-PKINIT-draft-9-support.patch
+Patch149: Remove-PKINIT-draft-9-ASN.1-code-and-types.patch
+Patch150: Remove-3des-support.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -717,6 +719,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Jun 26 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-32
+- Remove PKINIT draft9 support (compat with EOL, pre-2008 Windows)
+
 * Mon Jun 10 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-31
 - Remove strerror() calls from k5_get_error()
 

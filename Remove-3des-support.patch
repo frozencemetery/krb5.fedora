@@ -1,4 +1,4 @@
-From c6e61b6ce3f305765dab2acf05a676172c596ddd Mon Sep 17 00:00:00 2001
+From cac8b2d0da82fd625da0a351bb80b51a0bb811a2 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 26 Mar 2019 18:51:10 -0400
 Subject: [PATCH] Remove 3des support
@@ -7,6 +7,8 @@ Completely remove support for all DES3 enctypes (des3-cbc-raw,
 des3-hmac-sha1, des3-cbc-sha1-kd).  Update all tests and documentation
 to user other enctypes.  Mark the 3DES enctypes UNSUPPORTED and retain
 their constants.
+
+(cherry picked from commit 49b086ddbf861ad0e2e84c402f3d65e9ea8a2392)
 ---
  doc/admin/advanced/retiring-des.rst           |  11 +
  doc/admin/conf_files/kdc_conf.rst             |   7 +-
@@ -16,7 +18,7 @@ their constants.
  doc/mitK5features.rst                         |   2 +-
  src/Makefile.in                               |   4 +-
  src/configure.in                              |   1 -
- src/include/krb5/krb5.hin                     |  10 +-
+ src/include/krb5/krb5.hin                     |  12 +-
  src/kadmin/testing/proto/kdc.conf.proto       |   4 +-
  src/kdc/kdc_util.c                            |   4 -
  src/lib/crypto/Makefile.in                    |   8 +-
@@ -103,7 +105,7 @@ their constants.
  src/tests/t_salt.py                           |   5 +-
  src/util/k5test.py                            |  10 -
  .../leash/htmlhelp/html/Encryption_Types.htm  |  13 -
- 95 files changed, 162 insertions(+), 4836 deletions(-)
+ 95 files changed, 163 insertions(+), 4837 deletions(-)
  delete mode 100644 src/lib/crypto/builtin/des/ISSUES
  delete mode 100644 src/lib/crypto/builtin/des/Makefile.in
  delete mode 100644 src/lib/crypto/builtin/des/d3_aead.c
@@ -300,9 +302,15 @@ index 8d781a7c8..a19a0ea97 100644
          lib/crypto/$CRYPTO_IMPL/sha1 lib/crypto/$CRYPTO_IMPL/sha2
  	lib/crypto/$CRYPTO_IMPL/aes lib/crypto/$CRYPTO_IMPL/camellia
 diff --git a/src/include/krb5/krb5.hin b/src/include/krb5/krb5.hin
-index 5f596d1fc..9a05ce32d 100644
+index 5f596d1fc..ca7eb6a80 100644
 --- a/src/include/krb5/krb5.hin
 +++ b/src/include/krb5/krb5.hin
+@@ -1,4 +1,4 @@
+-/* -*- mode: c; c-basic-offset: 4; indent-tabs-mode: nil -*- */
++./* -*- mode: c; c-basic-offset: 4; indent-tabs-mode: nil -*- */
+ /* General definitions for Kerberos version 5. */
+ /*
+  * Copyright 1989, 1990, 1995, 2001, 2003, 2007, 2011 by the Massachusetts
 @@ -426,8 +426,8 @@ typedef struct _krb5_crypto_iov {
  #define ENCTYPE_DES_CBC_MD4     0x0002  /**< @deprecated no longer supported */
  #define ENCTYPE_DES_CBC_MD5     0x0003  /**< @deprecated no longer supported */
@@ -5771,29 +5779,29 @@ index 28ded4a89..47f4727bd 100644
  #define CKK_CAST3		(0x17)
  #define CKK_CAST128		(0x18)
 diff --git a/src/plugins/preauth/pkinit/pkinit_clnt.c b/src/plugins/preauth/pkinit/pkinit_clnt.c
-index 58400d555..a5337b6f5 100644
+index 1a642139a..2f0431991 100644
 --- a/src/plugins/preauth/pkinit/pkinit_clnt.c
 +++ b/src/plugins/preauth/pkinit/pkinit_clnt.c
-@@ -237,14 +237,6 @@ pkinit_as_req_create(krb5_context context,
-         auth_pack.clientDHNonce.length = 0;
-         auth_pack.clientPublicValue = &info;
-         auth_pack.supportedKDFs = (krb5_data **)supported_kdf_alg_ids;
+@@ -212,14 +212,6 @@ pkinit_as_req_create(krb5_context context,
+     auth_pack.clientPublicValue = &info;
+     auth_pack.supportedKDFs = (krb5_data **)supported_kdf_alg_ids;
+ 
+-    /* add List of CMS algorithms */
+-    retval = create_krb5_supportedCMSTypes(context, plgctx->cryptoctx,
+-                                           reqctx->cryptoctx,
+-                                           reqctx->idctx, &cmstypes);
+-    auth_pack.supportedCMSTypes = cmstypes;
+-    if (retval)
+-        goto cleanup;
 -
--        /* add List of CMS algorithms */
--        retval = create_krb5_supportedCMSTypes(context, plgctx->cryptoctx,
--                                               reqctx->cryptoctx,
--                                               reqctx->idctx, &cmstypes);
--        auth_pack.supportedCMSTypes = cmstypes;
--        if (retval)
--            goto cleanup;
-         break;
-     default:
-         pkiDebug("as_req: unrecognized pa_type = %d\n",
+     switch(protocol) {
+     case DH_PROTOCOL:
+         TRACE_PKINIT_CLIENT_REQ_DH(context);
 diff --git a/src/plugins/preauth/pkinit/pkinit_crypto.h b/src/plugins/preauth/pkinit/pkinit_crypto.h
-index 0acb731cd..d42acfa4b 100644
+index 8064a07d0..a291889b0 100644
 --- a/src/plugins/preauth/pkinit/pkinit_crypto.h
 +++ b/src/plugins/preauth/pkinit/pkinit_crypto.h
-@@ -381,18 +381,6 @@ krb5_error_code server_process_dh
+@@ -380,18 +380,6 @@ krb5_error_code server_process_dh
  	unsigned int *server_key_len_out);		/* OUT
  		    receives length of DH secret key */
  
@@ -5813,10 +5821,10 @@ index 0acb731cd..d42acfa4b 100644
   * this functions takes in crypto specific representation of
   * trustedCertifiers and creates a list of
 diff --git a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
-index 8aa2c5257..b101d179f 100644
+index 8c7fd0cca..52976895b 100644
 --- a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
 +++ b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
-@@ -5596,44 +5596,6 @@ cleanup:
+@@ -5487,44 +5487,6 @@ cleanup:
      return retval;
  }
  

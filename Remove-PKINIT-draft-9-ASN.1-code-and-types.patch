@@ -1,0 +1,967 @@
+From fc909a6d2881c4b434c946023c5f581cec9e96c9 Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Tue, 18 Jun 2019 11:40:48 -0400
+Subject: [PATCH] Remove PKINIT draft 9 ASN.1 code and types
+
+ticket: 8817
+(cherry picked from commit c82e21d8836d4cb4c6ac7047752c9f600cb1ce33)
+---
+ src/include/k5-int-pkinit.h        | 74 --------------------------
+ src/include/k5-int.h               | 30 +----------
+ src/lib/krb5/asn.1/asn1_k_encode.c | 81 ----------------------------
+ src/lib/krb5/os/accessor.c         |  7 ---
+ src/tests/asn.1/krb5_decode_test.c | 41 --------------
+ src/tests/asn.1/krb5_encode_test.c | 40 --------------
+ src/tests/asn.1/ktest.c            | 85 ------------------------------
+ src/tests/asn.1/ktest.h            | 11 ----
+ src/tests/asn.1/ktest_equal.c      | 51 ------------------
+ src/tests/asn.1/ktest_equal.h      |  3 --
+ src/tests/asn.1/pkinit_encode.out  |  5 --
+ src/tests/asn.1/pkinit_trval.out   | 47 -----------------
+ 12 files changed, 1 insertion(+), 474 deletions(-)
+
+diff --git a/src/include/k5-int-pkinit.h b/src/include/k5-int-pkinit.h
+index 4622a629e..c23cfd304 100644
+--- a/src/include/k5-int-pkinit.h
++++ b/src/include/k5-int-pkinit.h
+@@ -45,14 +45,6 @@ typedef struct _krb5_pk_authenticator {
+     krb5_data      *freshnessToken;
+ } krb5_pk_authenticator;
+ 
+-/* PKAuthenticator draft9 */
+-typedef struct _krb5_pk_authenticator_draft9 {
+-    krb5_principal  kdcName;
+-    krb5_int32      cusec;  /* (0..999999) */
+-    krb5_timestamp  ctime;
+-    krb5_int32      nonce;  /* (0..4294967295) */
+-} krb5_pk_authenticator_draft9;
+-
+ /* AlgorithmIdentifier */
+ typedef struct _krb5_algorithm_identifier {
+     krb5_data algorithm;      /* OID */
+@@ -74,12 +66,6 @@ typedef struct _krb5_auth_pack {
+     krb5_data                   **supportedKDFs; /* OIDs of KDFs; OPTIONAL */
+ } krb5_auth_pack;
+ 
+-/* AuthPack draft9 */
+-typedef struct _krb5_auth_pack_draft9 {
+-    krb5_pk_authenticator_draft9 pkAuthenticator;
+-    krb5_subject_pk_info        *clientPublicValue; /* Optional */
+-} krb5_auth_pack_draft9;
+-
+ /* ExternalPrincipalIdentifier */
+ typedef struct _krb5_external_principal_identifier {
+     krb5_data subjectName; /* Optional */
+@@ -87,14 +73,6 @@ typedef struct _krb5_external_principal_identifier {
+     krb5_data subjectKeyIdentifier; /* Optional */
+ } krb5_external_principal_identifier;
+ 
+-/* PA-PK-AS-REQ (Draft 9 -- PA TYPE 14) */
+-/* This has four fields, but we only care about the first and third for
+- * encoding, and the only about the first for decoding. */
+-typedef struct _krb5_pa_pk_as_req_draft9 {
+-    krb5_data signedAuthPack;
+-    krb5_data kdcCert; /* Optional */
+-} krb5_pa_pk_as_req_draft9;
+-
+ /* PA-PK-AS-REQ (rfc4556 -- PA TYPE 16) */
+ typedef struct _krb5_pa_pk_as_req {
+     krb5_data signedAuthPack;
+@@ -116,37 +94,12 @@ typedef struct _krb5_kdc_dh_key_info {
+     krb5_timestamp  dhKeyExpiration; /* Optional */
+ } krb5_kdc_dh_key_info;
+ 
+-/* KDCDHKeyInfo draft9*/
+-typedef struct _krb5_kdc_dh_key_info_draft9 {
+-    krb5_data       subjectPublicKey; /* BIT STRING */
+-    krb5_int32      nonce;  /* (0..4294967295) */
+-} krb5_kdc_dh_key_info_draft9;
+-
+ /* ReplyKeyPack */
+ typedef struct _krb5_reply_key_pack {
+     krb5_keyblock   replyKey;
+     krb5_checksum   asChecksum;
+ } krb5_reply_key_pack;
+ 
+-/* ReplyKeyPack */
+-typedef struct _krb5_reply_key_pack_draft9 {
+-    krb5_keyblock   replyKey;
+-    krb5_int32      nonce;
+-} krb5_reply_key_pack_draft9;
+-
+-/* PA-PK-AS-REP (Draft 9 -- PA TYPE 15) */
+-typedef struct _krb5_pa_pk_as_rep_draft9 {
+-    enum krb5_pa_pk_as_rep_draft9_selection {
+-        choice_pa_pk_as_rep_draft9_UNKNOWN = -1,
+-        choice_pa_pk_as_rep_draft9_dhSignedData = 0,
+-        choice_pa_pk_as_rep_draft9_encKeyPack = 1
+-    } choice;
+-    union krb5_pa_pk_as_rep_draft9_choices {
+-        krb5_data dhSignedData;
+-        krb5_data encKeyPack;
+-    } u;
+-} krb5_pa_pk_as_rep_draft9;
+-
+ /* PA-PK-AS-REP (rfc4556 -- PA TYPE 17) */
+ typedef struct _krb5_pa_pk_as_rep {
+     enum krb5_pa_pk_as_rep_selection {
+@@ -186,34 +139,18 @@ typedef struct _krb5_pkinit_supp_pub_info {
+ krb5_error_code
+ encode_krb5_pa_pk_as_req(const krb5_pa_pk_as_req *rep, krb5_data **code);
+ 
+-krb5_error_code
+-encode_krb5_pa_pk_as_req_draft9(const krb5_pa_pk_as_req_draft9 *rep,
+-                                krb5_data **code);
+-
+ krb5_error_code
+ encode_krb5_pa_pk_as_rep(const krb5_pa_pk_as_rep *rep, krb5_data **code);
+ 
+-krb5_error_code
+-encode_krb5_pa_pk_as_rep_draft9(const krb5_pa_pk_as_rep_draft9 *rep,
+-                                krb5_data **code);
+-
+ krb5_error_code
+ encode_krb5_auth_pack(const krb5_auth_pack *rep, krb5_data **code);
+ 
+-krb5_error_code
+-encode_krb5_auth_pack_draft9(const krb5_auth_pack_draft9 *rep,
+-                             krb5_data **code);
+-
+ krb5_error_code
+ encode_krb5_kdc_dh_key_info(const krb5_kdc_dh_key_info *rep, krb5_data **code);
+ 
+ krb5_error_code
+ encode_krb5_reply_key_pack(const krb5_reply_key_pack *, krb5_data **code);
+ 
+-krb5_error_code
+-encode_krb5_reply_key_pack_draft9(const krb5_reply_key_pack_draft9 *,
+-                                  krb5_data **code);
+-
+ krb5_error_code
+ encode_krb5_td_trusted_certifiers(krb5_external_principal_identifier *const *,
+                                   krb5_data **code);
+@@ -237,19 +174,12 @@ encode_krb5_pkinit_supp_pub_info(const krb5_pkinit_supp_pub_info *,
+ krb5_error_code
+ decode_krb5_pa_pk_as_req(const krb5_data *, krb5_pa_pk_as_req **);
+ 
+-krb5_error_code
+-decode_krb5_pa_pk_as_req_draft9(const krb5_data *,
+-                                krb5_pa_pk_as_req_draft9 **);
+-
+ krb5_error_code
+ decode_krb5_pa_pk_as_rep(const krb5_data *, krb5_pa_pk_as_rep **);
+ 
+ krb5_error_code
+ decode_krb5_auth_pack(const krb5_data *, krb5_auth_pack **);
+ 
+-krb5_error_code
+-decode_krb5_auth_pack_draft9(const krb5_data *, krb5_auth_pack_draft9 **);
+-
+ krb5_error_code
+ decode_krb5_kdc_dh_key_info(const krb5_data *, krb5_kdc_dh_key_info **);
+ 
+@@ -259,10 +189,6 @@ decode_krb5_principal_name(const krb5_data *, krb5_principal_data **);
+ krb5_error_code
+ decode_krb5_reply_key_pack(const krb5_data *, krb5_reply_key_pack **);
+ 
+-krb5_error_code
+-decode_krb5_reply_key_pack_draft9(const krb5_data *,
+-                                  krb5_reply_key_pack_draft9 **);
+-
+ krb5_error_code
+ decode_krb5_td_trusted_certifiers(const krb5_data *,
+                                   krb5_external_principal_identifier ***);
+diff --git a/src/include/k5-int.h b/src/include/k5-int.h
+index 0857fd1cc..cb328785d 100644
+--- a/src/include/k5-int.h
++++ b/src/include/k5-int.h
+@@ -1836,7 +1836,7 @@ krb5int_random_string(krb5_context, char *string, unsigned int length);
+ /* To keep happy libraries which are (for now) accessing internal stuff */
+ 
+ /* Make sure to increment by one when changing the struct */
+-#define KRB5INT_ACCESS_STRUCT_VERSION 22
++#define KRB5INT_ACCESS_STRUCT_VERSION 23
+ 
+ typedef struct _krb5int_access {
+     krb5_error_code (*auth_con_get_subkey_enctype)(krb5_context,
+@@ -1865,10 +1865,6 @@ typedef struct _krb5int_access {
+     krb5_error_code
+     (*encode_krb5_auth_pack)(const krb5_auth_pack *rep, krb5_data **code);
+ 
+-    krb5_error_code
+-    (*encode_krb5_auth_pack_draft9)(const krb5_auth_pack_draft9 *rep,
+-                                    krb5_data **code);
+-
+     krb5_error_code
+     (*encode_krb5_kdc_dh_key_info)(const krb5_kdc_dh_key_info *rep,
+                                    krb5_data **code);
+@@ -1877,26 +1873,14 @@ typedef struct _krb5int_access {
+     (*encode_krb5_pa_pk_as_rep)(const krb5_pa_pk_as_rep *rep,
+                                 krb5_data **code);
+ 
+-    krb5_error_code
+-    (*encode_krb5_pa_pk_as_rep_draft9)(const krb5_pa_pk_as_rep_draft9 *rep,
+-                                       krb5_data **code);
+-
+     krb5_error_code
+     (*encode_krb5_pa_pk_as_req)(const krb5_pa_pk_as_req *rep,
+                                 krb5_data **code);
+ 
+-    krb5_error_code
+-    (*encode_krb5_pa_pk_as_req_draft9)(const krb5_pa_pk_as_req_draft9 *rep,
+-                                       krb5_data **code);
+-
+     krb5_error_code
+     (*encode_krb5_reply_key_pack)(const krb5_reply_key_pack *,
+                                   krb5_data **code);
+ 
+-    krb5_error_code
+-    (*encode_krb5_reply_key_pack_draft9)(const krb5_reply_key_pack_draft9 *,
+-                                         krb5_data **code);
+-
+     krb5_error_code
+     (*encode_krb5_td_dh_parameters)(krb5_algorithm_identifier *const *,
+                                     krb5_data **code);
+@@ -1908,17 +1892,9 @@ typedef struct _krb5int_access {
+     krb5_error_code
+     (*decode_krb5_auth_pack)(const krb5_data *, krb5_auth_pack **);
+ 
+-    krb5_error_code
+-    (*decode_krb5_auth_pack_draft9)(const krb5_data *,
+-                                    krb5_auth_pack_draft9 **);
+-
+     krb5_error_code
+     (*decode_krb5_pa_pk_as_req)(const krb5_data *, krb5_pa_pk_as_req **);
+ 
+-    krb5_error_code
+-    (*decode_krb5_pa_pk_as_req_draft9)(const krb5_data *,
+-                                       krb5_pa_pk_as_req_draft9 **);
+-
+     krb5_error_code
+     (*decode_krb5_pa_pk_as_rep)(const krb5_data *, krb5_pa_pk_as_rep **);
+ 
+@@ -1931,10 +1907,6 @@ typedef struct _krb5int_access {
+     krb5_error_code
+     (*decode_krb5_reply_key_pack)(const krb5_data *, krb5_reply_key_pack **);
+ 
+-    krb5_error_code
+-    (*decode_krb5_reply_key_pack_draft9)(const krb5_data *,
+-                                         krb5_reply_key_pack_draft9 **);
+-
+     krb5_error_code
+     (*decode_krb5_td_dh_parameters)(const krb5_data *,
+                                     krb5_algorithm_identifier ***);
+diff --git a/src/lib/krb5/asn.1/asn1_k_encode.c b/src/lib/krb5/asn.1/asn1_k_encode.c
+index 81a34bac9..a026ab390 100644
+--- a/src/lib/krb5/asn.1/asn1_k_encode.c
++++ b/src/lib/krb5/asn.1/asn1_k_encode.c
+@@ -1446,19 +1446,6 @@ static const struct atype_info *pk_authenticator_fields[] = {
+ };
+ DEFSEQTYPE(pk_authenticator, krb5_pk_authenticator, pk_authenticator_fields);
+ 
+-DEFFIELD(pkauth9_0, krb5_pk_authenticator_draft9, kdcName, 0, principal);
+-DEFFIELD(pkauth9_1, krb5_pk_authenticator_draft9, kdcName, 1,
+-         realm_of_principal);
+-DEFFIELD(pkauth9_2, krb5_pk_authenticator_draft9, cusec, 2, int32);
+-DEFFIELD(pkauth9_3, krb5_pk_authenticator_draft9, ctime, 3, kerberos_time);
+-DEFFIELD(pkauth9_4, krb5_pk_authenticator_draft9, nonce, 4, int32);
+-static const struct atype_info *pk_authenticator_draft9_fields[] = {
+-    &k5_atype_pkauth9_0, &k5_atype_pkauth9_1, &k5_atype_pkauth9_2,
+-    &k5_atype_pkauth9_3, &k5_atype_pkauth9_4
+-};
+-DEFSEQTYPE(pk_authenticator_draft9, krb5_pk_authenticator_draft9,
+-           pk_authenticator_draft9_fields);
+-
+ DEFCOUNTEDSTRINGTYPE(s_bitstring, char *, unsigned int,
+                      k5_asn1_encode_bitstring, k5_asn1_decode_bitstring,
+                      ASN1_BITSTRING);
+@@ -1488,15 +1475,6 @@ static const struct atype_info *auth_pack_fields[] = {
+ };
+ DEFSEQTYPE(auth_pack, krb5_auth_pack, auth_pack_fields);
+ 
+-DEFFIELD(auth_pack9_0, krb5_auth_pack_draft9, pkAuthenticator, 0,
+-         pk_authenticator_draft9);
+-DEFFIELD(auth_pack9_1, krb5_auth_pack_draft9, clientPublicValue, 1,
+-         opt_subject_pk_info_ptr);
+-static const struct atype_info *auth_pack_draft9_fields[] = {
+-    &k5_atype_auth_pack9_0, &k5_atype_auth_pack9_1
+-};
+-DEFSEQTYPE(auth_pack_draft9, krb5_auth_pack_draft9, auth_pack_draft9_fields);
+-
+ DEFFIELD_IMPLICIT(extprinc_0, krb5_external_principal_identifier,
+                   subjectName, 0, opt_ostring_data);
+ DEFFIELD_IMPLICIT(extprinc_1, krb5_external_principal_identifier,
+@@ -1529,29 +1507,6 @@ static const struct atype_info *pa_pk_as_req_fields[] = {
+ };
+ DEFSEQTYPE(pa_pk_as_req, krb5_pa_pk_as_req, pa_pk_as_req_fields);
+ 
+-/*
+- * In draft-ietf-cat-kerberos-pk-init-09, this sequence has four fields, but we
+- * only ever use the first and third.  The fields are specified as explicitly
+- * tagged, but our historical behavior is to pretend that they are wrapped in
+- * IMPLICIT OCTET STRING (i.e., generate primitive context tags), and we don't
+- * want to change that without interop testing.
+- */
+-DEFFIELD_IMPLICIT(pa_pk_as_req9_0, krb5_pa_pk_as_req_draft9, signedAuthPack, 0,
+-                  ostring_data);
+-DEFFIELD_IMPLICIT(pa_pk_as_req9_2, krb5_pa_pk_as_req_draft9, kdcCert, 2,
+-                  opt_ostring_data);
+-static const struct atype_info *pa_pk_as_req_draft9_fields[] = {
+-    &k5_atype_pa_pk_as_req9_0, &k5_atype_pa_pk_as_req9_2
+-};
+-DEFSEQTYPE(pa_pk_as_req_draft9, krb5_pa_pk_as_req_draft9,
+-           pa_pk_as_req_draft9_fields);
+-/* For decoding, we only care about the first field; we can ignore the rest. */
+-static const struct atype_info *pa_pk_as_req_draft9_decode_fields[] = {
+-    &k5_atype_pa_pk_as_req9_0
+-};
+-DEFSEQTYPE(pa_pk_as_req_draft9_decode, krb5_pa_pk_as_req_draft9,
+-           pa_pk_as_req_draft9_decode_fields);
+-
+ DEFFIELD_IMPLICIT(dh_rep_info_0, krb5_dh_rep_info, dhSignedData, 0,
+                   ostring_data);
+ DEFFIELD(dh_rep_info_1, krb5_dh_rep_info, serverDHNonce, 1, opt_ostring_data);
+@@ -1577,14 +1532,6 @@ static const struct atype_info *reply_key_pack_fields[] = {
+ };
+ DEFSEQTYPE(reply_key_pack, krb5_reply_key_pack, reply_key_pack_fields);
+ 
+-DEFFIELD(key_pack9_0, krb5_reply_key_pack_draft9, replyKey, 0, encryption_key);
+-DEFFIELD(key_pack9_1, krb5_reply_key_pack_draft9, nonce, 1, int32);
+-static const struct atype_info *reply_key_pack_draft9_fields[] = {
+-    &k5_atype_key_pack9_0, &k5_atype_key_pack9_1
+-};
+-DEFSEQTYPE(reply_key_pack_draft9, krb5_reply_key_pack_draft9,
+-           reply_key_pack_draft9_fields);
+-
+ DEFCTAGGEDTYPE(pa_pk_as_rep_0, 0, dh_rep_info);
+ DEFCTAGGEDTYPE_IMPLICIT(pa_pk_as_rep_1, 1, ostring_data);
+ static const struct atype_info *pa_pk_as_rep_alternatives[] = {
+@@ -1595,44 +1542,16 @@ DEFCHOICETYPE(pa_pk_as_rep_choice, union krb5_pa_pk_as_rep_choices,
+ DEFCOUNTEDTYPE_SIGNED(pa_pk_as_rep, krb5_pa_pk_as_rep, u, choice,
+                       pa_pk_as_rep_choice);
+ 
+-/*
+- * draft-ietf-cat-kerberos-pk-init-09 specifies these alternatives as
+- * explicitly tagged SignedData and EnvelopedData respectively, which means
+- * they should have constructed context tags.  However, our historical behavior
+- * is to use primitive context tags, and we don't want to change that behavior
+- * without interop testing.  We have the encodings for each alternative in a
+- * krb5_data object; pretend that they are wrapped in IMPLICIT OCTET STRING in
+- * order to wrap them in primitive [0] and [1] tags.
+- */
+-DEFCTAGGEDTYPE_IMPLICIT(pa_pk_as_rep9_0, 0, ostring_data);
+-DEFCTAGGEDTYPE_IMPLICIT(pa_pk_as_rep9_1, 1, ostring_data);
+-static const struct atype_info *pa_pk_as_rep_draft9_alternatives[] = {
+-    &k5_atype_pa_pk_as_rep9_0, &k5_atype_pa_pk_as_rep9_1
+-};
+-DEFCHOICETYPE(pa_pk_as_rep_draft9_choice,
+-              union krb5_pa_pk_as_rep_draft9_choices,
+-              enum krb5_pa_pk_as_rep_draft9_selection,
+-              pa_pk_as_rep_draft9_alternatives);
+-DEFCOUNTEDTYPE_SIGNED(pa_pk_as_rep_draft9, krb5_pa_pk_as_rep_draft9, u, choice,
+-                      pa_pk_as_rep_draft9_choice);
+-
+ MAKE_ENCODER(encode_krb5_pa_pk_as_req, pa_pk_as_req);
+ MAKE_DECODER(decode_krb5_pa_pk_as_req, pa_pk_as_req);
+-MAKE_ENCODER(encode_krb5_pa_pk_as_req_draft9, pa_pk_as_req_draft9);
+-MAKE_DECODER(decode_krb5_pa_pk_as_req_draft9, pa_pk_as_req_draft9_decode);
+ MAKE_ENCODER(encode_krb5_pa_pk_as_rep, pa_pk_as_rep);
+ MAKE_DECODER(decode_krb5_pa_pk_as_rep, pa_pk_as_rep);
+-MAKE_ENCODER(encode_krb5_pa_pk_as_rep_draft9, pa_pk_as_rep_draft9);
+ MAKE_ENCODER(encode_krb5_auth_pack, auth_pack);
+ MAKE_DECODER(decode_krb5_auth_pack, auth_pack);
+-MAKE_ENCODER(encode_krb5_auth_pack_draft9, auth_pack_draft9);
+-MAKE_DECODER(decode_krb5_auth_pack_draft9, auth_pack_draft9);
+ MAKE_ENCODER(encode_krb5_kdc_dh_key_info, kdc_dh_key_info);
+ MAKE_DECODER(decode_krb5_kdc_dh_key_info, kdc_dh_key_info);
+ MAKE_ENCODER(encode_krb5_reply_key_pack, reply_key_pack);
+ MAKE_DECODER(decode_krb5_reply_key_pack, reply_key_pack);
+-MAKE_ENCODER(encode_krb5_reply_key_pack_draft9, reply_key_pack_draft9);
+-MAKE_DECODER(decode_krb5_reply_key_pack_draft9, reply_key_pack_draft9);
+ MAKE_ENCODER(encode_krb5_td_trusted_certifiers,
+              seqof_external_principal_identifier);
+ MAKE_DECODER(decode_krb5_td_trusted_certifiers,
+diff --git a/src/lib/krb5/os/accessor.c b/src/lib/krb5/os/accessor.c
+index d77f8c6b7..12a39a2ab 100644
+--- a/src/lib/krb5/os/accessor.c
++++ b/src/lib/krb5/os/accessor.c
+@@ -80,25 +80,18 @@ krb5int_accessor(krb5int_access *internals, krb5_int32 version)
+ #define SC(FIELD, VAL)  S(FIELD, 0)
+ #endif
+             SC (encode_krb5_pa_pk_as_req, encode_krb5_pa_pk_as_req),
+-            SC (encode_krb5_pa_pk_as_req_draft9, encode_krb5_pa_pk_as_req_draft9),
+             SC (encode_krb5_pa_pk_as_rep, encode_krb5_pa_pk_as_rep),
+-            SC (encode_krb5_pa_pk_as_rep_draft9, encode_krb5_pa_pk_as_rep_draft9),
+             SC (encode_krb5_auth_pack, encode_krb5_auth_pack),
+-            SC (encode_krb5_auth_pack_draft9, encode_krb5_auth_pack_draft9),
+             SC (encode_krb5_kdc_dh_key_info, encode_krb5_kdc_dh_key_info),
+             SC (encode_krb5_reply_key_pack, encode_krb5_reply_key_pack),
+-            SC (encode_krb5_reply_key_pack_draft9, encode_krb5_reply_key_pack_draft9),
+             SC (encode_krb5_td_trusted_certifiers, encode_krb5_td_trusted_certifiers),
+             SC (encode_krb5_td_dh_parameters, encode_krb5_td_dh_parameters),
+             SC (decode_krb5_pa_pk_as_req, decode_krb5_pa_pk_as_req),
+-            SC (decode_krb5_pa_pk_as_req_draft9, decode_krb5_pa_pk_as_req_draft9),
+             SC (decode_krb5_pa_pk_as_rep, decode_krb5_pa_pk_as_rep),
+             SC (decode_krb5_auth_pack, decode_krb5_auth_pack),
+-            SC (decode_krb5_auth_pack_draft9, decode_krb5_auth_pack_draft9),
+             SC (decode_krb5_kdc_dh_key_info, decode_krb5_kdc_dh_key_info),
+             SC (decode_krb5_principal_name, decode_krb5_principal_name),
+             SC (decode_krb5_reply_key_pack, decode_krb5_reply_key_pack),
+-            SC (decode_krb5_reply_key_pack_draft9, decode_krb5_reply_key_pack_draft9),
+             SC (decode_krb5_td_trusted_certifiers, decode_krb5_td_trusted_certifiers),
+             SC (decode_krb5_td_dh_parameters, decode_krb5_td_dh_parameters),
+             SC (encode_krb5_kdc_req_body, encode_krb5_kdc_req_body),
+diff --git a/src/tests/asn.1/krb5_decode_test.c b/src/tests/asn.1/krb5_decode_test.c
+index cbd99ba63..7a116b40d 100644
+--- a/src/tests/asn.1/krb5_decode_test.c
++++ b/src/tests/asn.1/krb5_decode_test.c
+@@ -42,8 +42,6 @@ void krb5_ktest_free_enc_data(krb5_context context, krb5_enc_data *val);
+ #ifndef DISABLE_PKINIT
+ static int equal_principal(krb5_principal *ref, krb5_principal var);
+ static void ktest_free_auth_pack(krb5_context context, krb5_auth_pack *val);
+-static void ktest_free_auth_pack_draft9(krb5_context context,
+-                                        krb5_auth_pack_draft9 *val);
+ static void ktest_free_kdc_dh_key_info(krb5_context context,
+                                        krb5_kdc_dh_key_info *val);
+ static void ktest_free_pa_pk_as_req(krb5_context context,
+@@ -52,8 +50,6 @@ static void ktest_free_pa_pk_as_rep(krb5_context context,
+                                     krb5_pa_pk_as_rep *val);
+ static void ktest_free_reply_key_pack(krb5_context context,
+                                       krb5_reply_key_pack *val);
+-static void ktest_free_reply_key_pack_draft9(krb5_context context,
+-                                             krb5_reply_key_pack_draft9 *val);
+ #endif
+ static void ktest_free_kkdcp_message(krb5_context context,
+                                      krb5_kkdcp_message *val);
+@@ -1183,16 +1179,6 @@ int main(argc, argv)
+         ktest_empty_auth_pack(&ref);
+     }
+ 
+-    /****************************************************************/
+-    /* decode_krb5_auth_pack_draft9 */
+-    {
+-        setup(krb5_auth_pack_draft9,ktest_make_sample_auth_pack_draft9);
+-        decode_run("krb5_auth_pack_draft9","","30 75 A0 4F 30 4D A0 1A 30 18 A0 03 02 01 01 A1 11 30 0F 1B 06 68 66 74 73 61 69 1B 05 65 78 74 72 61 A1 10 1B 0E 41 54 48 45 4E 41 2E 4D 49 54 2E 45 44 55 A2 05 02 03 01 E2 40 A3 11 18 0F 31 39 39 34 30 36 31 30 30 36 30 33 31 37 5A A4 03 02 01 2A A1 22 30 20 30 13 06 09 2A 86 48 86 F7 12 01 02 02 04 06 70 61 72 61 6D 73 03 09 00 6B 72 62 35 64 61 74 61",
+-                   acc.decode_krb5_auth_pack_draft9,
+-                   ktest_equal_auth_pack_draft9,ktest_free_auth_pack_draft9);
+-        ktest_empty_auth_pack_draft9(&ref);
+-    }
+-
+     /****************************************************************/
+     /* decode_krb5_kdc_dh_key_info */
+     {
+@@ -1213,16 +1199,6 @@ int main(argc, argv)
+         ktest_empty_reply_key_pack(&ref);
+     }
+ 
+-    /****************************************************************/
+-    /* decode_krb5_reply_key_pack_draft9 */
+-    {
+-        setup(krb5_reply_key_pack_draft9,ktest_make_sample_reply_key_pack_draft9);
+-        decode_run("krb5_reply_key_pack_draft9","","30 1A A0 13 30 11 A0 03 02 01 01 A1 0A 04 08 31 32 33 34 35 36 37 38 A1 03 02 01 2A",
+-                   acc.decode_krb5_reply_key_pack_draft9,
+-                   ktest_equal_reply_key_pack_draft9,ktest_free_reply_key_pack_draft9);
+-        ktest_empty_reply_key_pack_draft9(&ref);
+-    }
+-
+     /****************************************************************/
+     /* decode_krb5_principal_name */
+     /* We have no encoder for this type (KerberosName from RFC 4556); the
+@@ -1279,14 +1255,6 @@ ktest_free_auth_pack(krb5_context context, krb5_auth_pack *val)
+     free(val);
+ }
+ 
+-static void
+-ktest_free_auth_pack_draft9(krb5_context context, krb5_auth_pack_draft9 *val)
+-{
+-    if (val)
+-        ktest_empty_auth_pack_draft9(val);
+-    free(val);
+-}
+-
+ static void
+ ktest_free_kdc_dh_key_info(krb5_context context, krb5_kdc_dh_key_info *val)
+ {
+@@ -1319,15 +1287,6 @@ ktest_free_reply_key_pack(krb5_context context, krb5_reply_key_pack *val)
+     free(val);
+ }
+ 
+-static void
+-ktest_free_reply_key_pack_draft9(krb5_context context,
+-                                 krb5_reply_key_pack_draft9 *val)
+-{
+-    if (val)
+-        ktest_empty_reply_key_pack_draft9(val);
+-    free(val);
+-}
+-
+ #endif /* not DISABLE_PKINIT */
+ 
+ static void
+diff --git a/src/tests/asn.1/krb5_encode_test.c b/src/tests/asn.1/krb5_encode_test.c
+index 3efbfb4c0..72c013468 100644
+--- a/src/tests/asn.1/krb5_encode_test.c
++++ b/src/tests/asn.1/krb5_encode_test.c
+@@ -798,15 +798,6 @@ main(argc, argv)
+         ktest_empty_pa_pk_as_req(&req);
+     }
+     /****************************************************************/
+-    /* encode_krb5_pa_pk_as_req_draft9 */
+-    {
+-        krb5_pa_pk_as_req_draft9 req;
+-        ktest_make_sample_pa_pk_as_req_draft9(&req);
+-        encode_run(req, "pa_pk_as_req_draft9", "",
+-                   acc.encode_krb5_pa_pk_as_req_draft9);
+-        ktest_empty_pa_pk_as_req_draft9(&req);
+-    }
+-    /****************************************************************/
+     /* encode_krb5_pa_pk_as_rep */
+     {
+         krb5_pa_pk_as_rep rep;
+@@ -820,19 +811,6 @@ main(argc, argv)
+         ktest_empty_pa_pk_as_rep(&rep);
+     }
+     /****************************************************************/
+-    /* encode_krb5_pa_pk_as_rep_draft9 */
+-    {
+-        krb5_pa_pk_as_rep_draft9 rep;
+-        ktest_make_sample_pa_pk_as_rep_draft9_dhSignedData(&rep);
+-        encode_run(rep, "pa_pk_as_rep_draft9", "(dhSignedData)",
+-                   acc.encode_krb5_pa_pk_as_rep_draft9);
+-        ktest_empty_pa_pk_as_rep_draft9(&rep);
+-        ktest_make_sample_pa_pk_as_rep_draft9_encKeyPack(&rep);
+-        encode_run(rep, "pa_pk_as_rep_draft9", "(encKeyPack)",
+-                   acc.encode_krb5_pa_pk_as_rep_draft9);
+-        ktest_empty_pa_pk_as_rep_draft9(&rep);
+-    }
+-    /****************************************************************/
+     /* encode_krb5_auth_pack */
+     {
+         krb5_auth_pack pack;
+@@ -841,15 +819,6 @@ main(argc, argv)
+         ktest_empty_auth_pack(&pack);
+     }
+     /****************************************************************/
+-    /* encode_krb5_auth_pack_draft9_draft9 */
+-    {
+-        krb5_auth_pack_draft9 pack;
+-        ktest_make_sample_auth_pack_draft9(&pack);
+-        encode_run(pack, "auth_pack_draft9", "",
+-                   acc.encode_krb5_auth_pack_draft9);
+-        ktest_empty_auth_pack_draft9(&pack);
+-    }
+-    /****************************************************************/
+     /* encode_krb5_kdc_dh_key_info */
+     {
+         krb5_kdc_dh_key_info ki;
+@@ -866,15 +835,6 @@ main(argc, argv)
+         ktest_empty_reply_key_pack(&pack);
+     }
+     /****************************************************************/
+-    /* encode_krb5_reply_key_pack_draft9 */
+-    {
+-        krb5_reply_key_pack_draft9 pack;
+-        ktest_make_sample_reply_key_pack_draft9(&pack);
+-        encode_run(pack, "reply_key_pack_draft9", "",
+-                   acc.encode_krb5_reply_key_pack_draft9);
+-        ktest_empty_reply_key_pack_draft9(&pack);
+-    }
+-    /****************************************************************/
+     /* encode_krb5_sp80056a_other_info */
+     {
+         krb5_sp80056a_other_info info;
+diff --git a/src/tests/asn.1/ktest.c b/src/tests/asn.1/ktest.c
+index 258377299..7bb698732 100644
+--- a/src/tests/asn.1/ktest.c
++++ b/src/tests/asn.1/ktest.c
+@@ -729,15 +729,6 @@ ktest_make_sample_pk_authenticator(krb5_pk_authenticator *p)
+     ktest_make_sample_data(p->freshnessToken);
+ }
+ 
+-static void
+-ktest_make_sample_pk_authenticator_draft9(krb5_pk_authenticator_draft9 *p)
+-{
+-    ktest_make_sample_principal(&p->kdcName);
+-    p->cusec = SAMPLE_USEC;
+-    p->ctime = SAMPLE_TIME;
+-    p->nonce = SAMPLE_NONCE;
+-}
+-
+ static void
+ ktest_make_sample_oid(krb5_data *p)
+ {
+@@ -788,13 +779,6 @@ ktest_make_sample_pa_pk_as_req(krb5_pa_pk_as_req *p)
+     ktest_make_sample_data(&p->kdcPkId);
+ }
+ 
+-void
+-ktest_make_sample_pa_pk_as_req_draft9(krb5_pa_pk_as_req_draft9 *p)
+-{
+-    ktest_make_sample_data(&p->signedAuthPack);
+-    ktest_make_sample_data(&p->kdcCert);
+-}
+-
+ static void
+ ktest_make_sample_dh_rep_info(krb5_dh_rep_info *p)
+ {
+@@ -818,20 +802,6 @@ ktest_make_sample_pa_pk_as_rep_encKeyPack(krb5_pa_pk_as_rep *p)
+     ktest_make_sample_data(&p->u.encKeyPack);
+ }
+ 
+-void
+-ktest_make_sample_pa_pk_as_rep_draft9_dhSignedData(krb5_pa_pk_as_rep_draft9 *p)
+-{
+-    p->choice = choice_pa_pk_as_rep_draft9_dhSignedData;
+-    ktest_make_sample_data(&p->u.dhSignedData);
+-}
+-
+-void
+-ktest_make_sample_pa_pk_as_rep_draft9_encKeyPack(krb5_pa_pk_as_rep_draft9 *p)
+-{
+-    p->choice = choice_pa_pk_as_rep_draft9_encKeyPack;
+-    ktest_make_sample_data(&p->u.encKeyPack);
+-}
+-
+ void
+ ktest_make_sample_auth_pack(krb5_auth_pack *p)
+ {
+@@ -851,14 +821,6 @@ ktest_make_sample_auth_pack(krb5_auth_pack *p)
+     p->supportedKDFs[1] = NULL;
+ }
+ 
+-void
+-ktest_make_sample_auth_pack_draft9(krb5_auth_pack_draft9 *p)
+-{
+-    ktest_make_sample_pk_authenticator_draft9(&p->pkAuthenticator);
+-    p->clientPublicValue = ealloc(sizeof(krb5_subject_pk_info));
+-    ktest_make_sample_subject_pk_info(p->clientPublicValue);
+-}
+-
+ void
+ ktest_make_sample_kdc_dh_key_info(krb5_kdc_dh_key_info *p)
+ {
+@@ -874,13 +836,6 @@ ktest_make_sample_reply_key_pack(krb5_reply_key_pack *p)
+     ktest_make_sample_checksum(&p->asChecksum);
+ }
+ 
+-void
+-ktest_make_sample_reply_key_pack_draft9(krb5_reply_key_pack_draft9 *p)
+-{
+-    ktest_make_sample_keyblock(&p->replyKey);
+-    p->nonce = SAMPLE_NONCE;
+-}
+-
+ void
+ ktest_make_sample_sp80056a_other_info(krb5_sp80056a_other_info *p)
+ {
+@@ -1717,12 +1672,6 @@ ktest_empty_pk_authenticator(krb5_pk_authenticator *p)
+     p->freshnessToken = NULL;
+ }
+ 
+-static void
+-ktest_empty_pk_authenticator_draft9(krb5_pk_authenticator_draft9 *p)
+-{
+-    ktest_destroy_principal(&p->kdcName);
+-}
+-
+ static void
+ ktest_empty_subject_pk_info(krb5_subject_pk_info *p)
+ {
+@@ -1754,13 +1703,6 @@ ktest_empty_pa_pk_as_req(krb5_pa_pk_as_req *p)
+     ktest_empty_data(&p->kdcPkId);
+ }
+ 
+-void
+-ktest_empty_pa_pk_as_req_draft9(krb5_pa_pk_as_req_draft9 *p)
+-{
+-    ktest_empty_data(&p->signedAuthPack);
+-    ktest_empty_data(&p->kdcCert);
+-}
+-
+ static void
+ ktest_empty_dh_rep_info(krb5_dh_rep_info *p)
+ {
+@@ -1779,16 +1721,6 @@ ktest_empty_pa_pk_as_rep(krb5_pa_pk_as_rep *p)
+     p->choice = choice_pa_pk_as_rep_UNKNOWN;
+ }
+ 
+-void
+-ktest_empty_pa_pk_as_rep_draft9(krb5_pa_pk_as_rep_draft9 *p)
+-{
+-    if (p->choice == choice_pa_pk_as_rep_draft9_dhSignedData)
+-        ktest_empty_data(&p->u.dhSignedData);
+-    else if (p->choice == choice_pa_pk_as_rep_draft9_encKeyPack)
+-        ktest_empty_data(&p->u.encKeyPack);
+-    p->choice = choice_pa_pk_as_rep_draft9_UNKNOWN;
+-}
+-
+ void
+ ktest_empty_auth_pack(krb5_auth_pack *p)
+ {
+@@ -1820,17 +1752,6 @@ ktest_empty_auth_pack(krb5_auth_pack *p)
+     }
+ }
+ 
+-void
+-ktest_empty_auth_pack_draft9(krb5_auth_pack_draft9 *p)
+-{
+-    ktest_empty_pk_authenticator_draft9(&p->pkAuthenticator);
+-    if (p->clientPublicValue != NULL) {
+-        ktest_empty_subject_pk_info(p->clientPublicValue);
+-        free(p->clientPublicValue);
+-        p->clientPublicValue = NULL;
+-    }
+-}
+-
+ void
+ ktest_empty_kdc_dh_key_info(krb5_kdc_dh_key_info *p)
+ {
+@@ -1844,12 +1765,6 @@ ktest_empty_reply_key_pack(krb5_reply_key_pack *p)
+     ktest_empty_checksum(&p->asChecksum);
+ }
+ 
+-void
+-ktest_empty_reply_key_pack_draft9(krb5_reply_key_pack_draft9 *p)
+-{
+-    ktest_empty_keyblock(&p->replyKey);
+-}
+-
+ void ktest_empty_sp80056a_other_info(krb5_sp80056a_other_info *p)
+ {
+     ktest_empty_algorithm_identifier(&p->algorithm_identifier);
+diff --git a/src/tests/asn.1/ktest.h b/src/tests/asn.1/ktest.h
+index 1413cfae1..d9cc90a5c 100644
+--- a/src/tests/asn.1/ktest.h
++++ b/src/tests/asn.1/ktest.h
+@@ -101,18 +101,11 @@ void ktest_make_maximal_pa_otp_req(krb5_pa_otp_req *p);
+ 
+ #ifndef DISABLE_PKINIT
+ void ktest_make_sample_pa_pk_as_req(krb5_pa_pk_as_req *p);
+-void ktest_make_sample_pa_pk_as_req_draft9(krb5_pa_pk_as_req_draft9 *p);
+ void ktest_make_sample_pa_pk_as_rep_dhInfo(krb5_pa_pk_as_rep *p);
+ void ktest_make_sample_pa_pk_as_rep_encKeyPack(krb5_pa_pk_as_rep *p);
+-void ktest_make_sample_pa_pk_as_rep_draft9_dhSignedData(
+-    krb5_pa_pk_as_rep_draft9 *p);
+-void ktest_make_sample_pa_pk_as_rep_draft9_encKeyPack(
+-    krb5_pa_pk_as_rep_draft9 *p);
+ void ktest_make_sample_auth_pack(krb5_auth_pack *p);
+-void ktest_make_sample_auth_pack_draft9(krb5_auth_pack_draft9 *p);
+ void ktest_make_sample_kdc_dh_key_info(krb5_kdc_dh_key_info *p);
+ void ktest_make_sample_reply_key_pack(krb5_reply_key_pack *p);
+-void ktest_make_sample_reply_key_pack_draft9(krb5_reply_key_pack_draft9 *p);
+ void ktest_make_sample_sp80056a_other_info(krb5_sp80056a_other_info *p);
+ void ktest_make_sample_pkinit_supp_pub_info(krb5_pkinit_supp_pub_info *p);
+ #endif
+@@ -197,14 +190,10 @@ void ktest_empty_pa_otp_req(krb5_pa_otp_req *p);
+ 
+ #ifndef DISABLE_PKINIT
+ void ktest_empty_pa_pk_as_req(krb5_pa_pk_as_req *p);
+-void ktest_empty_pa_pk_as_req_draft9(krb5_pa_pk_as_req_draft9 *p);
+ void ktest_empty_pa_pk_as_rep(krb5_pa_pk_as_rep *p);
+-void ktest_empty_pa_pk_as_rep_draft9(krb5_pa_pk_as_rep_draft9 *p);
+ void ktest_empty_auth_pack(krb5_auth_pack *p);
+-void ktest_empty_auth_pack_draft9(krb5_auth_pack_draft9 *p);
+ void ktest_empty_kdc_dh_key_info(krb5_kdc_dh_key_info *p);
+ void ktest_empty_reply_key_pack(krb5_reply_key_pack *p);
+-void ktest_empty_reply_key_pack_draft9(krb5_reply_key_pack_draft9 *p);
+ void ktest_empty_sp80056a_other_info(krb5_sp80056a_other_info *p);
+ void ktest_empty_pkinit_supp_pub_info(krb5_pkinit_supp_pub_info *p);
+ #endif
+diff --git a/src/tests/asn.1/ktest_equal.c b/src/tests/asn.1/ktest_equal.c
+index 714cc4398..8a3911cdc 100644
+--- a/src/tests/asn.1/ktest_equal.c
++++ b/src/tests/asn.1/ktest_equal.c
+@@ -876,20 +876,6 @@ ktest_equal_pk_authenticator(krb5_pk_authenticator *ref,
+     return p;
+ }
+ 
+-static int
+-ktest_equal_pk_authenticator_draft9(krb5_pk_authenticator_draft9 *ref,
+-                                    krb5_pk_authenticator_draft9 *var)
+-{
+-    int p = TRUE;
+-    if (ref == var) return TRUE;
+-    else if (ref == NULL || var == NULL) return FALSE;
+-    p = p && ptr_equal(kdcName, ktest_equal_principal_data);
+-    p = p && scalar_equal(cusec);
+-    p = p && scalar_equal(ctime);
+-    p = p && scalar_equal(nonce);
+-    return p;
+-}
+-
+ static int
+ ktest_equal_subject_pk_info(krb5_subject_pk_info *ref,
+                             krb5_subject_pk_info *var)
+@@ -937,18 +923,6 @@ ktest_equal_pa_pk_as_req(krb5_pa_pk_as_req *ref, krb5_pa_pk_as_req *var)
+     return p;
+ }
+ 
+-int
+-ktest_equal_pa_pk_as_req_draft9(krb5_pa_pk_as_req_draft9 *ref,
+-                                krb5_pa_pk_as_req_draft9 *var)
+-{
+-    int p = TRUE;
+-    if (ref == var) return TRUE;
+-    else if (ref == NULL || var == NULL) return FALSE;
+-    p = p && equal_str(signedAuthPack);
+-    p = p && equal_str(kdcCert);
+-    return p;
+-}
+-
+ static int
+ ktest_equal_dh_rep_info(krb5_dh_rep_info *ref, krb5_dh_rep_info *var)
+ {
+@@ -996,19 +970,6 @@ ktest_equal_auth_pack(krb5_auth_pack *ref, krb5_auth_pack *var)
+     return p;
+ }
+ 
+-int
+-ktest_equal_auth_pack_draft9(krb5_auth_pack_draft9 *ref,
+-                             krb5_auth_pack_draft9 *var)
+-{
+-    int p = TRUE;
+-    if (ref == var) return TRUE;
+-    else if (ref == NULL || var == NULL) return FALSE;
+-    p = p && struct_equal(pkAuthenticator,
+-                          ktest_equal_pk_authenticator_draft9);
+-    p = p && ptr_equal(clientPublicValue, ktest_equal_subject_pk_info);
+-    return p;
+-}
+-
+ int
+ ktest_equal_kdc_dh_key_info(krb5_kdc_dh_key_info *ref,
+                             krb5_kdc_dh_key_info *var)
+@@ -1033,18 +994,6 @@ ktest_equal_reply_key_pack(krb5_reply_key_pack *ref, krb5_reply_key_pack *var)
+     return p;
+ }
+ 
+-int
+-ktest_equal_reply_key_pack_draft9(krb5_reply_key_pack_draft9 *ref,
+-                                  krb5_reply_key_pack_draft9 *var)
+-{
+-    int p = TRUE;
+-    if (ref == var) return TRUE;
+-    else if (ref == NULL || var == NULL) return FALSE;
+-    p = p && struct_equal(replyKey, ktest_equal_keyblock);
+-    p = p && scalar_equal(nonce);
+-    return p;
+-}
+-
+ #endif /* not DISABLE_PKINIT */
+ 
+ int
+diff --git a/src/tests/asn.1/ktest_equal.h b/src/tests/asn.1/ktest_equal.h
+index cfa82ac6e..80a0d781a 100644
+--- a/src/tests/asn.1/ktest_equal.h
++++ b/src/tests/asn.1/ktest_equal.h
+@@ -139,13 +139,10 @@ int ktest_equal_ldap_sequence_of_keys(ldap_seqof_key_data *ref,
+ 
+ #ifndef DISABLE_PKINIT
+ generic(ktest_equal_pa_pk_as_req, krb5_pa_pk_as_req);
+-generic(ktest_equal_pa_pk_as_req_draft9, krb5_pa_pk_as_req_draft9);
+ generic(ktest_equal_pa_pk_as_rep, krb5_pa_pk_as_rep);
+ generic(ktest_equal_auth_pack, krb5_auth_pack);
+-generic(ktest_equal_auth_pack_draft9, krb5_auth_pack_draft9);
+ generic(ktest_equal_kdc_dh_key_info, krb5_kdc_dh_key_info);
+ generic(ktest_equal_reply_key_pack, krb5_reply_key_pack);
+-generic(ktest_equal_reply_key_pack_draft9, krb5_reply_key_pack_draft9);
+ #endif /* not DISABLE_PKINIT */
+ 
+ int ktest_equal_kkdcp_message(krb5_kkdcp_message *ref,
+diff --git a/src/tests/asn.1/pkinit_encode.out b/src/tests/asn.1/pkinit_encode.out
+index 55a60bbef..9bd08e159 100644
+--- a/src/tests/asn.1/pkinit_encode.out
++++ b/src/tests/asn.1/pkinit_encode.out
+@@ -1,13 +1,8 @@
+ encode_krb5_pa_pk_as_req: 30 38 80 08 6B 72 62 35 64 61 74 61 A1 22 30 20 30 1E 80 08 6B 72 62 35 64 61 74 61 81 08 6B 72 62 35 64 61 74 61 82 08 6B 72 62 35 64 61 74 61 82 08 6B 72 62 35 64 61 74 61
+-encode_krb5_pa_pk_as_req_draft9: 30 14 80 08 6B 72 62 35 64 61 74 61 82 08 6B 72 62 35 64 61 74 61
+ encode_krb5_pa_pk_as_rep(dhInfo): A0 28 30 26 80 08 6B 72 62 35 64 61 74 61 A1 0A 04 08 6B 72 62 35 64 61 74 61 A2 0E 30 0C A0 0A 06 08 6B 72 62 35 64 61 74 61
+ encode_krb5_pa_pk_as_rep(encKeyPack): 81 08 6B 72 62 35 64 61 74 61
+-encode_krb5_pa_pk_as_rep_draft9(dhSignedData): 80 08 6B 72 62 35 64 61 74 61
+-encode_krb5_pa_pk_as_rep_draft9(encKeyPack): 81 08 6B 72 62 35 64 61 74 61
+ encode_krb5_auth_pack: 30 81 9F A0 35 30 33 A0 05 02 03 01 E2 40 A1 11 18 0F 31 39 39 34 30 36 31 30 30 36 30 33 31 37 5A A2 03 02 01 2A A3 06 04 04 31 32 33 34 A4 0A 04 08 6B 72 62 35 64 61 74 61 A1 22 30 20 30 13 06 09 2A 86 48 86 F7 12 01 02 02 04 06 70 61 72 61 6D 73 03 09 00 6B 72 62 35 64 61 74 61 A2 24 30 22 30 13 06 09 2A 86 48 86 F7 12 01 02 02 04 06 70 61 72 61 6D 73 30 0B 06 09 2A 86 48 86 F7 12 01 02 02 A3 0A 04 08 6B 72 62 35 64 61 74 61 A4 10 30 0E 30 0C A0 0A 06 08 6B 72 62 35 64 61 74 61
+-encode_krb5_auth_pack_draft9: 30 75 A0 4F 30 4D A0 1A 30 18 A0 03 02 01 01 A1 11 30 0F 1B 06 68 66 74 73 61 69 1B 05 65 78 74 72 61 A1 10 1B 0E 41 54 48 45 4E 41 2E 4D 49 54 2E 45 44 55 A2 05 02 03 01 E2 40 A3 11 18 0F 31 39 39 34 30 36 31 30 30 36 30 33 31 37 5A A4 03 02 01 2A A1 22 30 20 30 13 06 09 2A 86 48 86 F7 12 01 02 02 04 06 70 61 72 61 6D 73 03 09 00 6B 72 62 35 64 61 74 61
+ encode_krb5_kdc_dh_key_info: 30 25 A0 0B 03 09 00 6B 72 62 35 64 61 74 61 A1 03 02 01 2A A2 11 18 0F 31 39 39 34 30 36 31 30 30 36 30 33 31 37 5A
+ encode_krb5_reply_key_pack: 30 26 A0 13 30 11 A0 03 02 01 01 A1 0A 04 08 31 32 33 34 35 36 37 38 A1 0F 30 0D A0 03 02 01 01 A1 06 04 04 31 32 33 34
+-encode_krb5_reply_key_pack_draft9: 30 1A A0 13 30 11 A0 03 02 01 01 A1 0A 04 08 31 32 33 34 35 36 37 38 A1 03 02 01 2A
+ encode_krb5_sp80056a_other_info: 30 81 81 30 0B 06 09 2A 86 48 86 F7 12 01 02 02 A0 32 04 30 30 2E A0 10 1B 0E 41 54 48 45 4E 41 2E 4D 49 54 2E 45 44 55 A1 1A 30 18 A0 03 02 01 01 A1 11 30 0F 1B 06 68 66 74 73 61 69 1B 05 65 78 74 72 61 A1 32 04 30 30 2E A0 10 1B 0E 41 54 48 45 4E 41 2E 4D 49 54 2E 45 44 55 A1 1A 30 18 A0 03 02 01 01 A1 11 30 0F 1B 06 68 66 74 73 61 69 1B 05 65 78 74 72 61 A2 0A 04 08 6B 72 62 35 64 61 74 61
+ encode_krb5_pkinit_supp_pub_info: 30 1D A0 03 02 01 14 A1 0A 04 08 6B 72 62 35 64 61 74 61 A2 0A 04 08 6B 72 62 35 64 61 74 61
+diff --git a/src/tests/asn.1/pkinit_trval.out b/src/tests/asn.1/pkinit_trval.out
+index 9557188a8..3675fba38 100644
+--- a/src/tests/asn.1/pkinit_trval.out
++++ b/src/tests/asn.1/pkinit_trval.out
+@@ -15,14 +15,6 @@ encode_krb5_pa_pk_as_req:
+ .  [2] <8>
+       6b 72 62 35 64 61 74 61                             krb5data
+ 
+-encode_krb5_pa_pk_as_req_draft9:
+-
+-[Sequence/Sequence Of]
+-.  [0] <8>
+-      6b 72 62 35 64 61 74 61                             krb5data
+-.  [2] <8>
+-      6b 72 62 35 64 61 74 61                             krb5data
+-
+ encode_krb5_pa_pk_as_rep(dhInfo):
+ 
+ [CONT 0]
+@@ -36,16 +28,6 @@ encode_krb5_pa_pk_as_rep(dhInfo):
+ 
+ encode_krb5_pa_pk_as_rep(encKeyPack):
+ 
+-[CONT 1] <8>
+-   6b 72 62 35 64 61 74 61                                krb5data
+-
+-encode_krb5_pa_pk_as_rep_draft9(dhSignedData):
+-
+-[CONT 0] <8>
+-   6b 72 62 35 64 61 74 61                                krb5data
+-
+-encode_krb5_pa_pk_as_rep_draft9(encKeyPack):
+-
+ [CONT 1] <8>
+    6b 72 62 35 64 61 74 61                                krb5data
+ 
+@@ -79,27 +61,6 @@ encode_krb5_auth_pack:
+ .  .  .  [0] [Object Identifier] <8>
+             6b 72 62 35 64 61 74 61                          krb5data
+ 
+-encode_krb5_auth_pack_draft9:
+-
+-[Sequence/Sequence Of]
+-.  [0] [Sequence/Sequence Of]
+-.  .  [0] [Sequence/Sequence Of]
+-.  .  .  [0] [Integer] 1
+-.  .  .  [1] [Sequence/Sequence Of]
+-.  .  .  .  [General string] "hftsai"
+-.  .  .  .  [General string] "extra"
+-.  .  [1] [General string] "ATHENA.MIT.EDU"
+-.  .  [2] [Integer] 123456
+-.  .  [3] [Generalized Time] "19940610060317Z"
+-.  .  [4] [Integer] 42
+-.  [1] [Sequence/Sequence Of]
+-.  .  [Sequence/Sequence Of]
+-.  .  .  [Object Identifier] <9>
+-            2a 86 48 86 f7 12 01 02 02                       *.H......
+-.  .  .  [Octet String] "params"
+-.  .  [Bit String] <9>
+-         00 6b 72 62 35 64 61 74 61                       .krb5data
+-
+ encode_krb5_kdc_dh_key_info:
+ 
+ [Sequence/Sequence Of]
+@@ -118,14 +79,6 @@ encode_krb5_reply_key_pack:
+ .  .  [0] [Integer] 1
+ .  .  [1] [Octet String] "1234"
+ 
+-encode_krb5_reply_key_pack_draft9:
+-
+-[Sequence/Sequence Of]
+-.  [0] [Sequence/Sequence Of]
+-.  .  [0] [Integer] 1
+-.  .  [1] [Octet String] "12345678"
+-.  [1] [Integer] 42
+-
+ encode_krb5_sp80056a_other_info:
+ 
+ [Sequence/Sequence Of]
