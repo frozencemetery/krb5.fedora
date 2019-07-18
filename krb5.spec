@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 35%{?dist}
+Release: 36%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -112,6 +112,7 @@ Patch149: Remove-PKINIT-draft-9-ASN.1-code-and-types.patch
 Patch150: Remove-3des-support.patch
 Patch151: Remove-now-unused-checksum-functions.patch
 Patch152: Don-t-error-on-invalid-enctypes-in-keytab.patch
+Patch153: Filter-enctypes-in-gss_set_allowable_enctypes.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -721,6 +722,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Jul 18 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-36
+- Filter enctypes in gss_set_allowable_enctypes()
+
 * Mon Jul 15 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-35
 - Don't error on invalid enctypes in keytab
 - Resolves: #1724380
