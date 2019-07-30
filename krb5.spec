@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 37%{?dist}
+Release: 38%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -113,6 +113,9 @@ Patch150: Remove-3des-support.patch
 Patch151: Remove-now-unused-checksum-functions.patch
 Patch152: Don-t-error-on-invalid-enctypes-in-keytab.patch
 Patch153: Filter-enctypes-in-gss_set_allowable_enctypes.patch
+Patch154: Add-soft-pkcs11-source-code.patch
+Patch155: Use-imported-soft-pkcs11-for-tests.patch
+Patch156: Fix-Coverity-defects-in-soft-pkcs11-test-code.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -722,6 +725,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Jul 30 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-38
+- Add soft-pkcs11 and use it for testing
+
 * Thu Jul 25 2019 Fedora Release Engineering <releng@fedoraproject.org> - 1.17-37
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_31_Mass_Rebuild
 
