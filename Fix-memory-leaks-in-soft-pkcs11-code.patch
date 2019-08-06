@@ -1,0 +1,122 @@
+From 26aa776c9ce531d4487c40ad6684afef74394bac Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Mon, 5 Aug 2019 01:53:51 -0400
+Subject: [PATCH] Fix memory leaks in soft-pkcs11 code
+
+Fix leaks detected by asan in t_pkinit.py.  Add a helper to free a
+struct st_object and free objects in C_Finalize().  Duplicate the X509
+cert in add_certificate() instead of creating aliases so it can be
+properly freed.  Start the session handle counter at 1 so that
+C_Finalize() won't confuse the first session handle with
+CK_INVALID_HANDLE (defined to 0 in pkinit.h) and will properly clean
+the session object.
+
+(cherry picked from commit 15bcaf8bcb4af25ff89820ad3bf23ad5a324e863)
+---
+ src/tests/softpkcs11/main.c | 44 +++++++++++++++++++++++++++++++++----
+ 1 file changed, 40 insertions(+), 4 deletions(-)
+
+diff --git a/src/tests/softpkcs11/main.c b/src/tests/softpkcs11/main.c
+index 2d1448ca2..a4c3ae78e 100644
+--- a/src/tests/softpkcs11/main.c
++++ b/src/tests/softpkcs11/main.c
+@@ -109,7 +109,7 @@ struct st_object {
+         X509 *cert;
+         EVP_PKEY *public_key;
+         struct {
+-            const char *file;
++            char *file;
+             EVP_PKEY *key;
+             X509 *cert;
+         } private_key;
+@@ -343,6 +343,26 @@ print_attributes(const CK_ATTRIBUTE *attributes,
+     }
+ }
+ 
++static void
++free_st_object(struct st_object *o)
++{
++    int i;
++
++    for (i = 0; i < o->num_attributes; i++)
++        free(o->attrs[i].attribute.pValue);
++    free(o->attrs);
++    if (o->type == STO_T_CERTIFICATE) {
++        X509_free(o->u.cert);
++    } else if (o->type == STO_T_PRIVATE_KEY) {
++        free(o->u.private_key.file);
++        EVP_PKEY_free(o->u.private_key.key);
++        X509_free(o->u.private_key.cert);
++    } else if (o->type == STO_T_PUBLIC_KEY) {
++        EVP_PKEY_free(o->u.public_key);
++    }
++    free(o);
++}
++
+ static struct st_object *
+ add_st_object(void)
+ {
+@@ -518,7 +538,11 @@ add_certificate(char *label,
+         goto out;
+     }
+     o->type = STO_T_CERTIFICATE;
+-    o->u.cert = cert;
++    o->u.cert = X509_dup(cert);
++    if (o->u.cert == NULL) {
++        ret = CKR_DEVICE_MEMORY;
++        goto out;
++    }
+     public_key = X509_get_pubkey(o->u.cert);
+ 
+     switch (EVP_PKEY_base_id(public_key)) {
+@@ -602,7 +626,11 @@ add_certificate(char *label,
+         o->u.private_key.file = strdup(private_key_file);
+         o->u.private_key.key = NULL;
+ 
+-        o->u.private_key.cert = cert;
++        o->u.private_key.cert = X509_dup(cert);
++        if (o->u.private_key.cert == NULL) {
++            ret = CKR_DEVICE_MEMORY;
++            goto out;
++        }
+ 
+         c = CKO_PRIVATE_KEY;
+         add_object_attribute(o, 0, CKA_CLASS, &c, sizeof(c));
+@@ -676,6 +704,7 @@ add_certificate(char *label,
+     free(serial_data);
+     free(issuer_data);
+     free(subject_data);
++    X509_free(cert);
+ 
+     return ret;
+ }
+@@ -872,7 +901,7 @@ C_Initialize(CK_VOID_PTR a)
+         st_logf("\tFlags\t%04x\n", (unsigned int)args->flags);
+     }
+ 
+-    soft_token.next_session_handle = 0;
++    soft_token.next_session_handle = 1;
+ 
+     fn = get_rcfilename();
+     if (fn == NULL)
+@@ -886,6 +915,7 @@ CK_RV
+ C_Finalize(CK_VOID_PTR args)
+ {
+     size_t i;
++    int j;
+ 
+     st_logf("Finalize\n");
+ 
+@@ -897,6 +927,12 @@ C_Finalize(CK_VOID_PTR args)
+         }
+     }
+ 
++    for (j = 0; j < soft_token.object.num_objs; j++)
++        free_st_object(soft_token.object.objs[j]);
++    free(soft_token.object.objs);
++    soft_token.object.objs = NULL;
++    soft_token.object.num_objs = 0;
++
+     return CKR_OK;
+ }
+ 
