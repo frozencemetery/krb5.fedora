@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 39%{?dist}
+Release: 40%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -118,6 +118,7 @@ Patch155: Use-imported-soft-pkcs11-for-tests.patch
 Patch156: Fix-Coverity-defects-in-soft-pkcs11-test-code.patch
 Patch157: Skip-URI-tests-when-using-asan.patch
 Patch158: Fix-memory-leaks-in-soft-pkcs11-code.patch
+Patch159: Initialize-life-rlife-in-kdcpolicy-interface.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -727,6 +728,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Aug 09 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-40
+- Initialize life/rlife in kdcpolicy interface
+
 * Tue Aug 06 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-39
 - Fix memory leaks in soft-pkcs11 code
 

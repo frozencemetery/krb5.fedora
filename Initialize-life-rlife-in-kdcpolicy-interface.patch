@@ -1,0 +1,41 @@
+From a2065b41a6a89b273b455088a5df5304bfd1f663 Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Fri, 9 Aug 2019 14:07:22 -0400
+Subject: [PATCH] Initialize life/rlife in kdcpolicy interface
+
+A value of 0 indicates that the plugin doesn't wish to modify lifetimes.
+Make this the default, rather than requiring all plugins to set these
+values themselves.
+
+ticket: 8824 (new)
+tags: pullup
+target_version: 1.17-next
+target_version: 1.16-next
+
+(cherry picked from commit d81c5870013240c04642c8e0cb994b4c49e40ddf)
+---
+ src/kdc/policy.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/kdc/policy.c b/src/kdc/policy.c
+index 26c16f97c..a3ff556c5 100644
+--- a/src/kdc/policy.c
++++ b/src/kdc/policy.c
+@@ -106,7 +106,7 @@ check_kdcpolicy_as(krb5_context context, const krb5_kdc_req *request,
+                    krb5_data *const *auth_indicators, krb5_timestamp kdc_time,
+                    krb5_ticket_times *times, const char **status)
+ {
+-    krb5_deltat life, rlife;
++    krb5_deltat life = 0, rlife = 0;
+     krb5_error_code ret;
+     kdcpolicy_handle *hp, h;
+     char **ais = NULL;
+@@ -146,7 +146,7 @@ check_kdcpolicy_tgs(krb5_context context, const krb5_kdc_req *request,
+                     krb5_data *const *auth_indicators, krb5_timestamp kdc_time,
+                     krb5_ticket_times *times, const char **status)
+ {
+-    krb5_deltat life, rlife;
++    krb5_deltat life = 0, rlife = 0;
+     krb5_error_code ret;
+     kdcpolicy_handle *hp, h;
+     char **ais = NULL;
