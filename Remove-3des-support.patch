@@ -74,7 +74,7 @@ their constants.
  src/lib/gssapi/krb5/gssapiP_krb5.h            |   6 +-
  src/lib/gssapi/krb5/k5seal.c                  |  35 +-
  src/lib/gssapi/krb5/k5sealiov.c               |  27 +-
- src/lib/gssapi/krb5/k5unseal.c                | 102 ++---
+ src/lib/gssapi/krb5/k5unseal.c                |  88 ++--
  src/lib/gssapi/krb5/k5unsealiov.c             |  38 +-
  src/lib/gssapi/krb5/util_crypt.c              |  11 -
  .../api.current/chpass-principal-v2.exp       |   4 +-
@@ -105,7 +105,7 @@ their constants.
  src/tests/t_salt.py                           |   5 +-
  src/util/k5test.py                            |  10 -
  .../leash/htmlhelp/html/Encryption_Types.htm  |  13 -
- 95 files changed, 162 insertions(+), 4836 deletions(-)
+ 95 files changed, 155 insertions(+), 4829 deletions(-)
  delete mode 100644 src/lib/crypto/builtin/des/ISSUES
  delete mode 100644 src/lib/crypto/builtin/des/Makefile.in
  delete mode 100644 src/lib/crypto/builtin/des/d3_aead.c
@@ -5384,13 +5384,15 @@ index 9b183bc33..f0cc4a680 100644
 +    if (signalg != SGN_ALG_HMAC_MD5) {
          *minor_status = 0;
          return(GSS_S_DEFECTIVE_TOKEN);
--
++    }
+ 
 -    case SGN_ALG_HMAC_SHA1_DES3_KD:
 -    case SGN_ALG_HMAC_MD5:
 -        /* compute the checksum of the message */
 -
 -        /* 8 = bytes of token body to be checksummed according to spec */
--
++    /* compute the checksum of the message */
+ 
 -        if (! (data_ptr = xmalloc(8 + plainlen))) {
 -            if (sealalg != 0xffff)
 -                xfree(plain);
@@ -5399,33 +5401,9 @@ index 9b183bc33..f0cc4a680 100644
 -            *minor_status = ENOMEM;
 -            return(GSS_S_FAILURE);
 -        }
--
--        (void) memcpy(data_ptr, ptr-2, 8);
--
--        (void) memcpy(data_ptr+8, plain, plainlen);
--
--        plaind.length = 8 + plainlen;
--        plaind.data = data_ptr;
--        code = krb5_k_make_checksum(context, md5cksum.checksum_type,
--                                    ctx->seq, sign_usage,
--                                    &plaind, &md5cksum);
--        xfree(data_ptr);
--
--        if (code) {
--            if (toktype == KG_TOK_SEAL_MSG)
--                gssalloc_free(token.value);
--            *minor_status = code;
--            return(GSS_S_FAILURE);
--        }
--
--        code = k5_bcmp(md5cksum.contents, ptr + 14, cksum_len);
--        break;
-     }
- 
-+    /* compute the checksum of the message */
-+
 +    /* 8 = bytes of token body to be checksummed according to spec */
-+
+ 
+-        (void) memcpy(data_ptr, ptr-2, 8);
 +    if (! (data_ptr = xmalloc(8 + plainlen))) {
 +        if (sealalg != 0xffff)
 +            xfree(plain);
@@ -5434,25 +5412,40 @@ index 9b183bc33..f0cc4a680 100644
 +        *minor_status = ENOMEM;
 +        return(GSS_S_FAILURE);
 +    }
-+
+ 
+-        (void) memcpy(data_ptr+8, plain, plainlen);
 +    (void) memcpy(data_ptr, ptr-2, 8);
-+
+ 
+-        plaind.length = 8 + plainlen;
+-        plaind.data = data_ptr;
+-        code = krb5_k_make_checksum(context, md5cksum.checksum_type,
+-                                    ctx->seq, sign_usage,
+-                                    &plaind, &md5cksum);
+-        xfree(data_ptr);
 +    (void) memcpy(data_ptr+8, plain, plainlen);
-+
+ 
+-        if (code) {
+-            if (toktype == KG_TOK_SEAL_MSG)
+-                gssalloc_free(token.value);
+-            *minor_status = code;
+-            return(GSS_S_FAILURE);
+-        }
 +    plaind.length = 8 + plainlen;
 +    plaind.data = data_ptr;
 +    code = krb5_k_make_checksum(context, md5cksum.checksum_type,
 +                                ctx->seq, sign_usage,
 +                                &plaind, &md5cksum);
 +    xfree(data_ptr);
-+
+ 
+-        code = k5_bcmp(md5cksum.contents, ptr + 14, cksum_len);
+-        break;
 +    if (code) {
 +        if (toktype == KG_TOK_SEAL_MSG)
 +            gssalloc_free(token.value);
 +        *minor_status = code;
 +        return(GSS_S_FAILURE);
-+    }
-+
+     }
+ 
 +    code = k5_bcmp(md5cksum.contents, ptr + 14, cksum_len);
 +
      krb5_free_checksum_contents(context, &md5cksum);

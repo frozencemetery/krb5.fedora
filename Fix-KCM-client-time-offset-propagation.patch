@@ -1,0 +1,32 @@
+From e299c5e9442ade8c0b47d122809f76f03b64e497 Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Wed, 14 Aug 2019 13:52:27 -0400
+Subject: [PATCH] Fix KCM client time offset propagation
+
+An inverted status check in get_kdc_offset() would cause querying the
+offset time from the ccache to always fail (silently) on KCM.  Fix the
+status check so that KCM can properly handle desync.
+
+ticket: 8826 (new)
+tags: pullup
+target_version: 1.17-next
+target_verison: 1.16-next
+
+(cherry picked from commit 323abb6d1ebe5469d6c2167c29aa5d696d099b90)
+---
+ src/lib/krb5/ccache/cc_kcm.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/lib/krb5/ccache/cc_kcm.c b/src/lib/krb5/ccache/cc_kcm.c
+index 092ab7daf..fe93ca3dc 100644
+--- a/src/lib/krb5/ccache/cc_kcm.c
++++ b/src/lib/krb5/ccache/cc_kcm.c
+@@ -583,7 +583,7 @@ get_kdc_offset(krb5_context context, krb5_ccache cache)
+     if (cache_call(context, cache, &req, FALSE) != 0)
+         goto cleanup;
+     time_offset = k5_input_get_uint32_be(&req.reply);
+-    if (!req.reply.status)
++    if (req.reply.status)
+         goto cleanup;
+     context->os_context.time_offset = time_offset;
+     context->os_context.usec_offset = 0;

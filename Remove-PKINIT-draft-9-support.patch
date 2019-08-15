@@ -15,12 +15,12 @@ ticket: 8817 (new)
  src/plugins/preauth/pkinit/pkinit_accessor.h  |   6 -
  src/plugins/preauth/pkinit/pkinit_clnt.c      | 231 +++-----
  src/plugins/preauth/pkinit/pkinit_crypto.h    |   1 -
- .../preauth/pkinit/pkinit_crypto_openssl.c    | 219 ++-----
+ .../preauth/pkinit/pkinit_crypto_openssl.c    | 221 ++------
  src/plugins/preauth/pkinit/pkinit_lib.c       |  65 ---
- src/plugins/preauth/pkinit/pkinit_srv.c       | 543 ++++++------------
+ src/plugins/preauth/pkinit/pkinit_srv.c       | 531 +++++-------------
  src/plugins/preauth/pkinit/pkinit_trace.h     |   4 -
  src/tests/t_pkinit.py                         |   6 +-
- 10 files changed, 282 insertions(+), 814 deletions(-)
+ 10 files changed, 277 insertions(+), 809 deletions(-)
 
 diff --git a/src/plugins/preauth/pkinit/pkinit.h b/src/plugins/preauth/pkinit/pkinit.h
 index fe2ec0d31..b437fd53f 100644
@@ -214,18 +214,7 @@ index 58400d555..1a642139a 100644
 -        auth_pack.clientDHNonce.length = 0;
 -        auth_pack.clientPublicValue = &info;
 -        auth_pack.supportedKDFs = (krb5_data **)supported_kdf_alg_ids;
-+    memset(&info, 0, sizeof(info));
-+    memset(&auth_pack, 0, sizeof(auth_pack));
-+    auth_pack.pkAuthenticator.ctime = ctsec;
-+    auth_pack.pkAuthenticator.cusec = cusec;
-+    auth_pack.pkAuthenticator.nonce = nonce;
-+    auth_pack.pkAuthenticator.paChecksum = *cksum;
-+    if (!reqctx->opts->disable_freshness)
-+        auth_pack.pkAuthenticator.freshnessToken = reqctx->freshness_token;
-+    auth_pack.clientDHNonce.length = 0;
-+    auth_pack.clientPublicValue = &info;
-+    auth_pack.supportedKDFs = (krb5_data **)supported_kdf_alg_ids;
- 
+-
 -        /* add List of CMS algorithms */
 -        retval = create_krb5_supportedCMSTypes(context, plgctx->cryptoctx,
 -                                               reqctx->cryptoctx,
@@ -238,6 +227,18 @@ index 58400d555..1a642139a 100644
 -        pkiDebug("as_req: unrecognized pa_type = %d\n",
 -                 (int)reqctx->pa_type);
 -        retval = -1;
++    memset(&info, 0, sizeof(info));
++    memset(&auth_pack, 0, sizeof(auth_pack));
++    auth_pack.pkAuthenticator.ctime = ctsec;
++    auth_pack.pkAuthenticator.cusec = cusec;
++    auth_pack.pkAuthenticator.nonce = nonce;
++    auth_pack.pkAuthenticator.paChecksum = *cksum;
++    if (!reqctx->opts->disable_freshness)
++        auth_pack.pkAuthenticator.freshnessToken = reqctx->freshness_token;
++    auth_pack.clientDHNonce.length = 0;
++    auth_pack.clientPublicValue = &info;
++    auth_pack.supportedKDFs = (krb5_data **)supported_kdf_alg_ids;
++
 +    /* add List of CMS algorithms */
 +    retval = create_krb5_supportedCMSTypes(context, plgctx->cryptoctx,
 +                                           reqctx->cryptoctx,
@@ -355,20 +356,19 @@ index 58400d555..1a642139a 100644
 -                                       &req9->signedAuthPack.data,
 -                                       &req9->signedAuthPack.length);
 -        break;
--#ifdef DEBUG_ASN1
++                                       &req->signedAuthPack.data,
++                                       &req->signedAuthPack.length);
++    }
++
+ #ifdef DEBUG_ASN1
 -        print_buffer_bin((unsigned char *)req9->signedAuthPack.data,
 -                         req9->signedAuthPack.length,
 -                         "/tmp/client_signed_data_draft9");
--#endif
-+                                       &req->signedAuthPack.data,
-+                                       &req->signedAuthPack.length);
-     }
-+
-+#ifdef DEBUG_ASN1
 +    print_buffer_bin((unsigned char *)req->signedAuthPack.data,
 +                     req->signedAuthPack.length,
 +                     "/tmp/client_signed_data");
-+#endif
+ #endif
+-    }
 +
      krb5_free_data(context, coded_auth_pack);
      if (retval) {
@@ -556,13 +556,7 @@ index 8aa2c5257..8c7fd0cca 100644
 -                goto cleanup2;
 -            PKCS7_add_signed_attribute(p7si, NID_pkcs9_contentType,
 -                                       V_ASN1_OBJECT, oid_copy);
-+        /* create a content-type attr */
-+        oid_copy = OBJ_dup(oid);
-+        if (oid_copy == NULL)
-+            goto cleanup2;
-+        PKCS7_add_signed_attribute(p7si, NID_pkcs9_contentType,
-+                                   V_ASN1_OBJECT, oid_copy);
- 
+-
 -            /* create the signature over signed attributes. get DER encoded value */
 -            /* This is the place where smartcard signature needs to be calculated */
 -            sk = p7si->auth_attr;
@@ -571,6 +565,13 @@ index 8aa2c5257..8c7fd0cca 100644
 -            if (abuf == NULL)
 -                goto cleanup2;
 -        } /* signed attributes */
++        /* create a content-type attr */
++        oid_copy = OBJ_dup(oid);
++        if (oid_copy == NULL)
++            goto cleanup2;
++        PKCS7_add_signed_attribute(p7si, NID_pkcs9_contentType,
++                                   V_ASN1_OBJECT, oid_copy);
++
 +        /* create the signature over signed attributes. get DER encoded value */
 +        /* This is the place where smartcard signature needs to be calculated */
 +        sk = p7si->auth_attr;
@@ -1040,47 +1041,38 @@ index 6aa646cc6..c44be9c74 100644
      if (retval) {
          TRACE_PKINIT_SERVER_PADATA_VERIFY_FAIL(context);
          goto cleanup;
-@@ -541,118 +513,88 @@ pkinit_server_verify_padata(krb5_context context,
+@@ -541,117 +513,87 @@ pkinit_server_verify_padata(krb5_context context,
  #endif
  
      OCTETDATA_TO_KRB5DATA(&authp_data, &k5data);
 -    switch ((int)data->pa_type) {
 -    case KRB5_PADATA_PK_AS_REQ:
 -        retval = k5int_decode_krb5_auth_pack(&k5data, &auth_pack);
-+    retval = k5int_decode_krb5_auth_pack(&k5data, &auth_pack);
-+    if (retval) {
-+        pkiDebug("failed to decode krb5_auth_pack\n");
-+        goto cleanup;
-+    }
-+
-+    retval = krb5_check_clockskew(context, auth_pack->pkAuthenticator.ctime);
-+    if (retval)
-+        goto cleanup;
-+
-+    /* check dh parameters */
-+    if (auth_pack->clientPublicValue != NULL) {
-+        retval = server_check_dh(context, plgctx->cryptoctx,
-+                                 reqctx->cryptoctx, plgctx->idctx,
-+                                 &auth_pack->clientPublicValue->algorithm.parameters,
-+                                 plgctx->opts->dh_min_bits);
-         if (retval) {
+-        if (retval) {
 -            pkiDebug("failed to decode krb5_auth_pack\n");
-+            pkiDebug("bad dh parameters\n");
-             goto cleanup;
-         }
+-            goto cleanup;
+-        }
 -
 -        retval = krb5_check_clockskew(context,
 -                                      auth_pack->pkAuthenticator.ctime);
 -        if (retval)
 -            goto cleanup;
--
++    retval = k5int_decode_krb5_auth_pack(&k5data, &auth_pack);
++    if (retval) {
++        pkiDebug("failed to decode krb5_auth_pack\n");
++        goto cleanup;
++    }
+ 
 -        /* check dh parameters */
 -        if (auth_pack->clientPublicValue != NULL) {
 -            retval = server_check_dh(context, plgctx->cryptoctx,
 -                                     reqctx->cryptoctx, plgctx->idctx,
 -                                     &auth_pack->clientPublicValue->algorithm.parameters,
 -                                     plgctx->opts->dh_min_bits);
--
++    retval = krb5_check_clockskew(context, auth_pack->pkAuthenticator.ctime);
++    if (retval)
++        goto cleanup;
+ 
 -            if (retval) {
 -                pkiDebug("bad dh parameters\n");
 -                goto cleanup;
@@ -1096,10 +1088,17 @@ index 6aa646cc6..c44be9c74 100644
 -        der_req = cb->request_body(context, rock);
 -        retval = krb5_c_make_checksum(context, CKSUMTYPE_NIST_SHA, NULL,
 -                                      0, der_req, &cksum);
--        if (retval) {
++    /* check dh parameters */
++    if (auth_pack->clientPublicValue != NULL) {
++        retval = server_check_dh(context, plgctx->cryptoctx,
++                                 reqctx->cryptoctx, plgctx->idctx,
++                                 &auth_pack->clientPublicValue->algorithm.parameters,
++                                 plgctx->opts->dh_min_bits);
+         if (retval) {
 -            pkiDebug("unable to calculate AS REQ checksum\n");
--            goto cleanup;
--        }
++            pkiDebug("bad dh parameters\n");
+             goto cleanup;
+         }
 -        if (cksum.length != auth_pack->pkAuthenticator.paChecksum.length ||
 -            k5_bcmp(cksum.contents,
 -                    auth_pack->pkAuthenticator.paChecksum.contents,
@@ -1171,7 +1170,10 @@ index 6aa646cc6..c44be9c74 100644
 -            if (!valid_kdcPkId)
 -                pkiDebug("kdcPkId in AS_REQ does not match KDC's cert"
 -                         "RFC says to ignore and proceed\n");
--
++        retval = KRB5KDC_ERR_PA_CHECKSUM_MUST_BE_INCLUDED;
++        goto cleanup;
++    }
+ 
 -        }
 -        /* remember the decoded auth_pack for verify_padata routine */
 -        reqctx->rcv_auth_pack = auth_pack;
@@ -1182,35 +1184,24 @@ index 6aa646cc6..c44be9c74 100644
 -        retval = k5int_decode_krb5_auth_pack_draft9(&k5data, &auth_pack9);
 -        if (retval) {
 -            pkiDebug("failed to decode krb5_auth_pack_draft9\n");
--            goto cleanup;
++    ftoken = auth_pack->pkAuthenticator.freshnessToken;
++    if (ftoken != NULL) {
++        retval = cb->check_freshness_token(context, rock, ftoken);
++        if (retval)
+             goto cleanup;
 -        }
 -        if (auth_pack9->clientPublicValue != NULL) {
 -            retval = server_check_dh(context, plgctx->cryptoctx,
 -                                     reqctx->cryptoctx, plgctx->idctx,
 -                                     &auth_pack9->clientPublicValue->algorithm.parameters,
 -                                     plgctx->opts->dh_min_bits);
--
++        valid_freshness_token = TRUE;
++    }
+ 
 -            if (retval) {
 -                pkiDebug("bad dh parameters\n");
 -                goto cleanup;
 -            }
--        }
--        /* remember the decoded auth_pack for verify_padata routine */
--        reqctx->rcv_auth_pack9 = auth_pack9;
--        auth_pack9 = NULL;
--        break;
-+        retval = KRB5KDC_ERR_PA_CHECKSUM_MUST_BE_INCLUDED;
-+        goto cleanup;
-     }
- 
-+    ftoken = auth_pack->pkAuthenticator.freshnessToken;
-+    if (ftoken != NULL) {
-+        retval = cb->check_freshness_token(context, rock, ftoken);
-+        if (retval)
-+            goto cleanup;
-+        valid_freshness_token = TRUE;
-+    }
-+
 +    /* check if kdcPkId present and match KDC's subjectIdentifier */
 +    if (reqp->kdcPkId.data != NULL) {
 +        int valid_kdcPkId = 0;
@@ -1223,15 +1214,18 @@ index 6aa646cc6..c44be9c74 100644
 +        if (!valid_kdcPkId) {
 +            pkiDebug("kdcPkId in AS_REQ does not match KDC's cert; "
 +                     "RFC says to ignore and proceed\n");
-+        }
-+    }
+         }
+-        /* remember the decoded auth_pack for verify_padata routine */
+-        reqctx->rcv_auth_pack9 = auth_pack9;
+-        auth_pack9 = NULL;
+-        break;
+     }
 +    /* remember the decoded auth_pack for verify_padata routine */
 +    reqctx->rcv_auth_pack = auth_pack;
 +    auth_pack = NULL;
-+
+ 
      if (is_signed) {
          retval = check_log_freshness(context, plgctx, request,
-                                      valid_freshness_token);
 @@ -682,21 +624,13 @@ cleanup:
              pkiDebug("pkinit_create_edata failed\n");
      }
@@ -1420,7 +1414,7 @@ index 6aa646cc6..c44be9c74 100644
          }
 -        pkiDebug("%s: return checksum instead of nonce = %d\n",
 -                 __FUNCTION__, fixed_keypack);
- 
+-
 -        /* if this is an RFC reply or draft9 client requested a checksum
 -         * in the reply instead of the nonce, create an RFC-style keypack
 -         */
@@ -1430,7 +1424,7 @@ index 6aa646cc6..c44be9c74 100644
 -                retval = ENOMEM;
 -                goto cleanup;
 -            }
--
+ 
 -            retval = krb5_c_make_checksum(context, 0,
 -                                          encrypting_key, KRB5_KEYUSAGE_TGS_REQ_AUTH_CKSUM,
 -                                          req_pkt, &key_pack->asChecksum);

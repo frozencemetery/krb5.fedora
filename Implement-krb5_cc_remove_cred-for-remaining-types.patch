@@ -266,13 +266,25 @@ index 8419f6ebf..98723fe2e 100644
 -     * with the time offsets, skip it. */
 -    while (krcursor->keys[krcursor->currkey] == krcursor->princ_id ||
 -           krcursor->keys[krcursor->currkey] == krcursor->offsets_id) {
+-        krcursor->currkey++;
+-        /* Check if we have now reached the end */
+-        if (krcursor->currkey >= krcursor->numkeys)
+-            return KRB5_CC_END;
+-    }
 +        /* Read the key; the right size buffer will be allocated and
 +         * returned. */
 +        psize = keyctl_read_alloc(krcursor->keys[krcursor->currkey],
 +                                  &payload);
 +        if (psize != -1) {
 +            krcursor->currkey++;
-+
+ 
+-    /* Read the key; the right size buffer will be allocated and returned. */
+-    psize = keyctl_read_alloc(krcursor->keys[krcursor->currkey], &payload);
+-    if (psize == -1) {
+-        DEBUG_PRINT(("Error reading key %d: %s\n",
+-                     krcursor->keys[krcursor->currkey],
+-                     strerror(errno)));
+-        return KRB5_FCC_NOFILE;
 +            /* Unmarshal the cred using the file ccache version 4 format. */
 +            ret = k5_unmarshal_cred(payload, psize, 4, creds);
 +            free(payload);
@@ -285,22 +297,10 @@ index 8419f6ebf..98723fe2e 100644
 +
 +        /* The current key was unlinked, probably by a remove_cred call; move
 +         * on to the next one. */
-         krcursor->currkey++;
--        /* Check if we have now reached the end */
--        if (krcursor->currkey >= krcursor->numkeys)
--            return KRB5_CC_END;
++        krcursor->currkey++;
      }
- 
--    /* Read the key; the right size buffer will be allocated and returned. */
--    psize = keyctl_read_alloc(krcursor->keys[krcursor->currkey], &payload);
--    if (psize == -1) {
--        DEBUG_PRINT(("Error reading key %d: %s\n",
--                     krcursor->keys[krcursor->currkey],
--                     strerror(errno)));
--        return KRB5_FCC_NOFILE;
--    }
 -    krcursor->currkey++;
--
+ 
 -    /* Unmarshal the credential using the file ccache version 4 format. */
 -    ret = k5_unmarshal_cred(payload, psize, 4, creds);
 -    free(payload);

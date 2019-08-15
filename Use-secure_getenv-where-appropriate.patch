@@ -15,10 +15,10 @@ ticket: 8800
  src/lib/krb5/os/trace.c                      |  2 +-
  src/lib/krb5/rcache/rc_base.c                |  4 ++--
  src/lib/krb5/rcache/rc_io.c                  |  4 ++--
- src/plugins/preauth/pkinit/pkinit_identity.c | 13 ++++---------
+ src/plugins/preauth/pkinit/pkinit_identity.c | 11 +++--------
  src/plugins/tls/k5tls/openssl.c              |  2 +-
  src/util/profile/prof_file.c                 |  2 +-
- 12 files changed, 20 insertions(+), 25 deletions(-)
+ 12 files changed, 19 insertions(+), 24 deletions(-)
 
 diff --git a/src/lib/kadm5/alt_prof.c b/src/lib/kadm5/alt_prof.c
 index 3f6b53651..5531a10fb 100644
@@ -184,7 +184,7 @@ diff --git a/src/plugins/preauth/pkinit/pkinit_identity.c b/src/plugins/preauth/
 index 8cd3fc640..b89c5d015 100644
 --- a/src/plugins/preauth/pkinit/pkinit_identity.c
 +++ b/src/plugins/preauth/pkinit/pkinit_identity.c
-@@ -29,15 +29,9 @@
+@@ -29,16 +29,10 @@
   * SUCH DAMAGES.
   */
  
@@ -192,16 +192,16 @@ index 8cd3fc640..b89c5d015 100644
 -#include <string.h>
 -#include <stdio.h>
 -#include <stdlib.h>
--#include <dlfcn.h>
++#include "pkinit.h"
+ #include <dlfcn.h>
 -#include <unistd.h>
--#include <dirent.h>
--
- #include "pkinit.h"
-+#include <dlfcn.h>
-+#include <dirent.h>
+ #include <dirent.h>
  
+-#include "pkinit.h"
+-
  static void
  free_list(char **list)
+ {
 @@ -430,7 +424,8 @@ process_option_identity(krb5_context context,
      switch (idtype) {
      case IDTYPE_ENVVAR:
