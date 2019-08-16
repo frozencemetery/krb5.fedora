@@ -398,22 +398,19 @@ export SOCKET_WRAPPER_DIR="$PWD/sockets" ; mkdir -p $SOCKET_WRAPPER_DIR
 export LD_PRELOAD="$PWD/noport.so:libnss_wrapper.so:libsocket_wrapper.so"
 
 # ugh.  COPR doesn't expose the keyring, so try to cope.
-%if 0%{?copr_username:1}
-%global keyctl :
-%else
-%global keyctl keyctl
-%endif
+KEYCTL=keyctl
+keyctl list @u &>/dev/null || KEYCTL=:
 
 # Run the test suite. We can't actually run the whole thing in the build
 # system, but we can at least run more than we used to.  The build system may
 # give us a revoked session keyring, so run affected tests with a new one.
 make -C src runenv.py
 : make -C src check TMPDIR=%{_tmppath}
-%{keyctl} session - make -C src/lib check TMPDIR=%{_tmppath} OFFLINE=yes
+$KEYCTL session - make -C src/lib check TMPDIR=%{_tmppath} OFFLINE=yes
 make -C src/kdc check TMPDIR=%{_tmppath}
-%{keyctl} session - make -C src/appl check TMPDIR=%{_tmppath}
+$KEYCTL session - make -C src/appl check TMPDIR=%{_tmppath}
 make -C src/clients check TMPDIR=%{_tmppath}
-%{keyctl} session - make -C src/util check TMPDIR=%{_tmppath}
+$KEYCTL session - make -C src/util check TMPDIR=%{_tmppath}
 
 %install
 [ "$RPM_BUILD_ROOT" != '/' ] && rm -rf -- "$RPM_BUILD_ROOT"
