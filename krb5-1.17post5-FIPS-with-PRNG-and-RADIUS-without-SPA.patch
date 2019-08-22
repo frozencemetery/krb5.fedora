@@ -1,10 +1,9 @@
-From fd2088635e27ce571e2d98c40fea34db15243b7a Mon Sep 17 00:00:00 2001
+From ca3c0fc3fd80b3a9953da47f64beb8b24bd46f08 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 9 Nov 2018 15:12:21 -0500
-Subject: [PATCH] krb5-1.17post4 FIPS with PRNG, SPAKE, and RADIUS
+Subject: [PATCH] krb5-1.17post5 FIPS with PRNG and RADIUS without SPAKE
 
-NB: Use openssl's PRNG in FIPS mode, be aware during SPAKE group
-negotiation, and taint within krad.
+NB: Use openssl's PRNG in FIPS mode and taint within krad.
 
 A lot of the FIPS error conditions from OpenSSL are incredibly
 mysterious (at best, things return NULL unexpectedly; at worst,
@@ -14,10 +13,9 @@ awareness of what we can and can't safely call.
 
 This will slow down some calls slightly (FIPS_mode() takes multiple
 locks), but not for any ciphers we care about - which is to say that
-AES is fine.  Shame about the SPAKE groups though.
+AES is fine.  Shame about SPAKE though.
 
-post4 is on top of the 3DES removal.  (4 > 3; it makes sense this
-time!)
+post5 removes SPAKE entirely.
 ---
  src/lib/crypto/krb/prng.c                     | 11 ++++-
  .../crypto/openssl/enc_provider/camellia.c    |  6 +++
@@ -31,8 +29,9 @@ time!)
  src/lib/krad/remote.c                         | 10 ++++-
  src/lib/krad/t_attr.c                         |  3 +-
  src/lib/krad/t_attrset.c                      |  4 +-
- src/plugins/preauth/spake/groups.c            |  8 ++++
- 13 files changed, 117 insertions(+), 33 deletions(-)
+ src/plugins/preauth/spake/spake_client.c      |  6 +++
+ src/plugins/preauth/spake/spake_kdc.c         |  6 +++
+ 14 files changed, 121 insertions(+), 33 deletions(-)
 
 diff --git a/src/lib/crypto/krb/prng.c b/src/lib/crypto/krb/prng.c
 index cb9ca9b98..f0e9984ca 100644
@@ -502,36 +501,51 @@ index 7928335ca..0f9576253 100644
      krad_attrset_free(set);
  
      /* Manually encode User-Name. */
-diff --git a/src/plugins/preauth/spake/groups.c b/src/plugins/preauth/spake/groups.c
-index a195cc195..8a913cb5a 100644
---- a/src/plugins/preauth/spake/groups.c
-+++ b/src/plugins/preauth/spake/groups.c
-@@ -56,6 +56,8 @@
- #include "trace.h"
+diff --git a/src/plugins/preauth/spake/spake_client.c b/src/plugins/preauth/spake/spake_client.c
+index 00734a13b..a3ce22b70 100644
+--- a/src/plugins/preauth/spake/spake_client.c
++++ b/src/plugins/preauth/spake/spake_client.c
+@@ -38,6 +38,8 @@
  #include "groups.h"
+ #include <krb5/clpreauth_plugin.h>
  
 +#include <openssl/crypto.h>
 +
- #define DEFAULT_GROUPS_CLIENT "edwards25519"
- #define DEFAULT_GROUPS_KDC ""
+ typedef struct reqstate_st {
+     krb5_pa_spake *msg;         /* set in prep_questions, used in process */
+     krb5_keyblock *initial_key;
+@@ -375,6 +377,10 @@ clpreauth_spake_initvt(krb5_context context, int maj_ver, int min_ver,
  
-@@ -102,6 +104,9 @@ find_gdef(int32_t group)
- {
-     size_t i;
- 
-+    if (group == builtin_edwards25519.reg->id && FIPS_mode())
-+        return NULL;
+     if (maj_ver != 1)
+         return KRB5_PLUGIN_VER_NOTSUPP;
 +
-     for (i = 0; groupdefs[i] != NULL; i++) {
-         if (groupdefs[i]->reg->id == group)
-             return groupdefs[i];
-@@ -116,6 +121,9 @@ find_gnum(const char *name)
- {
-     size_t i;
- 
-+    if (strcasecmp(name, builtin_edwards25519.reg->name) == 0 && FIPS_mode())
-+        return 0;
++    if (FIPS_mode())
++        return KRB5_CRYPTO_INTERNAL;
 +
-     for (i = 0; groupdefs[i] != NULL; i++) {
-         if (strcasecmp(name, groupdefs[i]->reg->name) == 0)
-             return groupdefs[i]->reg->id;
+     vt = (krb5_clpreauth_vtable)vtable;
+     vt->name = "spake";
+     vt->pa_type_list = pa_types;
+diff --git a/src/plugins/preauth/spake/spake_kdc.c b/src/plugins/preauth/spake/spake_kdc.c
+index 59e88409e..1b3e569e9 100644
+--- a/src/plugins/preauth/spake/spake_kdc.c
++++ b/src/plugins/preauth/spake/spake_kdc.c
+@@ -41,6 +41,8 @@
+ 
+ #include <krb5/kdcpreauth_plugin.h>
+ 
++#include <openssl/crypto.h>
++
+ /*
+  * The SPAKE kdcpreauth module uses a secure cookie containing the following
+  * concatenated fields (all integer fields are big-endian):
+@@ -578,6 +580,10 @@ kdcpreauth_spake_initvt(krb5_context context, int maj_ver, int min_ver,
+ 
+     if (maj_ver != 1)
+         return KRB5_PLUGIN_VER_NOTSUPP;
++
++    if (FIPS_mode())
++        return KRB5_CRYPTO_INTERNAL;
++
+     vt = (krb5_kdcpreauth_vtable)vtable;
+     vt->name = "spake";
+     vt->pa_type_list = pa_types;

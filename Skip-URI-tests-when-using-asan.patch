@@ -1,4 +1,4 @@
-From 6099c5f17a25971defadde6f8fbc2abaa764462b Mon Sep 17 00:00:00 2001
+From 345ffa545ef85ae5c6384c931759cc5353f4d434 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Sat, 3 Aug 2019 13:30:28 -0400
 Subject: [PATCH] Skip URI tests when using asan

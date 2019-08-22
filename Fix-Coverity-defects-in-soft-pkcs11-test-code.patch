@@ -1,4 +1,4 @@
-From 9fccdd784a639ffc9d4eae723a39e35cb7434fec Mon Sep 17 00:00:00 2001
+From 28db01445d2807d51b5045c0a04d5e49905de504 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Sat, 20 Jul 2019 00:51:52 -0400
 Subject: [PATCH] Fix Coverity defects in soft-pkcs11 test code
