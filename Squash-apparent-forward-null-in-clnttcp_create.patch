@@ -1,0 +1,34 @@
+From e2087bcf8a10fa0ecc4f0663e8df9b7ef5752805 Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Fri, 30 Aug 2019 11:16:58 -0400
+Subject: [PATCH] Squash apparent forward-null in clnttcp_create()
+
+clnttcp_create() only allows raddr to be NULL if *sockp is set.
+Static analyzers cannot know this, so can report a forward null
+defect.  Add an raddr check before calling connect() to squash the
+defect.
+
+[ghudson@mit.edu: rewrote commit message]
+
+(cherry picked from commit b2f688eedd4bcca525201ef9485749a8c20b808a)
+---
+ src/lib/rpc/clnt_tcp.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/lib/rpc/clnt_tcp.c b/src/lib/rpc/clnt_tcp.c
+index 87761906c..dbd62d0a7 100644
+--- a/src/lib/rpc/clnt_tcp.c
++++ b/src/lib/rpc/clnt_tcp.c
+@@ -168,9 +168,9 @@ clnttcp_create(
+ 	if (*sockp < 0) {
+ 		*sockp = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+ 		(void)bindresvport_sa(*sockp, NULL);
+-		if ((*sockp < 0)
+-		    || (connect(*sockp, (struct sockaddr *)raddr,
+-		    sizeof(*raddr)) < 0)) {
++		if (*sockp < 0 || raddr == NULL ||
++		    connect(*sockp, (struct sockaddr *)raddr,
++			    sizeof(*raddr)) < 0) {
+ 			rpc_createerr.cf_stat = RPC_SYSTEMERROR;
+ 			rpc_createerr.cf_error.re_errno = errno;
+                         (void)closesocket(*sockp);
