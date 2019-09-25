@@ -1163,7 +1163,7 @@ index 1a35cfba5..8cd1d36cb 100644
 -    unsigned int i;
 -    struct tms before, after;
 -    unsigned long cksum;
- 
+-
 -    block = malloc(blksiz * nblk);
 -    if (block == NULL)
 -        exit(1);
@@ -1187,7 +1187,7 @@ index 1a35cfba5..8cd1d36cb 100644
 -    free(block);
 -}
 -#endif
--
+ 
 -static void
 -verify(void)
 +int

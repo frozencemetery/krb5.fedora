@@ -20,8 +20,8 @@ spake_prep_questions() without a prototype.
 ticket: 8659
 (cherry picked from commit f240f1b0d324312be8aa59ead7cfbe0c329ed064)
 ---
- src/plugins/preauth/spake/spake_client.c | 111 ++++++++++++++---------
- 1 file changed, 66 insertions(+), 45 deletions(-)
+ src/plugins/preauth/spake/spake_client.c | 109 ++++++++++++++---------
+ 1 file changed, 65 insertions(+), 44 deletions(-)
 
 diff --git a/src/plugins/preauth/spake/spake_client.c b/src/plugins/preauth/spake/spake_client.c
 index d72bd64aa..47a6ba26c 100644
@@ -75,11 +75,14 @@ index d72bd64aa..47a6ba26c 100644
      if (st == NULL)
          return ENOMEM;
 -    if (st->initial_key == NULL && pa_data->length > 0)
-+
+-        cb->need_as_key(context, rock);
+ 
+-    /* When second-factor is implemented, we should ask questions based on the
+-     * factors in the challenge. */
 +    /* We don't need to ask any questions to send a support message. */
 +    if (pa_data->length == 0)
 +        return 0;
-+
+ 
 +    /* Decode the incoming message, replacing any previous one in the request
 +     * state.  If we can't decode it, we have no questions to ask. */
 +    k5_free_pa_spake(context, st->msg);
@@ -98,11 +101,7 @@ index d72bd64aa..47a6ba26c 100644
 +        if (!contains_sf_none(ch->factors))
 +            return 0;
 +        /* We will need the AS key to respond to the challenge. */
-         cb->need_as_key(context, rock);
--
--    /* When second-factor is implemented, we should ask questions based on the
--     * factors in the challenge. */
--
++        cb->need_as_key(context, rock);
 +    } else if (st->msg->choice == SPAKE_MSGTYPE_ENCDATA) {
 +        /* When second factor support is implemented, we should decrypt the
 +         * encdata message and ask questions based on the factor data. */

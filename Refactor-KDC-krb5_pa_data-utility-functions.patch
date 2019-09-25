@@ -19,9 +19,9 @@ where applicable.
 ---
  src/kdc/fast_util.c   |  28 +------
  src/kdc/kdc_preauth.c |  14 ++--
- src/kdc/kdc_util.c    | 187 +++++++++++++++++++++---------------------
+ src/kdc/kdc_util.c    | 183 +++++++++++++++++++++---------------------
  src/kdc/kdc_util.h    |   8 +-
- 4 files changed, 109 insertions(+), 128 deletions(-)
+ 4 files changed, 107 insertions(+), 126 deletions(-)
 
 diff --git a/src/kdc/fast_util.c b/src/kdc/fast_util.c
 index e05107ef3..6a3fc11b9 100644
@@ -250,29 +250,17 @@ index 754570c01..13111215d 100644
 -
 -    p[i] = (krb5_pa_data *)malloc(sizeof(krb5_pa_data));
 -    if (p[i] == NULL)
--        return ENOMEM;
--    *(p[i]) = *padata;
--
--    p[i + 1] = NULL;
--
--    if (copy) {
--        p[i]->contents = (krb5_octet *)malloc(padata->length);
--        if (p[i]->contents == NULL) {
--            free(p[i]);
--            p[i] = NULL;
 +    *out = NULL;
 +    if (len > 0) {
 +        buf = malloc(len);
 +        if (buf == NULL)
-             return ENOMEM;
--        }
--
--        memcpy(p[i]->contents, padata->contents, padata->length);
-     }
++            return ENOMEM;
++    }
 +    pa = malloc(sizeof(*pa));
 +    if (pa == NULL) {
 +        free(buf);
-+        return ENOMEM;
+         return ENOMEM;
+-    *(p[i]) = *padata;
 +    }
 +    pa->magic = KV5M_PA_DATA;
 +    pa->pa_type = pa_type;
@@ -282,21 +270,31 @@ index 754570c01..13111215d 100644
 +    return 0;
 +}
  
+-    p[i + 1] = NULL;
 +/* Add pa to list, claiming its memory.  Free pa on failure. */
 +krb5_error_code
 +add_pa_data_element(krb5_pa_data ***list, krb5_pa_data *pa)
 +{
 +    size_t count;
 +    krb5_pa_data **newlist;
-+
+ 
+-    if (copy) {
+-        p[i]->contents = (krb5_octet *)malloc(padata->length);
+-        if (p[i]->contents == NULL) {
+-            free(p[i]);
+-            p[i] = NULL;
+-            return ENOMEM;
+-        }
 +    for (count = 0; *list != NULL && (*list)[count] != NULL; count++);
-+
+ 
+-        memcpy(p[i]->contents, padata->contents, padata->length);
 +    newlist = realloc(*list, (count + 2) * sizeof(*newlist));
 +    if (newlist == NULL) {
 +        free(pa->contents);
 +        free(pa);
 +        return ENOMEM;
-+    }
+     }
+-
 +    newlist[count] = pa;
 +    newlist[count + 1] = NULL;
 +    *list = newlist;
@@ -339,6 +337,13 @@ index 754570c01..13111215d 100644
 +
 +    /* Add a pa-data element to the list, stealing memory from der_cksum. */
 +    retval = alloc_pa_data(KRB5_ENCPADATA_REQ_ENC_PA_REP, 0, &pa);
++    if (retval)
++        goto cleanup;
++    pa->length = der_cksum->length;
++    pa->contents = (uint8_t *)der_cksum->data;
++    der_cksum->data = NULL;
++    /* add_pa_data_element() claims pa on success or failure. */
++    retval = add_pa_data_element(out_enc_padata, pa);
      if (retval)
          goto cleanup;
 -    out->data = NULL;
@@ -347,13 +352,6 @@ index 754570c01..13111215d 100644
 -    pa.length = 0;
 -    pa.contents = NULL;
 -    retval = add_pa_data_element(context, &pa, out_enc_padata, FALSE);
-+    pa->length = der_cksum->length;
-+    pa->contents = (uint8_t *)der_cksum->data;
-+    der_cksum->data = NULL;
-+    /* add_pa_data_element() claims pa on success or failure. */
-+    retval = add_pa_data_element(out_enc_padata, pa);
-+    if (retval)
-+        goto cleanup;
 +
 +    /* Add a zero-length PA-FX-FAST element to the list. */
 +    retval = alloc_pa_data(KRB5_PADATA_FX_FAST, 0, &pa);

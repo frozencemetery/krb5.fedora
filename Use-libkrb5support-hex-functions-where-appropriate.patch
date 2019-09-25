@@ -8,7 +8,7 @@ Subject: [PATCH] Use libkrb5support hex functions where appropriate
  src/kadmin/dbutil/deps                        | 16 ++---
  src/kadmin/dbutil/tabdump.c                   | 19 +++---
  src/kadmin/ktutil/deps                        | 13 ++--
- src/kadmin/ktutil/ktutil_funcs.c              | 30 ++++-----
+ src/kadmin/ktutil/ktutil_funcs.c              | 28 ++++----
  src/lib/crypto/crypto_tests/deps              | 39 ++++++-----
  src/lib/crypto/crypto_tests/t_cksum.c         | 35 +++-------
  src/lib/crypto/crypto_tests/t_crc.c           | 28 ++------
@@ -24,7 +24,7 @@ Subject: [PATCH] Use libkrb5support hex functions where appropriate
  src/slave/kproplog.c                          | 11 ++--
  src/tests/gssapi/deps                         | 14 ++--
  src/tests/gssapi/t_prf.c                      | 13 ++--
- 19 files changed, 152 insertions(+), 255 deletions(-)
+ 19 files changed, 151 insertions(+), 254 deletions(-)
 
 diff --git a/src/kadmin/dbutil/deps b/src/kadmin/dbutil/deps
 index 4dcc33628..8b0965aac 100644
@@ -153,26 +153,25 @@ index 7a3aa0dca..5843e24b7 100644
 -        lp->entry->key.contents = (krb5_octet *) malloc((strlen(buf) + 1) / 2);
 -        if (!lp->entry->key.contents) {
 -            retval = ENOMEM;
-+        retval = k5_hex_decode(buf, &keybytes, &keylen);
-+        if (retval) {
-+            if (retval == EINVAL) {
-+                fprintf(stderr, _("addent: Illegal character in key.\n"));
-+                retval = 0;
-+            }
-             goto cleanup;
-         }
- 
+-            goto cleanup;
+-        }
+-
 -        i = 0;
 -        for (cp = buf; *cp; cp += 2) {
 -            if (!isxdigit((int) cp[0]) || !isxdigit((int) cp[1])) {
--                fprintf(stderr, _("addent: Illegal character in key.\n"));
--                retval = 0;
++        retval = k5_hex_decode(buf, &keybytes, &keylen);
++        if (retval) {
++            if (retval == EINVAL) {
+                 fprintf(stderr, _("addent: Illegal character in key.\n"));
+                 retval = 0;
 -                goto cleanup;
--            }
+             }
 -            sscanf(cp, "%02x", &tmp);
 -            lp->entry->key.contents[i++] = (krb5_octet) tmp;
--        }
++            goto cleanup;
+         }
 -        lp->entry->key.length = i;
++
 +        lp->entry->key.enctype = enctype;
 +        lp->entry->key.contents = keybytes;
 +        lp->entry->key.length = keylen;
@@ -665,22 +664,17 @@ index 87a2118ff..cb30f4a7f 100644
          return EINVAL;
      }
 -    str += 5;
- 
+-
 -    len = strlen(str);
 -    if (len % 2 != 0) {
 -        k5_setmsg(context, EINVAL, _("Password corrupt"));
 -        return EINVAL;
-+    ret = k5_hex_decode(str + 5, &bytes, &len);
-+    if (ret) {
-+        if (ret == EINVAL)
-+            k5_setmsg(context, ret, _("Password corrupt"));
-+        return ret;
-     }
- 
+-    }
+-
 -    q = password = malloc(len / 2 + 1);
 -    if (password == NULL)
 -        return ENOMEM;
--
+ 
 -    for (p = (unsigned char *)str; *p != '\0'; p += 2) {
 -        if (!isxdigit(*p) || !isxdigit(p[1])) {
 -            free(password);
@@ -689,9 +683,14 @@ index 87a2118ff..cb30f4a7f 100644
 -        }
 -        sscanf((char *)p, "%2x", &k);
 -        *q++ = k;
--    }
++    ret = k5_hex_decode(str + 5, &bytes, &len);
++    if (ret) {
++        if (ret == EINVAL)
++            k5_setmsg(context, ret, _("Password corrupt"));
++        return ret;
+     }
 -    *q = '\0';
--
+ 
 -    *password_out = (char *)password;
 +    *password_out = (char *)bytes;
      return 0;

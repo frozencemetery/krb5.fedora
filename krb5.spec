@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.16.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 25%{?dist}
+Release: 26%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.16/krb5-%{version}%{prerelease}.tar.gz
@@ -111,6 +111,7 @@ Patch92: In-kpropd-debug-log-proper-ticket-enctype-names.patch
 Patch93: Add-function-and-enctype-flag-for-deprecations.patch
 Patch94: Make-etype-names-in-KDC-logs-human-readable.patch
 Patch95: Mark-deprecated-enctypes-when-used.patch
+Patch96: Fix-KDC-crash-when-logging-PKINIT-enctypes.patch
 
 License: MIT
 URL: http://web.mit.edu/kerberos/www/
@@ -757,6 +758,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Sep 25 2019 Robbie Harwood <rharwood@redhat.com> - 1.16.1-26
+- Fix KDC crash when logging PKINIT enctypes (CVE-2019-14844)
+
 * Thu Jan 17 2019 Robbie Harwood <rharwood@redhat.com> - 1.16.1-25
 - enctype logging and explicit_bzero()
 

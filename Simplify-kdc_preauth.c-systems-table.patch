@@ -16,8 +16,8 @@ since it was first added.
 
 (cherry picked from commit fea1a488924faa3938ef723feaa1ff12d22a91ff)
 ---
- src/kdc/kdc_preauth.c | 526 +++++++++++++++---------------------------
- 1 file changed, 184 insertions(+), 342 deletions(-)
+ src/kdc/kdc_preauth.c | 522 +++++++++++++++---------------------------
+ 1 file changed, 182 insertions(+), 340 deletions(-)
 
 diff --git a/src/kdc/kdc_preauth.c b/src/kdc/kdc_preauth.c
 index edc30bd83..6f34dc289 100644
@@ -344,18 +344,15 @@ index edc30bd83..6f34dc289 100644
      state->rock = rock;
      state->realm = rock->rstate->realm_data;
      state->e_data_out = e_data_out;
--
++    state->pa_data = NULL;
++    state->ap = preauth_systems;
+ 
 -    state->pa_data = calloc(n_preauth_systems + 1, sizeof(krb5_pa_data *));
 -    if (!state->pa_data) {
 -        free(state);
 -        (*respond)(arg);
 -        return;
 -    }
--
--    state->pa_cur = state->pa_data;
-+    state->pa_data = NULL;
-     state->ap = preauth_systems;
-+
 +    /* Add an empty PA-FX-FAST element to advertise FAST support. */
 +    if (alloc_pa_data(KRB5_PADATA_FX_FAST, 0, &pa) != 0)
 +        goto error;
@@ -365,7 +362,9 @@ index edc30bd83..6f34dc289 100644
 +
 +    if (add_etype_info(kdc_context, rock, &state->pa_data) != 0)
 +        goto error;
-+
+ 
+-    state->pa_cur = state->pa_data;
+-    state->ap = preauth_systems;
      hint_list_next(state);
 +    return;
 +
@@ -543,23 +542,16 @@ index edc30bd83..6f34dc289 100644
          goto cleanup;
 -    pa = k5alloc(sizeof(*pa), &retval);
 -    if (pa == NULL)
-+
-+    /* Steal the data from der_etype_info to create a pa-data element. */
-+    retval = alloc_pa_data(pa_type, 0, pa_out);
-+    if (retval)
-         goto cleanup;
+-        goto cleanup;
 -    pa->magic = KV5M_PA_DATA;
 -    pa->pa_type = pa_type;
 -    pa->contents = (unsigned char *)scratch->data;
 -    pa->length = scratch->length;
 -    scratch->data = NULL;
 -    *pa_out = pa;
-+    (*pa_out)->contents = (uint8_t *)der_etype_info->data;
-+    (*pa_out)->length = der_etype_info->length;
-+    der_etype_info->data = NULL;
- 
- cleanup:
-     krb5_free_etype_info(context, entry);
+-
+-cleanup:
+-    krb5_free_etype_info(context, entry);
 -    krb5_free_data(context, scratch);
 -    return retval;
 -}
@@ -576,7 +568,7 @@ index edc30bd83..6f34dc289 100644
 -    }
 -    return FALSE;
 -}
--
+ 
 -/* Generate hint list padata for PA-ETYPE-INFO or PA-ETYPE-INFO2. */
 -static void
 -get_etype_info(krb5_context context, krb5_kdc_req *request,
@@ -635,12 +627,14 @@ index edc30bd83..6f34dc289 100644
 -
 -    retval = krb5_dbe_compute_salt(context, client_key, request->client,
 -                                   &salttype, &salt);
--    if (retval)
++    /* Steal the data from der_etype_info to create a pa-data element. */
++    retval = alloc_pa_data(pa_type, 0, pa_out);
+     if (retval)
 -        return 0;
 -
 -    padata = k5alloc(sizeof(*padata), &retval);
 -    if (padata == NULL)
--        goto cleanup;
+         goto cleanup;
 -    padata->magic = KV5M_PA_DATA;
 -
 -    if (salttype == KRB5_KDB_SALTTYPE_AFS3) {
@@ -658,10 +652,14 @@ index edc30bd83..6f34dc289 100644
 -
 -    *send_pa = padata;
 -    padata = NULL;
--
--cleanup:
++    (*pa_out)->contents = (uint8_t *)der_etype_info->data;
++    (*pa_out)->length = der_etype_info->length;
++    der_etype_info->data = NULL;
+ 
+ cleanup:
 -    free(padata);
 -    krb5_free_data(context, salt);
++    krb5_free_etype_info(context, entry);
 +    krb5_free_data(context, der_etype_info);
      return retval;
  }

@@ -13,9 +13,9 @@ ticket: 8772 (new)
 (cherry picked from commit b999ade3996817ccb9c9362e4c06dd236e4a854b)
 ---
  src/kdc/kdc_log.c  |  42 +++++++--------
- src/kdc/kdc_util.c | 131 +++++++++++++++++++++++----------------------
+ src/kdc/kdc_util.c | 125 +++++++++++++++++++++++----------------------
  src/kdc/kdc_util.h |   6 +--
- 3 files changed, 90 insertions(+), 89 deletions(-)
+ 3 files changed, 87 insertions(+), 86 deletions(-)
 
 diff --git a/src/kdc/kdc_log.c b/src/kdc/kdc_log.c
 index 4eec50373..b160ba21a 100644
@@ -133,35 +133,68 @@ index 13111215d..6f83be9db 100644
 - * L10_2 = log10(2**x), rounded up; log10(2) ~= 0.301.
 - */
 -#define L10_2(x) ((int)(((x * 301) + 999) / 1000))
--
++/* Wrapper of krb5_enctype_to_name() to include the PKINIT types. */
++static krb5_error_code
++enctype_name(krb5_enctype ktype, char *buf, size_t buflen)
++{
++    char *name;
++
++    if (buflen == 0)
++        return EINVAL;
++    *buf = '\0'; /* ensure these are always valid C-strings */
++
++    /* rfc4556 recommends that clients wishing to indicate support for these
++     * pkinit algorithms include them in the etype field of the AS-REQ. */
++    if (ktype == ENCTYPE_DSA_SHA1_CMS)
++        name = "id-dsa-with-sha1-CmsOID";
++    else if (ktype == ENCTYPE_MD5_RSA_CMS)
++        name = "md5WithRSAEncryption-CmsOID";
++    else if (ktype == ENCTYPE_SHA1_RSA_CMS)
++        name = "sha-1WithRSAEncryption-CmsOID";
++    else if (ktype == ENCTYPE_RC2_CBC_ENV)
++        name = "rc2-cbc-EnvOID";
++    else if (ktype == ENCTYPE_RSA_ENV)
++        name = "rsaEncryption-EnvOID";
++    else if (ktype == ENCTYPE_RSA_ES_OAEP_ENV)
++        name = "id-RSAES-OAEP-EnvOID";
++    else if (ktype == ENCTYPE_DES3_CBC_ENV)
++        name = "des-ede3-cbc-EnvOID";
++    else
++        return krb5_enctype_to_name(ktype, FALSE, buf, buflen);
+ 
 -/*
 - * Max length of sprintf("%ld") for an int of type T; includes leading
 - * minus sign and terminating NUL.
 - */
 -#define D_LEN(t) (L10_2(sizeof(t) * CHAR_BIT) + 2)
--
++    if (strlcpy(name, buf, buflen) >= buflen)
++        return ENOMEM;
++    return 0;
++}
+ 
 -void
 -ktypes2str(char *s, size_t len, int nktypes, krb5_enctype *ktype)
-+/* Wrapper of krb5_enctype_to_name() to include the PKINIT types. */
-+static krb5_error_code
-+enctype_name(krb5_enctype ktype, char *buf, size_t buflen)
++char *
++ktypes2str(krb5_enctype *ktype, int nktypes)
  {
--    int i;
++    struct k5buf buf;
+     int i;
 -    char stmp[D_LEN(krb5_enctype) + 1];
 -    char *p;
-+    char *name;
++    char name[64];
  
 -    if (nktypes < 0
 -        || len < (sizeof(" etypes {...}") + D_LEN(int))) {
 -        *s = '\0';
 -        return;
 -    }
-+    if (buflen == 0)
-+        return EINVAL;
-+    *buf = '\0'; /* ensure these are always valid C-strings */
++    if (nktypes < 0)
++        return NULL;
  
 -    snprintf(s, len, "%d etypes {", nktypes);
--    for (i = 0; i < nktypes; i++) {
++    k5_buf_init_dynamic(&buf);
++    k5_buf_add_fmt(&buf, "%d etypes {", nktypes);
+     for (i = 0; i < nktypes; i++) {
 -        snprintf(stmp, sizeof(stmp), "%s%ld", i ? " " : "", (long)ktype[i]);
 -        if (strlen(s) + strlen(stmp) + sizeof("}") > len)
 -            break;
@@ -181,68 +214,32 @@ index 13111215d..6f83be9db 100644
 -            }
 -        }
 -        strlcat(s, "...", len);
--    }
++        enctype_name(ktype[i], name, sizeof(name));
++        k5_buf_add_fmt(&buf, "%s%s(%ld)", i ? ", " : "", name, (long)ktype[i]);
+     }
 -    strlcat(s, "}", len);
 -    return;
-+    /* rfc4556 recommends that clients wishing to indicate support for these
-+     * pkinit algorithms include them in the etype field of the AS-REQ. */
-+    if (ktype == ENCTYPE_DSA_SHA1_CMS)
-+        name = "id-dsa-with-sha1-CmsOID";
-+    else if (ktype == ENCTYPE_MD5_RSA_CMS)
-+        name = "md5WithRSAEncryption-CmsOID";
-+    else if (ktype == ENCTYPE_SHA1_RSA_CMS)
-+        name = "sha-1WithRSAEncryption-CmsOID";
-+    else if (ktype == ENCTYPE_RC2_CBC_ENV)
-+        name = "rc2-cbc-EnvOID";
-+    else if (ktype == ENCTYPE_RSA_ENV)
-+        name = "rsaEncryption-EnvOID";
-+    else if (ktype == ENCTYPE_RSA_ES_OAEP_ENV)
-+        name = "id-RSAES-OAEP-EnvOID";
-+    else if (ktype == ENCTYPE_DES3_CBC_ENV)
-+        name = "des-ede3-cbc-EnvOID";
-+    else
-+        return krb5_enctype_to_name(ktype, FALSE, buf, buflen);
-+
-+    if (strlcpy(name, buf, buflen) >= buflen)
-+        return ENOMEM;
-+    return 0;
++    k5_buf_add(&buf, "}");
++    return buf.data;
  }
  
 -void
 -rep_etypes2str(char *s, size_t len, krb5_kdc_rep *rep)
 +char *
-+ktypes2str(krb5_enctype *ktype, int nktypes)
++rep_etypes2str(krb5_kdc_rep *rep)
  {
 -    char stmp[sizeof("ses=") + D_LEN(krb5_enctype)];
-+    struct k5buf buf;
-+    int i;
-+    char name[64];
- 
+-
 -    if (len < (3 * D_LEN(krb5_enctype)
 -               + sizeof("etypes {rep= tkt= ses=}"))) {
 -        *s = '\0';
 -        return;
-+    if (nktypes < 0)
-+        return NULL;
-+
-+    k5_buf_init_dynamic(&buf);
-+    k5_buf_add_fmt(&buf, "%d etypes {", nktypes);
-+    for (i = 0; i < nktypes; i++) {
-+        enctype_name(ktype[i], name, sizeof(name));
-+        k5_buf_add_fmt(&buf, "%s%s(%ld)", i ? ", " : "", name, (long)ktype[i]);
-     }
-+    k5_buf_add(&buf, "}");
-+    return buf.data;
-+}
- 
--    snprintf(s, len, "etypes {rep=%ld", (long)rep->enc_part.enctype);
-+char *
-+rep_etypes2str(krb5_kdc_rep *rep)
-+{
+-    }
 +    struct k5buf buf;
 +    char name[64];
 +    krb5_enctype etype;
-+
+ 
+-    snprintf(s, len, "etypes {rep=%ld", (long)rep->enc_part.enctype);
 +    k5_buf_init_dynamic(&buf);
 +    k5_buf_add(&buf, "etypes {rep=");
 +    enctype_name(rep->enc_part.enctype, name, sizeof(name));
