@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 44%{?dist}
+Release: 45%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -123,6 +123,7 @@ Patch161: krb5-1.17post5-FIPS-with-PRNG-and-RADIUS-without-SPA.patch
 Patch162: Simplify-krb5_dbe_def_search_enctype.patch
 Patch163: Squash-apparent-forward-null-in-clnttcp_create.patch
 Patch164: Remove-null-check-in-krb5_gss_duplicate_name.patch
+Patch165: Fix-KDC-crash-when-logging-PKINIT-enctypes.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -729,6 +730,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Sep 25 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-45
+- Fix KDC crash when logging PKINIT enctypes (CVE-2019-14844)
+
 * Thu Sep 12 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-44
 - Static analyzer appeasement
 
