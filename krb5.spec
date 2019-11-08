@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 46%{?dist}
+Release: 47%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -731,6 +731,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Nov 08 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-47
+- Add default_principal_flags to example kdc.conf
+
 * Wed Oct 02 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-46
 - Log unknown enctypes as unsupported in KDC
 
