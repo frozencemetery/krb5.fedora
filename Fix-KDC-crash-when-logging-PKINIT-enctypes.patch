@@ -1,4 +1,4 @@
-From 55353df13814c6d711a1d947dd6690b334269122 Mon Sep 17 00:00:00 2001
+From b3ccbf6ba3f662d0671b0abd10017562f76a190a Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Wed, 25 Sep 2019 12:57:56 -0400
 Subject: [PATCH] Fix KDC crash when logging PKINIT enctypes

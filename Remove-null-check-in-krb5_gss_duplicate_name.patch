@@ -1,4 +1,4 @@
-From 7016aa77499732446d7bc838b95810c8cdf5b15b Mon Sep 17 00:00:00 2001
+From 09855e99697edcfb6228f266e8c7b6889ea48b23 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 30 Aug 2019 11:19:52 -0400
 Subject: [PATCH] Remove null check in krb5_gss_duplicate_name()

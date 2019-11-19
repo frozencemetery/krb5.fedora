@@ -1,7 +1,7 @@
-From ca3c0fc3fd80b3a9953da47f64beb8b24bd46f08 Mon Sep 17 00:00:00 2001
+From 80b56b04d90fcacd9f78fed305c7d5528d863b38 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 9 Nov 2018 15:12:21 -0500
-Subject: [PATCH] krb5-1.17post5 FIPS with PRNG and RADIUS without SPAKE
+Subject: [PATCH] krb5-1.17post6 FIPS with PRNG and RADIUS and MD4
 
 NB: Use openssl's PRNG in FIPS mode and taint within krad.
 
@@ -15,12 +15,12 @@ This will slow down some calls slightly (FIPS_mode() takes multiple
 locks), but not for any ciphers we care about - which is to say that
 AES is fine.  Shame about SPAKE though.
 
-post5 removes SPAKE entirely.
+post6 restores MD4 (and therefore keygen-only RC4).
 ---
  src/lib/crypto/krb/prng.c                     | 11 ++++-
  .../crypto/openssl/enc_provider/camellia.c    |  6 +++
  src/lib/crypto/openssl/enc_provider/rc4.c     | 13 +++++-
- .../crypto/openssl/hash_provider/hash_evp.c   |  4 ++
+ .../crypto/openssl/hash_provider/hash_evp.c   | 12 +++++
  src/lib/crypto/openssl/hmac.c                 |  6 ++-
  src/lib/krad/attr.c                           | 45 ++++++++++++++-----
  src/lib/krad/attrset.c                        |  5 ++-
@@ -31,7 +31,7 @@ post5 removes SPAKE entirely.
  src/lib/krad/t_attrset.c                      |  4 +-
  src/plugins/preauth/spake/spake_client.c      |  6 +++
  src/plugins/preauth/spake/spake_kdc.c         |  6 +++
- 14 files changed, 121 insertions(+), 33 deletions(-)
+ 14 files changed, 129 insertions(+), 33 deletions(-)
 
 diff --git a/src/lib/crypto/krb/prng.c b/src/lib/crypto/krb/prng.c
 index cb9ca9b98..f0e9984ca 100644
@@ -127,15 +127,30 @@ index a65d57b7a..6ccaca94a 100644
       * The cipher state here is a saved pointer to a struct arcfour_state
       * object, rather than a flat byte array as in most enc providers.  The
 diff --git a/src/lib/crypto/openssl/hash_provider/hash_evp.c b/src/lib/crypto/openssl/hash_provider/hash_evp.c
-index 957ed8d9c..8c1fd7f59 100644
+index 957ed8d9c..915da9dbe 100644
 --- a/src/lib/crypto/openssl/hash_provider/hash_evp.c
 +++ b/src/lib/crypto/openssl/hash_provider/hash_evp.c
-@@ -64,12 +64,16 @@ hash_evp(const EVP_MD *type, const krb5_crypto_iov *data, size_t num_data,
+@@ -49,6 +49,11 @@ hash_evp(const EVP_MD *type, const krb5_crypto_iov *data, size_t num_data,
+     if (ctx == NULL)
+         return ENOMEM;
+ 
++    if (type == EVP_md4()) {
++        /* See comment below in hash_md4(). */
++        EVP_MD_CTX_set_flags(ctx, EVP_MD_CTX_FLAG_NON_FIPS_ALLOW);
++    }
++
+     ok = EVP_DigestInit_ex(ctx, type, NULL);
+     for (i = 0; i < num_data; i++) {
+         if (!SIGN_IOV(&data[i]))
+@@ -64,12 +69,19 @@ hash_evp(const EVP_MD *type, const krb5_crypto_iov *data, size_t num_data,
  static krb5_error_code
  hash_md4(const krb5_crypto_iov *data, size_t num_data, krb5_data *output)
  {
-+    if (FIPS_mode())
-+        return KRB5_CRYPTO_INTERNAL;
++    /*
++     * MD4 is needed in FIPS mode to perform key generation for RC4 keys used
++     * by IPA.  These keys are only used along a (separately) secured channel
++     * for legacy reasons when performing trusts to Active Directory.
++     */
      return hash_evp(EVP_md4(), data, num_data, output);
  }
  

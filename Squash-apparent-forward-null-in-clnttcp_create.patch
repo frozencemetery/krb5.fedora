@@ -1,4 +1,4 @@
-From e2087bcf8a10fa0ecc4f0663e8df9b7ef5752805 Mon Sep 17 00:00:00 2001
+From d52e7db97781dbdb518368e143c031ed5c6217cc Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 30 Aug 2019 11:16:58 -0400
 Subject: [PATCH] Squash apparent forward-null in clnttcp_create()

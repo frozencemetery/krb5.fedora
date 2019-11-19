@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 47%{?dist}
+Release: 48%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -119,12 +119,15 @@ Patch157: Skip-URI-tests-when-using-asan.patch
 Patch158: Fix-memory-leaks-in-soft-pkcs11-code.patch
 Patch159: Initialize-life-rlife-in-kdcpolicy-interface.patch
 Patch160: Fix-KCM-client-time-offset-propagation.patch
-Patch161: krb5-1.17post5-FIPS-with-PRNG-and-RADIUS-without-SPA.patch
 Patch162: Simplify-krb5_dbe_def_search_enctype.patch
 Patch163: Squash-apparent-forward-null-in-clnttcp_create.patch
 Patch164: Remove-null-check-in-krb5_gss_duplicate_name.patch
 Patch165: Fix-KDC-crash-when-logging-PKINIT-enctypes.patch
 Patch166: Log-unknown-enctypes-as-unsupported-in-KDC.patch
+Patch167: Fix-minor-errors-in-softpkcs11.patch
+Patch168: Update-test-suite-cert-message-digest-to-sha256.patch
+Patch169: Use-backported-version-of-OpenSSL-3-KDF-interface.patch
+Patch170: krb5-1.17post6-FIPS-with-PRNG-and-RADIUS-and-MD4.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -175,7 +178,9 @@ BuildRequires: hostname
 BuildRequires: iproute
 BuildRequires: libverto-devel
 BuildRequires: openldap-devel
-BuildRequires: openssl-devel >= 0.9.8
+
+# KDF support
+BuildRequires: openssl-devel >= 1.1.1d-4
 
 %ifarch %{ix86} x86_64
 BuildRequires: yasm
@@ -731,6 +736,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Nov 19 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-48
+- Use OpenSSL's backported KDFs
+- Restore MD4 in FIPS mode (for samba)
+
 * Fri Nov 08 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-47
 - Add default_principal_flags to example kdc.conf
 
