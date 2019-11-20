@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 49%{?dist}
+Release: 50%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -182,6 +182,7 @@ BuildRequires: openldap-devel
 
 # KDF support
 BuildRequires: openssl-devel >= 1.1.1d-4
+Requires: openssl-libs >= 1.1.1d-4
 
 %ifarch %{ix86} x86_64
 BuildRequires: yasm
@@ -737,6 +738,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Nov 20 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-50
+- Add runtime openssl version requirement too
+
 * Wed Nov 20 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-49
 - Fix kadmin addprinc -randkey -kvno
 
