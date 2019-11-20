@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 48%{?dist}
+Release: 49%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -128,6 +128,7 @@ Patch167: Fix-minor-errors-in-softpkcs11.patch
 Patch168: Update-test-suite-cert-message-digest-to-sha256.patch
 Patch169: Use-backported-version-of-OpenSSL-3-KDF-interface.patch
 Patch170: krb5-1.17post6-FIPS-with-PRNG-and-RADIUS-and-MD4.patch
+Patch171: Fix-kadmin-addprinc-randkey-kvno.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -736,6 +737,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Nov 20 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-49
+- Fix kadmin addprinc -randkey -kvno
+
 * Tue Nov 19 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-48
 - Use OpenSSL's backported KDFs
 - Restore MD4 in FIPS mode (for samba)

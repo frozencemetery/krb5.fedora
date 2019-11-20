@@ -1,0 +1,45 @@
+From 2c0d9a91c34f315f860fc857dd84863d048b6105 Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Sat, 16 Nov 2019 19:54:51 -0500
+Subject: [PATCH] Fix kadmin addprinc -randkey -kvno
+
+Commit f07bca9fc94a5cf2e3c0f58226c7973a4b86b7a9 made addprinc -randkey
+use a single RPC request, but the server-side handling always creates
+the random keys with kvno 1.  If a kvno is specified in the RPC
+request, set the kvno of the key data after creating it.  Reported by
+Andreas Ladanyi.
+
+ticket: 8848
+tags: pullup
+target_version: 1.17-next
+target_version: 1.16-next
+
+(cherry picked from commit 462e85208d57b8d4120c99e801fbd156b9ccf16f)
+---
+ src/lib/kadm5/srv/svr_principal.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/src/lib/kadm5/srv/svr_principal.c b/src/lib/kadm5/srv/svr_principal.c
+index 48cac0c11..a1ecdbfc4 100644
+--- a/src/lib/kadm5/srv/svr_principal.c
++++ b/src/lib/kadm5/srv/svr_principal.c
+@@ -302,7 +302,7 @@ kadm5_create_principal_3(void *server_handle,
+     kadm5_server_handle_t handle = server_handle;
+     krb5_keyblock               *act_mkey;
+     krb5_kvno                   act_kvno;
+-    int                         new_n_ks_tuple = 0;
++    int                         new_n_ks_tuple = 0, i;
+     krb5_key_salt_tuple         *new_ks_tuple = NULL;
+ 
+     CHECK_HANDLE(server_handle);
+@@ -468,6 +468,10 @@ kadm5_create_principal_3(void *server_handle,
+         /* Null password means create with random key (new in 1.8). */
+         ret = krb5_dbe_crk(handle->context, &master_keyblock,
+                            new_ks_tuple, new_n_ks_tuple, FALSE, kdb);
++        if (mask & KADM5_KVNO) {
++            for (i = 0; i < kdb->n_key_data; i++)
++                kdb->key_data[i].key_data_kvno = entry->kvno;
++        }
+     }
+     if (ret)
+         goto cleanup;
