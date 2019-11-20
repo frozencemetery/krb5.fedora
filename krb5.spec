@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 50%{?dist}
+Release: 51%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -179,10 +179,7 @@ BuildRequires: hostname
 BuildRequires: iproute
 BuildRequires: libverto-devel
 BuildRequires: openldap-devel
-
-# KDF support
 BuildRequires: openssl-devel >= 1.1.1d-4
-Requires: openssl-libs >= 1.1.1d-4
 
 %ifarch %{ix86} x86_64
 BuildRequires: yasm
@@ -215,6 +212,7 @@ to install this package.
 
 %package libs
 Summary: The non-admin shared libraries used by Kerberos 5
+Requires: openssl-libs >= 1.1.1d-4
 Requires: coreutils, gawk, grep, sed
 Requires: keyutils-libs >= 1.5.8
 Requires: /etc/crypto-policies/back-ends/krb5.config
@@ -738,6 +736,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Nov 20 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-51
+- Fix runtime openssl version to actually propogate
+
 * Wed Nov 20 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-50
 - Add runtime openssl version requirement too
 
