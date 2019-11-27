@@ -1,4 +1,4 @@
-From 9e71fcd5db98fb7ace02e8684486cc7f092d82ad Mon Sep 17 00:00:00 2001
+From f87c6fabd1073637c4798fcdd3fdab060edb0731 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Wed, 17 Apr 2019 17:07:46 -0400
 Subject: [PATCH] Remove support for no-flags SAM-2 preauth

@@ -1,4 +1,4 @@
-From 35395701a34f68e99abfe23d07b93c59cd63ad50 Mon Sep 17 00:00:00 2001
+From cebf1ea82c4d2dc4494ad0af7525fd324e6d92e2 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 24 May 2019 13:11:44 -0400
 Subject: [PATCH] Remove the v4 and afs3 salt types

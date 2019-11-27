@@ -1,4 +1,4 @@
-From 47e66724b9d5cfef84965d99c83d29e4739932e3 Mon Sep 17 00:00:00 2001
+From 3d1f71979d0a41e75f5169ecbdd594e171e8bbf6 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Thu, 20 Jun 2019 13:41:57 -0400
 Subject: [PATCH] Use imported soft-pkcs11 for tests

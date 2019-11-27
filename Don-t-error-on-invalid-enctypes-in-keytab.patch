@@ -1,4 +1,4 @@
-From 84bb2b804c69830ff2dc405b1a2bd7893291d8e6 Mon Sep 17 00:00:00 2001
+From 261e67018b25412c53a290c429612bb55569428e Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Wed, 10 Jul 2019 17:10:16 -0400
 Subject: [PATCH] Don't error on invalid enctypes in keytab

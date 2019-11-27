@@ -1,4 +1,4 @@
-From 152e88043117927c334fead93bb3bd3dd74593b7 Mon Sep 17 00:00:00 2001
+From 12ffeca5a708add9461e71300d58a08ea99ed6e4 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 16 Apr 2019 14:16:39 -0400
 Subject: [PATCH] Update ASN.1 SAM tests to use a modern enctype

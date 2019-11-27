@@ -1,4 +1,4 @@
-From df5026b47d2f90729b76071fd7cae48d46c4d1f6 Mon Sep 17 00:00:00 2001
+From 0d27dbf488547b9ca6780f23e5e40fa820928385 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 8 Nov 2019 14:28:56 -0500
 Subject: [PATCH] Fix minor errors in softpkcs11

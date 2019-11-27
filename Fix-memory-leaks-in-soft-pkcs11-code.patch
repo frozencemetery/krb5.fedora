@@ -1,4 +1,4 @@
-From 5cc80472e7a8b0fb3002f229ffb104dccf8bd120 Mon Sep 17 00:00:00 2001
+From 8087bdce8a5e9912f693ab199198a5bf4db54001 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Mon, 5 Aug 2019 01:53:51 -0400
 Subject: [PATCH] Fix memory leaks in soft-pkcs11 code

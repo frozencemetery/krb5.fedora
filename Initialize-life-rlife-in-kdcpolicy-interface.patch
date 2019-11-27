@@ -1,4 +1,4 @@
-From b448801a1ab19d89cc069e63f5ce5acbc9f3cd8d Mon Sep 17 00:00:00 2001
+From 17d1dbd3b2eb3961c061b140f8a7641405e59d44 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 9 Aug 2019 14:07:22 -0400
 Subject: [PATCH] Initialize life/rlife in kdcpolicy interface

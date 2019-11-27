@@ -1,4 +1,4 @@
-From 80b56b04d90fcacd9f78fed305c7d5528d863b38 Mon Sep 17 00:00:00 2001
+From 6048ef0ecbf45f239a6df3074975b926ce286e5a Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 9 Nov 2018 15:12:21 -0500
 Subject: [PATCH] krb5-1.17post6 FIPS with PRNG and RADIUS and MD4

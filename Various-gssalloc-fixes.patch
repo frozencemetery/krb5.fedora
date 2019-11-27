@@ -1,0 +1,142 @@
+From 9e574469b639220a34bbf3dc36a96854ad0c269a Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Sat, 23 Nov 2019 11:42:59 -0500
+Subject: [PATCH] Various gssalloc fixes
+
+The DEBUG_GSSALLOC version of gssalloc_realloc() must add the sentinel
+size to the byte count.
+
+The mechglue gss_decapsulate_token(), gss_encapsulate_token(), and
+gss_export_sec_context() must use gssalloc_malloc() to allocate
+output buffers.
+
+The krb5 mech's gss_export_name_composite() and gss_pseudo_random()
+implementations must use gssalloc_malloc() to allocate output buffers.
+
+SPNEGO's gss_display_status() implementation must use gssalloc for the
+output buffer.
+
+The sample GSS server must use gss_release_buffer() to free the result
+of gss_export_sec_context().
+
+ticket: 8852 (new)
+tags: pullup
+target_version: 1.17-next
+target_version: 1.16-next
+
+(cherry picked from commit ab5c4259bdbe51dd3f4b5c5aff22628188d04322)
+---
+ src/appl/gss-sample/gss-server.c              | 2 +-
+ src/lib/gssapi/generic/gssapi_alloc.h         | 2 +-
+ src/lib/gssapi/krb5/naming_exts.c             | 2 +-
+ src/lib/gssapi/krb5/prf.c                     | 2 +-
+ src/lib/gssapi/mechglue/g_decapsulate_token.c | 2 +-
+ src/lib/gssapi/mechglue/g_encapsulate_token.c | 2 +-
+ src/lib/gssapi/mechglue/g_exp_sec_context.c   | 2 +-
+ src/lib/gssapi/spnego/spnego_mech.c           | 2 +-
+ 8 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/src/appl/gss-sample/gss-server.c b/src/appl/gss-sample/gss-server.c
+index 6b5959a1c..793fefc9f 100644
+--- a/src/appl/gss-sample/gss-server.c
++++ b/src/appl/gss-sample/gss-server.c
+@@ -391,7 +391,7 @@ test_import_export_context(gss_ctx_id_t *context)
+     if (verbose && logfile)
+         fprintf(logfile, "Importing context: %7.4f seconds\n",
+                 timeval_subtract(&tm1, &tm2));
+-    free(context_token.value);
++    (void) gss_release_buffer(&min_stat, &context_token);
+     return 0;
+ }
+ 
+diff --git a/src/lib/gssapi/generic/gssapi_alloc.h b/src/lib/gssapi/generic/gssapi_alloc.h
+index 9a5cd9892..d0bd4b2b0 100644
+--- a/src/lib/gssapi/generic/gssapi_alloc.h
++++ b/src/lib/gssapi/generic/gssapi_alloc.h
+@@ -80,7 +80,7 @@ gssalloc_realloc(void *value, size_t size)
+         return gssalloc_malloc(size);
+     if (memcmp(p, "gssalloc", 8) != 0)
+         abort();
+-    return (char *)realloc(p, size) + 8;
++    return (char *)realloc(p, size + 8) + 8;
+ }
+ 
+ #else /* not _WIN32 or DEBUG_GSSALLOC */
+diff --git a/src/lib/gssapi/krb5/naming_exts.c b/src/lib/gssapi/krb5/naming_exts.c
+index 41752d90b..2ac1aba33 100644
+--- a/src/lib/gssapi/krb5/naming_exts.c
++++ b/src/lib/gssapi/krb5/naming_exts.c
+@@ -624,7 +624,7 @@ krb5_gss_export_name_composite(OM_uint32 *minor_status,
+     exp_composite_name->length += 4; /* length of encoded attributes */
+     if (attrs != NULL)
+         exp_composite_name->length += attrs->length;
+-    exp_composite_name->value = malloc(exp_composite_name->length);
++    exp_composite_name->value = gssalloc_malloc(exp_composite_name->length);
+     if (exp_composite_name->value == NULL) {
+         code = ENOMEM;
+         goto cleanup;
+diff --git a/src/lib/gssapi/krb5/prf.c b/src/lib/gssapi/krb5/prf.c
+index e897074fc..f87957bdf 100644
+--- a/src/lib/gssapi/krb5/prf.c
++++ b/src/lib/gssapi/krb5/prf.c
+@@ -86,7 +86,7 @@ krb5_gss_pseudo_random(OM_uint32 *minor_status,
+     if (desired_output_len == 0)
+         return GSS_S_COMPLETE;
+ 
+-    prf_out->value = k5alloc(desired_output_len, &code);
++    prf_out->value = gssalloc_malloc(desired_output_len);
+     if (prf_out->value == NULL) {
+         code = KG_INPUT_TOO_LONG;
+         goto cleanup;
+diff --git a/src/lib/gssapi/mechglue/g_decapsulate_token.c b/src/lib/gssapi/mechglue/g_decapsulate_token.c
+index 934d2607c..1c04e2f27 100644
+--- a/src/lib/gssapi/mechglue/g_decapsulate_token.c
++++ b/src/lib/gssapi/mechglue/g_decapsulate_token.c
+@@ -55,7 +55,7 @@ gss_decapsulate_token(gss_const_buffer_t input_token,
+     if (minor != 0)
+         return GSS_S_DEFECTIVE_TOKEN;
+ 
+-    output_token->value = malloc(body_size);
++    output_token->value = gssalloc_malloc(body_size);
+     if (output_token->value == NULL)
+         return GSS_S_FAILURE;
+ 
+diff --git a/src/lib/gssapi/mechglue/g_encapsulate_token.c b/src/lib/gssapi/mechglue/g_encapsulate_token.c
+index 6ce0eeb0f..850e3ee65 100644
+--- a/src/lib/gssapi/mechglue/g_encapsulate_token.c
++++ b/src/lib/gssapi/mechglue/g_encapsulate_token.c
+@@ -51,7 +51,7 @@ gss_encapsulate_token(gss_const_buffer_t input_token,
+     assert(tokenSize > 2);
+     tokenSize -= 2; /* TOK_ID */
+ 
+-    output_token->value = malloc(tokenSize);
++    output_token->value = gssalloc_malloc(tokenSize);
+     if (output_token->value == NULL)
+         return GSS_S_FAILURE;
+ 
+diff --git a/src/lib/gssapi/mechglue/g_exp_sec_context.c b/src/lib/gssapi/mechglue/g_exp_sec_context.c
+index 1d7990b1c..a04afe3d1 100644
+--- a/src/lib/gssapi/mechglue/g_exp_sec_context.c
++++ b/src/lib/gssapi/mechglue/g_exp_sec_context.c
+@@ -112,7 +112,7 @@ gss_buffer_t		interprocess_token;
+ 
+     length = token.length + 4 + ctx->mech_type->length;
+     interprocess_token->length = length;
+-    interprocess_token->value = malloc(length);
++    interprocess_token->value = gssalloc_malloc(length);
+     if (interprocess_token->value == 0) {
+ 	*minor_status = ENOMEM;
+ 	status = GSS_S_FAILURE;
+diff --git a/src/lib/gssapi/spnego/spnego_mech.c b/src/lib/gssapi/spnego/spnego_mech.c
+index 9d6027ce8..412b4c41c 100644
+--- a/src/lib/gssapi/spnego/spnego_mech.c
++++ b/src/lib/gssapi/spnego/spnego_mech.c
+@@ -3731,7 +3731,7 @@ negotiate_mech(gss_OID_set supported, gss_OID_set received,
+ static spnego_token_t
+ make_spnego_token(const char *name)
+ {
+-	return (spnego_token_t)strdup(name);
++	return (spnego_token_t)gssalloc_strdup(name);
+ }
+ 
+ static gss_buffer_desc

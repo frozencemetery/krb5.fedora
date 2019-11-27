@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 52%{?dist}
+Release: 53%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -54,8 +54,6 @@ Patch27: krb5-1.17-beta1-selinux-label.patch
 Patch30: krb5-1.15-beta1-buildconf.patch
 Patch31: krb5-1.3.1-dns.patch
 Patch34: krb5-1.9-debuginfo.patch
-Patch35: krb5-1.11-run_user_0.patch
-Patch36: krb5-1.11-kpasswdtest.patch
 Patch90: Add-tests-for-KCM-ccache-type.patch
 Patch92: Address-some-optimized-out-memset-calls.patch
 Patch94: Avoid-allocating-a-register-in-zap-assembly.patch
@@ -129,6 +127,7 @@ Patch168: Update-test-suite-cert-message-digest-to-sha256.patch
 Patch169: Use-backported-version-of-OpenSSL-3-KDF-interface.patch
 Patch170: krb5-1.17post6-FIPS-with-PRNG-and-RADIUS-and-MD4.patch
 Patch171: Fix-kadmin-addprinc-randkey-kvno.patch
+Patch172: Various-gssalloc-fixes.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -736,6 +735,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Nov 27 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-53
+- Various gssalloc fixes
+
 * Thu Nov 21 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-52
 - Turns out openssl has an epoch
 

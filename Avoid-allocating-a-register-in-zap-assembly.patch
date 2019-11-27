@@ -1,4 +1,4 @@
-From 7491d9ed5c358960c6344c2581db9cafaf308f06 Mon Sep 17 00:00:00 2001
+From df3bfd244f8b4601f8750599270eb98cadccdafe Mon Sep 17 00:00:00 2001
 From: Andreas Schneider <asn@samba.org>
 Date: Thu, 3 Jan 2019 17:19:32 +0100
 Subject: [PATCH] Avoid allocating a register in zap() assembly

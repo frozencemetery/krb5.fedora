@@ -1,4 +1,4 @@
-From c742a3eacc7b2dc92bf8dc83f5e8ea602dded8c2 Mon Sep 17 00:00:00 2001
+From a768fb06f0df69f0b6985058e21c72448587d2a8 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Mon, 9 Oct 2017 15:58:33 -0400
 Subject: [PATCH] Remove srvtab support
@@ -194,7 +194,7 @@ index 6d119a2b6..e2e005d22 100644
 -    return result;
 -}
 diff --git a/src/kadmin/testing/proto/krb5.conf.proto b/src/kadmin/testing/proto/krb5.conf.proto
-index 9c4bc1de7..f91cf70f3 100644
+index 00c442978..e710852d4 100644
 --- a/src/kadmin/testing/proto/krb5.conf.proto
 +++ b/src/kadmin/testing/proto/krb5.conf.proto
 @@ -1,6 +1,6 @@

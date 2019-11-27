@@ -1,4 +1,4 @@
-From b54bce8e7b54c8700467fefcc74623fa50234046 Mon Sep 17 00:00:00 2001
+From 842ffb8cd2f47844346c6a88ff7575c6d131644b Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Sun, 30 Dec 2018 16:40:28 -0500
 Subject: [PATCH] Address some optimized-out memset() calls

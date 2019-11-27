@@ -1,4 +1,4 @@
-From 2c0d9a91c34f315f860fc857dd84863d048b6105 Mon Sep 17 00:00:00 2001
+From 5e0baa51f69ae9f67865d808213bda5872ee7dc6 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Sat, 16 Nov 2019 19:54:51 -0500
 Subject: [PATCH] Fix kadmin addprinc -randkey -kvno

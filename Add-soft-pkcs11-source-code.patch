@@ -1,4 +1,4 @@
-From a186597238ae40e167ce041857b5bd1f94ee2383 Mon Sep 17 00:00:00 2001
+From d80e1a0f07591c1fedc9cfc2cbb6ab7e54b55287 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Thu, 20 Jun 2019 10:45:18 -0400
 Subject: [PATCH] Add soft-pkcs11 source code

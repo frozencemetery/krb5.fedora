@@ -1,4 +1,4 @@
-From 945c21ddafbedfe57dfbf9ca3e7b0185cb4b7175 Mon Sep 17 00:00:00 2001
+From de5bdedc1d27ee3e9ff7072614ea1316064b222a Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 10 Jan 2019 16:34:54 -0500
 Subject: [PATCH] Mark deprecated enctypes when used

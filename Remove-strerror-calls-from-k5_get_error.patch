@@ -1,4 +1,4 @@
-From bf8f84d2116af9aba33202f44fdaf04a76430410 Mon Sep 17 00:00:00 2001
+From 1aff5025ec486d1f8239e3a135156e33ea5e764d Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Thu, 6 Jun 2019 11:46:58 -0400
 Subject: [PATCH] Remove strerror() calls from k5_get_error()
