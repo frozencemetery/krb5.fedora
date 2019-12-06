@@ -1,0 +1,309 @@
+From 35160d8bf1aa1464d7e757c73ed11644478cc4d4 Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Fri, 29 Nov 2019 20:39:38 -0500
+Subject: [PATCH] Qualify short hostnames when not using DNS
+
+When DNS forward canonicalization is turned off or fails, qualify
+single-component hostnames with the first DNS search domain.  Add the
+qualify_shortname relation to override this suffix.
+
+For one of the tests we need to disable qualification, which is
+accomplished with an empty value.  Adjust k5test.py to correctly emit
+empty values when writing profiles.
+
+ticket: 8855 (new)
+(cherry picked from commit 996353767fe8afa7f67a3b5b465e4d70e18bad7c)
+---
+ doc/admin/conf_files/krb5_conf.rst |  9 +++++++
+ src/include/k5-int.h               |  1 +
+ src/lib/krb5/os/dnsglue.c          | 23 ++++++++++++++++
+ src/lib/krb5/os/os-proto.h         |  2 ++
+ src/lib/krb5/os/sn2princ.c         | 43 +++++++++++++++++++++++++++++-
+ src/tests/gssapi/t_ccselect.py     |  5 ++--
+ src/tests/t_sn2princ.py            | 12 ++++++---
+ src/util/k5test.py                 | 34 ++++++++++++-----------
+ 8 files changed, 106 insertions(+), 23 deletions(-)
+
+diff --git a/doc/admin/conf_files/krb5_conf.rst b/doc/admin/conf_files/krb5_conf.rst
+index 89f02434b..582ac8df0 100644
+--- a/doc/admin/conf_files/krb5_conf.rst
++++ b/doc/admin/conf_files/krb5_conf.rst
+@@ -308,6 +308,15 @@ The libdefaults section may contain any of the following relations:
+     If this flag is true, initial tickets will be proxiable by
+     default, if allowed by the KDC.  The default value is false.
+ 
++**qualify_shortname**
++    If this string is set, it determines the domain suffix for
++    single-component hostnames when DNS canonicalization is not used
++    (either because **dns_canonicalize_hostname** is false or because
++    forward canonicalization failed).  The default value is the first
++    search domain of the system's DNS configuration.  To disable
++    qualification of shortnames, set this relation to the empty string
++    with ``qualify_shortname = ""``.  (New in release 1.18.)
++
+ **rdns**
+     If this flag is true, reverse name lookup will be used in addition
+     to forward name lookup to canonicalizing hostnames for use in
+diff --git a/src/include/k5-int.h b/src/include/k5-int.h
+index cb328785d..7458319fa 100644
+--- a/src/include/k5-int.h
++++ b/src/include/k5-int.h
+@@ -280,6 +280,7 @@ typedef unsigned char   u_char;
+ #define KRB5_CONF_PLUGIN_BASE_DIR              "plugin_base_dir"
+ #define KRB5_CONF_PREFERRED_PREAUTH_TYPES      "preferred_preauth_types"
+ #define KRB5_CONF_PROXIABLE                    "proxiable"
++#define KRB5_CONF_QUALIFY_SHORTNAME            "qualify_shortname"
+ #define KRB5_CONF_RDNS                         "rdns"
+ #define KRB5_CONF_REALMS                       "realms"
+ #define KRB5_CONF_REALM_TRY_DOMAINS            "realm_try_domains"
+diff --git a/src/lib/krb5/os/dnsglue.c b/src/lib/krb5/os/dnsglue.c
+index 59ff92963..e35ca9d76 100644
+--- a/src/lib/krb5/os/dnsglue.c
++++ b/src/lib/krb5/os/dnsglue.c
+@@ -71,6 +71,7 @@ static int initparse(struct krb5int_dns_state *);
+  * Define macros to use the best available DNS search functions.  INIT_HANDLE()
+  * returns true if handle initialization is successful, false if it is not.
+  * SEARCH() returns the length of the response or -1 on error.
++ * PRIMARY_DOMAIN() returns the first search domain in allocated memory.
+  * DECLARE_HANDLE() must be used last in the declaration list since it may
+  * evaluate to nothing.
+  */
+@@ -81,6 +82,7 @@ static int initparse(struct krb5int_dns_state *);
+ #define DECLARE_HANDLE(h) dns_handle_t h
+ #define INIT_HANDLE(h) ((h = dns_open(NULL)) != NULL)
+ #define SEARCH(h, n, c, t, a, l) dns_search(h, n, c, t, a, l, NULL, NULL)
++#define PRIMARY_DOMAIN(h) dns_search_list_domain(h, 0)
+ #define DESTROY_HANDLE(h) dns_free(h)
+ 
+ #elif HAVE_RES_NINIT && HAVE_RES_NSEARCH
+@@ -89,6 +91,7 @@ static int initparse(struct krb5int_dns_state *);
+ #define DECLARE_HANDLE(h) struct __res_state h
+ #define INIT_HANDLE(h) (memset(&h, 0, sizeof(h)), res_ninit(&h) == 0)
+ #define SEARCH(h, n, c, t, a, l) res_nsearch(&h, n, c, t, a, l)
++#define PRIMARY_DOMAIN(h) strdup(h.dnsrch[0])
+ #if HAVE_RES_NDESTROY
+ #define DESTROY_HANDLE(h) res_ndestroy(&h)
+ #else
+@@ -101,6 +104,7 @@ static int initparse(struct krb5int_dns_state *);
+ #define DECLARE_HANDLE(h)
+ #define INIT_HANDLE(h) (res_init() == 0)
+ #define SEARCH(h, n, c, t, a, l) res_search(n, c, t, a, l)
++#define PRIMARY_DOMAIN(h) strdup(_res.defdname)
+ #define DESTROY_HANDLE(h)
+ 
+ #endif
+@@ -433,6 +437,12 @@ cleanup:
+     return ret;
+ }
+ 
++char *
++k5_primary_domain()
++{
++    return NULL;
++}
++
+ #else /* _WIN32 */
+ 
+ krb5_error_code
+@@ -485,5 +495,18 @@ errout:
+     return retval;
+ }
+ 
++char *
++k5_primary_domain()
++{
++    char *domain;
++    DECLARE_HANDLE(h);
++
++    if (!INIT_HANDLE(h))
++        return NULL;
++    domain = PRIMARY_DOMAIN(h);
++    DESTROY_HANDLE(h);
++    return domain;
++}
++
+ #endif /* not _WIN32 */
+ #endif /* KRB5_DNS_LOOKUP */
+diff --git a/src/lib/krb5/os/os-proto.h b/src/lib/krb5/os/os-proto.h
+index 066d30221..a16a34b74 100644
+--- a/src/lib/krb5/os/os-proto.h
++++ b/src/lib/krb5/os/os-proto.h
+@@ -136,6 +136,8 @@ k5_make_uri_query(krb5_context context, const krb5_data *realm,
+ krb5_error_code k5_try_realm_txt_rr(krb5_context context, const char *prefix,
+                                     const char *name, char **realm);
+ 
++char *k5_primary_domain(void);
++
+ int _krb5_use_dns_realm (krb5_context);
+ int _krb5_use_dns_kdc (krb5_context);
+ int _krb5_conf_boolean (const char *);
+diff --git a/src/lib/krb5/os/sn2princ.c b/src/lib/krb5/os/sn2princ.c
+index 98d2600aa..a51761d0c 100644
+--- a/src/lib/krb5/os/sn2princ.c
++++ b/src/lib/krb5/os/sn2princ.c
+@@ -50,15 +50,47 @@ use_reverse_dns(krb5_context context)
+                               &value);
+     if (ret)
+         return DEFAULT_RDNS_LOOKUP;
++
+     return value;
+ }
+ 
++/* Append a domain suffix to host and return the result in allocated memory.
++ * Return NULL if no suffix is configured or on failure. */
++static char *
++qualify_shortname(krb5_context context, const char *host)
++{
++    krb5_error_code ret;
++    char *fqdn = NULL, *prof_domain = NULL, *os_domain = NULL;
++    const char *domain;
++
++    ret = profile_get_string(context->profile, KRB5_CONF_LIBDEFAULTS,
++                             KRB5_CONF_QUALIFY_SHORTNAME, NULL, NULL,
++                             &prof_domain);
++    if (ret)
++        return NULL;
++
++#ifdef KRB5_DNS_LOOKUP
++    if (prof_domain == NULL)
++        os_domain = k5_primary_domain();
++#endif
++
++    domain = (prof_domain != NULL) ? prof_domain : os_domain;
++    if (domain != NULL && *domain != '\0') {
++        if (asprintf(&fqdn, "%s.%s", host, domain) < 0)
++            fqdn = NULL;
++    }
++
++    profile_release_string(prof_domain);
++    free(os_domain);
++    return fqdn;
++}
++
+ krb5_error_code
+ k5_expand_hostname(krb5_context context, const char *host,
+                    krb5_boolean is_fallback, char **canonhost_out)
+ {
+     struct addrinfo *ai = NULL, hint;
+-    char namebuf[NI_MAXHOST], *copy, *p;
++    char namebuf[NI_MAXHOST], *qualified = NULL, *copy, *p;
+     int err;
+     const char *canonhost;
+     krb5_boolean use_dns;
+@@ -90,6 +122,14 @@ k5_expand_hostname(krb5_context context, const char *host,
+         }
+     }
+ 
++    /* If we didn't use DNS and the name is just one component, try to add a
++     * domain suffix. */
++    if (canonhost == host && strchr(host, '.') == NULL) {
++        qualified = qualify_shortname(context, host);
++        if (qualified != NULL)
++            canonhost = qualified;
++    }
++
+     copy = strdup(canonhost);
+     if (copy == NULL)
+         goto cleanup;
+@@ -113,6 +153,7 @@ cleanup:
+     /* We only return success or ENOMEM. */
+     if (ai != NULL)
+         freeaddrinfo(ai);
++    free(qualified);
+     return (*canonhost_out == NULL) ? ENOMEM : 0;
+ }
+ 
+diff --git a/src/tests/gssapi/t_ccselect.py b/src/tests/gssapi/t_ccselect.py
+index 9ca66554f..66d85880c 100755
+--- a/src/tests/gssapi/t_ccselect.py
++++ b/src/tests/gssapi/t_ccselect.py
+@@ -24,8 +24,9 @@ from k5test import *
+ 
+ # Create two independent realms (no cross-realm TGTs).  For the
+ # fallback realm tests we need to control the precise server hostname,
+-# so turn off DNS canonicalization.
+-conf = {'libdefaults': {'dns_canonicalize_hostname': 'false'}}
++# so turn off DNS canonicalization and shortname qualification.
++conf = {'libdefaults': {'dns_canonicalize_hostname': 'false',
++                        'qualify_shortname': ''}}
+ r1 = K5Realm(create_user=False, krb5_conf=conf)
+ r2 = K5Realm(create_user=False, krb5_conf=conf, realm='KRBTEST2.COM',
+              portbase=62000, testdir=os.path.join(r1.testdir, 'r2'))
+diff --git a/src/tests/t_sn2princ.py b/src/tests/t_sn2princ.py
+index fe435a2d5..26dcb91c2 100755
+--- a/src/tests/t_sn2princ.py
++++ b/src/tests/t_sn2princ.py
+@@ -6,7 +6,8 @@ conf = {'domain_realm': {'kerberos.org': 'R1',
+                          'example.com': 'R2',
+                          'mit.edu': 'R3'}}
+ no_rdns_conf = {'libdefaults': {'rdns': 'false'}}
+-no_canon_conf = {'libdefaults': {'dns_canonicalize_hostname': 'false'}}
++no_canon_conf = {'libdefaults': {'dns_canonicalize_hostname': 'false',
++                                 'qualify_shortname': 'example.com'}}
+ fallback_canon_conf = {'libdefaults':
+                        {'rdns': 'false',
+                         'dns_canonicalize_hostname': 'fallback'}}
+@@ -62,12 +63,15 @@ testu('Example.COM:xyZ', 'Example.COM:xyZ', 'R2')
+ testu('example.com.::123', 'example.com.::123', '')
+ 
+ # With dns_canonicalize_hostname=false, we downcase and remove
+-# trailing dots but do not canonicalize the hostname.  Trailers do not
+-# get downcased.
++# trailing dots but do not canonicalize the hostname.
++# Single-component names are qualified with the configured suffix
++# (defaulting to the first OS search domain, but Python cannot easily
++# retrieve that value so we don't test it).  Trailers do not get
++# downcased.
+ mark('dns_canonicalize_host=false')
+ testnc('ptr-mismatch.kerberos.org', 'ptr-mismatch.kerberos.org', 'R1')
+ testnc('Example.COM', 'example.com', 'R2')
+-testnc('abcde', 'abcde', '')
++testnc('abcde', 'abcde.example.com', 'R2')
+ testnc('example.com.:123', 'example.com:123', 'R2')
+ testnc('Example.COM:xyZ', 'example.com:xyZ', 'R2')
+ testnc('example.com.::123', 'example.com.::123', '')
+diff --git a/src/util/k5test.py b/src/util/k5test.py
+index feb6df7a0..c7f941303 100644
+--- a/src/util/k5test.py
++++ b/src/util/k5test.py
+@@ -918,22 +918,24 @@ class K5Realm(object):
+     def _subst_cfg_value(self, value):
+         global buildtop, srctop, hostname
+         template = string.Template(value)
+-        return template.substitute(realm=self.realm,
+-                                   testdir=self.testdir,
+-                                   buildtop=buildtop,
+-                                   srctop=srctop,
+-                                   plugins=plugins,
+-                                   hostname=hostname,
+-                                   port0=self.portbase,
+-                                   port1=self.portbase + 1,
+-                                   port2=self.portbase + 2,
+-                                   port3=self.portbase + 3,
+-                                   port4=self.portbase + 4,
+-                                   port5=self.portbase + 5,
+-                                   port6=self.portbase + 6,
+-                                   port7=self.portbase + 7,
+-                                   port8=self.portbase + 8,
+-                                   port9=self.portbase + 9)
++        subst = template.substitute(realm=self.realm,
++                                    testdir=self.testdir,
++                                    buildtop=buildtop,
++                                    srctop=srctop,
++                                    plugins=plugins,
++                                    hostname=hostname,
++                                    port0=self.portbase,
++                                    port1=self.portbase + 1,
++                                    port2=self.portbase + 2,
++                                    port3=self.portbase + 3,
++                                    port4=self.portbase + 4,
++                                    port5=self.portbase + 5,
++                                    port6=self.portbase + 6,
++                                    port7=self.portbase + 7,
++                                    port8=self.portbase + 8,
++                                    port9=self.portbase + 9)
++        # Empty values must be quoted to avoid a syntax error.
++        return subst if subst else '""'
+ 
+     def _create_acl(self):
+         global hostname
