@@ -1,4 +1,4 @@
-From e1c4f8894d22da9c157bfcf31e28f9ceaeebe39e Mon Sep 17 00:00:00 2001
+From b50a43ef1f09694298ec043104a59082d6f37c8c Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:30:53 -0400
 Subject: [PATCH] krb5-1.17-beta1-selinux-label.patch
@@ -172,7 +172,7 @@ index ce87e21ca..917357df9 100644
  GSS_LIBS	= $(GSS_KRB5_LIB)
  # needs fixing if ever used on macOS!
 diff --git a/src/configure.in b/src/configure.in
-index e9a12ac16..93aec682e 100644
+index cd8ccabcd..feae21c3e 100644
 --- a/src/configure.in
 +++ b/src/configure.in
 @@ -1354,6 +1354,8 @@ AC_PATH_PROG(GROFF, groff)

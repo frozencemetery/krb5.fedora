@@ -16,20 +16,13 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.17
+Version: 1.17.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 54%{?dist}
+Release: 1%{?dist}
 
-# lookaside-cached sources; two downloads and a build artifact
-Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
 # rharwood has trust path to signing key and verifies on check-in
+Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
 Source1: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz.asc
-# This source is generated during the build because sphinx doesn't
-# give me architecture-deterministic documentation builds.
-# To override this behavior (e.g., new upstream version), do:
-#     tar cfT krb5-1.15.2-pdfs.tar /dev/null
-# or the like.
-Source3: krb5-%{version}%{prerelease}-pdfs.tar
 
 # Numbering is a relic of old init systems etc.  It's easiest to just leave.
 Source2: kprop.service
@@ -63,7 +56,6 @@ Patch97: Add-function-and-enctype-flag-for-deprecations.patch
 Patch98: Make-etype-names-in-KDC-logs-human-readable.patch
 Patch99: Mark-deprecated-enctypes-when-used.patch
 Patch100: Properly-size-ifdef-in-k5_cccol_lock.patch
-Patch101: Fix-memory-leak-in-none-replay-cache-type.patch
 Patch104: Clarify-header-comment-for-krb5_cc_start_seq_get.patch
 Patch105: Implement-krb5_cc_remove_cred-for-remaining-types.patch
 Patch106: Remove-srvtab-support.patch
@@ -80,7 +72,6 @@ Patch116: Clear-forwardable-flag-instead-of-denying-request.patch
 Patch117: Add-dns_canonicalize_hostname-fallback-support.patch
 Patch118: Use-secure_getenv-where-appropriate.patch
 Patch119: Initialize-some-data-structure-magic-fields.patch
-Patch120: Fix-some-return-code-handling-bugs.patch
 Patch121: Modernize-exit-path-in-gss_krb5int_copy_ccache.patch
 Patch122: Simplify-SAM-2-as_key-handling.patch
 Patch123: Avoid-alignment-warnings-in-openssl-rc4.c.patch
@@ -115,8 +106,6 @@ Patch155: Use-imported-soft-pkcs11-for-tests.patch
 Patch156: Fix-Coverity-defects-in-soft-pkcs11-test-code.patch
 Patch157: Skip-URI-tests-when-using-asan.patch
 Patch158: Fix-memory-leaks-in-soft-pkcs11-code.patch
-Patch159: Initialize-life-rlife-in-kdcpolicy-interface.patch
-Patch160: Fix-KCM-client-time-offset-propagation.patch
 Patch162: Simplify-krb5_dbe_def_search_enctype.patch
 Patch163: Squash-apparent-forward-null-in-clnttcp_create.patch
 Patch164: Remove-null-check-in-krb5_gss_duplicate_name.patch
@@ -126,9 +115,6 @@ Patch167: Fix-minor-errors-in-softpkcs11.patch
 Patch168: Update-test-suite-cert-message-digest-to-sha256.patch
 Patch169: Use-backported-version-of-OpenSSL-3-KDF-interface.patch
 Patch170: krb5-1.17post6-FIPS-with-PRNG-and-RADIUS-and-MD4.patch
-Patch171: Fix-kadmin-addprinc-randkey-kvno.patch
-Patch172: Various-gssalloc-fixes.patch
-Patch173: Qualify-short-hostnames-when-not-using-DNS.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -136,41 +122,14 @@ BuildRequires: autoconf, bison, cmake, flex, gawk, gettext, pkgconfig, sed
 BuildRequires: gcc
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
 BuildRequires: gzip, ncurses-devel
-BuildRequires: python3-sphinx, texlive-pdftex, latexmk
-
-# For autosetup
-BuildRequires: git
-
-# Originally from \usepackage directives produced by sphinx:
-BuildRequires: tex(babel.sty)
-BuildRequires: tex(bookmark.sty)
-BuildRequires: tex(capt-of.sty)
-BuildRequires: tex(eqparbox.sty)
-BuildRequires: tex(fancybox.sty)
-BuildRequires: tex(fncychap.sty)
-BuildRequires: tex(fontenc.sty)
-BuildRequires: tex(framed.sty)
-BuildRequires: tex(hyperref.sty)
-BuildRequires: tex(ifthen.sty)
-BuildRequires: tex(inputenc.sty)
-BuildRequires: tex(longtable.sty)
-BuildRequires: tex(multirow.sty)
-BuildRequires: tex(needspace.sty)
-BuildRequires: tex(report.cls)
-BuildRequires: tex(tabulary.sty)
-BuildRequires: tex(threeparttable.sty)
-BuildRequires: tex(times.sty)
-BuildRequires: tex(titlesec.sty)
-BuildRequires: tex(upquote.sty)
-BuildRequires: tex(wrapfig.sty)
-
-# Typical fonts, and the commands which we need to have present.
-BuildRequires: texlive, texlive-latex, texlive-texmf-fonts
-BuildRequires: /usr/bin/pdflatex /usr/bin/makeindex
+BuildRequires: python3-sphinx
 BuildRequires: keyutils, keyutils-libs-devel >= 1.5.8
 BuildRequires: libselinux-devel
 BuildRequires: pam-devel
 BuildRequires: systemd-units
+
+# For autosetup
+BuildRequires: git
 
 # For the test framework.
 BuildRequires: perl-interpreter, dejagnu, tcl-devel, python3
@@ -291,7 +250,7 @@ contains only the libkadm5clnt and libkadm5serv shared objects. This
 interface is not considered stable.
 
 %prep
-%autosetup -S git -n %{name}-%{version}%{prerelease} -a 3
+%autosetup -S git -n %{name}-%{version}%{prerelease}
 ln NOTICE LICENSE
 
 # Generate an FDS-compatible LDIF file.
@@ -381,17 +340,10 @@ fi
 # Build the docs.
 make -C src/doc paths.py version.py
 cp src/doc/paths.py doc/
-mkdir -p build-man build-html build-pdf
+mkdir -p build-man build-html
 sphinx-build -a -b man   -t pathsubs doc build-man
 sphinx-build -a -b html  -t pathsubs doc build-html
 rm -fr build-html/_sources
-sphinx-build -a -b latex -t pathsubs doc build-pdf
-# Build the PDFs if we don't have pre-built ones
-for pdf in admin appdev basic build plugindev user ; do
-    test -s build-pdf/$pdf.pdf || make -C build-pdf
-done
-# new krb5-version-pdf
-tar -cf "krb5-%{version}%{prerelease}-pdfs.tar.new" build-pdf/*.pdf
 
 # We need to cut off any access to locally-running nameservers, too.
 %{__cc} -fPIC -shared -o noport.so -Wall -Wextra %{SOURCE100}
@@ -574,7 +526,6 @@ exit 0
 %doc src/config-files/services.append
 %doc src/config-files/krb5.conf
 %doc build-html/*
-%doc build-pdf/user.pdf build-pdf/basic.pdf
 %attr(0755,root,root) %doc src/config-files/convert-config-files
 
 # Clients of the KDC, including tools you're likely to need if you're running
@@ -606,7 +557,6 @@ exit 0
 
 %files server
 %docdir %{_mandir}
-%doc build-pdf/admin.pdf build-pdf/build.pdf
 %doc src/config-files/kdc.conf
 %{_unitdir}/krb5kdc.service
 %{_unitdir}/kadmin.service
@@ -712,7 +662,6 @@ exit 0
 
 %files devel
 %docdir %{_mandir}
-%doc build-pdf/appdev.pdf build-pdf/plugindev.pdf
 
 %{_includedir}/*
 %{_libdir}/libgssapi_krb5.so
@@ -736,6 +685,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Dec 12 2019 Robbie Harwood <rharwood@redhat.com> - 1.17.1-1
+- New upstream version - 1.17.1
+- Stop building and packaging PDFs
+
 * Fri Dec 06 2019 Robbie Harwood <rharwood@redhat.com> - 1.17-54
 - Qualify short hostnames when not using DNS
 

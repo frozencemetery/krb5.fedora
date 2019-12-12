@@ -1,4 +1,4 @@
-From 947ba07fe50c4bb6188d453fd3f6b0b9ef6d5288 Mon Sep 17 00:00:00 2001
+From b952b5ac5301ed9f4ae49300e90631ae0562b012 Mon Sep 17 00:00:00 2001
 From: Simo Sorce <simo@redhat.com>
 Date: Tue, 4 Dec 2018 15:22:55 -0500
 Subject: [PATCH] Add dns_canonicalize_hostname=fallback support
@@ -28,10 +28,10 @@ ticket: 8765 (new)
  10 files changed, 167 insertions(+), 18 deletions(-)
 
 diff --git a/doc/admin/conf_files/krb5_conf.rst b/doc/admin/conf_files/krb5_conf.rst
-index 7b4389f6b..e9f7e8c59 100644
+index 4adb084a6..d1e1a222d 100644
 --- a/doc/admin/conf_files/krb5_conf.rst
 +++ b/doc/admin/conf_files/krb5_conf.rst
-@@ -201,6 +201,10 @@ The libdefaults section may contain any of the following relations:
+@@ -195,6 +195,10 @@ The libdefaults section may contain any of the following relations:
      means that short hostnames will not be canonicalized to
      fully-qualified hostnames.  The default value is true.
  

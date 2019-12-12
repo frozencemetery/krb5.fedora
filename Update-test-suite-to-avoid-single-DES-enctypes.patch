@@ -1,4 +1,4 @@
-From ec9180a78e84c71940c3ef3834bb22aae1245d91 Mon Sep 17 00:00:00 2001
+From 99077dd3855832912df7563086cd615ba430e440 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 24 May 2019 13:11:55 -0400
 Subject: [PATCH] Update test suite to avoid single-DES enctypes

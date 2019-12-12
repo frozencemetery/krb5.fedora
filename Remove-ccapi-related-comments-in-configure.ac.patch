@@ -1,4 +1,4 @@
-From 8096d0c97bcb5ac1ad830b6f354b4e32c90ac4cf Mon Sep 17 00:00:00 2001
+From ac8df1b0977dd5aedfaeb3d10458aaf18cece29f Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Wed, 3 Apr 2019 16:01:22 -0400
 Subject: [PATCH] Remove ccapi-related comments in configure.ac
@@ -12,7 +12,7 @@ is not.
  1 file changed, 3 deletions(-)
 
 diff --git a/src/configure.in b/src/configure.in
-index 7c309a26b..8d781a7c8 100644
+index 505dabb02..9d6825b78 100644
 --- a/src/configure.in
 +++ b/src/configure.in
 @@ -1450,7 +1450,6 @@ V5_AC_OUTPUT_MAKEFILE(.

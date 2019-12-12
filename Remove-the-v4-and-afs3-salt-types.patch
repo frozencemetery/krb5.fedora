@@ -1,4 +1,4 @@
-From cebf1ea82c4d2dc4494ad0af7525fd324e6d92e2 Mon Sep 17 00:00:00 2001
+From 111e528c68393435be41f71f22f41b7a04ccad1e Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 24 May 2019 13:11:44 -0400
 Subject: [PATCH] Remove the v4 and afs3 salt types
@@ -12,6 +12,7 @@ krb4 databases.
 
 ticket: 8808
 (cherry picked from commit e0a35ff48c09a26ebb9aefd7e98855a84574b8be)
+[rharwood@redhat.com: release version conflict in man pages]
 ---
  doc/admin/conf_files/kdc_conf.rst             |  2 -
  src/include/kdb.h                             |  4 +-
@@ -33,10 +34,10 @@ ticket: 8808
  17 files changed, 24 insertions(+), 164 deletions(-)
 
 diff --git a/doc/admin/conf_files/kdc_conf.rst b/doc/admin/conf_files/kdc_conf.rst
-index c73791ceb..62d1bfc05 100644
+index 72f002d4d..7fbc8eb79 100644
 --- a/doc/admin/conf_files/kdc_conf.rst
 +++ b/doc/admin/conf_files/kdc_conf.rst
-@@ -917,10 +917,8 @@ follows:
+@@ -919,10 +919,8 @@ follows:
  
  ================= ============================================
  normal            default for Kerberos Version 5
@@ -292,18 +293,18 @@ index 7c400be86..3c9168591 100644
 -
  success('krb5_get_etype_info() tests')
 diff --git a/src/man/kdc.conf.man b/src/man/kdc.conf.man
-index ab3ee0289..4a75be8cb 100644
+index 959f00de5..fd4dbb2e2 100644
 --- a/src/man/kdc.conf.man
 +++ b/src/man/kdc.conf.man
 @@ -1,6 +1,6 @@
  .\" Man page generated from reStructuredText.
  .
--.TH "KDC.CONF" "5" " " "1.17" "MIT Kerberos"
+-.TH "KDC.CONF" "5" " " "1.17.1" "MIT Kerberos"
 +.TH "KDC.CONF" "5" " " "1.18" "MIT Kerberos"
  .SH NAME
  kdc.conf \- Kerberos V5 KDC configuration file
  .
-@@ -1148,12 +1148,6 @@ default for Kerberos Version 5
+@@ -1149,12 +1149,6 @@ default for Kerberos Version 5
  T}
  _
  T{
@@ -316,7 +317,7 @@ index ab3ee0289..4a75be8cb 100644
  norealm
  T}	T{
  same as the default, without using realm information
-@@ -1166,12 +1160,6 @@ uses only realm information as the salt
+@@ -1167,12 +1161,6 @@ uses only realm information as the salt
  T}
  _
  T{

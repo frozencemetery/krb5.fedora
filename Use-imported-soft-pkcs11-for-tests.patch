@@ -1,4 +1,4 @@
-From 3d1f71979d0a41e75f5169ecbdd594e171e8bbf6 Mon Sep 17 00:00:00 2001
+From 923cafe924fa08c1b35ca11d5473a255d629592d Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Thu, 20 Jun 2019 13:41:57 -0400
 Subject: [PATCH] Use imported soft-pkcs11 for tests
@@ -21,7 +21,7 @@ integrate it into the build system, and use it for the PKINIT tests.
  create mode 100644 src/tests/softpkcs11/softpkcs11.exports
 
 diff --git a/src/configure.in b/src/configure.in
-index a19a0ea97..d0d8c4ed7 100644
+index 3e3b95e49..1df6f18fc 100644
 --- a/src/configure.in
 +++ b/src/configure.in
 @@ -1086,6 +1086,7 @@ int i = 1;

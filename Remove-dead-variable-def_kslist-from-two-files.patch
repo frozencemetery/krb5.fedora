@@ -1,4 +1,4 @@
-From 20be29dfddcbc4afda79eae2bcd3d5de3bb0330d Mon Sep 17 00:00:00 2001
+From 5c9dce0ac1b8b6fcb048404e3830fd4619f4f1c5 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 2 May 2019 16:57:51 -0400
 Subject: [PATCH] Remove dead variable def_kslist from two files

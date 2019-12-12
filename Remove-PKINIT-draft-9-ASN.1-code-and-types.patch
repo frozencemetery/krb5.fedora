@@ -1,4 +1,4 @@
-From a52788c294f56a023b7bc05286990717ec993158 Mon Sep 17 00:00:00 2001
+From 044e7ea922800bfc17ba816780803b1d67622b7b Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Tue, 18 Jun 2019 11:40:48 -0400
 Subject: [PATCH] Remove PKINIT draft 9 ASN.1 code and types

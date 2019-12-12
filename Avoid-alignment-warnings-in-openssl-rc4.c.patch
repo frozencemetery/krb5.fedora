@@ -1,4 +1,4 @@
-From ceb6a10c14ec83b0d4d1bb6f792917e6945995d6 Mon Sep 17 00:00:00 2001
+From 399b9ed8ef199b6280bf4d6564928c79a3611cc5 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Mon, 6 May 2019 15:14:49 -0400
 Subject: [PATCH] Avoid alignment warnings in openssl rc4.c

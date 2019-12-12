@@ -1,4 +1,4 @@
-From 15ac04c3e0d02c36643427ac943d344711cd8b50 Mon Sep 17 00:00:00 2001
+From 397ce771e195edf63f796f1cf917bc65b4eafd8c Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 15 Jan 2019 16:16:57 -0500
 Subject: [PATCH] Add function and enctype flag for deprecations

@@ -1,4 +1,4 @@
-From 675edf995b497d681732a2909df21d8e4fe11e07 Mon Sep 17 00:00:00 2001
+From 073c20a214df8b416b8d848412256c57feb43ef0 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Tue, 16 Jul 2019 00:15:42 -0400
 Subject: [PATCH] Filter enctypes in gss_set_allowable_enctypes()

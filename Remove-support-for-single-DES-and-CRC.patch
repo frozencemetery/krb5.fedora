@@ -1,4 +1,4 @@
-From c13f1fde8931a9199a7a15a5b011f02ed2615e9f Mon Sep 17 00:00:00 2001
+From e73ed142bd5baf15943069346202fe3b1a4d96d6 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 24 May 2019 13:12:03 -0400
 Subject: [PATCH] Remove support for single-DES and CRC
@@ -11,13 +11,15 @@ user-visible deprecation warnings were issued starting in release
 ticket: 8808
 (cherry picked from commit fb2dada5eb89c4cd4e39dedd6dbb7dbd5e94f8b8)
 [rharwood@redhat.com: .gitignore removal]
+[rharwood@redhat.com: In this branch, supported_enctypes changes landed
+first]
 ---
  doc/admin/advanced/retiring-des.rst           |   5 +
  doc/admin/conf_files/kdc_conf.rst             |  17 +-
  doc/admin/conf_files/krb5_conf.rst            |  17 +-
  doc/admin/enctypes.rst                        |  38 +-
  doc/appdev/refs/macros/index.rst              |   1 +
- doc/conf.py                                   |   2 +-
+ doc/conf.py                                   |   4 +-
  doc/mitK5features.rst                         |   2 +-
  src/include/k5-int.h                          |   1 -
  src/include/krb5/krb5.hin                     |  10 +-
@@ -67,7 +69,7 @@ ticket: 8808
  src/man/kdc.conf.man                          |  47 +-
  src/man/krb5.conf.man                         |   6 +-
  .../leash/htmlhelp/html/Encryption_Types.htm  |  14 +-
- 55 files changed, 74 insertions(+), 2180 deletions(-)
+ 55 files changed, 75 insertions(+), 2181 deletions(-)
  delete mode 100644 src/lib/crypto/builtin/enc_provider/des.c
  delete mode 100644 src/lib/crypto/builtin/hash_provider/hash_crc32.c
  delete mode 100644 src/lib/crypto/krb/crc32.c
@@ -93,7 +95,7 @@ index ebac95f24..4a964c15c 100644
  -------------
  
 diff --git a/doc/admin/conf_files/kdc_conf.rst b/doc/admin/conf_files/kdc_conf.rst
-index 62d1bfc05..2c6ea1855 100644
+index 7fbc8eb79..9759756a2 100644
 --- a/doc/admin/conf_files/kdc_conf.rst
 +++ b/doc/admin/conf_files/kdc_conf.rst
 @@ -381,13 +381,6 @@ The following tags may be specified in a [realms] subsection:
@@ -110,7 +112,7 @@ index 62d1bfc05..2c6ea1855 100644
  **reject_bad_transit**
      (Boolean value.)  If set to true, the KDC will check the list of
      transited realms for cross-realm tickets against the transit path
-@@ -848,13 +841,8 @@ Encryption types marked as "weak" are available for compatibility but
+@@ -850,13 +843,8 @@ Encryption types marked as "weak" are available for compatibility but
  not recommended for use.
  
  ==================================================== =========================================================
@@ -124,7 +126,7 @@ index 62d1bfc05..2c6ea1855 100644
  aes256-cts-hmac-sha1-96 aes256-cts aes256-sha1       AES-256 CTS mode with 96-bit SHA-1 HMAC
  aes128-cts-hmac-sha1-96 aes128-cts aes128-sha1       AES-128 CTS mode with 96-bit SHA-1 HMAC
  aes256-cts-hmac-sha384-192 aes256-sha2               AES-256 CTS mode with 192-bit SHA-384 HMAC
-@@ -863,7 +851,6 @@ arcfour-hmac rc4-hmac arcfour-hmac-md5               RC4 with HMAC/MD5
+@@ -865,7 +853,6 @@ arcfour-hmac rc4-hmac arcfour-hmac-md5               RC4 with HMAC/MD5
  arcfour-hmac-exp rc4-hmac-exp arcfour-hmac-md5-exp   Exportable RC4 with HMAC/MD5 (weak)
  camellia256-cts-cmac camellia256-cts                 Camellia-256 CTS mode with CMAC
  camellia128-cts-cmac camellia128-cts                 Camellia-128 CTS mode with CMAC
@@ -132,7 +134,7 @@ index 62d1bfc05..2c6ea1855 100644
  des3                                                 The triple DES family: des3-cbc-sha1
  aes                                                  The AES family: aes256-cts-hmac-sha1-96, aes128-cts-hmac-sha1-96, aes256-cts-hmac-sha384-192, and aes128-cts-hmac-sha256-128
  rc4                                                  The RC4 family: arcfour-hmac
-@@ -875,8 +862,8 @@ types for the variable in question.  Types or families can be removed
+@@ -877,8 +864,8 @@ types for the variable in question.  Types or families can be removed
  from the current list by prefixing them with a minus sign ("-").
  Types or families can be prefixed with a plus sign ("+") for symmetry;
  it has the same meaning as just listing the type or family.  For
@@ -144,10 +146,10 @@ index 62d1bfc05..2c6ea1855 100644
  front.
  
 diff --git a/doc/admin/conf_files/krb5_conf.rst b/doc/admin/conf_files/krb5_conf.rst
-index 5df3bfe36..89f02434b 100644
+index a3fb5d9f2..d5c498c89 100644
 --- a/doc/admin/conf_files/krb5_conf.rst
 +++ b/doc/admin/conf_files/krb5_conf.rst
-@@ -106,10 +106,7 @@ The libdefaults section may contain any of the following relations:
+@@ -100,10 +100,7 @@ The libdefaults section may contain any of the following relations:
      in :ref:`Encryption_types` in :ref:`kdc.conf(5)`) will be filtered
      out of the lists **default_tgs_enctypes**,
      **default_tkt_enctypes**, and **permitted_enctypes**.  The default
@@ -159,7 +161,7 @@ index 5df3bfe36..89f02434b 100644
  
  **canonicalize**
      If this flag is set to true, initial ticket requests to the KDC
-@@ -163,9 +160,7 @@ The libdefaults section may contain any of the following relations:
+@@ -157,9 +154,7 @@ The libdefaults section may contain any of the following relations:
      preference from highest to lowest.  The list may be delimited with
      commas or whitespace.  See :ref:`Encryption_types` in
      :ref:`kdc.conf(5)` for a list of the accepted values for this tag.
@@ -170,7 +172,7 @@ index 5df3bfe36..89f02434b 100644
  
      Do not set this unless required for specific backward
      compatibility purposes; stale values of this setting can prevent
-@@ -177,9 +172,7 @@ The libdefaults section may contain any of the following relations:
+@@ -171,9 +166,7 @@ The libdefaults section may contain any of the following relations:
      the client should request when making an AS-REQ, in order of
      preference from highest to lowest.  The format is the same as for
      default_tgs_enctypes.  The default value for this tag is
@@ -181,7 +183,7 @@ index 5df3bfe36..89f02434b 100644
  
      Do not set this unless required for specific backward
      compatibility purposes; stale values of this setting can prevent
-@@ -297,9 +290,7 @@ The libdefaults section may contain any of the following relations:
+@@ -291,9 +284,7 @@ The libdefaults section may contain any of the following relations:
  **permitted_enctypes**
      Identifies all encryption types that are permitted for use in
      session key encryption.  The default value for this tag is
@@ -273,14 +275,16 @@ index 47c6d4413..534795d15 100644
     ENCTYPE_DES_CBC_MD4.rst
     ENCTYPE_DES_CBC_MD5.rst
 diff --git a/doc/conf.py b/doc/conf.py
-index c32e33001..759367c21 100644
+index 7c688d871..759367c21 100644
 --- a/doc/conf.py
 +++ b/doc/conf.py
-@@ -272,7 +272,7 @@ else:
+@@ -271,8 +271,8 @@ else:
+     rst_epilog += '.. |ckeytab| replace:: %s\n' % ckeytab
      rst_epilog += '''
  .. |krb5conf| replace:: ``/etc/krb5.conf``
- .. |defkeysalts| replace:: ``aes256-cts-hmac-sha1-96:normal aes128-cts-hmac-sha1-96:normal des3-cbc-sha1:normal arcfour-hmac-md5:normal``
+-.. |defkeysalts| replace:: ``aes256-cts-hmac-sha1-96:normal aes128-cts-hmac-sha1-96:normal``
 -.. |defetypes| replace:: ``aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 aes256-cts-hmac-sha384-192 aes128-cts-hmac-sha256-128 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4``
++.. |defkeysalts| replace:: ``aes256-cts-hmac-sha1-96:normal aes128-cts-hmac-sha1-96:normal des3-cbc-sha1:normal arcfour-hmac-md5:normal``
 +.. |defetypes| replace:: ``aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 aes256-cts-hmac-sha384-192 aes128-cts-hmac-sha256-128 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac``
  .. |defmkey| replace:: ``aes256-cts-hmac-sha1-96``
  .. |copy| unicode:: U+000A9
@@ -3186,7 +3190,7 @@ index 39f656322..55491428b 100644
          goto cleanup;
      context->clockskew = (krb5_deltat) ibuf;
 diff --git a/src/man/kdc.conf.man b/src/man/kdc.conf.man
-index 4a75be8cb..8058134ac 100644
+index fd4dbb2e2..527d5d697 100644
 --- a/src/man/kdc.conf.man
 +++ b/src/man/kdc.conf.man
 @@ -441,13 +441,6 @@ marks the server principal as host\-based or the service is also
@@ -3203,7 +3207,7 @@ index 4a75be8cb..8058134ac 100644
  \fBreject_bad_transit\fP
  (Boolean value.)  If set to true, the KDC will check the list of
  transited realms for cross\-realm tickets against the transit path
-@@ -969,30 +962,6 @@ center;
+@@ -970,30 +963,6 @@ center;
  |l|l|.
  _
  T{
@@ -3234,7 +3238,7 @@ index 4a75be8cb..8058134ac 100644
  des3\-cbc\-raw
  T}	T{
  Triple DES cbc mode raw (weak)
-@@ -1005,12 +974,6 @@ Triple DES cbc mode with HMAC/sha1
+@@ -1006,12 +975,6 @@ Triple DES cbc mode with HMAC/sha1
  T}
  _
  T{
@@ -3247,7 +3251,7 @@ index 4a75be8cb..8058134ac 100644
  aes256\-cts\-hmac\-sha1\-96 aes256\-cts aes256\-sha1
  T}	T{
  AES\-256 CTS mode with 96\-bit SHA\-1 HMAC
-@@ -1059,12 +1022,6 @@ Camellia\-128 CTS mode with CMAC
+@@ -1060,12 +1023,6 @@ Camellia\-128 CTS mode with CMAC
  T}
  _
  T{
@@ -3260,7 +3264,7 @@ index 4a75be8cb..8058134ac 100644
  des3
  T}	T{
  The triple DES family: des3\-cbc\-sha1
-@@ -1095,8 +1052,8 @@ types for the variable in question.  Types or families can be removed
+@@ -1096,8 +1053,8 @@ types for the variable in question.  Types or families can be removed
  from the current list by prefixing them with a minus sign ("\-").
  Types or families can be prefixed with a plus sign ("+") for symmetry;
  it has the same meaning as just listing the type or family.  For
@@ -3272,10 +3276,10 @@ index 4a75be8cb..8058134ac 100644
  front.
  .sp
 diff --git a/src/man/krb5.conf.man b/src/man/krb5.conf.man
-index aafdf7f83..d6ff91c3b 100644
+index 433f38d71..4bc190e32 100644
 --- a/src/man/krb5.conf.man
 +++ b/src/man/krb5.conf.man
-@@ -254,7 +254,7 @@ the client should request when making a TGS\-REQ, in order of
+@@ -240,7 +240,7 @@ the client should request when making a TGS\-REQ, in order of
  preference from highest to lowest.  The list may be delimited with
  commas or whitespace.  See Encryption_types in
  kdc.conf(5) for a list of the accepted values for this tag.
@@ -3284,7 +3288,7 @@ index aafdf7f83..d6ff91c3b 100644
  will be implicitly removed from this list if the value of
  \fBallow_weak_crypto\fP is false.
  .sp
-@@ -268,7 +268,7 @@ Identifies the supported list of session key encryption types that
+@@ -254,7 +254,7 @@ Identifies the supported list of session key encryption types that
  the client should request when making an AS\-REQ, in order of
  preference from highest to lowest.  The format is the same as for
  default_tgs_enctypes.  The default value for this tag is
@@ -3293,7 +3297,7 @@ index aafdf7f83..d6ff91c3b 100644
  removed from this list if the value of \fBallow_weak_crypto\fP is
  false.
  .sp
-@@ -388,7 +388,7 @@ used across NATs.  The default value is true.
+@@ -374,7 +374,7 @@ used across NATs.  The default value is true.
  \fBpermitted_enctypes\fP
  Identifies all encryption types that are permitted for use in
  session key encryption.  The default value for this tag is

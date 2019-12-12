@@ -1,4 +1,4 @@
-From 842ffb8cd2f47844346c6a88ff7575c6d131644b Mon Sep 17 00:00:00 2001
+From 95fec44aebd6a4d815f88a0b5a53517c4f3175f4 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Sun, 30 Dec 2018 16:40:28 -0500
 Subject: [PATCH] Address some optimized-out memset() calls
@@ -60,10 +60,10 @@ index bb1072fe4..47c161ec9 100644
      iah.cookie = cookie;
  
 diff --git a/src/lib/kadm5/srv/svr_principal.c b/src/lib/kadm5/srv/svr_principal.c
-index 21c53ece1..9ab2c5a74 100644
+index 8582bbc56..be0922101 100644
 --- a/src/lib/kadm5/srv/svr_principal.c
 +++ b/src/lib/kadm5/srv/svr_principal.c
-@@ -2093,14 +2093,8 @@ static int decrypt_key_data(krb5_context context,
+@@ -2097,14 +2097,8 @@ static int decrypt_key_data(krb5_context context,
          ret = krb5_dbe_decrypt_key_data(context, NULL, &key_data[i], &keys[i],
                                          NULL);
          if (ret) {

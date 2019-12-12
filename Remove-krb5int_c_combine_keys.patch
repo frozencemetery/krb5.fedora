@@ -1,4 +1,4 @@
-From 6181039fc3f70c073e4125d98d8a28aec9c223bf Mon Sep 17 00:00:00 2001
+From 90c702467b0c4373758f235512c67f80f1998e02 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 18 Apr 2019 17:27:07 -0400
 Subject: [PATCH] Remove krb5int_c_combine_keys()

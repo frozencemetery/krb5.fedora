@@ -1,4 +1,4 @@
-From 5ff802a443dfd47e2f43a37de0dc439a1c583849 Mon Sep 17 00:00:00 2001
+From a7cd60bc97b4d9b171eddae391cf9ecd84c58d31 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Thu, 22 Aug 2019 16:19:12 -0400
 Subject: [PATCH] Simplify krb5_dbe_def_search_enctype()

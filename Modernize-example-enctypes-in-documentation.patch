@@ -1,10 +1,11 @@
-From c547bf2cae39d503de3ac3670d99b2cc324c6567 Mon Sep 17 00:00:00 2001
+From b90cdec363eae38cb2ea40d40668e3fbc83edeb8 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 11 Apr 2019 18:25:41 -0400
 Subject: [PATCH] Modernize example enctypes in documentation
 
 ticket: 8805 (new)
 (cherry picked from commit ccb4a3e4b35fa9ea63af0e98a42eba4aadb099e2)
+[rharwood@redhat.com: release version conflict in man pages]
 ---
  doc/admin/admin_commands/kadmin_local.rst     |  8 ++++----
  doc/admin/admin_commands/kdb5_util.rst        | 10 +++++-----
@@ -70,7 +71,7 @@ index 7dd54f797..444c58bcd 100644
  
  ENVIRONMENT
 diff --git a/doc/admin/database.rst b/doc/admin/database.rst
-index 113a680a6..0eb5ccde7 100644
+index 33895b857..cea60b009 100644
 --- a/doc/admin/database.rst
 +++ b/doc/admin/database.rst
 @@ -483,7 +483,7 @@ availability.  To roll over the master key, follow these steps:
@@ -126,13 +127,13 @@ index 5d1e70ede..3bec59f96 100644
          type arcfour-hmac added to keytab FILE:/etc/krb5.keytab.
  
 diff --git a/src/man/kadmin.man b/src/man/kadmin.man
-index 849677258..44859a378 100644
+index 3c4f013fb..44859a378 100644
 --- a/src/man/kadmin.man
 +++ b/src/man/kadmin.man
 @@ -1,6 +1,6 @@
  .\" Man page generated from reStructuredText.
  .
--.TH "KADMIN" "1" " " "1.17" "MIT Kerberos"
+-.TH "KADMIN" "1" " " "1.17.1" "MIT Kerberos"
 +.TH "KADMIN" "1" " " "1.18" "MIT Kerberos"
  .SH NAME
  kadmin \- Kerberos V5 database administration program

@@ -1,4 +1,4 @@
-From 78e9d11d8a6c05218d18b9b200d1de888a95503c Mon Sep 17 00:00:00 2001
+From f4681ed7ec9f22fdbacc5c58a9f12ef567601267 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Fri, 27 Sep 2019 16:55:37 -0400
 Subject: [PATCH] Log unknown enctypes as unsupported in KDC

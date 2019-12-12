@@ -1,4 +1,4 @@
-From a768fb06f0df69f0b6985058e21c72448587d2a8 Mon Sep 17 00:00:00 2001
+From ecf80eb7a536c2d78812482d9c974120725ca609 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Mon, 9 Oct 2017 15:58:33 -0400
 Subject: [PATCH] Remove srvtab support
@@ -8,6 +8,7 @@ name was used.
 
 ticket: 8793 (new)
 (cherry picked from commit a23e670b40f69b6be0024f8a60d2afaf7f7a005a)
+[rharwood@redhat.com: release version conflict in man pages]
 ---
  doc/admin/admin_commands/ktutil.rst           |  22 +-
  doc/basic/keytab_def.rst                      |   6 +-
@@ -206,10 +207,10 @@ index 00c442978..e710852d4 100644
  	plugin_base_dir = __PLUGIN_DIR__
  	allow_weak_crypto = true
 diff --git a/src/kadmin/testing/scripts/env-setup.shin b/src/kadmin/testing/scripts/env-setup.shin
-index c8d866f15..726298351 100755
+index 273cf6954..8c29bb996 100755
 --- a/src/kadmin/testing/scripts/env-setup.shin
 +++ b/src/kadmin/testing/scripts/env-setup.shin
-@@ -77,7 +77,7 @@ SRVTCL=$TESTDIR/util/kadm5_srv_tcl; export SRVTCL
+@@ -79,7 +79,7 @@ export QUALNAME
  
  KRB5_CONFIG=$K5ROOT/krb5.conf; export KRB5_CONFIG
  KRB5_KDC_PROFILE=$K5ROOT/kdc.conf; export KRB5_KDC_PROFILE
@@ -219,10 +220,10 @@ index c8d866f15..726298351 100755
  KRB5CCNAME=$K5ROOT/krb5cc_unit-test; export KRB5CCNAME
  
 diff --git a/src/kadmin/testing/scripts/init_db b/src/kadmin/testing/scripts/init_db
-index cd7165628..bf119f2ac 100755
+index c41d290d1..2496be2ab 100755
 --- a/src/kadmin/testing/scripts/init_db
 +++ b/src/kadmin/testing/scripts/init_db
-@@ -218,7 +218,7 @@ changepw/kerberos@$REALM	cil
+@@ -216,7 +216,7 @@ changepw/kerberos@$REALM	cil
  
  EOF
  
@@ -245,10 +246,10 @@ index dfe0b3a01..c77d61c70 100755
  	  replaced by the canonical host name of the local host.";
  
 diff --git a/src/kadmin/testing/scripts/start_servers_local b/src/kadmin/testing/scripts/start_servers_local
-index 0cbed462d..809892974 100755
+index f34444ee8..e502a6a0b 100755
 --- a/src/kadmin/testing/scripts/start_servers_local
 +++ b/src/kadmin/testing/scripts/start_servers_local
-@@ -98,9 +98,6 @@ x=$?
+@@ -96,9 +96,6 @@ x=$?
  rm /tmp/start_servers_local$$
  if test $x != 0 ; then exit 1 ; fi
  
@@ -952,12 +953,12 @@ index ba57b703e..ed179bbe3 100644
   	verbose "% $SERVER" 1
  	set server_pid [spawn $SERVER $PROT]
 diff --git a/src/lib/rpc/unit-test/lib/helpers.exp b/src/lib/rpc/unit-test/lib/helpers.exp
-index a1b078374..6ba2b10ae 100644
+index a7f89f636..f08c73201 100644
 --- a/src/lib/rpc/unit-test/lib/helpers.exp
 +++ b/src/lib/rpc/unit-test/lib/helpers.exp
 @@ -121,8 +121,8 @@ proc setup_database {} {
  if ![info exists CANON_HOST] {
-     set CANON_HOST [exec $env(QUALNAME)]
+     set CANON_HOST $env(QUALNAME)
      setup_database
 -    file delete $env(RPC_TEST_SRVTAB)
 -    exec $env(MAKE_KEYTAB) -princ "server/$CANON_HOST" $env(RPC_TEST_SRVTAB)
@@ -967,7 +968,7 @@ index a1b078374..6ba2b10ae 100644
  
  
 diff --git a/src/lib/rpc/unit-test/rpc_test_setup.sh b/src/lib/rpc/unit-test/rpc_test_setup.sh
-index 968f52a67..b610f87ef 100755
+index d147a337e..d7df0eb2b 100755
 --- a/src/lib/rpc/unit-test/rpc_test_setup.sh
 +++ b/src/lib/rpc/unit-test/rpc_test_setup.sh
 @@ -1,7 +1,7 @@
@@ -979,7 +980,7 @@ index 968f52a67..b610f87ef 100755
  # environment. 
  #
  # $Id$
-@@ -42,9 +42,9 @@ if test $? != 0 ; then
+@@ -39,9 +39,9 @@ if test $? != 0 ; then
  fi
  rm /tmp/rpc_test_setup$$
  
@@ -992,13 +993,13 @@ index 968f52a67..b610f87ef 100755
  # grep -s "$CANON_HOST SECURE-TEST.OV.COM" /etc/krb.realms
  # if [ $? != 0 ]; then
 diff --git a/src/man/ktutil.man b/src/man/ktutil.man
-index 4e174c0fe..233329468 100644
+index 711a0ed2c..233329468 100644
 --- a/src/man/ktutil.man
 +++ b/src/man/ktutil.man
 @@ -1,6 +1,6 @@
  .\" Man page generated from reStructuredText.
  .
--.TH "KTUTIL" "1" " " "1.17" "MIT Kerberos"
+-.TH "KTUTIL" "1" " " "1.17.1" "MIT Kerberos"
 +.TH "KTUTIL" "1" " " "1.18" "MIT Kerberos"
  .SH NAME
  ktutil \- Kerberos keytab file maintenance utility

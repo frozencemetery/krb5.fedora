@@ -1,4 +1,4 @@
-From d1bbb1c98c3c2deb3713959281a3eee2b5019480 Mon Sep 17 00:00:00 2001
+From bcd727fc66e9213e7b6ea4d22f781812033789ba Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 15 Jan 2019 13:41:16 -0500
 Subject: [PATCH] In kpropd, debug-log proper ticket enctype names

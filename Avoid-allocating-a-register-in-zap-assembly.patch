@@ -1,4 +1,4 @@
-From df3bfd244f8b4601f8750599270eb98cadccdafe Mon Sep 17 00:00:00 2001
+From c896facca7dd9d0fbbd561d3a723a90216821b72 Mon Sep 17 00:00:00 2001
 From: Andreas Schneider <asn@samba.org>
 Date: Thu, 3 Jan 2019 17:19:32 +0100
 Subject: [PATCH] Avoid allocating a register in zap() assembly
@@ -17,7 +17,7 @@ Also add explicit_bzero() (glibc, FreeBSD) and explicit_memset()
  2 files changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/src/configure.in b/src/configure.in
-index 93aec682e..7c309a26b 100644
+index feae21c3e..505dabb02 100644
 --- a/src/configure.in
 +++ b/src/configure.in
 @@ -421,7 +421,7 @@ AC_PROG_LEX

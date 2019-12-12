@@ -1,4 +1,4 @@
-From 73e08f464b5a55c1d86b3d08f1fd0f391253548f Mon Sep 17 00:00:00 2001
+From 8c38e6a1cef9bee050e42f591a530d077bb11f17 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 12 Nov 2019 13:38:59 -0500
 Subject: [PATCH] Update test suite cert message digest to sha256

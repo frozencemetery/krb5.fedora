@@ -1,4 +1,4 @@
-From b7ba0fa6a2f8324c58b57dedde33c1ae5d1ddb41 Mon Sep 17 00:00:00 2001
+From ab2b67102127e448cc1a266fbbe2c738a1a3a158 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:45:26 -0400
 Subject: [PATCH] krb5-1.15-beta1-buildconf.patch

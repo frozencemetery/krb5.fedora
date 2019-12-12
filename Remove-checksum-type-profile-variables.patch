@@ -1,4 +1,4 @@
-From 443754ab8140d87e2e5bbd595f39827461d6498a Mon Sep 17 00:00:00 2001
+From ee07471fa613fb68ddebc28577870e97cb5190cf Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Mon, 13 May 2019 14:19:57 -0400
 Subject: [PATCH] Remove checksum type profile variables
@@ -18,6 +18,7 @@ did not impose any limitations.
 
 ticket: 8804 (new)
 (cherry picked from commit a5a140dc85201faf1ba3a687553058354722a1b4)
+[rharwood@redhat.com: release version conflict in man pages]
 ---
  doc/admin/conf_files/krb5_conf.rst | 37 ------------
  src/include/k5-int.h               |  6 --
@@ -30,10 +31,10 @@ ticket: 8804 (new)
  8 files changed, 7 insertions(+), 204 deletions(-)
 
 diff --git a/doc/admin/conf_files/krb5_conf.rst b/doc/admin/conf_files/krb5_conf.rst
-index e9f7e8c59..5df3bfe36 100644
+index d1e1a222d..a3fb5d9f2 100644
 --- a/doc/admin/conf_files/krb5_conf.rst
 +++ b/doc/admin/conf_files/krb5_conf.rst
-@@ -111,14 +111,6 @@ The libdefaults section may contain any of the following relations:
+@@ -105,14 +105,6 @@ The libdefaults section may contain any of the following relations:
      strong crypto.  Users in affected environments should set this tag
      to true until their infrastructure adopts stronger ciphers.
  
@@ -48,7 +49,7 @@ index e9f7e8c59..5df3bfe36 100644
  **canonicalize**
      If this flag is set to true, initial ticket requests to the KDC
      will request canonicalization of the client principal name, and
-@@ -297,26 +289,6 @@ The libdefaults section may contain any of the following relations:
+@@ -291,26 +283,6 @@ The libdefaults section may contain any of the following relations:
      corrective factor is only used by the Kerberos library; it is not
      used to change the system clock.  The default value is 1.
  
@@ -75,7 +76,7 @@ index e9f7e8c59..5df3bfe36 100644
  **noaddresses**
      If this flag is true, requests for initial tickets will not be
      made with address restrictions set, allowing the tickets to be
-@@ -365,15 +337,6 @@ The libdefaults section may contain any of the following relations:
+@@ -359,15 +331,6 @@ The libdefaults section may contain any of the following relations:
      (:ref:`duration` string.)  Sets the default renewable lifetime
      for initial ticket requests.  The default value is 0.
  
@@ -299,18 +300,18 @@ index a6e48cd25..22be2198b 100644
      ctx->library_options = 0;
      ctx->profile_secure = TRUE;
 diff --git a/src/man/krb5.conf.man b/src/man/krb5.conf.man
-index d431dce75..aafdf7f83 100644
+index 2a7af6aa4..433f38d71 100644
 --- a/src/man/krb5.conf.man
 +++ b/src/man/krb5.conf.man
 @@ -1,6 +1,6 @@
  .\" Man page generated from reStructuredText.
  .
--.TH "KRB5.CONF" "5" " " "1.17" "MIT Kerberos"
+-.TH "KRB5.CONF" "5" " " "1.17.1" "MIT Kerberos"
 +.TH "KRB5.CONF" "5" " " "1.18" "MIT Kerberos"
  .SH NAME
  krb5.conf \- Kerberos configuration file
  .
-@@ -202,14 +202,6 @@ failures in existing Kerberos infrastructures that do not support
+@@ -188,14 +188,6 @@ failures in existing Kerberos infrastructures that do not support
  strong crypto.  Users in affected environments should set this tag
  to true until their infrastructure adopts stronger ciphers.
  .TP
@@ -325,7 +326,7 @@ index d431dce75..aafdf7f83 100644
  \fBcanonicalize\fP
  If this flag is set to true, initial ticket requests to the KDC
  will request canonicalization of the client principal name, and
-@@ -291,6 +283,10 @@ hostnames for use in service principal names.  Setting this flag
+@@ -277,6 +269,10 @@ hostnames for use in service principal names.  Setting this flag
  to false can improve security by reducing reliance on DNS, but
  means that short hostnames will not be canonicalized to
  fully\-qualified hostnames.  The default value is true.
@@ -336,7 +337,7 @@ index d431dce75..aafdf7f83 100644
  .TP
  \fBdns_lookup_kdc\fP
  Indicate whether DNS SRV records should be used to locate the KDCs
-@@ -384,73 +380,6 @@ requesting service tickets or authenticating to services.  This
+@@ -370,73 +366,6 @@ requesting service tickets or authenticating to services.  This
  corrective factor is only used by the Kerberos library; it is not
  used to change the system clock.  The default value is 1.
  .TP
@@ -410,7 +411,7 @@ index d431dce75..aafdf7f83 100644
  \fBnoaddresses\fP
  If this flag is true, requests for initial tickets will not be
  made with address restrictions set, allowing the tickets to be
-@@ -499,15 +428,6 @@ set.  The default is not to search domain components.
+@@ -485,15 +414,6 @@ set.  The default is not to search domain components.
  (duration string.)  Sets the default renewable lifetime
  for initial ticket requests.  The default value is 0.
  .TP

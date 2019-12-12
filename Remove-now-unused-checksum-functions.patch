@@ -1,4 +1,4 @@
-From 3d6b547ca1454b8113c6f83161def1f995c04616 Mon Sep 17 00:00:00 2001
+From e9cc0b8762266ed368cb50e7ba48d6196db54da5 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 28 Jun 2019 13:09:47 -0400
 Subject: [PATCH] Remove now-unused checksum functions

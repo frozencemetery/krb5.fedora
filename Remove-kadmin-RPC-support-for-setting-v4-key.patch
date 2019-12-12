@@ -1,4 +1,4 @@
-From e1e27c400736ca304c9cbdc52e2946c65e047a21 Mon Sep 17 00:00:00 2001
+From 620a45acc6ea6c01cce0474883011ed47cb35458 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 4 Apr 2019 16:14:46 -0400
 Subject: [PATCH] Remove kadmin RPC support for setting v4 key
@@ -336,10 +336,10 @@ index 64ad5dd69..e3c04e690 100644
  xdr_ui_4
  kadm5_init_iprop
 diff --git a/src/lib/kadm5/srv/svr_principal.c b/src/lib/kadm5/srv/svr_principal.c
-index 9ab2c5a74..48cac0c11 100644
+index be0922101..a1ecdbfc4 100644
 --- a/src/lib/kadm5/srv/svr_principal.c
 +++ b/src/lib/kadm5/srv/svr_principal.c
-@@ -1645,124 +1645,6 @@ done:
+@@ -1649,124 +1649,6 @@ done:
      return ret;
  }
  
