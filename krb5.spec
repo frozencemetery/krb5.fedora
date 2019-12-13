@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 1%{?dist}
+Release: 2%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -139,6 +139,7 @@ BuildRequires: iproute
 BuildRequires: libverto-devel
 BuildRequires: openldap-devel
 BuildRequires: openssl-devel >= 1:1.1.1d-4
+BuildRequires: lmdb-devel
 
 %ifarch %{ix86} x86_64
 BuildRequires: yasm
@@ -325,6 +326,7 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
     --with-pam \
     --with-selinux \
     --with-prng-alg=os \
+    --with-lmdb \
     || (cat config.log; exit 1)
 # Now build it.
 make
@@ -581,6 +583,7 @@ exit 0
 %dir %{_libdir}/krb5/plugins/authdata
 %{_libdir}/krb5/plugins/preauth/otp.so
 %{_libdir}/krb5/plugins/kdb/db2.so
+%{_libdir}/krb5/plugins/kdb/klmdb.so
 
 # KDC binaries and configuration.
 %{_mandir}/man5/kadm5.acl.5*
@@ -685,6 +688,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Dec 13 2019 Robbie Harwood <rharwood@redhat.com> - 1.17.1-2
+- Enable the LMDB backend for the KDB
+
 * Thu Dec 12 2019 Robbie Harwood <rharwood@redhat.com> - 1.17.1-1
 - New upstream version - 1.17.1
 - Stop building and packaging PDFs
