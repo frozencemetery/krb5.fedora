@@ -1931,7 +1931,7 @@ index c061d764e..e8adee234 100644
      }
      {
  	all-enctypes
-@@ -248,114 +207,7 @@ set passes {
+@@ -248,115 +207,8 @@ set passes {
  	{allow_weak_crypto(server)=false}
  	{dummy=[verbose -log "all default enctypes"]}
      }
@@ -1960,8 +1960,8 @@ index c061d764e..e8adee234 100644
 -	{dummy=[verbose -log \
 -		"DES3 TGT, KDC permitting only des-cbc-crc"]}
 -    }
--}
--
+ }
+ 
 -# des.md5-tgt is set as unused, since it won't trigger the error case
 -# if SUPPORT_DESMD5 isn't honored.
 -
@@ -2041,11 +2041,12 @@ index c061d764e..e8adee234 100644
 -	{master_key_type=aes256-cts-hmac-sha1-96}
 -	{dummy=[verbose -log "AES via TCP"]}
 -    }
- }
+-}
 -#	{supported_enctypes=des-cbc-md5:normal des-cbc-crc:normal twofish256-hmac-sha1:normal }
- 
+-
  # This shouldn't be necessary on dejagnu-1.4 and later, but 1.3 seems
  # to need it because its runtest.exp doesn't deal with PASS at all.
+ if [info exists PASS] {
 @@ -1095,7 +947,7 @@ proc setup_kerberos_db { standalone } {
      global REALMNAME KDB5_UTIL KADMIN_LOCAL KEY
      global tmppwd hostname
