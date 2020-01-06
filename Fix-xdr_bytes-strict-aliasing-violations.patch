@@ -1,0 +1,138 @@
+From e48e04d955c809c6f7b4f9052294d407f0d93daa Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Tue, 10 Dec 2019 12:06:05 -0500
+Subject: [PATCH] Fix xdr_bytes() strict-aliasing violations
+
+When xdr_bytes() is used for a gss_buffer_desc object, a temporary
+character pointer must be used for the data value to avoid a strict
+aliasing violation.
+
+When xdr_bytes() is used for a krb5_keyblock object, a temporary
+character pointer must also be used, even though the data pointer is
+of type unsigned char *, to avoid a clang warning on macOS due to the
+"#pragma pack" declaration in krb5.h.
+
+(cherry picked from commit 21b39d0196e3e0bb6b1bfbf5d60a0596cfc82e27)
+---
+ src/lib/kadm5/kadm_rpc_xdr.c   |  8 +++++---
+ src/lib/rpc/auth_gssapi_misc.c | 21 +++++++++++++--------
+ src/lib/rpc/authgss_prot.c     |  5 ++++-
+ 3 files changed, 22 insertions(+), 12 deletions(-)
+
+diff --git a/src/lib/kadm5/kadm_rpc_xdr.c b/src/lib/kadm5/kadm_rpc_xdr.c
+index f22ea7f1f..8383e4e23 100644
+--- a/src/lib/kadm5/kadm_rpc_xdr.c
++++ b/src/lib/kadm5/kadm_rpc_xdr.c
+@@ -1125,14 +1125,16 @@ xdr_krb5_salttype(XDR *xdrs, krb5_int32 *objp)
+ bool_t
+ xdr_krb5_keyblock(XDR *xdrs, krb5_keyblock *objp)
+ {
++   char *cp;
++
+    /* XXX This only works because free_keyblock assumes ->contents
+       is allocated by malloc() */
+-
+    if(!xdr_krb5_enctype(xdrs, &objp->enctype))
+       return FALSE;
+-   if(!xdr_bytes(xdrs, (char **) &objp->contents, (unsigned int *)
+-		 &objp->length, ~0))
++   cp = (char *)objp->contents;
++   if(!xdr_bytes(xdrs, &cp, &objp->length, ~0))
+       return FALSE;
++   objp->contents = (uint8_t *)cp;
+    return TRUE;
+ }
+ 
+diff --git a/src/lib/rpc/auth_gssapi_misc.c b/src/lib/rpc/auth_gssapi_misc.c
+index a05ea19eb..a60eb7f7c 100644
+--- a/src/lib/rpc/auth_gssapi_misc.c
++++ b/src/lib/rpc/auth_gssapi_misc.c
+@@ -45,9 +45,11 @@ bool_t xdr_gss_buf(
+      bool_t result;
+      /* Fix type mismatches between APIs.  */
+      unsigned int length = buf->length;
+-     result = xdr_bytes(xdrs, (char **) &buf->value, &length,
++     char *cp = buf->value;
++     result = xdr_bytes(xdrs, &cp, &length,
+ 			(xdrs->x_op == XDR_DECODE && buf->value == NULL)
+ 			? (unsigned int) -1 : (unsigned int) buf->length);
++     buf->value = cp;
+      buf->length = length;
+      return result;
+ }
+@@ -204,6 +206,7 @@ bool_t auth_gssapi_wrap_data(
+      XDR temp_xdrs;
+      int conf_state;
+      unsigned int length;
++     char *cp;
+ 
+      PRINTF(("gssapi_wrap_data: starting\n"));
+ 
+@@ -243,13 +246,13 @@ bool_t auth_gssapi_wrap_data(
+ 
+      /* write the token */
+      length = out_buf.length;
+-     if (! xdr_bytes(out_xdrs, (char **) &out_buf.value,
+-		     (unsigned int *) &length,
+-		     out_buf.length)) {
++     cp = out_buf.value;
++     if (! xdr_bytes(out_xdrs, &cp, &length, out_buf.length)) {
+ 	  PRINTF(("gssapi_wrap_data: serializing encrypted data failed\n"));
+ 	  XDR_DESTROY(&temp_xdrs);
+ 	  return FALSE;
+      }
++     out_buf.value = cp;
+ 
+      *major = gss_release_buffer(minor, &out_buf);
+ 
+@@ -272,6 +275,7 @@ bool_t auth_gssapi_unwrap_data(
+      uint32_t verf_seq_num;
+      int conf, qop;
+      unsigned int length;
++     char *cp;
+ 
+      PRINTF(("gssapi_unwrap_data: starting\n"));
+ 
+@@ -280,14 +284,15 @@ bool_t auth_gssapi_unwrap_data(
+ 
+      in_buf.value = NULL;
+      out_buf.value = NULL;
+-     if (! xdr_bytes(in_xdrs, (char **) &in_buf.value,
+-		     &length, (unsigned int) -1)) {
++     cp = in_buf.value;
++     if (! xdr_bytes(in_xdrs, &cp, &length, (unsigned int) -1)) {
+ 	 PRINTF(("gssapi_unwrap_data: deserializing encrypted data failed\n"));
+ 	 temp_xdrs.x_op = XDR_FREE;
+-	 (void)xdr_bytes(&temp_xdrs, (char **) &in_buf.value, &length,
+-			 (unsigned int) -1);
++	 (void)xdr_bytes(&temp_xdrs, &cp, &length, (unsigned int) -1);
++	 in_buf.value = NULL;
+ 	 return FALSE;
+      }
++     in_buf.value = cp;
+      in_buf.length = length;
+ 
+      *major = gss_unseal(minor, context, &in_buf, &out_buf, &conf,
+diff --git a/src/lib/rpc/authgss_prot.c b/src/lib/rpc/authgss_prot.c
+index a5a587f90..9a48277b3 100644
+--- a/src/lib/rpc/authgss_prot.c
++++ b/src/lib/rpc/authgss_prot.c
+@@ -50,6 +50,7 @@ xdr_rpc_gss_buf(XDR *xdrs, gss_buffer_t buf, u_int maxsize)
+ {
+ 	bool_t xdr_stat;
+ 	u_int tmplen;
++	char *cp;
+ 
+ 	if (xdrs->x_op != XDR_DECODE) {
+ 		if (buf->length > UINT_MAX)
+@@ -57,7 +58,9 @@ xdr_rpc_gss_buf(XDR *xdrs, gss_buffer_t buf, u_int maxsize)
+ 		else
+ 			tmplen = buf->length;
+ 	}
+-	xdr_stat = xdr_bytes(xdrs, (char **)&buf->value, &tmplen, maxsize);
++	cp = buf->value;
++	xdr_stat = xdr_bytes(xdrs, &cp, &tmplen, maxsize);
++	buf->value = cp;
+ 
+ 	if (xdr_stat && xdrs->x_op == XDR_DECODE)
+ 		buf->length = tmplen;
