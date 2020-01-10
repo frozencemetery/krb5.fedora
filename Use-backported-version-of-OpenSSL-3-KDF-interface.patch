@@ -1,19 +1,19 @@
-From bdb78f9d3fbf9abccec9b41709bb0131e9ec28d6 Mon Sep 17 00:00:00 2001
+From 9d887898571744f5ea0a523c7fba9d86d9cf8588 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 15 Nov 2019 20:05:16 +0000
 Subject: [PATCH] Use backported version of OpenSSL-3 KDF interface
 
 ---
- src/configure.in                              |   4 +
+ src/configure.ac                              |   4 +
  src/lib/crypto/krb/derive.c                   | 356 +++++++++++++-----
  .../preauth/pkinit/pkinit_crypto_openssl.c    | 257 ++++++++-----
  3 files changed, 428 insertions(+), 189 deletions(-)
 
-diff --git a/src/configure.in b/src/configure.in
-index 1df6f18fc..3bd5e683d 100644
---- a/src/configure.in
-+++ b/src/configure.in
-@@ -269,6 +269,10 @@ AC_SUBST(CRYPTO_IMPL)
+diff --git a/src/configure.ac b/src/configure.ac
+index d4e4da525..29be532cb 100644
+--- a/src/configure.ac
++++ b/src/configure.ac
+@@ -282,6 +282,10 @@ AC_SUBST(CRYPTO_IMPL)
  AC_SUBST(CRYPTO_IMPL_CFLAGS)
  AC_SUBST(CRYPTO_IMPL_LIBS)
  

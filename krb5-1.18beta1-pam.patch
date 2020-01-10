@@ -1,7 +1,7 @@
-From 5e2837a56bb6bb1fbaf371377dbffa35aa81b3f1 Mon Sep 17 00:00:00 2001
+From 9d77eb513f95821f01f12e233e16d4ce50da7d23 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:29:58 -0400
-Subject: [PATCH] krb5-1.12.1-pam.patch
+Subject: [PATCH] krb5-1.18beta1-pam.patch
 
 Modify ksu so that it performs account and session management on behalf of
 the target user account, mimicking the action of regular su.  The default
@@ -17,24 +17,25 @@ Originally RT#5939, though it's changed since then to perform the account
 and session management before dropping privileges, and to apply on top of
 changes we're proposing for how it handles cache collections.
 ---
- src/aclocal.m4              |  67 +++++++
+ src/aclocal.m4              |  69 +++++++
  src/clients/ksu/Makefile.in |   8 +-
  src/clients/ksu/main.c      |  88 +++++++-
  src/clients/ksu/pam.c       | 389 ++++++++++++++++++++++++++++++++++++
  src/clients/ksu/pam.h       |  57 ++++++
- src/configure.in            |   2 +
- 6 files changed, 608 insertions(+), 3 deletions(-)
+ src/configure.ac            |   2 +
+ 6 files changed, 610 insertions(+), 3 deletions(-)
  create mode 100644 src/clients/ksu/pam.c
  create mode 100644 src/clients/ksu/pam.h
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
-index 3752d9bd5..340546d80 100644
+index 2394f7e33..830203683 100644
 --- a/src/aclocal.m4
 +++ b/src/aclocal.m4
-@@ -1697,3 +1697,70 @@ AC_DEFUN(KRB5_AC_PERSISTENT_KEYRING,[
-       ]))
+@@ -1675,3 +1675,72 @@ if test "$with_ldap" = yes; then
+   OPENLDAP_PLUGIN=yes
+ fi
  ])dnl
- dnl
++dnl
 +dnl
 +dnl Use PAM instead of local crypt() compare for checking local passwords,
 +dnl and perform PAM account, session management, and password-changing where
@@ -102,12 +103,13 @@ index 3752d9bd5..340546d80 100644
 +AC_SUBST(PAM_MAN)
 +AC_SUBST(NON_PAM_MAN)
 +])dnl
++
 diff --git a/src/clients/ksu/Makefile.in b/src/clients/ksu/Makefile.in
-index b2fcbf240..5755bb58a 100644
+index 8b4edce4d..9d58f29b5 100644
 --- a/src/clients/ksu/Makefile.in
 +++ b/src/clients/ksu/Makefile.in
 @@ -3,12 +3,14 @@ BUILDTOP=$(REL)..$(S)..
- DEFINES = -DGET_TGT_VIA_PASSWD -DPRINC_LOOK_AHEAD -DCMD_PATH='"/bin /local/bin"'
+ DEFINES = -DGET_TGT_VIA_PASSWD -DPRINC_LOOK_AHEAD -DCMD_PATH='"/usr/local/sbin /usr/local/bin /sbin /bin /usr/sbin /usr/bin"'
  
  KSU_LIBS=@KSU_LIBS@
 +PAM_LIBS=@PAM_LIBS@
@@ -141,7 +143,7 @@ index b2fcbf240..5755bb58a 100644
  clean:
  	$(RM) ksu
 diff --git a/src/clients/ksu/main.c b/src/clients/ksu/main.c
-index d9596d948..ec06788bc 100644
+index 4f03dd8ed..21a4d02bb 100644
 --- a/src/clients/ksu/main.c
 +++ b/src/clients/ksu/main.c
 @@ -26,6 +26,7 @@
@@ -171,7 +173,7 @@ index d9596d948..ec06788bc 100644
  /***********/
  
  #define KS_TEMPORARY_CACHE "MEMORY:_ksu"
-@@ -528,6 +534,23 @@ main (argc, argv)
+@@ -535,6 +541,23 @@ main (argc, argv)
                 prog_name,target_user,client_name,
                 source_user,ontty());
  
@@ -195,7 +197,7 @@ index d9596d948..ec06788bc 100644
          /* Run authorization as target.*/
          if (krb5_seteuid(target_uid)) {
              com_err(prog_name, errno, _("while switching to target for "
-@@ -588,6 +611,24 @@ main (argc, argv)
+@@ -595,6 +618,24 @@ main (argc, argv)
  
              exit(1);
          }
@@ -220,7 +222,7 @@ index d9596d948..ec06788bc 100644
      }
  
      if( some_rest_copy){
-@@ -645,6 +686,30 @@ main (argc, argv)
+@@ -652,6 +693,30 @@ main (argc, argv)
          exit(1);
      }
  
@@ -251,7 +253,7 @@ index d9596d948..ec06788bc 100644
      /* set permissions */
      if (setgid(target_pwd->pw_gid) < 0) {
          perror("ksu: setgid");
-@@ -742,7 +807,7 @@ main (argc, argv)
+@@ -749,7 +814,7 @@ main (argc, argv)
          fprintf(stderr, "program to be execed %s\n",params[0]);
      }
  
@@ -260,7 +262,7 @@ index d9596d948..ec06788bc 100644
          execv(params[0], params);
          com_err(prog_name, errno, _("while trying to execv %s"), params[0]);
          sweep_up(ksu_context, cc_target);
-@@ -772,16 +837,35 @@ main (argc, argv)
+@@ -779,16 +844,35 @@ main (argc, argv)
              if (ret_pid == -1) {
                  com_err(prog_name, errno, _("while calling waitpid"));
              }
@@ -755,11 +757,11 @@ index 000000000..0ab76569c
 +int appl_pam_cred_init(void);
 +void appl_pam_cleanup(void);
 +#endif
-diff --git a/src/configure.in b/src/configure.in
-index 36df71fa9..cd8ccabcd 100644
---- a/src/configure.in
-+++ b/src/configure.in
-@@ -1352,6 +1352,8 @@ AC_SUBST([VERTO_VERSION])
+diff --git a/src/configure.ac b/src/configure.ac
+index 234f4281c..d1f576124 100644
+--- a/src/configure.ac
++++ b/src/configure.ac
+@@ -1390,6 +1390,8 @@ AC_SUBST([VERTO_VERSION])
  
  AC_PATH_PROG(GROFF, groff)
  

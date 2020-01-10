@@ -9,16 +9,16 @@
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 
 # leave empty or set to e.g., -beta2
-%global prerelease %{nil}
+%global prerelease -beta1
 
 # Should be in form 5.0, 6.1, etc.
-%global kdbversion 7.0
+%global kdbversion 8.0
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.17.1
+Version: 1.18
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 5%{?dist}
+Release: 0.beta1.1%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -42,85 +42,14 @@ Source39: krb5-krb5kdc.conf
 # Carry this locally until it's available in a packaged form.
 Source100: noport.c
 
-Patch26: krb5-1.12.1-pam.patch
-Patch27: krb5-1.17-beta1-selinux-label.patch
+Patch1: krb5-1.18beta1-pam.patch
+Patch2: krb5-1.18-beta1-selinux-label.patch
 Patch30: krb5-1.15-beta1-buildconf.patch
 Patch31: krb5-1.3.1-dns.patch
 Patch34: krb5-1.9-debuginfo.patch
-Patch90: Add-tests-for-KCM-ccache-type.patch
-Patch92: Address-some-optimized-out-memset-calls.patch
-Patch94: Avoid-allocating-a-register-in-zap-assembly.patch
-Patch95: In-rd_req_dec-always-log-non-permitted-enctypes.patch
-Patch96: In-kpropd-debug-log-proper-ticket-enctype-names.patch
-Patch97: Add-function-and-enctype-flag-for-deprecations.patch
-Patch98: Make-etype-names-in-KDC-logs-human-readable.patch
-Patch99: Mark-deprecated-enctypes-when-used.patch
-Patch100: Properly-size-ifdef-in-k5_cccol_lock.patch
-Patch104: Clarify-header-comment-for-krb5_cc_start_seq_get.patch
-Patch105: Implement-krb5_cc_remove_cred-for-remaining-types.patch
-Patch106: Remove-srvtab-support.patch
-Patch107: Remove-kadmin-RPC-support-for-setting-v4-key.patch
-Patch108: Remove-ccapi-related-comments-in-configure.ac.patch
-Patch109: Remove-doxygen-generated-HTML-output-for-ccapi.patch
-Patch110: Remove-Kerberos-v4-support-vestiges-from-ccapi.patch
-Patch111: Fix-config-realm-change-logic-in-FILE-remove_cred.patch
-Patch112: Remove-confvalidator-utility.patch
-Patch113: Remove-ovsec_adm_export-dump-format-support.patch
-Patch114: Fix-potential-close-1-in-cc_file.c.patch
-Patch115: Check-more-errors-in-OpenSSL-crypto-backend.patch
-Patch116: Clear-forwardable-flag-instead-of-denying-request.patch
-Patch117: Add-dns_canonicalize_hostname-fallback-support.patch
-Patch118: Use-secure_getenv-where-appropriate.patch
-Patch119: Initialize-some-data-structure-magic-fields.patch
-Patch121: Modernize-exit-path-in-gss_krb5int_copy_ccache.patch
-Patch122: Simplify-SAM-2-as_key-handling.patch
-Patch123: Avoid-alignment-warnings-in-openssl-rc4.c.patch
-Patch124: Simply-OpenSSL-PKCS7-decryption-code.patch
-Patch125: Improve-error-messages-from-kadmin-change_password.patch
-Patch126: Remove-more-dead-code.patch
-Patch128: Remove-checksum-type-profile-variables.patch
-Patch129: Remove-dead-variable-def_kslist-from-two-files.patch
-Patch130: Mark-the-doc-kadm5-tex-files-as-historic.patch
-Patch131: Modernize-example-enctypes-in-documentation.patch
-Patch132: Update-ASN.1-SAM-tests-to-use-a-modern-enctype.patch
-Patch133: Update-default-krb5kdc-mkey-manual-entry-enctype.patch
-Patch134: Support-389ds-s-lockout-model.patch
-Patch135: Add-missing-newlines-to-deprecation-warnings.patch
-Patch136: Set-a-more-modern-default-ksu-CMD_PATH.patch
-Patch137: Remove-the-v4-and-afs3-salt-types.patch
-Patch138: Update-test-suite-to-avoid-single-DES-enctypes.patch
-Patch139: Remove-support-for-single-DES-and-CRC.patch
-Patch140: Display-unsupported-enctype-names.patch
-Patch142: Add-zapfreedata-convenience-function.patch
-Patch143: Remove-support-for-no-flags-SAM-2-preauth.patch
-Patch144: Remove-krb5int_c_combine_keys.patch
-Patch147: Remove-strerror-calls-from-k5_get_error.patch
-Patch148: Remove-PKINIT-draft-9-support.patch
-Patch149: Remove-PKINIT-draft-9-ASN.1-code-and-types.patch
-Patch150: Remove-3des-support.patch
-Patch151: Remove-now-unused-checksum-functions.patch
-Patch152: Don-t-error-on-invalid-enctypes-in-keytab.patch
-Patch153: Filter-enctypes-in-gss_set_allowable_enctypes.patch
-Patch154: Add-soft-pkcs11-source-code.patch
-Patch155: Use-imported-soft-pkcs11-for-tests.patch
-Patch156: Fix-Coverity-defects-in-soft-pkcs11-test-code.patch
-Patch157: Skip-URI-tests-when-using-asan.patch
-Patch158: Fix-memory-leaks-in-soft-pkcs11-code.patch
-Patch162: Simplify-krb5_dbe_def_search_enctype.patch
-Patch163: Squash-apparent-forward-null-in-clnttcp_create.patch
-Patch164: Remove-null-check-in-krb5_gss_duplicate_name.patch
-Patch165: Fix-KDC-crash-when-logging-PKINIT-enctypes.patch
-Patch166: Log-unknown-enctypes-as-unsupported-in-KDC.patch
-Patch167: Fix-minor-errors-in-softpkcs11.patch
-Patch168: Update-test-suite-cert-message-digest-to-sha256.patch
+Patch35: krb5-1.18-beta1-Remove-3des-support.patch
 Patch169: Use-backported-version-of-OpenSSL-3-KDF-interface.patch
 Patch170: krb5-1.17post6-FIPS-with-PRNG-and-RADIUS-and-MD4.patch
-Patch171: Don-t-warn-in-kadmin-when-no-policy-is-specified.patch
-Patch172: Allow-client-canonicalization-in-non-krbtgt-AS-REP.patch
-Patch173: Do-not-always-canonicalize-enterprise-principals.patch
-Patch174: Fix-xdr_bytes-strict-aliasing-violations.patch
-Patch175: Fix-handling-of-invalid-CAMMAC-service-verifier.patch
-Patch176: Fix-LDAP-policy-enforcement-of-pw_expiration.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -694,6 +623,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Jan 10 2020 Robbie Harwood <rharwood@redhat.com> - 1.18-0beta1.1
+- New upstream beta release - 1.18-beta1
+
 * Wed Jan 08 2020 Robbie Harwood <rharwood@redhat.com> - 1.17.1-5
 - Fix LDAP policy enforcement of pw_expiration
 - Fix handling of invalid CAMMAC service verifier

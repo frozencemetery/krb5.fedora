@@ -1,4 +1,4 @@
-From c874aa2c7ec16203c0be91e9e789b21221689de2 Mon Sep 17 00:00:00 2001
+From ad14cab8d35e6c7edee196708ce5b5516b9bb1f8 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 9 Nov 2018 15:12:21 -0500
 Subject: [PATCH] krb5-1.17post6 FIPS with PRNG and RADIUS and MD4
@@ -541,7 +541,7 @@ index 00734a13b..a3ce22b70 100644
      vt->name = "spake";
      vt->pa_type_list = pa_types;
 diff --git a/src/plugins/preauth/spake/spake_kdc.c b/src/plugins/preauth/spake/spake_kdc.c
-index 59e88409e..1b3e569e9 100644
+index 88c964ce1..c7df0392f 100644
 --- a/src/plugins/preauth/spake/spake_kdc.c
 +++ b/src/plugins/preauth/spake/spake_kdc.c
 @@ -41,6 +41,8 @@
@@ -553,7 +553,7 @@ index 59e88409e..1b3e569e9 100644
  /*
   * The SPAKE kdcpreauth module uses a secure cookie containing the following
   * concatenated fields (all integer fields are big-endian):
-@@ -578,6 +580,10 @@ kdcpreauth_spake_initvt(krb5_context context, int maj_ver, int min_ver,
+@@ -571,6 +573,10 @@ kdcpreauth_spake_initvt(krb5_context context, int maj_ver, int min_ver,
  
      if (maj_ver != 1)
          return KRB5_PLUGIN_VER_NOTSUPP;
