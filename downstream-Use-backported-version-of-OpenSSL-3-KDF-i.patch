@@ -1,8 +1,10 @@
-From 9d887898571744f5ea0a523c7fba9d86d9cf8588 Mon Sep 17 00:00:00 2001
+From 6015b8b21da26d4b2845ffad8fee3442402ea709 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 15 Nov 2019 20:05:16 +0000
-Subject: [PATCH] Use backported version of OpenSSL-3 KDF interface
+Subject: [PATCH] [downstream] Use backported version of OpenSSL-3 KDF
+ interface
 
+Last-updated: krb5-1.17
 ---
  src/configure.ac                              |   4 +
  src/lib/crypto/krb/derive.c                   | 356 +++++++++++++-----

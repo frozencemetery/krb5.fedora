@@ -1,7 +1,7 @@
-From ad14cab8d35e6c7edee196708ce5b5516b9bb1f8 Mon Sep 17 00:00:00 2001
+From 494658b52c8aebd7d31d51faa4eb498b6e6843ed Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 9 Nov 2018 15:12:21 -0500
-Subject: [PATCH] krb5-1.17post6 FIPS with PRNG and RADIUS and MD4
+Subject: [PATCH] [downstream] FIPS with PRNG and RADIUS and MD4
 
 NB: Use openssl's PRNG in FIPS mode and taint within krad.
 
@@ -16,6 +16,8 @@ locks), but not for any ciphers we care about - which is to say that
 AES is fine.  Shame about SPAKE though.
 
 post6 restores MD4 (and therefore keygen-only RC4).
+
+Last-updated: krb5-1.17
 ---
  src/lib/crypto/krb/prng.c                     | 11 ++++-
  .../crypto/openssl/enc_provider/camellia.c    |  6 +++

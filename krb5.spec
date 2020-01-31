@@ -9,7 +9,7 @@
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 
 # leave empty or set to e.g., -beta2
-%global prerelease -beta1
+%global prerelease -beta2
 
 # Should be in form 5.0, 6.1, etc.
 %global kdbversion 8.0
@@ -18,11 +18,11 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 0.beta1.1%{?dist}.1
+Release: 0.beta2.1%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
-Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
-Source1: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz.asc
+Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
+Source1: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz.asc
 
 # Numbering is a relic of old init systems etc.  It's easiest to just leave.
 Source2: kprop.service
@@ -42,14 +42,14 @@ Source39: krb5-krb5kdc.conf
 # Carry this locally until it's available in a packaged form.
 Source100: noport.c
 
-Patch1: krb5-1.18beta1-pam.patch
-Patch2: krb5-1.18-beta1-selinux-label.patch
-Patch30: krb5-1.15-beta1-buildconf.patch
-Patch31: krb5-1.3.1-dns.patch
-Patch34: krb5-1.9-debuginfo.patch
-Patch35: krb5-1.18-beta1-Remove-3des-support.patch
-Patch169: Use-backported-version-of-OpenSSL-3-KDF-interface.patch
-Patch170: krb5-1.17post6-FIPS-with-PRNG-and-RADIUS-and-MD4.patch
+Patch0: downstream-ksu-pam-integration.patch
+Patch1: downstream-SELinux-integration.patch
+Patch2: downstream-Adjust-build-configuration.patch
+Patch3: downstream-netlib-and-dns.patch
+Patch4: downstream-fix-debuginfo-with-y.tab.c.patch
+Patch5: downstream-Remove-3des-support.patch
+Patch6: downstream-Use-backported-version-of-OpenSSL-3-KDF-i.patch
+Patch7: downstream-FIPS-with-PRNG-and-RADIUS-and-MD4.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -623,10 +623,11 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
-* Wed Jan 29 2020 Fedora Release Engineering <releng@fedoraproject.org> - 1.18-0.beta1.1.1
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
+* Fri Jan 31 2020 Robbie Harwood <rharwood@redhat.com> - 1.18-0.beta2.1
+- New upstream beta release - 1.18-beta2
+- Adjust naming convention for downstream patches
 
-* Fri Jan 10 2020 Robbie Harwood <rharwood@redhat.com> - 1.18-0beta1.1
+* Fri Jan 10 2020 Robbie Harwood <rharwood@redhat.com> - 1.18-0.beta1.1
 - New upstream beta release - 1.18-beta1
 
 * Wed Jan 08 2020 Robbie Harwood <rharwood@redhat.com> - 1.17.1-5

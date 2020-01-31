@@ -1,7 +1,7 @@
-From 49a03b8bff8399b9259b51da1e034f67878bfad4 Mon Sep 17 00:00:00 2001
+From bbdfaec5156307c791804c6eb5ed8c2eefff1318 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:30:53 -0400
-Subject: [PATCH] krb5-1.18-beta1-selinux-label.patch
+Subject: [PATCH] [downstream] SELinux integration
 
 SELinux bases access to files on the domain of the requesting process,
 the operation being performed, and the context applied to the file.
@@ -35,6 +35,8 @@ stomp all over us.
 The selabel APIs for looking up the context should be thread-safe (per
 Red Hat #273081), so switching to using them instead of matchpathcon(),
 which we used earlier, is some improvement.
+
+Last-updated: krb5-1.18-beta1
 ---
  src/aclocal.m4                                |  48 +++
  src/build-tools/krb5-config.in                |   3 +-

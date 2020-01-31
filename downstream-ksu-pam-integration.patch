@@ -1,7 +1,7 @@
-From 9d77eb513f95821f01f12e233e16d4ce50da7d23 Mon Sep 17 00:00:00 2001
+From f59ec1fb55c13b0b0da413930d84a7c73019ed2b Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:29:58 -0400
-Subject: [PATCH] krb5-1.18beta1-pam.patch
+Subject: [PATCH] [downstream] ksu pam integration
 
 Modify ksu so that it performs account and session management on behalf of
 the target user account, mimicking the action of regular su.  The default
@@ -16,6 +16,8 @@ When enabled, ksu gains a dependency on libpam.
 Originally RT#5939, though it's changed since then to perform the account
 and session management before dropping privileges, and to apply on top of
 changes we're proposing for how it handles cache collections.
+
+Last-updated: krb5-1.18-beta1
 ---
  src/aclocal.m4              |  69 +++++++
  src/clients/ksu/Makefile.in |   8 +-
