@@ -14,14 +14,14 @@ ticket: 7871
 (cherry picked from commit 08e948cce2c79a3604066fcf7a64fc527456f83d)
 ---
  src/kdc/do_as_req.c       |  19 ++------
- src/kdc/do_tgs_req.c      |  58 +++++-----------------
+ src/kdc/do_tgs_req.c      |  56 ++++-----------------
  src/kdc/kdc_util.c        |  82 ++++++++++++++++++-------------
  src/kdc/kdc_util.h        |   9 ++--
  src/kdc/tgs_policy.c      |   8 +--
  src/tests/Makefile.in     |   1 +
  src/tests/gcred.c         |  28 ++++++++---
  src/tests/t_kdcoptions.py | 100 ++++++++++++++++++++++++++++++++++++++
- 8 files changed, 190 insertions(+), 115 deletions(-)
+ 8 files changed, 189 insertions(+), 114 deletions(-)
  create mode 100644 src/tests/t_kdcoptions.py
 
 diff --git a/src/kdc/do_as_req.c b/src/kdc/do_as_req.c
@@ -146,10 +146,9 @@ index 587342a6c..1da099318 100644
 -    if (isflagset(request->kdc_options, KDC_OPT_REQUEST_ANONYMOUS) &&
 -        !isflagset(header_enc_tkt->flags, TKT_FLG_ANONYMOUS))
 -        clear(enc_tkt_reply.flags, TKT_FLG_ANONYMOUS);
--
+ 
 -    if (isflagset(request->kdc_options, KDC_OPT_POSTDATED)) {
 -        setflag(enc_tkt_reply.flags, TKT_FLG_INVALID);
-+
 +    if (isflagset(request->kdc_options, KDC_OPT_POSTDATED))
          enc_tkt_reply.times.starttime = request->from;
 -    } else

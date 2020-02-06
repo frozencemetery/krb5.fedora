@@ -9,7 +9,7 @@ Subject: [PATCH] Remove Kerberos v4 support vestiges from ccapi
  src/ccapi/lib/ccapi_v2.c               |  34 +--
  src/ccapi/lib/win/OldCC/ccapi.h        |  20 --
  src/ccapi/server/ccs_ccache.c          |  69 +-----
- src/ccapi/test/test_ccapi_ccache.c     | 227 +++-----------------
+ src/ccapi/test/test_ccapi_ccache.c     | 223 +++-----------------
  src/ccapi/test/test_ccapi_constants.c  |   2 -
  src/ccapi/test/test_ccapi_context.c    |   3 -
  src/ccapi/test/test_ccapi_v2.c         |  89 --------
@@ -20,7 +20,7 @@ Subject: [PATCH] Remove Kerberos v4 support vestiges from ccapi
  src/windows/kfwlogon/kfwlogon.h        |   2 +-
  src/windows/leashdll/leash-int.h       |   2 +-
  src/windows/lib/cacheapi.h             |  53 +----
- 15 files changed, 100 insertions(+), 873 deletions(-)
+ 15 files changed, 98 insertions(+), 871 deletions(-)
 
 diff --git a/src/ccapi/common/cci_cred_union.c b/src/ccapi/common/cci_cred_union.c
 index 4c8981610..424a93dab 100644
@@ -760,8 +760,29 @@ index a0fd84af1..fe63e6710 100644
 -		cc_ccache_destroy(ccache);
 -		ccache = NULL;
 -	}
--
--
++        // replace v5 only ccache's principal
++        if (!err) {
++            err = cc_context_create_new_ccache(context, cc_credentials_v5,
++                                               "foo@BAZ.ORG", &ccache);
++        }
++        if (!err) {
++            check_once_cc_ccache_set_principal(
++                ccache, cc_credentials_v5, "foo/BAZ@BAR.ORG", ccNoError,
++                "replace v5 only ccache's principal (empty ccache)");
++        }
++        else {
++            log_error(
++                "cc_context_create_new_ccache failed, can't complete test");
++            failure_count++;
++        }
+ 
++        // bad params
++        if (!err) {
++            check_once_cc_ccache_set_principal(ccache, cc_credentials_v5,
++                                               NULL, ccErrBadParam,
++                                               "NULL principal");
++        }
+ 
 -	// empty ccache
 -
 -		// replace v5 only ccache's principal
@@ -837,29 +858,6 @@ index a0fd84af1..fe63e6710 100644
 -		// replace v4 only ccache's principal
 -
 -		// add v5 principal to v4 only ccache
-+        // replace v5 only ccache's principal
-+        if (!err) {
-+            err = cc_context_create_new_ccache(context, cc_credentials_v5,
-+                                               "foo@BAZ.ORG", &ccache);
-+        }
-+        if (!err) {
-+            check_once_cc_ccache_set_principal(
-+                ccache, cc_credentials_v5, "foo/BAZ@BAR.ORG", ccNoError,
-+                "replace v5 only ccache's principal (empty ccache)");
-+        }
-+        else {
-+            log_error(
-+                "cc_context_create_new_ccache failed, can't complete test");
-+            failure_count++;
-+        }
-+
-+        // bad params
-+        if (!err) {
-+            check_once_cc_ccache_set_principal(ccache, cc_credentials_v5,
-+                                               NULL, ccErrBadParam,
-+                                               "NULL principal");
-+        }
-+
 +        if (ccache) {
 +            cc_ccache_destroy(ccache);
 +            ccache = NULL;
@@ -894,7 +892,8 @@ index a0fd84af1..fe63e6710 100644
  	}
  	if (!err) {
 -		check_once_cc_ccache_get_kdc_time_offset(ccache, cc_credentials_v5, &time_offset, ccNoError, "offset set for v5 but not v4");
--	}
++		check_once_cc_ccache_get_kdc_time_offset(ccache, cc_credentials_v5, &time_offset, ccNoError, "offset set for v5");
+ 	}
 -	if (!err) {
 -		check_once_cc_ccache_get_kdc_time_offset(ccache, cc_credentials_v4, &time_offset, ccErrTimeOffsetNotSet, "asking for v4 offset when only v5 is set");
 -	}
@@ -903,10 +902,9 @@ index a0fd84af1..fe63e6710 100644
 -	}
 -	if (!err) {
 -		check_once_cc_ccache_get_kdc_time_offset(ccache, cc_credentials_v4, &time_offset, ccNoError, "asking for v4 offset when v4 and v5 are set");
-+		check_once_cc_ccache_get_kdc_time_offset(ccache, cc_credentials_v5, &time_offset, ccNoError, "offset set for v5");
- 	}
- 
+-	}
 -
+ 
  	check_once_cc_ccache_get_kdc_time_offset(ccache, cc_credentials_v5, NULL, ccErrBadParam, "NULL time_offset out param");
 -	check_once_cc_ccache_get_kdc_time_offset(ccache, cc_credentials_v4_v5, &time_offset, ccErrBadCredentialsVersion, "v4_v5 creds_vers in param (invalid)");
  
