@@ -1,0 +1,44 @@
+From 4951953618e5b53a571c4d1e4fcb5e6b14fbe004 Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Wed, 5 Feb 2020 12:56:00 -0500
+Subject: [PATCH] Don't assume OpenSSL failures are memory errors
+
+More recent versions of OpenSSL can fail for other reasons.  Indicate
+a crypto-related error occurred rather than a memory error to aid
+debugging.
+
+ticket: 8873 (new)
+tags: pullup
+target_version: 1.18
+target_version: 1.17-next
+
+(cherry picked from commit bf9b2134ceddd6c727362be894b1c95c297a0f17)
+---
+ src/lib/crypto/openssl/hash_provider/hash_evp.c | 2 +-
+ src/lib/crypto/openssl/sha256.c                 | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/lib/crypto/openssl/hash_provider/hash_evp.c b/src/lib/crypto/openssl/hash_provider/hash_evp.c
+index 915da9dbe..feb5eda99 100644
+--- a/src/lib/crypto/openssl/hash_provider/hash_evp.c
++++ b/src/lib/crypto/openssl/hash_provider/hash_evp.c
+@@ -63,7 +63,7 @@ hash_evp(const EVP_MD *type, const krb5_crypto_iov *data, size_t num_data,
+     }
+     ok = ok && EVP_DigestFinal_ex(ctx, (uint8_t *)output->data, NULL);
+     EVP_MD_CTX_free(ctx);
+-    return ok ? 0 : ENOMEM;
++    return ok ? 0 : KRB5_CRYPTO_INTERNAL;
+ }
+ 
+ static krb5_error_code
+diff --git a/src/lib/crypto/openssl/sha256.c b/src/lib/crypto/openssl/sha256.c
+index 0edd8b7ba..f9dfc8539 100644
+--- a/src/lib/crypto/openssl/sha256.c
++++ b/src/lib/crypto/openssl/sha256.c
+@@ -48,5 +48,5 @@ k5_sha256(const krb5_data *in, size_t n, uint8_t out[K5_SHA256_HASHLEN])
+         ok = ok && EVP_DigestUpdate(ctx, in[i].data, in[i].length);
+     ok = ok && EVP_DigestFinal_ex(ctx, out, NULL);
+     EVP_MD_CTX_free(ctx);
+-    return ok ? 0 : ENOMEM;
++    return ok ? 0 : KRB5_CRYPTO_INTERNAL;
+ }
