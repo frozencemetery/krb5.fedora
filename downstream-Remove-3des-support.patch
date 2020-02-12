@@ -1,4 +1,4 @@
-From 0153147f716b8f8710fd307df54908267779c3a4 Mon Sep 17 00:00:00 2001
+From 7dda569170c3f6ab08a9373572b4bc90481eeaf7 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 26 Mar 2019 18:51:10 -0400
 Subject: [PATCH] [downstream] Remove 3des support
@@ -269,7 +269,7 @@ index fc5662767..37eda67fa 100644
  .. |copy| unicode:: U+000A9
  '''
 diff --git a/doc/mitK5features.rst b/doc/mitK5features.rst
-index a7e55f206..77c095c75 100644
+index 513ecfd1b..05243f47b 100644
 --- a/doc/mitK5features.rst
 +++ b/doc/mitK5features.rst
 @@ -37,7 +37,7 @@ Database backends: LDAP, DB2, LMDB
