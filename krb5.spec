@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 1%{?dist}
+Release: 2%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -50,6 +50,7 @@ Patch4: downstream-fix-debuginfo-with-y.tab.c.patch
 Patch5: downstream-Remove-3des-support.patch
 Patch6: downstream-Use-backported-version-of-OpenSSL-3-KDF-i.patch
 Patch7: downstream-FIPS-with-PRNG-and-RADIUS-and-MD4.patch
+Patch8: Fix-AS-REQ-checking-of-KDB-modified-indicators.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -623,6 +624,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Feb 21 2020 Robbie Harwood <rharwood@redhat.com> - 1.18-2
+- Fix AS-REQ checking of KDB-modified indicators
+
 * Wed Feb 12 2020 Robbie Harwood <rharwood@redhat.com> - 1.18-1
 - New upstream version (1.18)
 
