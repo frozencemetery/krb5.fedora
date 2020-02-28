@@ -1,0 +1,160 @@
+From 59eea8a1977c6039069b3826e5e651582a33fc25 Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Tue, 25 Feb 2020 11:32:09 -0500
+Subject: [PATCH] Allow deletion of require_auth with LDAP KDB
+
+In update_ldap_mod_auth_ind(), if there is no string attribute value
+for require_auth, check for krbPrincipalAuthInd attributes that might
+need to be removed.  (This will only work if the entry is loaded and
+then modified, but that is the normal case for an existing entry.)
+
+Move the update_ldap_mod_auth_ind() call inside the tl-data
+conditional (which should perhaps be a check for KADM5_TL_DATA in the
+mask instead).  A modification which did not intend to update tl-data
+should not remove the krbPrincipalAuthInd attributes.
+
+Change get_int_from_tl_data() to to zero its output so that it can't
+leave a garbage value behind if it returns 0 (as it does if no
+KDB_TL_USER_INFO tl-data is present).
+
+Based on a patch by Glenn Machin.
+
+ticket: 8877
+tags: pullup
+target_version: 1.18-next
+target_version: 1.17-next
+
+(cherry picked from commit 6d9da7bb216f96cbdd731aa894714bd84213a9d0)
+---
+ src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c  |  2 ++
+ .../kdb/ldap/libkdb_ldap/ldap_principal2.c    | 31 ++++++++++++-------
+ src/tests/t_kdb.py                            | 26 +++++++++++++++-
+ 3 files changed, 47 insertions(+), 12 deletions(-)
+
+diff --git a/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c b/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c
+index ec7f32511..6bc20593f 100644
+--- a/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c
++++ b/src/plugins/kdb/ldap/libkdb_ldap/ldap_misc.c
+@@ -721,6 +721,8 @@ get_int_from_tl_data(krb5_context context, krb5_db_entry *entry, int type,
+     void *ptr;
+     int *intptr;
+ 
++    *intval = 0;
++
+     tl_data.tl_data_type = KDB_TL_USER_INFO;
+     ret = krb5_dbe_lookup_tl_data(context, entry, &tl_data);
+     if (ret || tl_data.tl_data_length == 0)
+diff --git a/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal2.c b/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal2.c
+index 1d0726707..8d97a29b6 100644
+--- a/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal2.c
++++ b/src/plugins/kdb/ldap/libkdb_ldap/ldap_principal2.c
+@@ -627,12 +627,22 @@ update_ldap_mod_auth_ind(krb5_context context, krb5_db_entry *entry,
+     char *auth_ind = NULL;
+     char *strval[10] = { 0 };
+     char *ai, *ai_save = NULL;
+-    int sv_num = sizeof(strval) / sizeof(*strval);
++    int mask, sv_num = sizeof(strval) / sizeof(*strval);
+ 
+     ret = krb5_dbe_get_string(context, entry, KRB5_KDB_SK_REQUIRE_AUTH,
+                               &auth_ind);
+-    if (ret || auth_ind == NULL)
+-        goto cleanup;
++    if (ret)
++        return ret;
++    if (auth_ind == NULL) {
++        /* If we know krbPrincipalAuthInd attributes are present from loading
++         * the entry, delete them. */
++        ret = krb5_get_attributes_mask(context, entry, &mask);
++        if (!ret && (mask & KDB_AUTH_IND_ATTR)) {
++            return krb5_add_str_mem_ldap_mod(mods, "krbPrincipalAuthInd",
++                                             LDAP_MOD_DELETE, NULL);
++        }
++        return 0;
++    }
+ 
+     ai = strtok_r(auth_ind, " ", &ai_save);
+     while (ai != NULL && i < sv_num) {
+@@ -642,8 +652,6 @@ update_ldap_mod_auth_ind(krb5_context context, krb5_db_entry *entry,
+ 
+     ret = krb5_add_str_mem_ldap_mod(mods, "krbPrincipalAuthInd",
+                                     LDAP_MOD_REPLACE, strval);
+-
+-cleanup:
+     krb5_dbe_free_string(context, auth_ind);
+     return ret;
+ }
+@@ -1251,18 +1259,19 @@ krb5_ldap_put_principal(krb5_context context, krb5_db_entry *entry,
+ 
+     } /* Modify Key data ends here */
+ 
+-    /* Auth indicators will also be stored in krbExtraData when processing
+-     * tl_data. */
+-    st = update_ldap_mod_auth_ind(context, entry, &mods);
+-    if (st != 0)
+-        goto cleanup;
+-
+     /* Set tl_data */
+     if (entry->tl_data != NULL) {
+         int count = 0;
+         struct berval **ber_tl_data = NULL;
+         krb5_tl_data *ptr;
+         krb5_timestamp unlock_time;
++
++        /* Normalize required auth indicators, but also store them as string
++         * attributes within krbExtraData. */
++        st = update_ldap_mod_auth_ind(context, entry, &mods);
++        if (st != 0)
++            goto cleanup;
++
+         for (ptr = entry->tl_data; ptr != NULL; ptr = ptr->tl_data_next) {
+             if (ptr->tl_data_type == KRB5_TL_LAST_PWD_CHANGE
+ #ifdef SECURID
+diff --git a/src/tests/t_kdb.py b/src/tests/t_kdb.py
+index 03ee70f47..caa7e9d8f 100755
+--- a/src/tests/t_kdb.py
++++ b/src/tests/t_kdb.py
+@@ -319,19 +319,43 @@ realm.klist(realm.user_princ, realm.host_princ)
+ 
+ mark('LDAP auth indicator')
+ 
+-# Test auth indicator support
++# Test require_auth normalization.
+ realm.addprinc('authind', password('authind'))
+ realm.run([kadminl, 'setstr', 'authind', 'require_auth', 'otp radius'])
+ 
++# Check that krbPrincipalAuthInd attributes are set when the string
++# attribute it set.
+ out = ldap_search('(krbPrincipalName=authind*)')
+ if 'krbPrincipalAuthInd: otp' not in out:
+     fail('Expected krbPrincipalAuthInd value not in output')
+ if 'krbPrincipalAuthInd: radius' not in out:
+     fail('Expected krbPrincipalAuthInd value not in output')
+ 
++# Check that the string attribute still appears when the principal is
++# loaded.
+ realm.run([kadminl, 'getstrs', 'authind'],
+           expected_msg='require_auth: otp radius')
+ 
++# Modify the LDAP attributes and check that the change is reflected in
++# the string attribute.
++ldap_modify('dn: krbPrincipalName=authind@KRBTEST.COM,cn=t1,cn=krb5\n'
++            'changetype: modify\n'
++            'replace: krbPrincipalAuthInd\n'
++            'krbPrincipalAuthInd: radius\n'
++            'krbPrincipalAuthInd: pkinit\n')
++realm.run([kadminl, 'getstrs', 'authind'],
++           expected_msg='require_auth: radius pkinit')
++
++# Regression test for #8877: remove the string attribute and check
++# that it is reflected in the LDAP attributes and by getstrs.
++realm.run([kadminl, 'delstr', 'authind', 'require_auth'])
++out = ldap_search('(krbPrincipalName=authind*)')
++if 'krbPrincipalAuthInd' in out:
++    fail('krbPrincipalAuthInd attribute still present after delstr')
++out = realm.run([kadminl, 'getstrs', 'authind'])
++if 'require_auth' in out:
++    fail('require_auth string attribute still visible after delstr')
++
+ mark('LDAP service principal aliases')
+ 
+ # Test service principal aliases.
