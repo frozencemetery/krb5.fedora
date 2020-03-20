@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 6%{?dist}
+Release: 7%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -78,8 +78,11 @@ BuildRequires: hostname
 BuildRequires: iproute
 BuildRequires: libverto-devel
 BuildRequires: openldap-devel
-BuildRequires: openssl-devel >= 1:1.1.1d-4
 BuildRequires: lmdb-devel
+
+# Need KDFs.  This is the backported version
+BuildRequires: openssl-devel >= 1:1.1.1d-4
+BuildRequires: openssl-devel < 1:3.0.0
 
 %ifarch %{ix86} x86_64
 BuildRequires: yasm
@@ -113,6 +116,7 @@ to install this package.
 %package libs
 Summary: The non-admin shared libraries used by Kerberos 5
 Requires: openssl-libs >= 1:1.1.1d-4
+Requires: openssl-libs < 1:3.0.0
 Requires: coreutils, gawk, grep, sed
 Requires: keyutils-libs >= 1.5.8
 Requires: /etc/crypto-policies/back-ends/krb5.config
@@ -628,6 +632,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Mar 20 2020 Robbie Harwood <rharwood@redhat.com> - 1.18-7
+- Add maximum openssl version in preparation for openssl 3
+
 * Tue Mar 17 2020 Robbie Harwood <rharwood@redhat.com> - 1.18-6
 - Document client keytab usage
 
