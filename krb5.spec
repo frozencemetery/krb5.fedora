@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 7%{?dist}
+Release: 8%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -55,6 +55,7 @@ Patch9: Allow-certauth-modules-to-set-hw-authent-flag.patch
 Patch10: Allow-deletion-of-require_auth-with-LDAP-KDB.patch
 Patch11: Refresh-manually-acquired-creds-from-client-keytab.patch
 Patch12: Document-client-keytab-usage.patch
+Patch13: Add-finalization-safety-check-to-com_err.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -632,6 +633,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Mar 26 2020 Robbie Harwood <rharwood@redhat.com> - 1.18-8
+- Add finalization safety check to com_err
+
 * Fri Mar 20 2020 Robbie Harwood <rharwood@redhat.com> - 1.18-7
 - Add maximum openssl version in preparation for openssl 3
 
