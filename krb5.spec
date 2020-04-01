@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 9%{?dist}
+Release: 10%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -57,6 +57,7 @@ Patch11: Refresh-manually-acquired-creds-from-client-keytab.patch
 Patch12: Document-client-keytab-usage.patch
 Patch13: Add-finalization-safety-check-to-com_err.patch
 Patch14: Eliminate-redundant-PKINIT-responder-invocation.patch
+Patch15: Correctly-import-service-GSS-host-based-name.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -634,6 +635,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Apr 01 2020 Robbie Harwood <rharwood@redhat.com> - 1.18-10
+- Correctly import "service@" GSS host-based name
+
 * Thu Mar 26 2020 Robbie Harwood <rharwood@redhat.com> - 1.18-9
 - Eliminate redundant PKINIT responder invocation
 
