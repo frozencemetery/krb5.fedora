@@ -1,4 +1,4 @@
-From 9a082e1e02ae4efd2404d0672d38b3d4eb2d6660 Mon Sep 17 00:00:00 2001
+From a7322a84657752c886c317a6994a9fc7a4a70ca5 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:29:58 -0400
 Subject: [PATCH] [downstream] ksu pam integration
@@ -145,7 +145,7 @@ index 8b4edce4d..9d58f29b5 100644
  clean:
  	$(RM) ksu
 diff --git a/src/clients/ksu/main.c b/src/clients/ksu/main.c
-index 4f03dd8ed..21a4d02bb 100644
+index 57c349200..508242e0e 100644
 --- a/src/clients/ksu/main.c
 +++ b/src/clients/ksu/main.c
 @@ -26,6 +26,7 @@
@@ -175,7 +175,7 @@ index 4f03dd8ed..21a4d02bb 100644
  /***********/
  
  #define KS_TEMPORARY_CACHE "MEMORY:_ksu"
-@@ -535,6 +541,23 @@ main (argc, argv)
+@@ -536,6 +542,23 @@ main (argc, argv)
                 prog_name,target_user,client_name,
                 source_user,ontty());
  
@@ -199,7 +199,7 @@ index 4f03dd8ed..21a4d02bb 100644
          /* Run authorization as target.*/
          if (krb5_seteuid(target_uid)) {
              com_err(prog_name, errno, _("while switching to target for "
-@@ -595,6 +618,24 @@ main (argc, argv)
+@@ -596,6 +619,24 @@ main (argc, argv)
  
              exit(1);
          }
@@ -224,7 +224,7 @@ index 4f03dd8ed..21a4d02bb 100644
      }
  
      if( some_rest_copy){
-@@ -652,6 +693,30 @@ main (argc, argv)
+@@ -653,6 +694,30 @@ main (argc, argv)
          exit(1);
      }
  
@@ -255,7 +255,7 @@ index 4f03dd8ed..21a4d02bb 100644
      /* set permissions */
      if (setgid(target_pwd->pw_gid) < 0) {
          perror("ksu: setgid");
-@@ -749,7 +814,7 @@ main (argc, argv)
+@@ -750,7 +815,7 @@ main (argc, argv)
          fprintf(stderr, "program to be execed %s\n",params[0]);
      }
  
@@ -264,7 +264,7 @@ index 4f03dd8ed..21a4d02bb 100644
          execv(params[0], params);
          com_err(prog_name, errno, _("while trying to execv %s"), params[0]);
          sweep_up(ksu_context, cc_target);
-@@ -779,16 +844,35 @@ main (argc, argv)
+@@ -780,16 +845,35 @@ main (argc, argv)
              if (ret_pid == -1) {
                  com_err(prog_name, errno, _("while calling waitpid"));
              }

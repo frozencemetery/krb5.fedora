@@ -1,4 +1,4 @@
-From 7dda569170c3f6ab08a9373572b4bc90481eeaf7 Mon Sep 17 00:00:00 2001
+From e9cd83237b54e2f6010a063f523217b0a442ecbf Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 26 Mar 2019 18:51:10 -0400
 Subject: [PATCH] [downstream] Remove 3des support
@@ -256,7 +256,7 @@ index 68debe714..788d094bf 100644
     CKSUMTYPE_NIST_SHA.rst
     CKSUMTYPE_RSA_MD4.rst
 diff --git a/doc/conf.py b/doc/conf.py
-index fc5662767..37eda67fa 100644
+index c32b2882a..5eeafc30f 100644
 --- a/doc/conf.py
 +++ b/doc/conf.py
 @@ -272,7 +272,7 @@ else:
@@ -269,7 +269,7 @@ index fc5662767..37eda67fa 100644
  .. |copy| unicode:: U+000A9
  '''
 diff --git a/doc/mitK5features.rst b/doc/mitK5features.rst
-index 513ecfd1b..05243f47b 100644
+index 5d286b6ee..f4594ed13 100644
 --- a/doc/mitK5features.rst
 +++ b/doc/mitK5features.rst
 @@ -37,7 +37,7 @@ Database backends: LDAP, DB2, LMDB
@@ -316,7 +316,7 @@ index 440a22bd9..d4e4da525 100644
          lib/crypto/$CRYPTO_IMPL/sha1 lib/crypto/$CRYPTO_IMPL/sha2
  	lib/crypto/$CRYPTO_IMPL/aes lib/crypto/$CRYPTO_IMPL/camellia
 diff --git a/src/include/krb5/krb5.hin b/src/include/krb5/krb5.hin
-index d1f5661bf..26a3b6ec8 100644
+index e9435c693..6355e6540 100644
 --- a/src/include/krb5/krb5.hin
 +++ b/src/include/krb5/krb5.hin
 @@ -426,8 +426,8 @@ typedef struct _krb5_crypto_iov {
@@ -365,7 +365,7 @@ index 8a4b87de1..d7f1d076b 100644
 +		supported_enctypes = aes256-cts:normal aes128-cts:normal aes256-sha2:normal aes128-sha2:normal
  	}
 diff --git a/src/kdc/kdc_util.c b/src/kdc/kdc_util.c
-index 221bde1dd..b8d292021 100644
+index e5898ea63..973976fd9 100644
 --- a/src/kdc/kdc_util.c
 +++ b/src/kdc/kdc_util.c
 @@ -1103,8 +1103,6 @@ enctype_name(krb5_enctype ktype, char *buf, size_t buflen)
@@ -377,7 +377,7 @@ index 221bde1dd..b8d292021 100644
      else
          return krb5_enctype_to_name(ktype, FALSE, buf, buflen);
  
-@@ -1841,8 +1839,6 @@ krb5_boolean
+@@ -1826,8 +1824,6 @@ krb5_boolean
  enctype_requires_etype_info_2(krb5_enctype enctype)
  {
      switch(enctype) {
@@ -6258,10 +6258,10 @@ index f71774cdc..d1857c433 100644
        "3BB3AE288C12B3B9D06B208A4151B3B6",
        "9AEA11A3BCF3C53F1F91F5A0BA2132E2501ADF5F3C28"
 diff --git a/src/tests/t_authdata.py b/src/tests/t_authdata.py
-index 378174a2e..3153ebca3 100644
+index c589adf2a..4fbdbec05 100644
 --- a/src/tests/t_authdata.py
 +++ b/src/tests/t_authdata.py
-@@ -172,7 +172,7 @@ realm.run([kvno, 'restricted'])
+@@ -174,7 +174,7 @@ realm.run([kvno, 'restricted'])
  # preferred krbtgt enctype changes.
  mark('#8139 regression test')
  realm.kinit(realm.user_princ, password('user'), ['-f'])

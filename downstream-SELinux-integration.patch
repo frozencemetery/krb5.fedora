@@ -1,4 +1,4 @@
-From 4a215a206d1d5af69ea9fbf1e78001971ab18be2 Mon Sep 17 00:00:00 2001
+From 0f8851a23a7b6fa0e195e01d0475e9e55707adf2 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:30:53 -0400
 Subject: [PATCH] [downstream] SELinux integration
@@ -236,7 +236,7 @@ index 000000000..dfaaa847c
 +#endif
 +#endif
 diff --git a/src/include/krb5/krb5.hin b/src/include/krb5/krb5.hin
-index d48685357..d1f5661bf 100644
+index 79761f6d2..e9435c693 100644
 --- a/src/include/krb5/krb5.hin
 +++ b/src/include/krb5/krb5.hin
 @@ -87,6 +87,12 @@
@@ -437,7 +437,7 @@ index 021c94398..aaf573439 100644
                  goto report_errno;
              writevno = 1;
 diff --git a/src/lib/krb5/os/trace.c b/src/lib/krb5/os/trace.c
-index 2a03ae980..85dbfeb47 100644
+index 7073459f0..e9b99f4ca 100644
 --- a/src/lib/krb5/os/trace.c
 +++ b/src/lib/krb5/os/trace.c
 @@ -458,7 +458,7 @@ krb5_set_trace_filename(krb5_context context, const char *filename)

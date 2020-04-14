@@ -1,4 +1,4 @@
-From 0a53577ebb24f0f9b05d769b34bdd4ef2ee2a629 Mon Sep 17 00:00:00 2001
+From 3f5875cf859271bca62f07aee6f663787972def9 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 15 Nov 2019 20:05:16 +0000
 Subject: [PATCH] [downstream] Use backported version of OpenSSL-3 KDF

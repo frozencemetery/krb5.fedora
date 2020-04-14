@@ -1,4 +1,4 @@
-From 9d452dc135ba0fad9470f096938a5dbfbacdbbe1 Mon Sep 17 00:00:00 2001
+From c136cfe050d203c910624573a33247fde2889b09 Mon Sep 17 00:00:00 2001
 From: Sumit Bose <sbose@redhat.com>
 Date: Fri, 28 Feb 2020 10:11:49 +0100
 Subject: [PATCH] Do expiration warnings for all init_creds APIs
@@ -21,7 +21,7 @@ ticket: 8893 (new)
  5 files changed, 165 insertions(+), 135 deletions(-)
 
 diff --git a/src/include/krb5/krb5.hin b/src/include/krb5/krb5.hin
-index 26a3b6ec8..36300ea53 100644
+index 6355e6540..f8269fb17 100644
 --- a/src/include/krb5/krb5.hin
 +++ b/src/include/krb5/krb5.hin
 @@ -7174,11 +7174,10 @@ typedef void

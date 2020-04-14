@@ -1,4 +1,4 @@
-From 745aa16c41305da1a3f288bf06e551f56cb04594 Mon Sep 17 00:00:00 2001
+From d23b2ed4f06fa77cd021814834dd1391ef6f452f Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Mon, 24 Feb 2020 15:58:59 -0500
 Subject: [PATCH] Allow certauth modules to set hw-authent flag

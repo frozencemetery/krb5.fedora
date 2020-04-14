@@ -16,9 +16,9 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.18
+Version: 1.18.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 12%{?dist}
+Release: 1%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -50,16 +50,12 @@ Patch4: downstream-fix-debuginfo-with-y.tab.c.patch
 Patch5: downstream-Remove-3des-support.patch
 Patch6: downstream-Use-backported-version-of-OpenSSL-3-KDF-i.patch
 Patch7: downstream-FIPS-with-PRNG-and-RADIUS-and-MD4.patch
-Patch8: Fix-AS-REQ-checking-of-KDB-modified-indicators.patch
 Patch9: Allow-certauth-modules-to-set-hw-authent-flag.patch
-Patch10: Allow-deletion-of-require_auth-with-LDAP-KDB.patch
 Patch11: Refresh-manually-acquired-creds-from-client-keytab.patch
-Patch12: Document-client-keytab-usage.patch
 Patch13: Add-finalization-safety-check-to-com_err.patch
 Patch14: Eliminate-redundant-PKINIT-responder-invocation.patch
 Patch15: Correctly-import-service-GSS-host-based-name.patch
 Patch16: Do-expiration-warnings-for-all-init_creds-APIs.patch
-Patch17: Make-ksu-honor-KRB5CCNAME-again.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -637,6 +633,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Apr 14 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.1-1
+- New upstream version (1.18.1)
+
 * Tue Apr 07 2020 Robbie Harwood <rharwood@redhat.com> - 1.18-12
 - Make ksu honor KRB5CCNAME again
 
