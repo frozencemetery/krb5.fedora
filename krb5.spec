@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 1%{?dist}
+Release: 3%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -56,6 +56,7 @@ Patch13: Add-finalization-safety-check-to-com_err.patch
 Patch14: Eliminate-redundant-PKINIT-responder-invocation.patch
 Patch15: Correctly-import-service-GSS-host-based-name.patch
 Patch16: Do-expiration-warnings-for-all-init_creds-APIs.patch
+Patch17: Pass-gss_localname-through-SPNEGO.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -80,17 +81,12 @@ BuildRequires: iproute
 BuildRequires: libverto-devel
 BuildRequires: openldap-devel
 BuildRequires: lmdb-devel
+BuildRequires: nss_wrapper
+BuildRequires: socket_wrapper
 
 # Need KDFs.  This is the backported version
 BuildRequires: openssl-devel >= 1:1.1.1d-4
 BuildRequires: openssl-devel < 1:3.0.0
-
-%ifarch %{ix86} x86_64
-BuildRequires: yasm
-%endif
-
-BuildRequires: nss_wrapper
-BuildRequires: socket_wrapper
 
 %description
 Kerberos V5 is a trusted-third-party network authentication system,
@@ -633,6 +629,12 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Apr 28 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.1-3
+- Pass gss_localname() through SPNEGO
+
+* Tue Apr 14 2020 Robbie Harwood <rharwood@redhat.com> - 1.18-1.1
+- Drop yasm requirement since we don't use builtin crypto
+
 * Tue Apr 14 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.1-1
 - New upstream version (1.18.1)
 
