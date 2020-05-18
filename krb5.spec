@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18.1
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 4%{?dist}
+Release: 5%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -58,6 +58,7 @@ Patch15: Correctly-import-service-GSS-host-based-name.patch
 Patch16: Do-expiration-warnings-for-all-init_creds-APIs.patch
 Patch17: Pass-gss_localname-through-SPNEGO.patch
 Patch18: Omit-KDC-indicator-check-for-S4U2Self-requests.patch
+Patch19: Fix-typo-in-in-in-the-ksu-man-page.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -630,6 +631,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon May 18 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.1-5
+- Fix typo ("in in") in the ksu man page
+
 * Fri May 08 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.1-4
 - Omit KDC indicator check for S4U2Self requests
 
