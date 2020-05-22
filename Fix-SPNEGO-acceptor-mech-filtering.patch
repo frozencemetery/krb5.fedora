@@ -1,0 +1,32 @@
+From b8a19522f0169be3b4a2f539e28c89755cd85d6f Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Thu, 21 May 2020 14:15:25 -0400
+Subject: [PATCH] Fix SPNEGO acceptor mech filtering
+
+Commit c2ca2f26eaf817a6a7ed42257c380437ab802bd9 (ticket 8851)
+accidentally changed the SPNEGO acceptor code to filter mechanisms by
+the obtainability of initiator credentials rather than acceptor
+credentials, when the default acceptor credential is used.
+
+ticket: 8908 (new)
+tags: pullup
+target_version: 1.18-next
+
+(cherry picked from commit e25918cb9efd7361aa78d2d96cd097dd34fdf35d)
+---
+ src/lib/gssapi/spnego/spnego_mech.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/lib/gssapi/spnego/spnego_mech.c b/src/lib/gssapi/spnego/spnego_mech.c
+index 8d36a05e8..255db6e30 100644
+--- a/src/lib/gssapi/spnego/spnego_mech.c
++++ b/src/lib/gssapi/spnego/spnego_mech.c
+@@ -1379,7 +1379,7 @@ acc_ctx_new(OM_uint32 *minor_status,
+ 		goto cleanup;
+ 	}
+ 
+-	ret = get_negotiable_mechs(minor_status, sc, spcred, GSS_C_INITIATE);
++	ret = get_negotiable_mechs(minor_status, sc, spcred, GSS_C_ACCEPT);
+ 	if (ret != GSS_S_COMPLETE) {
+ 		*return_token = NO_TOKEN_SEND;
+ 		goto cleanup;
