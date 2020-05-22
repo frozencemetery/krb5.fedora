@@ -1,4 +1,4 @@
-From 646212314a580a8cdffdacda9cb3c8f806471b08 Mon Sep 17 00:00:00 2001
+From dce745bbdf95ddfa733bc306c57afe5fcab74479 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Sun, 26 Apr 2020 19:55:54 -0400
 Subject: [PATCH] Pass gss_localname() through SPNEGO
@@ -30,7 +30,7 @@ index a93763314..066ec736f 100644
  (
  	OM_uint32 *minor_status,
 diff --git a/src/lib/gssapi/spnego/spnego_mech.c b/src/lib/gssapi/spnego/spnego_mech.c
-index 8e0c3a348..8d36a05e8 100644
+index ec0bae6a4..594fc5894 100644
 --- a/src/lib/gssapi/spnego/spnego_mech.c
 +++ b/src/lib/gssapi/spnego/spnego_mech.c
 @@ -237,7 +237,7 @@ static struct gss_config spnego_mechanism =

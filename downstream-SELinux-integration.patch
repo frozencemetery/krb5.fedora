@@ -1,4 +1,4 @@
-From 0f8851a23a7b6fa0e195e01d0475e9e55707adf2 Mon Sep 17 00:00:00 2001
+From f8c70f6190a0573e2aca0b40964cf3b1a73ca8bb Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:30:53 -0400
 Subject: [PATCH] [downstream] SELinux integration

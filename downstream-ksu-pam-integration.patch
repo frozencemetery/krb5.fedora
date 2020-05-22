@@ -1,4 +1,4 @@
-From a7322a84657752c886c317a6994a9fc7a4a70ca5 Mon Sep 17 00:00:00 2001
+From 9feb7298b90d3e6a34821fce7315757c0bf81c9e Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:29:58 -0400
 Subject: [PATCH] [downstream] ksu pam integration
