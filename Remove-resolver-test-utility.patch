@@ -1,4 +1,4 @@
-From 621cf6c98d74b025a0ca190cd279756596709ef9 Mon Sep 17 00:00:00 2001
+From c21bb26abc4799298726124d73f0c968430a87bd Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Thu, 28 May 2020 18:41:02 -0400
 Subject: [PATCH] Remove resolver test utility
@@ -22,10 +22,10 @@ tests/resolve is no longer used after the previous commit.
  delete mode 100644 src/tests/resolve/resolve.c
 
 diff --git a/src/configure.ac b/src/configure.ac
-index 29be532cb..2a756d6b5 100644
+index aafc462f9..00b5ea4c5 100644
 --- a/src/configure.ac
 +++ b/src/configure.ac
-@@ -1542,7 +1542,6 @@ V5_AC_OUTPUT_MAKEFILE(.
+@@ -1540,7 +1540,6 @@ V5_AC_OUTPUT_MAKEFILE(.
  	appl/simple appl/simple/client appl/simple/server
  	appl/gss-sample appl/user_user
  
