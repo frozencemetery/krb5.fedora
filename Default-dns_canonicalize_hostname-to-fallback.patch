@@ -1,0 +1,371 @@
+From 1e72ba5c1b74d5b78f84c5884d06e979830aeb53 Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Wed, 27 May 2020 18:48:35 -0400
+Subject: [PATCH] Default dns_canonicalize_hostname to "fallback"
+
+This change should mitigate some of the pain caused by the rdns=true
+default (generally associated with unwanted PTR records that cannot
+easily be changed), with a minimum of fallout.
+
+Update the documentation and tests accordingly.  In test environments,
+disable qualify_shortname and use the uncanonicalized system hostname
+(lowercased) to match the initial sn2princ result.
+
+ticket: 8911 (new)
+---
+ doc/admin/appl_servers.rst                    | 14 +++---
+ doc/admin/conf_files/krb5_conf.rst            |  9 ++--
+ doc/admin/princ_dns.rst                       | 44 +++++++++++--------
+ src/kadmin/testing/proto/krb5.conf.proto      |  8 ++--
+ src/kadmin/testing/scripts/env-setup.shin     |  4 +-
+ src/kadmin/testing/scripts/init_db            |  3 +-
+ src/kadmin/testing/scripts/start_servers      |  3 +-
+ .../testing/scripts/start_servers_local       |  2 +-
+ .../kadm5/unit-test/api.current/init-v2.exp   |  6 +--
+ src/lib/krb5/krb/init_ctx.c                   |  2 +-
+ src/tests/dejagnu/config/default.exp          |  5 +--
+ src/tests/t_sn2princ.py                       |  5 ++-
+ src/util/k5test.py                            | 25 +++--------
+ 13 files changed, 58 insertions(+), 72 deletions(-)
+
+diff --git a/doc/admin/appl_servers.rst b/doc/admin/appl_servers.rst
+index 5232db9af..afdf30297 100644
+--- a/doc/admin/appl_servers.rst
++++ b/doc/admin/appl_servers.rst
+@@ -115,14 +115,12 @@ Getting DNS information correct
+ -------------------------------
+ 
+ Several aspects of Kerberos rely on name service.  When a hostname is
+-used to name a service, the Kerberos library canonicalizes the
+-hostname using forward and reverse name resolution.  (The reverse name
+-resolution step can be turned off using the **rdns** variable in
+-:ref:`libdefaults`.)  The result of this canonicalization must match
+-the principal entry in the host's keytab, or authentication will fail.
+-
+-Each host's canonical name must be the fully-qualified host name
+-(including the domain), and each host's IP address must
++used to name a service, clients may canonicalize the hostname using
++forward and possibly reverse name resolution.  The result of this
++canonicalization must match the principal entry in the host's keytab,
++or authentication will fail.  To work with all client canonicalization
++configurations, each host's canonical name must be the fully-qualified
++host name (including the domain), and each host's IP address must
+ reverse-resolve to the canonical name.
+ 
+ Configuration of hostnames varies by operating system.  On the
+diff --git a/doc/admin/conf_files/krb5_conf.rst b/doc/admin/conf_files/krb5_conf.rst
+index 1d2aa7f68..a7e7a29d1 100644
+--- a/doc/admin/conf_files/krb5_conf.rst
++++ b/doc/admin/conf_files/krb5_conf.rst
+@@ -188,11 +188,10 @@ The libdefaults section may contain any of the following relations:
+     hostnames for use in service principal names.  Setting this flag
+     to false can improve security by reducing reliance on DNS, but
+     means that short hostnames will not be canonicalized to
+-    fully-qualified hostnames.  The default value is true.
+-
+-    If this option is set to ``fallback`` (new in release 1.18), DNS
+-    canonicalization will only be performed the server hostname is not
+-    found with the original name when requesting credentials.
++    fully-qualified hostnames.  If this option is set to ``fallback`` (new
++    in release 1.18), DNS canonicalization will only be performed the
++    server hostname is not found with the original name when
++    requesting credentials.  The default value is ``fallback``.
+ 
+ **dns_lookup_kdc**
+     Indicate whether DNS SRV records should be used to locate the KDCs
+diff --git a/doc/admin/princ_dns.rst b/doc/admin/princ_dns.rst
+index e1d823f27..32a269afc 100644
+--- a/doc/admin/princ_dns.rst
++++ b/doc/admin/princ_dns.rst
+@@ -31,27 +31,35 @@ based on rotating ``CNAME`` records in DNS.
+ Service principal canonicalization
+ ----------------------------------
+ 
+-MIT Kerberos clients currently always do forward resolution (looking
+-up the IPv4 and possibly IPv6 addresses using ``getaddrinfo()``) of
+-the hostname part of a host-based service principal to canonicalize
+-the hostname.  They obtain the "canonical" name of the host when doing
+-so.  By default, MIT Kerberos clients will also then do reverse DNS
+-resolution (looking up the hostname associated with the IPv4 or IPv6
+-address using ``getnameinfo()``) of the hostname.  Using the
+-:ref:`krb5.conf(5)` setting::
++In the MIT krb5 client library, canonicalization of host-based service
++principals is controlled by the **dns_canonicalize_hostname**,
++**rnds**, and **qualify_shortname** variables in :ref:`libdefaults`.
+ 
+-    [libdefaults]
+-        rdns = false
++If **dns_canonicalize_hostname** is set to ``true`` (the default value
++before release 1.19), the client performs forward resolution by
++looking up the IPv4 and/or IPv6 addresses of the hostname using
++``getaddrinfo()``.  This process will typically add a domain suffix to
++the hostname if needed, and follow CNAME records in the DNS.  If
++**rdns** is also set to ``true`` (the default), the client will then
++perform a reverse lookup of the first returned Internet address using
++``getnameinfo()``, finding the name associated with the PTR record.
+ 
+-will disable reverse DNS lookup on clients.  The default setting is
+-"true".
++If **dns_canonicalize_hostname** is set to ``false``, the hostname is
++not canonicalized using DNS.  If the hostname has only one component
++(i.e. it contains no "." characters), the host's primary DNS search
++domain will be appended, if there is one.  The **qualify_shortname**
++variable can be used to override or disable this suffix.
++
++If **dns_canonicalize_hostname** is set to ``fallback`` (the default
++value in release 1.19 and later), the hostname is initially treated
++according to the rules for ``dns_canonicalize_hostname=false``.  If a
++ticket request fails because the service principal is unknown, it the
++hostname will be canonicalized according to the rules for
++``dns_canonicalize_hostname=true`` and the request will be retried.
++
++In all cases, the hostname is converted to lowercase, and any trailing
++dot is removed.
+ 
+-Operating system bugs may prevent a setting of ``rdns = false`` from
+-disabling reverse DNS lookup.  Some versions of GNU libc have a bug in
+-``getaddrinfo()`` that cause them to look up ``PTR`` records even when
+-not required.  MIT Kerberos releases krb5-1.10.2 and newer have a
+-workaround for this problem, as does the krb5-1.9.x series as of
+-release krb5-1.9.4.
+ 
+ 
+ Reverse DNS mismatches
+diff --git a/src/kadmin/testing/proto/krb5.conf.proto b/src/kadmin/testing/proto/krb5.conf.proto
+index e710852d4..c0af716a5 100644
+--- a/src/kadmin/testing/proto/krb5.conf.proto
++++ b/src/kadmin/testing/proto/krb5.conf.proto
+@@ -2,19 +2,19 @@
+ 	default_realm = __REALM__
+ 	default_keytab_name = FILE:__K5ROOT__/keytab
+ 	dns_fallback = no
++	qualify_shortname = ""
+ 	plugin_base_dir = __PLUGIN_DIR__
+ 	allow_weak_crypto = true
+ 
+ [realms]
+ 	__REALM__ = {
+-		kdc = __KDCHOST__:1750
+-		admin_server = __KDCHOST__:1751
++		kdc = __HOSTNAME__:1750
++		admin_server = __HOSTNAME__:1751
+ 		database_module = foobar_db2_module_blah
+ 	}
+ 
+ [domain_realm]
+-	__LOCALHOST__ = __REALM__
+-	__KDCHOST__ = __REALM__
++	__HOSTNAME__ = __REALM__
+ 
+ [logging]
+ 	admin_server = FILE:__K5ROOT__/syslog
+diff --git a/src/kadmin/testing/scripts/env-setup.shin b/src/kadmin/testing/scripts/env-setup.shin
+index 969c5340c..88f8ad1aa 100755
+--- a/src/kadmin/testing/scripts/env-setup.shin
++++ b/src/kadmin/testing/scripts/env-setup.shin
+@@ -71,8 +71,8 @@ BSDDB_DUMP=$TESTDIR/util/bsddb_dump; export BSDDB_DUMP
+ CLNTTCL=$TESTDIR/util/kadm5_clnt_tcl; export CLNTTCL
+ SRVTCL=$TESTDIR/util/kadm5_srv_tcl; export SRVTCL
+ 
+-QUALNAME=`$BUILDTOP/tests/resolve/resolve -q | tr '[A-Z]' '[a-z]'`
+-export QUALNAME
++HOSTNAME=`hostname | tr '[A-Z]' '[a-z]'`
++export HOSTNAME
+ 
+ KRB5_CONFIG=$K5ROOT/krb5.conf; export KRB5_CONFIG
+ KRB5_KDC_PROFILE=$K5ROOT/kdc.conf; export KRB5_KDC_PROFILE
+diff --git a/src/kadmin/testing/scripts/init_db b/src/kadmin/testing/scripts/init_db
+index e65826c96..216f62793 100755
+--- a/src/kadmin/testing/scripts/init_db
++++ b/src/kadmin/testing/scripts/init_db
+@@ -79,8 +79,7 @@ fi
+ # done
+ 
+ sed -e "s/__REALM__/$REALM/g" -e "s#__K5ROOT__#$K5ROOT#g" \
+-	-e "s/__KDCHOST__/$QUALNAME/g" \
+-	-e "s/__LOCALHOST__/$QUALNAME/g" \
++	-e "s/__HOSTNAME__/$HOSTNAME/g" \
+ 	-e "s#__MODDIR__#$MODDIR#g" \
+ 	< $STESTDIR/proto/krb5.conf.proto > $K5ROOT/krb5.conf
+ sed -e "s/__REALM__/$REALM/g" -e "s#__K5ROOT__#$K5ROOT#g" \
+diff --git a/src/kadmin/testing/scripts/start_servers b/src/kadmin/testing/scripts/start_servers
+index f23df0682..05519e4ee 100755
+--- a/src/kadmin/testing/scripts/start_servers
++++ b/src/kadmin/testing/scripts/start_servers
+@@ -36,8 +36,7 @@ if [ $local = 0 ]; then
+ 
+ 	# Fix up the local krb5.conf to point to the remote 
+ 	sed -e "s/__REALM__/$REALM/g" -e "s#__K5ROOT__#$K5ROOT#g" \
+-		-e "s/__KDCHOST__/$hostname/g" \
+-		-e "s/__LOCALHOST__/$QUALNAME/g" \
++		-e "s/__HOSTNAME__/$HOSTNAME/g" \
+ 		-e "s#__MODDIR__#$TOP/../plugins/kdb#g"\
+ 		-e "s#__PLUGIN_DIR__#$TOP/../plugins#g"\
+ 		< $STESTDIR/proto/krb5.conf.proto > $K5ROOT/krb5.conf
+diff --git a/src/kadmin/testing/scripts/start_servers_local b/src/kadmin/testing/scripts/start_servers_local
+index 998ef9164..858e88031 100755
+--- a/src/kadmin/testing/scripts/start_servers_local
++++ b/src/kadmin/testing/scripts/start_servers_local
+@@ -79,7 +79,7 @@ cat - > /tmp/start_servers_local$$ <<\EOF
+ if { [catch {
+ 	source $env(STOP)/testing/tcl/util.t
+ 	set r $env(REALM)
+-	set q $env(QUALNAME)
++	set q $env(HOSTNAME)
+ 	puts stdout [kadm5_init $env(SRVTCL) mrroot null \
+ 		[config_params {KADM5_CONFIG_REALM} $r] \
+ 		$KADM5_STRUCT_VERSION $KADM5_API_VERSION_3 server_handle]
+diff --git a/src/lib/kadm5/unit-test/api.current/init-v2.exp b/src/lib/kadm5/unit-test/api.current/init-v2.exp
+index 7a353d4e9..47764c212 100644
+--- a/src/lib/kadm5/unit-test/api.current/init-v2.exp
++++ b/src/lib/kadm5/unit-test/api.current/init-v2.exp
+@@ -3,18 +3,14 @@ load_lib lib.t
+ api_exit
+ api_start
+ 
+-if ![info exists RESOLVE] {
+-    set RESOLVE [findfile $objdir/../../../tests/resolve/resolve]
+-}
+ proc get_hostname { } {
+-    global RESOLVE
+     global hostname
+ 
+     if {[info exists hostname]} {
+ 	return 1
+     }
+ 
+-    catch "exec $RESOLVE -q >myname" exec_output
++    catch "exec hostname >myname" exec_output
+     if ![string match "" $exec_output] {
+ 	send_log "$exec_output\n"
+ 	verbose $exec_output
+diff --git a/src/lib/krb5/krb/init_ctx.c b/src/lib/krb5/krb/init_ctx.c
+index 9a4741fa6..0b8ae6714 100644
+--- a/src/lib/krb5/krb/init_ctx.c
++++ b/src/lib/krb5/krb/init_ctx.c
+@@ -237,7 +237,7 @@ krb5_init_context_profile(profile_t profile, krb5_flags flags,
+     ctx->enforce_ok_as_delegate = tmp;
+ 
+     retval = get_tristate(ctx, KRB5_CONF_DNS_CANONICALIZE_HOSTNAME, "fallback",
+-                          CANONHOST_FALLBACK, 1, &tmp);
++                          CANONHOST_FALLBACK, CANONHOST_FALLBACK, &tmp);
+     if (retval)
+         goto cleanup;
+     ctx->dns_canonicalize_hostname = tmp;
+diff --git a/src/tests/dejagnu/config/default.exp b/src/tests/dejagnu/config/default.exp
+index 4d8c917cd..1e7777f1e 100644
+--- a/src/tests/dejagnu/config/default.exp
++++ b/src/tests/dejagnu/config/default.exp
+@@ -268,7 +268,6 @@ foreach i {
+     {KTUTIL $objdir/../../kadmin/ktutil/ktutil}
+     {KLIST $objdir/../../clients/klist/klist}
+     {KDESTROY $objdir/../../clients/kdestroy/kdestroy}
+-    {RESOLVE $objdir/../resolve/resolve}
+     {T_INETD $objdir/t_inetd}
+     {KPROPLOG $objdir/../../kprop/kproplog}
+     {KPASSWD $objdir/../../clients/kpasswd/kpasswd}
+@@ -462,7 +461,6 @@ proc setup_runtime_env { } {
+ # 0 on failure.
+ 
+ proc get_hostname { } {
+-    global RESOLVE
+     global hostname
+     global tmppwd
+ 
+@@ -472,7 +470,7 @@ proc get_hostname { } {
+ 
+     envstack_push
+     setup_runtime_env
+-    catch "exec $RESOLVE -q >$tmppwd/hostname" exec_output
++    catch "exec hostname >$tmppwd/hostname" exec_output
+     envstack_pop
+     if ![string match "" $exec_output] {
+ 	verbose -log $exec_output
+@@ -710,6 +708,7 @@ proc setup_krb5_conf { {type client} } {
+ 	puts $conffile "\[libdefaults\]"
+ 	puts $conffile "	default_realm = $REALMNAME"
+ 	puts $conffile "	dns_lookup_kdc = false"
++	puts $conffile "	qualify_shortname = \"\""
+ 	if [info exists allow_weak_crypto($type)] {
+ 	    puts $conffile "	allow_weak_crypto = $allow_weak_crypto($type)"
+ 	} else {
+diff --git a/src/tests/t_sn2princ.py b/src/tests/t_sn2princ.py
+index 26dcb91c2..f3e187286 100755
+--- a/src/tests/t_sn2princ.py
++++ b/src/tests/t_sn2princ.py
+@@ -2,7 +2,8 @@ from k5test import *
+ 
+ offline = (len(args) > 0 and args[0] != "no")
+ 
+-conf = {'domain_realm': {'kerberos.org': 'R1',
++conf = {'libdefaults': {'dns_canonicalize_hostname': 'true'},
++        'domain_realm': {'kerberos.org': 'R1',
+                          'example.com': 'R2',
+                          'mit.edu': 'R3'}}
+ no_rdns_conf = {'libdefaults': {'rdns': 'false'}}
+@@ -28,7 +29,7 @@ def testbase(host, nametype, princhost, princrealm, env=None):
+         fail('Expected %s, got %s' % (expected, out))
+ 
+ def test(host, princhost, princrealm):
+-    # Test with the host-based name type in the default environment.
++    # Test with the host-based name type with canonicalization enabled.
+     testbase(host, 'srv-hst', princhost, princrealm)
+ 
+ def testnc(host, princhost, princrealm):
+diff --git a/src/util/k5test.py b/src/util/k5test.py
+index eea92275d..5196cfa43 100644
+--- a/src/util/k5test.py
++++ b/src/util/k5test.py
+@@ -193,7 +193,10 @@ Scripts may use the following functions and variables:
+ 
+ * plugins: The plugin directory in the build tree (absolute path).
+ 
+-* hostname: This machine's fully-qualified domain name.
++* hostname: The local hostname as it will initially appear in
++  krb5_sname_to_principal() results.  (Shortname qualification is
++  turned off in the test environment to make this value easy to
++  discover from Python.)
+ 
+ * null_input: A file opened to read /dev/null.
+ 
+@@ -525,23 +528,6 @@ def _find_srctop():
+     return os.path.abspath(root)
+ 
+ 
+-# Return the local hostname as it will be canonicalized by
+-# krb5_sname_to_principal.  We can't simply use socket.getfqdn()
+-# because it explicitly prefers results containing periods and
+-# krb5_sname_to_principal doesn't care.
+-def _get_hostname():
+-    hostname = socket.gethostname()
+-    try:
+-        ai = socket.getaddrinfo(hostname, None, 0, 0, 0, socket.AI_CANONNAME)
+-    except socket.gaierror as e:
+-        fail('Local hostname "%s" does not resolve: %s.' % (hostname, e[1]))
+-    (family, socktype, proto, canonname, sockaddr) = ai[0]
+-    try:
+-        name = socket.getnameinfo(sockaddr, socket.NI_NAMEREQD)
+-    except socket.gaierror:
+-        return canonname.lower()
+-    return name[0].lower()
+-
+ # Parse command line arguments, setting global option variables.  Also
+ # sets the global variable args to the positional arguments, which may
+ # be used by the test script.
+@@ -1263,6 +1249,7 @@ _default_krb5_conf = {
+     'libdefaults': {
+         'default_realm': '$realm',
+         'dns_lookup_kdc': 'false',
++        'qualify_shortname': '',
+         'plugin_base_dir': '$plugins'},
+     'realms': {'$realm': {
+             'kdc': '$hostname:$port0',
+@@ -1356,7 +1343,7 @@ buildtop = _find_buildtop()
+ srctop = _find_srctop()
+ plugins = os.path.join(buildtop, 'plugins')
+ runenv = _import_runenv()
+-hostname = _get_hostname()
++hostname = socket.gethostname().lower()
+ null_input = open(os.devnull, 'r')
+ 
+ # A DB pass is a tuple of: name, kdc_conf.
