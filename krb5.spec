@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18.2
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 5%{?dist}
+Release: 6%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -63,6 +63,7 @@ Patch20: Pass-channel-bindings-through-SPNEGO.patch
 Patch21: Replace-gssrpc-tests-with-a-Python-script.patch
 Patch22: Default-dns_canonicalize_hostname-to-fallback.patch
 Patch23: Remove-resolver-test-utility.patch
+Patch24: Omit-PA_FOR_USER-if-we-can-t-compute-its-checksum.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -635,6 +636,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Jun 08 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-6
+- Omit PA_FOR_USER if we can't compute its checksum
+
 * Sat May 30 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-5
 - Replace gssrpc tests with a Python script
 
