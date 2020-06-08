@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18.2
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 6%{?dist}
+Release: 7%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -38,9 +38,6 @@ Source29: ksu.pamd
 Source33: krb5kdc.logrotate
 Source34: kadmind.logrotate
 Source39: krb5-krb5kdc.conf
-
-# Carry this locally until it's available in a packaged form.
-Source100: noport.c
 
 Patch0: downstream-ksu-pam-integration.patch
 Patch1: downstream-SELinux-integration.patch
@@ -68,7 +65,7 @@ Patch24: Omit-PA_FOR_USER-if-we-can-t-compute-its-checksum.patch
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
 BuildRequires: autoconf, bison, cmake, flex, gawk, gettext, pkgconfig, sed
-BuildRequires: gcc
+BuildRequires: gcc, gcc-c++
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
 BuildRequires: gzip, ncurses-devel
 BuildRequires: python3-sphinx
@@ -88,8 +85,7 @@ BuildRequires: iproute
 BuildRequires: libverto-devel
 BuildRequires: openldap-devel
 BuildRequires: lmdb-devel
-BuildRequires: nss_wrapper
-BuildRequires: socket_wrapper
+BuildRequires: python3-pyrad
 
 # Need KDFs.  This is the backported version
 BuildRequires: openssl-devel >= 1:1.1.1d-4
@@ -295,34 +291,17 @@ sphinx-build -a -b man   -t pathsubs doc build-man
 sphinx-build -a -b html  -t pathsubs doc build-html
 rm -fr build-html/_sources
 
-# We need to cut off any access to locally-running nameservers, too.
-%{__cc} -fPIC -shared -o noport.so -Wall -Wextra %{SOURCE100}
-
 %check
-mkdir nss_wrapper
-
-# Set things up to use the test wrappers.
-export NSS_WRAPPER_HOSTNAME=test.example.com
-export NSS_WRAPPER_HOSTS="$PWD/nss_wrapper/fakehosts"
-echo "127.0.0.1 $NSS_WRAPPER_HOSTNAME localhost" > $NSS_WRAPPER_HOSTS
-export NOPORT='53,111'
-export SOCKET_WRAPPER_DIR="$PWD/sockets" ; mkdir -p $SOCKET_WRAPPER_DIR
-export LD_PRELOAD="$PWD/noport.so:libnss_wrapper.so:libsocket_wrapper.so"
+pushd src
 
 # ugh.  COPR doesn't expose the keyring, so try to cope.
 KEYCTL=keyctl
 keyctl list @u &>/dev/null || KEYCTL=:
 
-# Run the test suite. We can't actually run the whole thing in the build
-# system, but we can at least run more than we used to.  The build system may
-# give us a revoked session keyring, so run affected tests with a new one.
-make -C src runenv.py
-: make -C src check TMPDIR=%{_tmppath}
-$KEYCTL session - make -C src/lib check TMPDIR=%{_tmppath} OFFLINE=yes
-make -C src/kdc check TMPDIR=%{_tmppath}
-$KEYCTL session - make -C src/appl check TMPDIR=%{_tmppath}
-make -C src/clients check TMPDIR=%{_tmppath}
-$KEYCTL session - make -C src/util check TMPDIR=%{_tmppath}
+# The build system may give us a revoked session keyring, so run affected
+# tests with a new one.
+$KEYCTL session - make check OFFLINE=yes TMPDIR=%{_tmppath}
+popd
 
 %install
 [ "$RPM_BUILD_ROOT" != '/' ] && rm -rf -- "$RPM_BUILD_ROOT"
@@ -636,6 +615,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Jun 08 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-7
+- Fix test suite by removing wrapper workarounds
+
 * Mon Jun 08 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-6
 - Omit PA_FOR_USER if we can't compute its checksum
 
