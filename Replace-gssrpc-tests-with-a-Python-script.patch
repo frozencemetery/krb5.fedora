@@ -1,4 +1,4 @@
-From 5af211200d6c2ac82872435556f5b39edcaba541 Mon Sep 17 00:00:00 2001
+From a12fc355a034e5b1d23bdb23db9735d4eaa396d8 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Sat, 15 Feb 2020 20:34:23 -0500
 Subject: [PATCH] Replace gssrpc tests with a Python script

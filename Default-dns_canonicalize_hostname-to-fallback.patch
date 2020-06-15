@@ -1,4 +1,4 @@
-From d003b4aa8dce14967725d6607c54ceb884b3647c Mon Sep 17 00:00:00 2001
+From 07179e38e5ee72e82ebc77a1c8d73e34905268b7 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Wed, 27 May 2020 18:48:35 -0400
 Subject: [PATCH] Default dns_canonicalize_hostname to "fallback"

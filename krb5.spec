@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18.2
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 7%{?dist}
+Release: 8%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -56,11 +56,17 @@ Patch16: Do-expiration-warnings-for-all-init_creds-APIs.patch
 Patch17: Pass-gss_localname-through-SPNEGO.patch
 Patch18: Omit-KDC-indicator-check-for-S4U2Self-requests.patch
 Patch19: Fix-typo-in-in-in-the-ksu-man-page.patch
-Patch20: Pass-channel-bindings-through-SPNEGO.patch
 Patch21: Replace-gssrpc-tests-with-a-Python-script.patch
 Patch22: Default-dns_canonicalize_hostname-to-fallback.patch
 Patch23: Remove-resolver-test-utility.patch
 Patch24: Omit-PA_FOR_USER-if-we-can-t-compute-its-checksum.patch
+Patch25: Improve-negoex_parse_token-code-hygiene.patch
+Patch26: Refactor-krb5-GSS-checksum-handling.patch
+Patch27: Implement-GSS_C_CHANNEL_BOUND_FLAG.patch
+Patch28: Implement-KERB_AP_OPTIONS_CBT-server-side.patch
+Patch29: Add-client_aware_channel_bindings-option.patch
+Patch30: Pass-channel-bindings-through-SPNEGO.patch
+Patch31: Add-channel-bindings-tests.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -615,6 +621,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Jun 15 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-8
+- Match Heimdal behavior for channel bindings
+
 * Mon Jun 08 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-7
 - Fix test suite by removing wrapper workarounds
 
