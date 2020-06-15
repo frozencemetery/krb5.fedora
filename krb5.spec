@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18.2
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 8%{?dist}
+Release: 9%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -67,6 +67,7 @@ Patch28: Implement-KERB_AP_OPTIONS_CBT-server-side.patch
 Patch29: Add-client_aware_channel_bindings-option.patch
 Patch30: Pass-channel-bindings-through-SPNEGO.patch
 Patch31: Add-channel-bindings-tests.patch
+Patch32: Use-two-queues-for-concurrent-t_otp.py-daemons.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -621,6 +622,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Jun 15 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-9
+- Use two queues for concurrent t_otp.py daemons
+
 * Mon Jun 15 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-8
 - Match Heimdal behavior for channel bindings
 
