@@ -391,7 +391,7 @@ install -pdm 755 $RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/kdb
 install -pdm 755 $RPM_BUILD_ROOT/%{_libdir}/krb5/plugins/authdata
 
 # The rest of the binaries, headers, libraries, and docs.
-make -C src DESTDIR=$RPM_BUILD_ROOT EXAMPLEDIR=%{libsdocdir}/examples install
+%make_install -C src EXAMPLEDIR=%{libsdocdir}/examples
 
 # Munge krb5-config yet again.  This is totally wrong for 64-bit, but chunks
 # of the buildconf patch already conspire to strip out /usr/<anything> from the
