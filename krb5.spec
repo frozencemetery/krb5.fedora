@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18.2
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 11%{?dist}
+Release: 12%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -68,7 +68,8 @@ Patch29: Add-client_aware_channel_bindings-option.patch
 Patch30: Pass-channel-bindings-through-SPNEGO.patch
 Patch31: Add-channel-bindings-tests.patch
 Patch32: Use-two-queues-for-concurrent-t_otp.py-daemons.patch
-Patch33: Ignore-bad-enctypes-in-krb5_string_to_keysalts.patch
+Patch33: Allow-gss_unwrap_iov-of-unpadded-RC4-tokens.patch
+Patch34: Ignore-bad-enctypes-in-krb5_string_to_keysalts.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -623,6 +624,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Jul 22 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-12
+- Ignore bad enctypes in krb5_string_to_keysalts()
+- Allow gss_unwrap_iov() of unpadded RC4 tokens
+
 * Wed Jul 15 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-11
 - Ignore bad enctypes in krb5_string_to_keysalts()
 
