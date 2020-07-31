@@ -1,4 +1,4 @@
-From 2a08fe3d2d1972df4ffe37d4bb64b161889ff988 Mon Sep 17 00:00:00 2001
+From bb7425941f5d84a53e30721c20fbfc714157f082 Mon Sep 17 00:00:00 2001
 From: Isaac Boukris <iboukris@gmail.com>
 Date: Tue, 10 Mar 2020 13:13:17 +0100
 Subject: [PATCH] Add client_aware_channel_bindings option
@@ -20,10 +20,10 @@ ticket: 8900
  3 files changed, 98 insertions(+), 86 deletions(-)
 
 diff --git a/doc/admin/conf_files/krb5_conf.rst b/doc/admin/conf_files/krb5_conf.rst
-index a7e7a29d1..7f2879640 100644
+index 1d2aa7f68..1d8ffc1e4 100644
 --- a/doc/admin/conf_files/krb5_conf.rst
 +++ b/doc/admin/conf_files/krb5_conf.rst
-@@ -382,6 +382,12 @@ The libdefaults section may contain any of the following relations:
+@@ -383,6 +383,12 @@ The libdefaults section may contain any of the following relations:
      credentials will fail if the client machine does not have a
      keytab.  The default value is false.
  

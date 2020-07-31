@@ -1,4 +1,4 @@
-From 3f873868fb08b77da2d30e164a0ef6c71c17c607 Mon Sep 17 00:00:00 2001
+From 63b526ffbdd932dffd5bc1d4a2b3ef6300208fb8 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Wed, 15 Jul 2020 15:42:20 -0400
 Subject: [PATCH] Ignore bad enctypes in krb5_string_to_keysalts()

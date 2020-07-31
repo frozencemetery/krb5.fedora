@@ -1,4 +1,4 @@
-From c726a72c68244129eb08b840b92144acfa776573 Mon Sep 17 00:00:00 2001
+From 409a8920e13cd14fec8533c1ff864de92d292178 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 9 Jun 2020 16:23:37 -0400
 Subject: [PATCH] Improve negoex_parse_token() code hygiene

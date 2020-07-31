@@ -1,4 +1,4 @@
-From 3e92520c1417f22447751cd9172d5ab30c2e0ad8 Mon Sep 17 00:00:00 2001
+From 5f98c9d9ff16f3760ac26304cfdb87bf53bc8628 Mon Sep 17 00:00:00 2001
 From: Isaac Boukris <iboukris@gmail.com>
 Date: Fri, 20 Mar 2020 00:17:28 +0100
 Subject: [PATCH] Add channel bindings tests

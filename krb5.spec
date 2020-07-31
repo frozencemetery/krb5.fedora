@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18.2
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 13%{?dist}
+Release: 14%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -57,7 +57,6 @@ Patch17: Pass-gss_localname-through-SPNEGO.patch
 Patch18: Omit-KDC-indicator-check-for-S4U2Self-requests.patch
 Patch19: Fix-typo-in-in-in-the-ksu-man-page.patch
 Patch21: Replace-gssrpc-tests-with-a-Python-script.patch
-Patch22: Default-dns_canonicalize_hostname-to-fallback.patch
 Patch23: Remove-resolver-test-utility.patch
 Patch24: Omit-PA_FOR_USER-if-we-can-t-compute-its-checksum.patch
 Patch25: Improve-negoex_parse_token-code-hygiene.patch
@@ -624,6 +623,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Jul 31 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-14
+- Revert qualify_shortname changes
+
 * Tue Jul 28 2020 Fedora Release Engineering <releng@fedoraproject.org> - 1.18.2-13
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
 
