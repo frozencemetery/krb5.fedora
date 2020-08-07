@@ -1,0 +1,45 @@
+From 7986adf30dffdd16fec43f261a2fa1384e0b8b90 Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Sat, 13 Jun 2020 21:55:54 -0400
+Subject: [PATCH] Prevent deletion of K/M
+
+In libkadm5srv, do not allow deletion of the master key principal, as
+it is very difficult to recover a KDB after doing so.
+
+ticket: 8913
+(cherry picked from commit 94b936a1bf0a8c67809597c5ea5400d8994d5dd8)
+---
+ src/lib/kadm5/srv/svr_principal.c | 4 ++++
+ src/tests/t_kadmin_acl.py         | 6 ++++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/src/lib/kadm5/srv/svr_principal.c b/src/lib/kadm5/srv/svr_principal.c
+index 53ecbe1bc..c2412df31 100644
+--- a/src/lib/kadm5/srv/svr_principal.c
++++ b/src/lib/kadm5/srv/svr_principal.c
+@@ -537,6 +537,10 @@ kadm5_delete_principal(void *server_handle, krb5_principal principal)
+     if (principal == NULL)
+         return EINVAL;
+ 
++    /* Deleting K/M is mostly unrecoverable, so don't allow it. */
++    if (krb5_principal_compare(handle->context, principal, master_princ))
++        return KADM5_PROTECT_PRINCIPAL;
++
+     if ((ret = kdb_get_entry(handle, principal, &kdb, &adb)))
+         return(ret);
+     ret = k5_kadm5_hook_remove(handle->context, handle->hook_handles,
+diff --git a/src/tests/t_kadmin_acl.py b/src/tests/t_kadmin_acl.py
+index 86eb59729..8946e8cc4 100755
+--- a/src/tests/t_kadmin_acl.py
++++ b/src/tests/t_kadmin_acl.py
+@@ -328,4 +328,10 @@ realm.run([kadmin, '-c', realm.ccache, 'cpw', '-randkey', 'none'],
+ realm.run([kadmin, '-c', realm.ccache, 'cpw', '-randkey', '-e', 'aes256-cts',
+            'none'], expected_code=1, expected_msg=msg)
+ 
++# Test operations disallowed at the libkadm5 layer.
++realm.run([kadminl, 'delprinc', 'K/M'],
++          expected_code=1, expected_msg='Cannot change protected principal')
++realm.run([kadminl, 'cpw', '-pw', 'pw', 'kadmin/history'],
++          expected_code=1, expected_msg='Cannot change protected principal')
++
+ success('kadmin ACL enforcement')

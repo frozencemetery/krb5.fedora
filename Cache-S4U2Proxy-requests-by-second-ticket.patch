@@ -1,0 +1,327 @@
+From 158ce9222351216507da39d7bb4233469603e647 Mon Sep 17 00:00:00 2001
+From: Isaac Boukris <iboukris@gmail.com>
+Date: Tue, 21 Jul 2020 00:40:06 +0200
+Subject: [PATCH] Cache S4U2Proxy requests by second ticket
+
+krb5_get_credentials() does not know the client principal for an
+S4U2Proxy request until the end, because it is in the encrypted part
+of the evidence ticket.  However, we can check the cache by second
+ticket, since all S4U2Proxy requests in a cache will generally be made
+with the same evidence ticket.
+
+In the ccache types, allow mcreds->client and mcreds->server to be
+NULL (as Heimdal does) to ignore them for the purpose of matching.  In
+krb5int_construct_matching_creds(), set mcreds->client to NULL for
+S4U2Proxy requests.  Add a cache check to
+k5_get_proxy_cred_from_kdc(), and remove the cache check from
+krb5_get_credentials_for_proxy() and the krb5 mech's
+get_credentials().
+
+In get_proxy_cred_from_kdc(), fix a bug where cross-realm S4U2Proxy
+would cache the evidence ticket used in the final request, rather than
+the original evidence ticket.
+
+[ghudson@mit.edu: debugged cache check and cross-realm caching;
+switched from new flag to null matching cred principals; wrote commit
+message]
+
+ticket: 8931 (new)
+(cherry picked from commit 148b317e1eb5df28dad96679cb4b8a07c62d4786)
+---
+ src/lib/gssapi/krb5/init_sec_context.c | 61 ++++++++++++--------------
+ src/lib/krb5/ccache/cc_retr.c          | 13 +++---
+ src/lib/krb5/ccache/ccapi/stdcc_util.c | 30 ++++++-------
+ src/lib/krb5/ccache/ccfns.c            |  3 +-
+ src/lib/krb5/krb/get_creds.c           |  5 +++
+ src/lib/krb5/krb/s4u_creds.c           | 58 ++++++++++++------------
+ src/tests/s4u2proxy.c                  |  3 ++
+ 7 files changed, 88 insertions(+), 85 deletions(-)
+
+diff --git a/src/lib/gssapi/krb5/init_sec_context.c b/src/lib/gssapi/krb5/init_sec_context.c
+index 3f77157c9..823656037 100644
+--- a/src/lib/gssapi/krb5/init_sec_context.c
++++ b/src/lib/gssapi/krb5/init_sec_context.c
+@@ -165,44 +165,37 @@ static krb5_error_code get_credentials(context, cred, server, now,
+             goto cleanup;
+     }
+ 
+-    /*
+-     * For IAKERB or constrained delegation, only check the cache in this step.
+-     * For IAKERB we will ask the server to make any necessary TGS requests;
+-     * for constrained delegation we will adjust in_creds and make an S4U2Proxy
+-     * request below if the cache lookup fails.
+-     */
+-    if (cred->impersonator != NULL || cred->iakerb_mech)
++    /* Try constrained delegation if we have proxy credentials. */
++    if (cred->impersonator != NULL) {
++        /* If we are trying to get a ticket to ourselves, we should use the
++         * the evidence ticket directly from cache. */
++        if (krb5_principal_compare(context, cred->impersonator,
++                                   server->princ)) {
++            flags |= KRB5_GC_CACHED;
++        } else {
++            memset(&mcreds, 0, sizeof(mcreds));
++            mcreds.magic = KV5M_CREDS;
++            mcreds.server = cred->impersonator;
++            mcreds.client = cred->name->princ;
++            code = krb5_cc_retrieve_cred(context, cred->ccache,
++                                         KRB5_TC_MATCH_AUTHDATA, &mcreds,
++                                         &evidence_creds);
++            if (code)
++                goto cleanup;
++
++            in_creds.client = cred->impersonator;
++            in_creds.second_ticket = evidence_creds.ticket;
++            flags = KRB5_GC_CANONICALIZE | KRB5_GC_CONSTRAINED_DELEGATION;
++        }
++    }
++
++    /* For IAKERB, only check the cache in this step.  We will ask the server
++     * to make any necessary TGS requests. */
++    if (cred->iakerb_mech)
+         flags |= KRB5_GC_CACHED;
+ 
+     code = krb5_get_credentials(context, flags, cred->ccache,
+                                 &in_creds, &result_creds);
+-
+-    /*
+-     * Try constrained delegation if we have proxy credentials, unless
+-     * we are trying to get a ticket to ourselves (in which case we could
+-     * just use the evidence ticket directly from cache).
+-     */
+-    if (code == KRB5_CC_NOTFOUND && cred->impersonator != NULL &&
+-        !cred->iakerb_mech &&
+-        !krb5_principal_compare(context, cred->impersonator, server->princ)) {
+-
+-        memset(&mcreds, 0, sizeof(mcreds));
+-        mcreds.magic = KV5M_CREDS;
+-        mcreds.server = cred->impersonator;
+-        mcreds.client = cred->name->princ;
+-        code = krb5_cc_retrieve_cred(context, cred->ccache,
+-                                     KRB5_TC_MATCH_AUTHDATA, &mcreds,
+-                                     &evidence_creds);
+-        if (code)
+-            goto cleanup;
+-
+-        in_creds.client = cred->impersonator;
+-        in_creds.second_ticket = evidence_creds.ticket;
+-        flags = KRB5_GC_CANONICALIZE | KRB5_GC_CONSTRAINED_DELEGATION;
+-        code = krb5_get_credentials(context, flags, cred->ccache,
+-                                    &in_creds, &result_creds);
+-    }
+-
+     if (code)
+         goto cleanup;
+ 
+diff --git a/src/lib/krb5/ccache/cc_retr.c b/src/lib/krb5/ccache/cc_retr.c
+index 2c50c9cce..4328b7d6f 100644
+--- a/src/lib/krb5/ccache/cc_retr.c
++++ b/src/lib/krb5/ccache/cc_retr.c
+@@ -58,15 +58,14 @@ static krb5_boolean
+ princs_match(krb5_context context, krb5_flags whichfields,
+              const krb5_creds *mcreds, const krb5_creds *creds)
+ {
+-    krb5_principal_data princ;
+-
+-    if (!krb5_principal_compare(context, mcreds->client, creds->client))
++    if (mcreds->client != NULL &&
++        !krb5_principal_compare(context, mcreds->client, creds->client))
+         return FALSE;
++    if (mcreds->server == NULL)
++        return TRUE;
+     if (whichfields & KRB5_TC_MATCH_SRV_NAMEONLY) {
+-        /* Ignore the server realm. */
+-        princ = *mcreds->server;
+-        princ.realm = creds->server->realm;
+-        return krb5_principal_compare(context, &princ, creds->server);
++        return krb5_principal_compare_any_realm(context, mcreds->server,
++                                                creds->server);
+     } else {
+         return krb5_principal_compare(context, mcreds->server, creds->server);
+     }
+diff --git a/src/lib/krb5/ccache/ccapi/stdcc_util.c b/src/lib/krb5/ccache/ccapi/stdcc_util.c
+index 1f2a3865c..58aa81165 100644
+--- a/src/lib/krb5/ccache/ccapi/stdcc_util.c
++++ b/src/lib/krb5/ccache/ccapi/stdcc_util.c
+@@ -945,8 +945,13 @@ standard_fields_match(context, mcreds, creds)
+     krb5_context context;
+     const krb5_creds *mcreds, *creds;
+ {
+-    return (krb5_principal_compare(context, mcreds->client,creds->client) &&
+-            krb5_principal_compare(context, mcreds->server,creds->server));
++    if (mcreds->client != NULL &&
++        !krb5_principal_compare(context, mcreds->client, creds->client))
++        return FALSE;
++    if (mcreds->server != NULL &&
++        !krb5_principal_compare(context, mcreds->server,creds->server))
++        return FALSE;
++    return TRUE;
+ }
+ 
+ /* only match the server name portion, not the server realm portion */
+@@ -956,19 +961,14 @@ srvname_match(context, mcreds, creds)
+     krb5_context context;
+     const krb5_creds *mcreds, *creds;
+ {
+-    krb5_boolean retval;
+-    krb5_principal_data p1, p2;
+-
+-    retval = krb5_principal_compare(context, mcreds->client,creds->client);
+-    if (retval != TRUE)
+-        return retval;
+-    /*
+-     * Hack to ignore the server realm for the purposes of the compare.
+-     */
+-    p1 = *mcreds->server;
+-    p2 = *creds->server;
+-    p1.realm = p2.realm;
+-    return krb5_principal_compare(context, &p1, &p2);
++    if (mcreds->client != NULL &&
++        !krb5_principal_compare(context, mcreds->client, creds->client))
++        return FALSE;
++    if (mcreds->server != NULL &&
++        !krb5_principal_compare_any_realm(context, mcreds->server,
++                                          creds->server))
++        return FALSE;
++    return TRUE;
+ }
+ 
+ 
+diff --git a/src/lib/krb5/ccache/ccfns.c b/src/lib/krb5/ccache/ccfns.c
+index 62a6983d8..59982b752 100644
+--- a/src/lib/krb5/ccache/ccfns.c
++++ b/src/lib/krb5/ccache/ccfns.c
+@@ -96,7 +96,8 @@ krb5_cc_retrieve_cred(krb5_context context, krb5_ccache cache,
+     TRACE_CC_RETRIEVE(context, cache, mcreds, ret);
+     if (ret != KRB5_CC_NOTFOUND)
+         return ret;
+-    if (!krb5_is_referral_realm(&mcreds->server->realm))
++    if (mcreds->client == NULL || mcreds->server == NULL ||
++        !krb5_is_referral_realm(&mcreds->server->realm))
+         return ret;
+ 
+     /*
+diff --git a/src/lib/krb5/krb/get_creds.c b/src/lib/krb5/krb/get_creds.c
+index dc0aef667..b3f01be9b 100644
+--- a/src/lib/krb5/krb/get_creds.c
++++ b/src/lib/krb5/krb/get_creds.c
+@@ -102,6 +102,11 @@ krb5int_construct_matching_creds(krb5_context context, krb5_flags options,
+             return KRB5_NO_2ND_TKT;
+     }
+ 
++    /* For S4U2Proxy requests we don't know the impersonated client in this
++     * API, but matching against the second ticket is good enough. */
++    if (options & KRB5_GC_CONSTRAINED_DELEGATION)
++        mcreds->client = NULL;
++
+     return 0;
+ }
+ 
+diff --git a/src/lib/krb5/krb/s4u_creds.c b/src/lib/krb5/krb/s4u_creds.c
+index 07c7a98be..d44f939f8 100644
+--- a/src/lib/krb5/krb/s4u_creds.c
++++ b/src/lib/krb5/krb/s4u_creds.c
+@@ -1122,6 +1122,13 @@ get_proxy_cred_from_kdc(krb5_context context, krb5_flags options,
+             code = KRB5KRB_AP_WRONG_PRINC;
+             goto cleanup;
+         }
++
++        /* Put the original evidence ticket in the output creds. */
++        krb5_free_data_contents(context, &tkt->second_ticket);
++        code = krb5int_copy_data_contents(context, &in_creds->second_ticket,
++                                          &tkt->second_ticket);
++        if (code)
++            goto cleanup;
+     }
+ 
+     /* Note the authdata we asked for in the output creds. */
+@@ -1148,11 +1155,33 @@ k5_get_proxy_cred_from_kdc(krb5_context context, krb5_flags options,
+ {
+     krb5_error_code code;
+     krb5_const_principal canonprinc;
+-    krb5_creds copy, *creds;
++    krb5_creds mcreds, copy, *creds, *ncreds;
++    krb5_flags fields;
+     struct canonprinc iter = { in_creds->server, .no_hostrealm = TRUE };
+ 
+     *out_creds = NULL;
+ 
++    code = krb5int_construct_matching_creds(context, options, in_creds,
++                                            &mcreds, &fields);
++    if (code != 0)
++        return code;
++
++    ncreds = calloc(1, sizeof(*ncreds));
++    if (ncreds == NULL)
++        return ENOMEM;
++    ncreds->magic = KV5M_CRED;
++
++    code = krb5_cc_retrieve_cred(context, ccache, fields, &mcreds, ncreds);
++    if (code) {
++        free(ncreds);
++    } else {
++        *out_creds = ncreds;
++    }
++
++    if ((code != KRB5_CC_NOTFOUND && code != KRB5_CC_NOT_KTYPE) ||
++        options & KRB5_GC_CACHED)
++        return code;
++
+     copy = *in_creds;
+     while ((code = k5_canonprinc(context, &iter, &canonprinc)) == 0 &&
+            canonprinc != NULL) {
+@@ -1198,9 +1227,6 @@ krb5_get_credentials_for_proxy(krb5_context context,
+                                krb5_creds **out_creds)
+ {
+     krb5_error_code code;
+-    krb5_creds mcreds;
+-    krb5_creds *ncreds = NULL;
+-    krb5_flags fields;
+     krb5_data *evidence_tkt_data = NULL;
+     krb5_creds s4u_creds;
+ 
+@@ -1222,30 +1248,6 @@ krb5_get_credentials_for_proxy(krb5_context context,
+         goto cleanup;
+     }
+ 
+-    code = krb5int_construct_matching_creds(context, options, in_creds,
+-                                            &mcreds, &fields);
+-    if (code != 0)
+-        goto cleanup;
+-
+-    ncreds = calloc(1, sizeof(*ncreds));
+-    if (ncreds == NULL) {
+-        code = ENOMEM;
+-        goto cleanup;
+-    }
+-    ncreds->magic = KV5M_CRED;
+-
+-    code = krb5_cc_retrieve_cred(context, ccache, fields, &mcreds, ncreds);
+-    if (code != 0) {
+-        free(ncreds);
+-        ncreds = in_creds;
+-    } else {
+-        *out_creds = ncreds;
+-    }
+-
+-    if ((code != KRB5_CC_NOTFOUND && code != KRB5_CC_NOT_KTYPE)
+-        || options & KRB5_GC_CACHED)
+-        goto cleanup;
+-
+     code = encode_krb5_ticket(evidence_tkt, &evidence_tkt_data);
+     if (code != 0)
+         goto cleanup;
+diff --git a/src/tests/s4u2proxy.c b/src/tests/s4u2proxy.c
+index 4adf6aca5..3786bad2c 100644
+--- a/src/tests/s4u2proxy.c
++++ b/src/tests/s4u2proxy.c
+@@ -124,6 +124,9 @@ main(int argc, char **argv)
+                                          KRB5_GC_CANONICALIZE, defcc,
+                                          &mcred, ev_ticket, &new_cred));
+ 
++    assert(data_eq(new_cred->second_ticket, ev_cred.ticket));
++    assert(new_cred->second_ticket.length != 0);
++
+     /* Store the new cred in the default ccache. */
+     check(krb5_cc_store_cred(context, defcc, new_cred));
+ 

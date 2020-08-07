@@ -1,0 +1,159 @@
+From fae915ea7f2734cfd9ef3d5952f25638e675bb7c Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Mon, 27 Jul 2020 01:19:01 -0400
+Subject: [PATCH] Try kadmin/admin first in libkadm5clnt
+
+The MIT krb5 kadmin protocol originally used kadmin/admin as the
+service principal.  Commits 493f0da5fbf92b0ac2f10e887706d1964d8a15e8
+and 5cfaec38a8e8f1c4b76228ba0a252987af797ca4 changed it to use
+kadmin/hostname preferentially, with kadmin/admin as a fallback, for
+interoperability with the Solaris SEAM administrative protocol.
+
+Change the preference order so that kadmin/admin is tried first, with
+kadmin/hostname as a fallback.
+
+ticket: 8934 (new)
+(cherry picked from commit 1d282badfbd6098e3db9d50d22d565c2ec3c8c47)
+---
+ doc/admin/admin_commands/kadmin_local.rst | 14 ++++++------
+ doc/admin/database.rst                    | 10 ++++-----
+ src/lib/kadm5/clnt/client_init.c          | 26 +++++++++--------------
+ src/tests/t_kadmin_acl.py                 | 14 ++++++++++++
+ 4 files changed, 36 insertions(+), 28 deletions(-)
+
+diff --git a/doc/admin/admin_commands/kadmin_local.rst b/doc/admin/admin_commands/kadmin_local.rst
+index fafa61365..33cf3a9cb 100644
+--- a/doc/admin/admin_commands/kadmin_local.rst
++++ b/doc/admin/admin_commands/kadmin_local.rst
+@@ -44,9 +44,9 @@ Kerberos principals, password policies, and service key tables
+ (keytabs).
+ 
+ The remote kadmin client uses Kerberos to authenticate to kadmind
+-using the service principal ``kadmin/ADMINHOST`` (where *ADMINHOST* is
+-the fully-qualified hostname of the admin server) or ``kadmin/admin``.
+-If the credentials cache contains a ticket for one of these
++using the service principal ``kadmin/admin`` or ``kadmin/ADMINHOST``
++(where *ADMINHOST* is the fully-qualified hostname of the admin
++server).  If the credentials cache contains a ticket for one of these
+ principals, and the **-c** credentials_cache option is specified, that
+ ticket is used to authenticate to kadmind.  Otherwise, the **-p** and
+ **-k** options are used to specify the client Kerberos principal name
+@@ -100,10 +100,10 @@ OPTIONS
+     fully anonymous operation.
+ 
+ **-c** *credentials_cache*
+-    Use *credentials_cache* as the credentials cache.  The
+-    cache should contain a service ticket for the ``kadmin/ADMINHOST``
+-    (where *ADMINHOST* is the fully-qualified hostname of the admin
+-    server) or ``kadmin/admin`` service; it can be acquired with the
++    Use *credentials_cache* as the credentials cache.  The cache
++    should contain a service ticket for the ``kadmin/admin`` or
++    ``kadmin/ADMINHOST`` (where *ADMINHOST* is the fully-qualified
++    hostname of the admin server) service; it can be acquired with the
+     :ref:`kinit(1)` program.  If this option is not specified, kadmin
+     requests a new service ticket from the KDC, and stores it in its
+     own temporary ccache.
+diff --git a/doc/admin/database.rst b/doc/admin/database.rst
+index e62cef7a7..ca19a362a 100644
+--- a/doc/admin/database.rst
++++ b/doc/admin/database.rst
+@@ -26,8 +26,8 @@ local filesystem (or through LDAP).  kadmin.local is necessary to set
+ up enough of the database to be able to use the remote version.
+ 
+ kadmin can authenticate to the admin server using the service
+-principal ``kadmin/HOST`` (where *HOST* is the hostname of the admin
+-server) or ``kadmin/admin``.  If the credentials cache contains a
++principal ``kadmin/admin`` or ``kadmin/HOST`` (where *HOST* is the
++hostname of the admin server).  If the credentials cache contains a
+ ticket for either service principal and the **-c** ccache option is
+ specified, that ticket is used to authenticate to KADM5.  Otherwise,
+ the **-p** and **-k** options are used to specify the client Kerberos
+@@ -811,9 +811,9 @@ Both master and replica sides must have a principal named
+ ``kiprop/hostname`` (where *hostname* is the lowercase,
+ fully-qualified, canonical name for the host) registered in the
+ Kerberos database, and have keys for that principal stored in the
+-default keytab file (|keytab|).  In release 1.13, the
+-``kiprop/hostname`` principal is created automatically for the master
+-KDC, but it must still be created for replica KDCs.
++default keytab file (|keytab|).  The ``kiprop/hostname`` principal may
++have been created automatically for the master KDC, but it must always
++be created for replica KDCs.
+ 
+ On the master KDC side, the ``kiprop/hostname`` principal must be
+ listed in the kadmind ACL file :ref:`kadm5.acl(5)`, and given the
+diff --git a/src/lib/kadm5/clnt/client_init.c b/src/lib/kadm5/clnt/client_init.c
+index aa08918e2..8d43ab97a 100644
+--- a/src/lib/kadm5/clnt/client_init.c
++++ b/src/lib/kadm5/clnt/client_init.c
+@@ -372,22 +372,10 @@ get_init_creds(kadm5_server_handle_t handle, krb5_principal client,
+ {
+     kadm5_ret_t code;
+     krb5_ccache ccache = NULL;
+-    char svcname[BUFSIZ];
++    char *svcname, svcbuf[BUFSIZ];
+ 
+     *server_out = NULL;
+ 
+-    /* NULL svcname means use host-based. */
+-    if (svcname_in == NULL) {
+-        code = kadm5_get_admin_service_name(handle->context,
+-                                            handle->params.realm,
+-                                            svcname, sizeof(svcname));
+-        if (code)
+-            goto error;
+-    } else {
+-        strncpy(svcname, svcname_in, sizeof(svcname));
+-        svcname[sizeof(svcname)-1] = '\0';
+-    }
+-
+     /*
+      * Acquire a service ticket for svcname@realm for client, using password
+      * pass (which could be NULL), and create a ccache to store them in.  If
+@@ -423,13 +411,19 @@ get_init_creds(kadm5_server_handle_t handle, krb5_principal client,
+     }
+     handle->lhandle->cache_name = handle->cache_name;
+ 
++    svcname = (svcname_in != NULL) ? svcname_in : KADM5_ADMIN_SERVICE;
+     code = gic_iter(handle, init_type, ccache, client, pass, svcname, realm,
+                     server_out);
+     if ((code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN
+          || code == KRB5_CC_NOTFOUND) && svcname_in == NULL) {
+-        /* Retry with old host-independent service principal. */
+-        code = gic_iter(handle, init_type, ccache, client, pass,
+-                        KADM5_ADMIN_SERVICE, realm, server_out);
++        /* Retry with host-based service principal. */
++        code = kadm5_get_admin_service_name(handle->context,
++                                            handle->params.realm,
++                                            svcbuf, sizeof(svcbuf));
++        if (code)
++            goto error;
++        code = gic_iter(handle, init_type, ccache, client, pass, svcbuf, realm,
++                        server_out);
+     }
+     /* Improved error messages */
+     if (code == KRB5KRB_AP_ERR_BAD_INTEGRITY) code = KADM5_BAD_PASSWORD;
+diff --git a/src/tests/t_kadmin_acl.py b/src/tests/t_kadmin_acl.py
+index 8946e8cc4..16faf0a9d 100755
+--- a/src/tests/t_kadmin_acl.py
++++ b/src/tests/t_kadmin_acl.py
+@@ -328,6 +328,20 @@ realm.run([kadmin, '-c', realm.ccache, 'cpw', '-randkey', 'none'],
+ realm.run([kadmin, '-c', realm.ccache, 'cpw', '-randkey', '-e', 'aes256-cts',
+            'none'], expected_code=1, expected_msg=msg)
+ 
++# Test authentication to kadmin/hostname.
++mark('authentication to kadmin/hostname')
++kadmin_hostname = 'kadmin/' + hostname
++realm.run([kadminl, 'delprinc', 'kadmin/admin'])
++msgs = ('Getting initial credentials for user/admin@KRBTEST.COM',
++        'Setting initial creds service to kadmin/admin',
++        '/Server not found in Kerberos database',
++        'Getting initial credentials for user/admin@KRBTEST.COM',
++        'Setting initial creds service to ' + kadmin_hostname,
++        'Decrypted AS reply')
++realm.run([kadmin, '-p', 'user/admin', 'listprincs'], expected_code=1,
++          expected_msg="Operation requires ``list'' privilege",
++          input=password('user/admin'), expected_trace=msgs)
++
+ # Test operations disallowed at the libkadm5 layer.
+ realm.run([kadminl, 'delprinc', 'K/M'],
+           expected_code=1, expected_msg='Cannot change protected principal')

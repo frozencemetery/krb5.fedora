@@ -1,0 +1,1190 @@
+From c0e732f79dc5ea0c2066120bfe7ae8f6df82bf82 Mon Sep 17 00:00:00 2001
+From: Greg Hudson <ghudson@mit.edu>
+Date: Fri, 17 Jul 2020 22:57:45 -0400
+Subject: [PATCH] Expand dns_canonicalize_host=fallback support
+
+In krb5_sname_to_principal(), when using fallback, defer realm lookup
+and any kind of hostname canonicalization until use.  Add a
+lightweight iterator k5_canonprinc() to yield the one or two possible
+candidates for a principal.  In the iterator, don't yield the same
+hostname part twice.
+
+Add fallback processing to the stepwise TGS state machine, and remove
+it from krb5_get_credentials().  Add fallback processing to
+k5_get_proxy_cred_from_kdc().
+
+Add fallback processing to krb5_init_creds_set_keytab(), and use the
+principal we find in the keytab as the request client principal.
+Defer restart_init_creds_loop() to the first step call so that server
+principal is built using the correct realm.
+
+Add fallback processing to krb5_rd_req().
+
+ticket: 8930 (new)
+(cherry picked from commit 3fcc365a6f049730b3f47168f7112c03997c5c0b)
+---
+ src/include/k5-trace.h            |   4 +-
+ src/kprop/kprop_util.c            |  26 ++--
+ src/lib/krb5/krb/deps             |  41 +++---
+ src/lib/krb5/krb/get_creds.c      | 151 ++++++++++-----------
+ src/lib/krb5/krb/get_in_tkt.c     |   7 +-
+ src/lib/krb5/krb/gic_keytab.c     |  29 +++-
+ src/lib/krb5/krb/init_creds_ctx.h |   1 +
+ src/lib/krb5/krb/rd_req_dec.c     |  36 ++++-
+ src/lib/krb5/krb/s4u_creds.c      |  62 ++++++---
+ src/lib/krb5/os/os-proto.h        |  30 +++++
+ src/lib/krb5/os/sn2princ.c        | 215 +++++++++++++++++++++---------
+ src/tests/icred.c                 |  39 ++++--
+ src/tests/t_sn2princ.py           |  65 ++++++---
+ 13 files changed, 465 insertions(+), 241 deletions(-)
+
+diff --git a/src/include/k5-trace.h b/src/include/k5-trace.h
+index 1da53dbb1..5a120f1a0 100644
+--- a/src/include/k5-trace.h
++++ b/src/include/k5-trace.h
+@@ -229,8 +229,8 @@ void krb5int_trace(krb5_context context, const char *fmt, ...);
+           salt, s2kparams)
+ #define TRACE_INIT_CREDS_IDENTIFIED_REALM(c, realm)                     \
+     TRACE(c, "Identified realm of client principal as {data}", realm)
+-#define TRACE_INIT_CREDS_KEYTAB_LOOKUP(c, etypes)               \
+-    TRACE(c, "Looked up etypes in keytab: {etypes}", etypes)
++#define TRACE_INIT_CREDS_KEYTAB_LOOKUP(c, princ, etypes)                \
++    TRACE(c, "Found entries for {princ} in keytab: {etypes}", princ, etypes)
+ #define TRACE_INIT_CREDS_KEYTAB_LOOKUP_FAILED(c, code)          \
+     TRACE(c, "Couldn't lookup etypes in keytab: {kerr}", code)
+ #define TRACE_INIT_CREDS_PREAUTH(c)                     \
+diff --git a/src/kprop/kprop_util.c b/src/kprop/kprop_util.c
+index c32d174b9..c2b2e8764 100644
+--- a/src/kprop/kprop_util.c
++++ b/src/kprop/kprop_util.c
+@@ -73,26 +73,22 @@ sn2princ_realm(krb5_context context, const char *hostname, const char *sname,
+                const char *realm, krb5_principal *princ_out)
+ {
+     krb5_error_code ret;
+-    char *canonhost, localname[MAXHOSTNAMELEN];
++    krb5_principal princ;
+ 
+     *princ_out = NULL;
+     assert(sname != NULL && realm != NULL);
+ 
+-    /* If hostname is NULL, use the local hostname. */
+-    if (hostname == NULL) {
+-        if (gethostname(localname, MAXHOSTNAMELEN) != 0)
+-            return SOCKET_ERRNO;
+-        hostname = localname;
+-    }
+-
+-    ret = krb5_expand_hostname(context, hostname, &canonhost);
++    ret = krb5_sname_to_principal(context, hostname, sname, KRB5_NT_SRV_HST,
++                                  &princ);
+     if (ret)
+         return ret;
+ 
+-    ret = krb5_build_principal(context, princ_out, strlen(realm), realm, sname,
+-                               canonhost, (char *)NULL);
+-    krb5_free_string(context, canonhost);
+-    if (!ret)
+-        (*princ_out)->type = KRB5_NT_SRV_HST;
+-    return ret;
++    ret = krb5_set_principal_realm(context, princ, realm);
++    if (ret) {
++        krb5_free_principal(context, princ);
++        return ret;
++    }
++
++    *princ_out = princ;
++    return 0;
+ }
+diff --git a/src/lib/krb5/krb/deps b/src/lib/krb5/krb/deps
+index 439ca0272..6ac68bc19 100644
+--- a/src/lib/krb5/krb/deps
++++ b/src/lib/krb5/krb/deps
+@@ -499,12 +499,13 @@ get_in_tkt.so get_in_tkt.po $(OUTPRE)get_in_tkt.$(OBJEXT): \
+ gic_keytab.so gic_keytab.po $(OUTPRE)gic_keytab.$(OBJEXT): \
+   $(BUILDTOP)/include/autoconf.h $(BUILDTOP)/include/krb5/krb5.h \
+   $(BUILDTOP)/include/osconf.h $(BUILDTOP)/include/profile.h \
+-  $(COM_ERR_DEPS) $(top_srcdir)/include/k5-buf.h $(top_srcdir)/include/k5-err.h \
+-  $(top_srcdir)/include/k5-gmt_mktime.h $(top_srcdir)/include/k5-int-pkinit.h \
+-  $(top_srcdir)/include/k5-int.h $(top_srcdir)/include/k5-json.h \
+-  $(top_srcdir)/include/k5-platform.h $(top_srcdir)/include/k5-plugin.h \
+-  $(top_srcdir)/include/k5-thread.h $(top_srcdir)/include/k5-trace.h \
+-  $(top_srcdir)/include/krb5.h $(top_srcdir)/include/krb5/authdata_plugin.h \
++  $(COM_ERR_DEPS) $(srcdir)/../os/os-proto.h $(top_srcdir)/include/k5-buf.h \
++  $(top_srcdir)/include/k5-err.h $(top_srcdir)/include/k5-gmt_mktime.h \
++  $(top_srcdir)/include/k5-int-pkinit.h $(top_srcdir)/include/k5-int.h \
++  $(top_srcdir)/include/k5-json.h $(top_srcdir)/include/k5-platform.h \
++  $(top_srcdir)/include/k5-plugin.h $(top_srcdir)/include/k5-thread.h \
++  $(top_srcdir)/include/k5-trace.h $(top_srcdir)/include/krb5.h \
++  $(top_srcdir)/include/krb5/authdata_plugin.h $(top_srcdir)/include/krb5/locate_plugin.h \
+   $(top_srcdir)/include/krb5/plugin.h $(top_srcdir)/include/port-sockets.h \
+   $(top_srcdir)/include/socket-utils.h gic_keytab.c init_creds_ctx.h \
+   int-proto.h
+@@ -940,13 +941,14 @@ rd_req.so rd_req.po $(OUTPRE)rd_req.$(OBJEXT): $(BUILDTOP)/include/autoconf.h \
+ rd_req_dec.so rd_req_dec.po $(OUTPRE)rd_req_dec.$(OBJEXT): \
+   $(BUILDTOP)/include/autoconf.h $(BUILDTOP)/include/krb5/krb5.h \
+   $(BUILDTOP)/include/osconf.h $(BUILDTOP)/include/profile.h \
+-  $(COM_ERR_DEPS) $(srcdir)/../rcache/memrcache.h $(top_srcdir)/include/k5-buf.h \
+-  $(top_srcdir)/include/k5-err.h $(top_srcdir)/include/k5-gmt_mktime.h \
+-  $(top_srcdir)/include/k5-int-pkinit.h $(top_srcdir)/include/k5-int.h \
+-  $(top_srcdir)/include/k5-platform.h $(top_srcdir)/include/k5-plugin.h \
+-  $(top_srcdir)/include/k5-thread.h $(top_srcdir)/include/k5-trace.h \
+-  $(top_srcdir)/include/k5-utf8.h $(top_srcdir)/include/krb5.h \
+-  $(top_srcdir)/include/krb5/authdata_plugin.h $(top_srcdir)/include/krb5/plugin.h \
++  $(COM_ERR_DEPS) $(srcdir)/../os/os-proto.h $(srcdir)/../rcache/memrcache.h \
++  $(top_srcdir)/include/k5-buf.h $(top_srcdir)/include/k5-err.h \
++  $(top_srcdir)/include/k5-gmt_mktime.h $(top_srcdir)/include/k5-int-pkinit.h \
++  $(top_srcdir)/include/k5-int.h $(top_srcdir)/include/k5-platform.h \
++  $(top_srcdir)/include/k5-plugin.h $(top_srcdir)/include/k5-thread.h \
++  $(top_srcdir)/include/k5-trace.h $(top_srcdir)/include/k5-utf8.h \
++  $(top_srcdir)/include/krb5.h $(top_srcdir)/include/krb5/authdata_plugin.h \
++  $(top_srcdir)/include/krb5/locate_plugin.h $(top_srcdir)/include/krb5/plugin.h \
+   $(top_srcdir)/include/port-sockets.h $(top_srcdir)/include/socket-utils.h \
+   auth_con.h authdata.h int-proto.h rd_req_dec.c
+ rd_safe.so rd_safe.po $(OUTPRE)rd_safe.$(OBJEXT): $(BUILDTOP)/include/autoconf.h \
+@@ -997,12 +999,13 @@ s4u_authdata.so s4u_authdata.po $(OUTPRE)s4u_authdata.$(OBJEXT): \
+ s4u_creds.so s4u_creds.po $(OUTPRE)s4u_creds.$(OBJEXT): \
+   $(BUILDTOP)/include/autoconf.h $(BUILDTOP)/include/krb5/krb5.h \
+   $(BUILDTOP)/include/osconf.h $(BUILDTOP)/include/profile.h \
+-  $(COM_ERR_DEPS) $(top_srcdir)/include/k5-buf.h $(top_srcdir)/include/k5-err.h \
+-  $(top_srcdir)/include/k5-gmt_mktime.h $(top_srcdir)/include/k5-int-pkinit.h \
+-  $(top_srcdir)/include/k5-int.h $(top_srcdir)/include/k5-platform.h \
+-  $(top_srcdir)/include/k5-plugin.h $(top_srcdir)/include/k5-thread.h \
+-  $(top_srcdir)/include/k5-trace.h $(top_srcdir)/include/krb5.h \
+-  $(top_srcdir)/include/krb5/authdata_plugin.h $(top_srcdir)/include/krb5/plugin.h \
++  $(COM_ERR_DEPS) $(srcdir)/../os/os-proto.h $(top_srcdir)/include/k5-buf.h \
++  $(top_srcdir)/include/k5-err.h $(top_srcdir)/include/k5-gmt_mktime.h \
++  $(top_srcdir)/include/k5-int-pkinit.h $(top_srcdir)/include/k5-int.h \
++  $(top_srcdir)/include/k5-platform.h $(top_srcdir)/include/k5-plugin.h \
++  $(top_srcdir)/include/k5-thread.h $(top_srcdir)/include/k5-trace.h \
++  $(top_srcdir)/include/krb5.h $(top_srcdir)/include/krb5/authdata_plugin.h \
++  $(top_srcdir)/include/krb5/locate_plugin.h $(top_srcdir)/include/krb5/plugin.h \
+   $(top_srcdir)/include/port-sockets.h $(top_srcdir)/include/socket-utils.h \
+   int-proto.h s4u_creds.c
+ sendauth.so sendauth.po $(OUTPRE)sendauth.$(OBJEXT): \
+diff --git a/src/lib/krb5/krb/get_creds.c b/src/lib/krb5/krb/get_creds.c
+index e0a3b5cd8..dc0aef667 100644
+--- a/src/lib/krb5/krb/get_creds.c
++++ b/src/lib/krb5/krb/get_creds.c
+@@ -119,7 +119,7 @@ krb5int_construct_matching_creds(krb5_context context, krb5_flags options,
+  * generate the next request.  If it's time to advance to another state, any of
+  * the three functions can make a tail call to begin_<nextstate> to do so.
+  *
+- * The overall process is as follows:
++ * The general process is as follows:
+  *   1. Get a TGT for the service principal's realm (STATE_GET_TGT).
+  *   2. Make one or more referrals queries (STATE_REFERRALS).
+  *   3. In some cases, get a TGT for the fallback realm (STATE_GET_TGT again).
+@@ -129,6 +129,9 @@ krb5int_construct_matching_creds(krb5_context context, krb5_flags options,
+  * getting_tgt_for field in the context keeps track of what state we will go to
+  * after successfully obtaining the TGT, and the end_get_tgt() function
+  * advances to the proper next state.
++ *
++ * If fallback DNS canonicalization is in use, the process can be repeated a
++ * second time for the second server principal canonicalization candidate.
+  */
+ 
+ enum state {
+@@ -153,6 +156,8 @@ struct _krb5_tkt_creds_context {
+     krb5_flags req_options;     /* Caller-requested KRB5_GC_* options */
+     krb5_flags req_kdcopt;      /* Caller-requested options as KDC options */
+     krb5_authdata **authdata;   /* Caller-requested authdata */
++    struct canonprinc iter;     /* Iterator over canonicalized server princs */
++    krb5_boolean referral_req;  /* Server initially contained referral realm */
+ 
+     /* The following fields are used in multiple steps. */
+     krb5_creds *cur_tgt;        /* TGT to be used for next query */
+@@ -484,7 +489,7 @@ try_fallback(krb5_context context, krb5_tkt_creds_context ctx)
+ 
+     /* If the request used a specified realm, make a non-referral request to
+      * that realm (in case it's a KDC which rejects KDC_OPT_CANONICALIZE). */
+-    if (!krb5_is_referral_realm(&ctx->req_server->realm))
++    if (!ctx->referral_req)
+         return begin_non_referral(context, ctx);
+ 
+     if (ctx->server->length < 2) {
+@@ -1015,10 +1020,13 @@ check_cache(krb5_context context, krb5_tkt_creds_context ctx)
+     krb5_error_code code;
+     krb5_creds mcreds;
+     krb5_flags fields;
++    krb5_creds req_in_creds;
+ 
+-    /* Perform the cache lookup. */
++    /* Check the cache for the originally requested server principal. */
++    req_in_creds = *ctx->in_creds;
++    req_in_creds.server = ctx->req_server;
+     code = krb5int_construct_matching_creds(context, ctx->req_options,
+-                                            ctx->in_creds, &mcreds, &fields);
++                                            &req_in_creds, &mcreds, &fields);
+     if (code)
+         return code;
+     code = cache_get(context, ctx->ccache, fields, &mcreds, &ctx->reply_creds);
+@@ -1044,12 +1052,9 @@ begin(krb5_context context, krb5_tkt_creds_context ctx)
+ {
+     krb5_error_code code;
+ 
+-    code = check_cache(context, ctx);
+-    if (code != 0 || ctx->state == STATE_COMPLETE)
+-        return code;
+-
+     /* If the server realm is unspecified, start with the client realm. */
+-    if (krb5_is_referral_realm(&ctx->server->realm)) {
++    ctx->referral_req = krb5_is_referral_realm(&ctx->server->realm);
++    if (ctx->referral_req) {
+         krb5_free_data_contents(context, &ctx->server->realm);
+         code = krb5int_copy_data_contents(context, &ctx->client->realm,
+                                           &ctx->server->realm);
+@@ -1072,6 +1077,7 @@ krb5_tkt_creds_init(krb5_context context, krb5_ccache ccache,
+ {
+     krb5_error_code code;
+     krb5_tkt_creds_context ctx = NULL;
++    krb5_const_principal canonprinc;
+ 
+     TRACE_TKT_CREDS(context, in_creds, ccache);
+     ctx = k5alloc(sizeof(*ctx), &code);
+@@ -1089,14 +1095,28 @@ krb5_tkt_creds_init(krb5_context context, krb5_ccache ccache,
+ 
+     ctx->state = STATE_BEGIN;
+ 
++    /* Copy the matching cred so we can modify it.  Steal the copy of the
++     * service principal name to remember the original request server. */
+     code = krb5_copy_creds(context, in_creds, &ctx->in_creds);
+     if (code != 0)
+         goto cleanup;
+-    ctx->client = ctx->in_creds->client;
+-    ctx->server = ctx->in_creds->server;
+-    code = krb5_copy_principal(context, ctx->server, &ctx->req_server);
++    ctx->req_server = ctx->in_creds->server;
++    ctx->in_creds->server = NULL;
++
++    /* Get the first canonicalization candidate for the requested server. */
++    ctx->iter.princ = ctx->req_server;
++
++    code = k5_canonprinc(context, &ctx->iter, &canonprinc);
++    if (code == 0 && canonprinc == NULL)
++        code = KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN;
+     if (code != 0)
+         goto cleanup;
++    code = krb5_copy_principal(context, canonprinc, &ctx->in_creds->server);
++    if (code != 0)
++        goto cleanup;
++
++    ctx->client = ctx->in_creds->client;
++    ctx->server = ctx->in_creds->server;
+     code = krb5_cc_dup(context, ccache, &ctx->ccache);
+     if (code != 0)
+         goto cleanup;
+@@ -1138,6 +1158,7 @@ krb5_tkt_creds_free(krb5_context context, krb5_tkt_creds_context ctx)
+         return;
+     krb5int_fast_free_state(context, ctx->fast_state);
+     krb5_free_creds(context, ctx->in_creds);
++    free_canonprinc(&ctx->iter);
+     krb5_cc_close(context, ctx->ccache);
+     krb5_free_principal(context, ctx->req_server);
+     krb5_free_authdata(context, ctx->authdata);
+@@ -1195,6 +1216,7 @@ krb5_tkt_creds_step(krb5_context context, krb5_tkt_creds_context ctx,
+ {
+     krb5_error_code code;
+     krb5_boolean no_input = (in == NULL || in->length == 0);
++    krb5_const_principal canonprinc;
+ 
+     *out = empty_data();
+     *realm = empty_data();
+@@ -1206,6 +1228,12 @@ krb5_tkt_creds_step(krb5_context context, krb5_tkt_creds_context ctx,
+         ctx->state == STATE_COMPLETE)
+         return EINVAL;
+ 
++    if (ctx->state == STATE_BEGIN) {
++        code = check_cache(context, ctx);
++        if (code != 0 || ctx->state == STATE_COMPLETE)
++            return code;
++    }
++
+     ctx->caller_out = out;
+     ctx->caller_realm = realm;
+     ctx->caller_flags = flags;
+@@ -1218,37 +1246,32 @@ krb5_tkt_creds_step(krb5_context context, krb5_tkt_creds_context ctx,
+     }
+ 
+     if (ctx->state == STATE_BEGIN)
+-        return begin(context, ctx);
++        code = begin(context, ctx);
+     else if (ctx->state == STATE_GET_TGT)
+-        return step_get_tgt(context, ctx);
++        code = step_get_tgt(context, ctx);
+     else if (ctx->state == STATE_GET_TGT_OFFPATH)
+-        return step_get_tgt_offpath(context, ctx);
++        code = step_get_tgt_offpath(context, ctx);
+     else if (ctx->state == STATE_REFERRALS)
+-        return step_referrals(context, ctx);
++        code = step_referrals(context, ctx);
+     else if (ctx->state == STATE_NON_REFERRAL)
+-        return step_non_referral(context, ctx);
++        code = step_non_referral(context, ctx);
+     else
+-        return EINVAL;
+-}
++        code = EINVAL;
+ 
+-static krb5_error_code
+-try_get_creds(krb5_context context, krb5_flags options, krb5_ccache ccache,
+-              krb5_creds *in_creds, krb5_creds *creds_out)
+-{
+-    krb5_error_code code;
+-    krb5_tkt_creds_context ctx = NULL;
++    /* Terminate on success or most errors. */
++    if (code != KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN)
++        return code;
+ 
+-    code = krb5_tkt_creds_init(context, ccache, in_creds, options, &ctx);
++    /* Restart with the next server principal canonicalization candidate. */
++    code = k5_canonprinc(context, &ctx->iter, &canonprinc);
+     if (code)
+-        goto cleanup;
+-    code = krb5_tkt_creds_get(context, ctx);
+-    if (code)
+-        goto cleanup;
+-    code = krb5_tkt_creds_get_creds(context, ctx, creds_out);
+-
+-cleanup:
+-    krb5_tkt_creds_free(context, ctx);
+-    return code;
++        return code;
++    if (canonprinc == NULL)
++        return KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN;
++    krb5_free_principal(context, ctx->in_creds->server);
++    code = krb5_copy_principal(context, canonprinc, &ctx->in_creds->server);
++    ctx->server = ctx->in_creds->server;
++    return begin(context, ctx);
+ }
+ 
+ krb5_error_code KRB5_CALLCONV
+@@ -1258,10 +1281,7 @@ krb5_get_credentials(krb5_context context, krb5_flags options,
+ {
+     krb5_error_code code;
+     krb5_creds *ncreds = NULL;
+-    krb5_creds canon_creds, store_creds;
+-    krb5_principal_data canon_server;
+-    krb5_data canon_components[2];
+-    char *hostname = NULL, *canon_hostname = NULL;
++    krb5_tkt_creds_context ctx = NULL;
+ 
+     *out_creds = NULL;
+ 
+@@ -1277,59 +1297,22 @@ krb5_get_credentials(krb5_context context, krb5_flags options,
+     if (ncreds == NULL)
+         goto cleanup;
+ 
+-    code = try_get_creds(context, options, ccache, in_creds, ncreds);
+-    if (!code) {
+-        *out_creds = ncreds;
+-        return 0;
+-    }
+-
+-    /* Possibly try again with the canonicalized hostname, if the server is
+-     * host-based and we are configured for fallback canonicalization. */
+-    if (code != KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN)
++    /* Make and execute a krb5_tkt_creds context to get the credential. */
++    code = krb5_tkt_creds_init(context, ccache, in_creds, options, &ctx);
++    if (code != 0)
+         goto cleanup;
+-    if (context->dns_canonicalize_hostname != CANONHOST_FALLBACK)
++    code = krb5_tkt_creds_get(context, ctx);
++    if (code != 0)
+         goto cleanup;
+-    if (in_creds->server->type != KRB5_NT_SRV_HST ||
+-        in_creds->server->length != 2)
++    code = krb5_tkt_creds_get_creds(context, ctx, ncreds);
++    if (code != 0)
+         goto cleanup;
+ 
+-    hostname = k5memdup0(in_creds->server->data[1].data,
+-                         in_creds->server->data[1].length, &code);
+-    if (hostname == NULL)
+-        goto cleanup;
+-    code = k5_expand_hostname(context, hostname, TRUE, &canon_hostname);
+-    if (code)
+-        goto cleanup;
+-
+-    TRACE_GET_CREDS_FALLBACK(context, canon_hostname);
+-
+-    /* Make shallow copies of in_creds and its server to alter the hostname. */
+-    canon_components[0] = in_creds->server->data[0];
+-    canon_components[1] = string2data(canon_hostname);
+-    canon_server = *in_creds->server;
+-    canon_server.data = canon_components;
+-    canon_creds = *in_creds;
+-    canon_creds.server = &canon_server;
+-
+-    code = try_get_creds(context, options | KRB5_GC_NO_STORE, ccache,
+-                         &canon_creds, ncreds);
+-    if (code)
+-        goto cleanup;
+-
+-    if (!(options & KRB5_GC_NO_STORE)) {
+-        /* Store the creds under the originally requested server name.  The
+-         * ccache layer will also store them under the ticket server name. */
+-        store_creds = *ncreds;
+-        store_creds.server = in_creds->server;
+-        (void)krb5_cc_store_cred(context, ccache, &store_creds);
+-    }
+-
+     *out_creds = ncreds;
+     ncreds = NULL;
+ 
+ cleanup:
+-    free(hostname);
+-    free(canon_hostname);
+     krb5_free_creds(context, ncreds);
++    krb5_tkt_creds_free(context, ctx);
+     return code;
+ }
+diff --git a/src/lib/krb5/krb/get_in_tkt.c b/src/lib/krb5/krb/get_in_tkt.c
+index cc0f70e83..09c4b8495 100644
+--- a/src/lib/krb5/krb/get_in_tkt.c
++++ b/src/lib/krb5/krb/get_in_tkt.c
+@@ -1051,9 +1051,6 @@ krb5_init_creds_init(krb5_context context,
+         ctx->request->kdc_options |= KDC_OPT_REQUEST_ANONYMOUS;
+         ctx->request->client->type = KRB5_NT_WELLKNOWN;
+     }
+-    code = restart_init_creds_loop(context, ctx, FALSE);
+-    if (code)
+-        goto cleanup;
+ 
+     *pctx = ctx;
+     ctx = NULL;
+@@ -1859,6 +1856,10 @@ krb5_init_creds_step(krb5_context context,
+         }
+         if (code != 0 || ctx->complete)
+             goto cleanup;
++    } else {
++        code = restart_init_creds_loop(context, ctx, FALSE);
++        if (code)
++            goto cleanup;
+     }
+ 
+     code = init_creds_step_request(context, ctx, out);
+diff --git a/src/lib/krb5/krb/gic_keytab.c b/src/lib/krb5/krb/gic_keytab.c
+index 1d70cf46f..b2b4ac904 100644
+--- a/src/lib/krb5/krb/gic_keytab.c
++++ b/src/lib/krb5/krb/gic_keytab.c
+@@ -27,6 +27,7 @@
+ 
+ #include "k5-int.h"
+ #include "int-proto.h"
++#include "os-proto.h"
+ #include "init_creds_ctx.h"
+ 
+ static krb5_error_code
+@@ -85,7 +86,8 @@ get_as_key_keytab(krb5_context context,
+ /* Return the list of etypes available for client in keytab. */
+ static krb5_error_code
+ lookup_etypes_for_keytab(krb5_context context, krb5_keytab keytab,
+-                         krb5_principal client, krb5_enctype **etypes_out)
++                         krb5_const_principal client,
++                         krb5_enctype **etypes_out)
+ {
+     krb5_kt_cursor cursor;
+     krb5_keytab_entry entry;
+@@ -182,18 +184,37 @@ krb5_init_creds_set_keytab(krb5_context context,
+ {
+     krb5_enctype *etype_list;
+     krb5_error_code ret;
++    struct canonprinc iter = { ctx->request->client, .subst_defrealm = TRUE };
++    krb5_const_principal canonprinc;
++    krb5_principal copy;
+     char *name;
+ 
+     ctx->gak_fct = get_as_key_keytab;
+     ctx->gak_data = keytab;
+ 
+-    ret = lookup_etypes_for_keytab(context, keytab, ctx->request->client,
+-                                   &etype_list);
++    /* We may be authenticating as a host-based principal.  If so, look for
++     * each canonicalization candidate in the keytab. */
++    while ((ret = k5_canonprinc(context, &iter, &canonprinc)) == 0 &&
++           canonprinc != NULL) {
++        ret = lookup_etypes_for_keytab(context, keytab, canonprinc,
++                                       &etype_list);
++        if (ret || etype_list != NULL)
++            break;
++    }
++    if (!ret && canonprinc != NULL) {
++        /* Authenticate as the principal we found in the keytab. */
++        ret = krb5_copy_principal(context, canonprinc, &copy);
++        if (!ret) {
++            krb5_free_principal(context, ctx->request->client);
++            ctx->request->client = copy;
++        }
++    }
++    free_canonprinc(&iter);
+     if (ret) {
+         TRACE_INIT_CREDS_KEYTAB_LOOKUP_FAILED(context, ret);
+         return 0;
+     }
+-    TRACE_INIT_CREDS_KEYTAB_LOOKUP(context, etype_list);
++    TRACE_INIT_CREDS_KEYTAB_LOOKUP(context, ctx->request->client, etype_list);
+ 
+     /* Error out if we have no keys for the client principal. */
+     if (etype_list == NULL) {
+diff --git a/src/lib/krb5/krb/init_creds_ctx.h b/src/lib/krb5/krb/init_creds_ctx.h
+index 5bd67a1d8..17d55dd7c 100644
+--- a/src/lib/krb5/krb/init_creds_ctx.h
++++ b/src/lib/krb5/krb/init_creds_ctx.h
+@@ -22,6 +22,7 @@ struct _krb5_init_creds_context {
+     krb5_get_init_creds_opt opt_storage;
+     krb5_boolean identify_realm;
+     const krb5_data *subject_cert;
++    krb5_principal keytab_princ;
+     char *in_tkt_service;
+     krb5_prompter_fct prompter;
+     void *prompter_data;
+diff --git a/src/lib/krb5/krb/rd_req_dec.c b/src/lib/krb5/krb/rd_req_dec.c
+index bc7fac455..013ca905c 100644
+--- a/src/lib/krb5/krb/rd_req_dec.c
++++ b/src/lib/krb5/krb/rd_req_dec.c
+@@ -33,6 +33,7 @@
+ #include "auth_con.h"
+ #include "authdata.h"
+ #include "int-proto.h"
++#include "os-proto.h"
+ 
+ /*
+  * essentially the same as krb_rd_req, but uses a decoded AP_REQ as
+@@ -351,9 +352,9 @@ try_one_princ(krb5_context context, const krb5_ap_req *req,
+  * Store the decrypting key in *keyblock_out if it is not NULL.
+  */
+ static krb5_error_code
+-decrypt_ticket(krb5_context context, const krb5_ap_req *req,
+-               krb5_const_principal server, krb5_keytab keytab,
+-               krb5_keyblock *keyblock_out)
++decrypt_try_server(krb5_context context, const krb5_ap_req *req,
++                   krb5_const_principal server, krb5_keytab keytab,
++                   krb5_keyblock *keyblock_out)
+ {
+     krb5_error_code ret;
+     krb5_keytab_entry ent;
+@@ -441,6 +442,35 @@ decrypt_ticket(krb5_context context, const krb5_ap_req *req,
+ #endif /* LEAN_CLIENT */
+ }
+ 
++static krb5_error_code
++decrypt_ticket(krb5_context context, const krb5_ap_req *req,
++               krb5_const_principal server, krb5_keytab keytab,
++               krb5_keyblock *keyblock_out)
++{
++    krb5_error_code ret, dret = 0;
++    struct canonprinc iter = { server, .no_hostrealm = TRUE };
++    krb5_const_principal canonprinc;
++
++    /* Don't try to canonicalize if we're going to ignore the hostname, or if
++     * server is null or has a wildcard hostname. */
++    if (context->ignore_acceptor_hostname || server == NULL ||
++        (server->length == 2 && server->data[1].length == 0))
++        return decrypt_try_server(context, req, server, keytab, keyblock_out);
++
++    /* Try each canonicalization candidate for server.  If they all fail,
++     * return the error from the last attempt. */
++    while ((ret = k5_canonprinc(context, &iter, &canonprinc)) == 0 &&
++           canonprinc != NULL) {
++        dret = decrypt_try_server(context, req, canonprinc, keytab,
++                                  keyblock_out);
++        /* Only continue if we found no keytab entries matching canonprinc. */
++        if (dret != KRB5KRB_AP_ERR_NOKEY)
++            break;
++    }
++    free_canonprinc(&iter);
++    return (ret != 0) ? ret : dret;
++}
++
+ static krb5_error_code
+ rd_req_decoded_opt(krb5_context context, krb5_auth_context *auth_context,
+                    const krb5_ap_req *req, krb5_const_principal server,
+diff --git a/src/lib/krb5/krb/s4u_creds.c b/src/lib/krb5/krb/s4u_creds.c
+index d8f486dc6..07c7a98be 100644
+--- a/src/lib/krb5/krb/s4u_creds.c
++++ b/src/lib/krb5/krb/s4u_creds.c
+@@ -26,6 +26,7 @@
+ 
+ #include "k5-int.h"
+ #include "int-proto.h"
++#include "os-proto.h"
+ 
+ /* Convert ticket flags to necessary KDC options */
+ #define FLAGS2OPTS(flags) (flags & KDC_TKT_COMMON_MASK)
+@@ -984,10 +985,10 @@ get_target_realm_proxy_tgt(krb5_context context, const krb5_data *realm,
+     return 0;
+ }
+ 
+-krb5_error_code
+-k5_get_proxy_cred_from_kdc(krb5_context context, krb5_flags options,
+-                           krb5_ccache ccache, krb5_creds *in_creds,
+-                           krb5_creds **out_creds)
++static krb5_error_code
++get_proxy_cred_from_kdc(krb5_context context, krb5_flags options,
++                        krb5_ccache ccache, krb5_creds *in_creds,
++                        krb5_creds **out_creds)
+ {
+     krb5_error_code code;
+     krb5_flags flags, req_kdcopt = 0;
+@@ -1123,22 +1124,11 @@ k5_get_proxy_cred_from_kdc(krb5_context context, krb5_flags options,
+         }
+     }
+ 
+-    if (!krb5_principal_compare(context, in_creds->server, tkt->server)) {
+-        krb5_free_principal(context, tkt->server);
+-        tkt->server = NULL;
+-        code = krb5_copy_principal(context, in_creds->server, &tkt->server);
+-        if (code)
+-            goto cleanup;
+-    }
+-
+     /* Note the authdata we asked for in the output creds. */
+     code = krb5_copy_authdata(context, in_creds->authdata, &tkt->authdata);
+     if (code)
+         goto cleanup;
+ 
+-    if (!(options & KRB5_GC_NO_STORE))
+-        (void)krb5_cc_store_cred(context, ccache, tkt);
+-
+     *out_creds = tkt;
+     tkt = NULL;
+ 
+@@ -1151,6 +1141,48 @@ cleanup:
+     return code;
+ }
+ 
++krb5_error_code
++k5_get_proxy_cred_from_kdc(krb5_context context, krb5_flags options,
++                           krb5_ccache ccache, krb5_creds *in_creds,
++                           krb5_creds **out_creds)
++{
++    krb5_error_code code;
++    krb5_const_principal canonprinc;
++    krb5_creds copy, *creds;
++    struct canonprinc iter = { in_creds->server, .no_hostrealm = TRUE };
++
++    *out_creds = NULL;
++
++    copy = *in_creds;
++    while ((code = k5_canonprinc(context, &iter, &canonprinc)) == 0 &&
++           canonprinc != NULL) {
++        copy.server = (krb5_principal)canonprinc;
++        code = get_proxy_cred_from_kdc(context, options, ccache, &copy,
++                                       &creds);
++        if (code != KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN)
++            break;
++    }
++    if (!code && canonprinc == NULL)
++        code = KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN;
++    free_canonprinc(&iter);
++    if (code)
++        return code;
++
++    krb5_free_principal(context, creds->server);
++    creds->server = NULL;
++    code = krb5_copy_principal(context, in_creds->server, &creds->server);
++    if (code) {
++        krb5_free_creds(context, creds);
++        return code;
++    }
++
++    if (!(options & KRB5_GC_NO_STORE))
++        (void)krb5_cc_store_cred(context, ccache, creds);
++
++    *out_creds = creds;
++    return 0;
++}
++
+ /*
+  * Exported API for constrained delegation (S4U2Proxy).
+  *
+diff --git a/src/lib/krb5/os/os-proto.h b/src/lib/krb5/os/os-proto.h
+index a16a34b74..f1aa60a3e 100644
+--- a/src/lib/krb5/os/os-proto.h
++++ b/src/lib/krb5/os/os-proto.h
+@@ -83,6 +83,36 @@ struct sendto_callback_info {
+     void *data;
+ };
+ 
++/*
++ * Initialize with all zeros except for princ.  Set no_hostrealm to disable
++ * host-to-realm lookup, which ordinarily happens after canonicalizing the host
++ * part.  Set subst_defrealm to substitute the default realm for the referral
++ * realm after realm lookup (this has no effect if no_hostrealm is set).  Free
++ * with free_canonprinc() when done.
++ */
++struct canonprinc {
++    krb5_const_principal princ;
++    krb5_boolean no_hostrealm;
++    krb5_boolean subst_defrealm;
++    int step;
++    char *canonhost;
++    char *realm;
++    krb5_principal_data copy;
++    krb5_data components[2];
++};
++
++/* Yield one or two candidate canonical principal names for iter, then NULL.
++ * Output names are valid for one iteration and must not be freed. */
++krb5_error_code k5_canonprinc(krb5_context context, struct canonprinc *iter,
++                              krb5_const_principal *princ_out);
++
++static inline void
++free_canonprinc(struct canonprinc *iter)
++{
++    free(iter->canonhost);
++    free(iter->realm);
++}
++
+ krb5_error_code k5_expand_hostname(krb5_context context, const char *host,
+                                    krb5_boolean is_fallback,
+                                    char **canonhost_out);
+diff --git a/src/lib/krb5/os/sn2princ.c b/src/lib/krb5/os/sn2princ.c
+index a51761d0c..8b7214189 100644
+--- a/src/lib/krb5/os/sn2princ.c
++++ b/src/lib/krb5/os/sn2princ.c
+@@ -85,22 +85,18 @@ qualify_shortname(krb5_context context, const char *host)
+     return fqdn;
+ }
+ 
+-krb5_error_code
+-k5_expand_hostname(krb5_context context, const char *host,
+-                   krb5_boolean is_fallback, char **canonhost_out)
++static krb5_error_code
++expand_hostname(krb5_context context, const char *host, krb5_boolean use_dns,
++                char **canonhost_out)
+ {
+     struct addrinfo *ai = NULL, hint;
+     char namebuf[NI_MAXHOST], *qualified = NULL, *copy, *p;
+     int err;
+     const char *canonhost;
+-    krb5_boolean use_dns;
+ 
+     *canonhost_out = NULL;
+ 
+     canonhost = host;
+-    use_dns = (context->dns_canonicalize_hostname == CANONHOST_TRUE ||
+-               (is_fallback &&
+-                context->dns_canonicalize_hostname == CANONHOST_FALLBACK));
+     if (use_dns) {
+         /* Try a forward lookup of the hostname. */
+         memset(&hint, 0, sizeof(hint));
+@@ -161,21 +157,135 @@ krb5_error_code KRB5_CALLCONV
+ krb5_expand_hostname(krb5_context context, const char *host,
+                      char **canonhost_out)
+ {
+-    return k5_expand_hostname(context, host, FALSE, canonhost_out);
++    int use_dns = (context->dns_canonicalize_hostname == CANONHOST_TRUE);
++
++    return expand_hostname(context, host, use_dns, canonhost_out);
+ }
+ 
+-/* If hostname appears to have a :port or :instance trailer (used in MSSQLSvc
+- * principals), return a pointer to the separator.  Otherwise return NULL. */
+-static const char *
+-find_trailer(const char *hostname)
++/* Split data into hostname and trailer (:port or :instance).  Trailers are
++ * used in MSSQLSvc principals. */
++static void
++split_trailer(const krb5_data *data, krb5_data *host, krb5_data *trailer)
+ {
+-    const char *p = strchr(hostname, ':');
++    char *p = memchr(data->data, ':', data->length);
++    unsigned int tlen = (p == NULL) ? 0 : data->length - (p - data->data);
+ 
+-    /* Look for a single colon followed by one or more characters.  An IPv6
+-     * address will have more than one colon, so don't accept that. */
+-    if (p == NULL || p[1] == '\0' || strchr(p + 1, ':') != NULL)
+-        return NULL;
+-    return p;
++    /* Make sure we have a single colon followed by one or more characters.  An
++     * IPv6 address will have more than one colon, so don't accept that. */
++    if (p == NULL || tlen == 1 || memchr(p + 1, ':', tlen - 1) != NULL) {
++        *host = *data;
++        *trailer = empty_data();
++    } else {
++        *host = make_data(data->data, p - data->data);
++        *trailer = make_data(p, tlen);
++    }
++}
++
++static krb5_error_code
++canonicalize_princ(krb5_context context, struct canonprinc *iter,
++                   krb5_boolean use_dns, krb5_const_principal *princ_out)
++{
++    krb5_error_code ret;
++    krb5_data host, trailer;
++    char *hostname = NULL, *canonhost = NULL, *combined = NULL;
++    char **hrealms = NULL;
++
++    *princ_out = NULL;
++
++    assert(iter->princ->length == 2);
++    split_trailer(&iter->princ->data[1], &host, &trailer);
++
++    hostname = k5memdup0(host.data, host.length, &ret);
++    if (hostname == NULL)
++        goto cleanup;
++
++    if (iter->princ->type == KRB5_NT_SRV_HST) {
++        /* Expand the hostname with or without DNS as specified. */
++        ret = expand_hostname(context, hostname, use_dns, &canonhost);
++        if (ret)
++            goto cleanup;
++    } else {
++        canonhost = strdup(hostname);
++        if (canonhost == NULL) {
++            ret = ENOMEM;
++            goto cleanup;
++        }
++    }
++
++    /* Add the trailer to the expanded hostname. */
++    if (asprintf(&combined, "%s%.*s", canonhost,
++                 trailer.length, trailer.data) < 0) {
++        combined = NULL;
++        ret = ENOMEM;
++        goto cleanup;
++    }
++
++    /* Don't yield the same host part twice. */
++    if (iter->canonhost != NULL && strcmp(iter->canonhost, combined) == 0)
++        goto cleanup;
++
++    free(iter->canonhost);
++    iter->canonhost = combined;
++    combined = NULL;
++
++    /* If the realm is unknown, look up the realm of the expanded hostname. */
++    if (iter->princ->realm.length == 0 && !iter->no_hostrealm) {
++        ret = krb5_get_host_realm(context, canonhost, &hrealms);
++        if (ret)
++            goto cleanup;
++        if (hrealms[0] == NULL) {
++            ret = KRB5_ERR_HOST_REALM_UNKNOWN;
++            goto cleanup;
++        }
++        free(iter->realm);
++        if (*hrealms[0] == '\0' && iter->subst_defrealm) {
++            ret = krb5_get_default_realm(context, &iter->realm);
++            if (ret)
++                goto cleanup;
++        } else {
++            iter->realm = strdup(hrealms[0]);
++            if (iter->realm == NULL) {
++                ret = ENOMEM;
++                goto cleanup;
++            }
++        }
++    }
++
++    iter->copy = *iter->princ;
++    if (iter->realm != NULL)
++        iter->copy.realm = string2data(iter->realm);
++    iter->components[0] = iter->princ->data[0];
++    iter->components[1] = string2data(iter->canonhost);
++    iter->copy.data = iter->components;
++    *princ_out = &iter->copy;
++
++cleanup:
++    free(hostname);
++    free(canonhost);
++    free(combined);
++    krb5_free_host_realm(context, hrealms);
++    return ret;
++}
++
++krb5_error_code
++k5_canonprinc(krb5_context context, struct canonprinc *iter,
++              krb5_const_principal *princ_out)
++{
++    int step = ++iter->step;
++
++    *princ_out = NULL;
++
++    /* If we're not doing fallback, the input principal is canonical. */
++    if (context->dns_canonicalize_hostname != CANONHOST_FALLBACK ||
++        iter->princ->type != KRB5_NT_SRV_HST || iter->princ->length != 2) {
++        *princ_out = (step == 1) ? iter->princ : NULL;
++        return 0;
++    }
++
++    /* Canonicalize without DNS at step 1, with DNS at step 2. */
++    if (step > 2)
++        return 0;
++    return canonicalize_princ(context, iter, step == 2, princ_out);
+ }
+ 
+ krb5_error_code KRB5_CALLCONV
+@@ -185,9 +295,10 @@ krb5_sname_to_principal(krb5_context context, const char *hostname,
+ {
+     krb5_error_code ret;
+     krb5_principal princ;
+-    const char *realm, *trailer;
+-    char **hrealms = NULL, *canonhost = NULL, *hostonly = NULL, *concat = NULL;
++    krb5_const_principal cprinc;
++    krb5_boolean use_dns;
+     char localname[MAXHOSTNAMELEN];
++    struct canonprinc iter = { NULL };
+ 
+     *princ_out = NULL;
+ 
+@@ -205,54 +316,26 @@ krb5_sname_to_principal(krb5_context context, const char *hostname,
+     if (sname == NULL)
+         sname = "host";
+ 
+-    /* If there is a trailer, remove it for now. */
+-    trailer = find_trailer(hostname);
+-    if (trailer != NULL) {
+-        hostonly = k5memdup0(hostname, trailer - hostname, &ret);
+-        if (hostonly == NULL)
+-            goto cleanup;
+-        hostname = hostonly;
+-    }
+-
+-    /* Canonicalize the hostname if appropriate. */
+-    if (type == KRB5_NT_SRV_HST) {
+-        ret = krb5_expand_hostname(context, hostname, &canonhost);
+-        if (ret)
+-            goto cleanup;
+-        hostname = canonhost;
+-    }
+-
+-    /* Find the realm of the host. */
+-    ret = krb5_get_host_realm(context, hostname, &hrealms);
++    /* Build an initial principal with what we have. */
++    ret = krb5_build_principal(context, &princ, 0, KRB5_REFERRAL_REALM,
++                               sname, hostname, (char *)NULL);
+     if (ret)
+-        goto cleanup;
+-    if (hrealms[0] == NULL) {
+-        ret = KRB5_ERR_HOST_REALM_UNKNOWN;
+-        goto cleanup;
+-    }
+-    realm = hrealms[0];
+-
+-    /* If there was a trailer, put it back on the end. */
+-    if (trailer != NULL) {
+-        if (asprintf(&concat, "%s%s", hostname, trailer) < 0) {
+-            ret = ENOMEM;
+-            goto cleanup;
+-        }
+-        hostname = concat;
+-    }
+-
+-    ret = krb5_build_principal(context, &princ, strlen(realm), realm, sname,
+-                               hostname, (char *)NULL);
+-    if (ret)
+-        goto cleanup;
+-
++        return ret;
+     princ->type = type;
+-    *princ_out = princ;
+ 
+-cleanup:
+-    free(hostonly);
+-    free(canonhost);
+-    free(concat);
+-    krb5_free_host_realm(context, hrealms);
++    if (type == KRB5_NT_SRV_HST &&
++        context->dns_canonicalize_hostname == CANONHOST_FALLBACK) {
++        /* Delay canonicalization and realm lookup until use. */
++        *princ_out = princ;
++        return 0;
++    }
++
++    use_dns = (context->dns_canonicalize_hostname == CANONHOST_TRUE);
++    iter.princ = princ;
++    ret = canonicalize_princ(context, &iter, use_dns, &cprinc);
++    if (!ret)
++        ret = krb5_copy_principal(context, cprinc, princ_out);
++    free_canonprinc(&iter);
++    krb5_free_principal(context, princ);
+     return ret;
+ }
+diff --git a/src/tests/icred.c b/src/tests/icred.c
+index 55f929cd7..d6ce1d5d3 100644
+--- a/src/tests/icred.c
++++ b/src/tests/icred.c
+@@ -30,10 +30,7 @@
+  * OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
+-/*
+- * This program exercises the init_creds APIs in ways kinit doesn't.  Right now
+- * it is very simplistic, but it can be extended as needed.
+- */
++/* This program exercises the init_creds APIs in ways kinit doesn't. */
+ 
+ #include "k5-platform.h"
+ #include <krb5.h>
+@@ -56,10 +53,11 @@ check(krb5_error_code code)
+ int
+ main(int argc, char **argv)
+ {
+-    const char *princstr, *password;
++    const char *ktname = NULL, *sname = NULL, *princstr, *password;
+     krb5_principal client;
+     krb5_init_creds_context icc;
+     krb5_get_init_creds_opt *opt;
++    krb5_keytab keytab = NULL;
+     krb5_creds creds;
+     krb5_boolean stepwise = FALSE;
+     krb5_preauthtype ptypes[64];
+@@ -69,8 +67,11 @@ main(int argc, char **argv)
+     check(krb5_init_context(&ctx));
+     check(krb5_get_init_creds_opt_alloc(ctx, &opt));
+ 
+-    while ((c = getopt(argc, argv, "so:X:")) != -1) {
++    while ((c = getopt(argc, argv, "k:so:S:X:")) != -1) {
+         switch (c) {
++        case 'k':
++            ktname = optarg;
++            break;
+         case 's':
+             stepwise = TRUE;
+             break;
+@@ -78,6 +79,9 @@ main(int argc, char **argv)
+             assert(nptypes < 64);
+             ptypes[nptypes++] = atoi(optarg);
+             break;
++        case 'S':
++            sname = optarg;
++            break;
+         case 'X':
+             val = strchr(optarg, '=');
+             if (val != NULL)
+@@ -93,12 +97,20 @@ main(int argc, char **argv)
+ 
+     argc -= optind;
+     argv += optind;
+-    if (argc != 2)
++    if (argc != 1 && argc != 2)
+         abort();
+     princstr = argv[0];
+     password = argv[1];
+ 
+-    check(krb5_parse_name(ctx, princstr, &client));
++    if (sname != NULL) {
++        check(krb5_sname_to_principal(ctx, princstr, sname, KRB5_NT_SRV_HST,
++                                      &client));
++    } else {
++        check(krb5_parse_name(ctx, princstr, &client));
++    }
++
++    if (ktname != NULL)
++        check(krb5_kt_resolve(ctx, ktname, &keytab));
+ 
+     if (nptypes > 0)
+         krb5_get_init_creds_opt_set_preauth_list(opt, ptypes, nptypes);
+@@ -106,9 +118,16 @@ main(int argc, char **argv)
+     if (stepwise) {
+         /* Use the stepwise interface. */
+         check(krb5_init_creds_init(ctx, client, NULL, NULL, 0, NULL, &icc));
+-        check(krb5_init_creds_set_password(ctx, icc, password));
++        if (keytab != NULL)
++            check(krb5_init_creds_set_keytab(ctx, icc, keytab));
++        if (password != NULL)
++            check(krb5_init_creds_set_password(ctx, icc, password));
+         check(krb5_init_creds_get(ctx, icc));
+         krb5_init_creds_free(ctx, icc);
++    } else if (keytab != NULL) {
++        check(krb5_get_init_creds_keytab(ctx, &creds, client, keytab, 0, NULL,
++                                         opt));
++        krb5_free_cred_contents(ctx, &creds);
+     } else {
+         /* Use the traditional one-shot interface. */
+         check(krb5_get_init_creds_password(ctx, &creds, client, password, NULL,
+@@ -116,6 +135,8 @@ main(int argc, char **argv)
+         krb5_free_cred_contents(ctx, &creds);
+     }
+ 
++    if (keytab != NULL)
++        krb5_kt_close(ctx, keytab);
+     krb5_get_init_creds_opt_free(ctx, opt);
+     krb5_free_principal(ctx, client);
+     krb5_free_context(ctx);
+diff --git a/src/tests/t_sn2princ.py b/src/tests/t_sn2princ.py
+index f3e187286..493fba219 100755
+--- a/src/tests/t_sn2princ.py
++++ b/src/tests/t_sn2princ.py
+@@ -85,28 +85,9 @@ if offline:
+ oname = 'ptr-mismatch.kerberos.org'
+ fname = 'www.kerberos.org'
+ 
+-# Test fallback canonicalization krb5_sname_to_principal() results
+-# (same as dns_canonicalize_hostname=false).
++# Test fallback canonicalization krb5_sname_to_principal() results.
+ mark('dns_canonicalize_host=fallback')
+-testfc(oname, oname, 'R1')
+-
+-# Test fallback canonicalization in krb5_get_credentials().
+-oprinc = 'host/' + oname
+-fprinc = 'host/' + fname
+-shutil.copy(realm.ccache, realm.ccache + '.save')
+-realm.addprinc(fprinc)
+-# oprinc doesn't exist, so we get the canonicalized fprinc as a fallback.
+-msgs = ('Falling back to canonicalized server hostname ' + fname,)
+-realm.run(['./gcred', 'srv-hst', oprinc], env=fallback_canon,
+-          expected_msg=fprinc, expected_trace=msgs)
+-realm.addprinc(oprinc)
+-# oprinc now exists, but we still get the fprinc ticket from the cache.
+-realm.run(['./gcred', 'srv-hst', oprinc], env=fallback_canon,
+-          expected_msg=fprinc)
+-# Without the cached result, we sould get oprinc in preference to fprinc.
+-os.rename(realm.ccache + '.save', realm.ccache)
+-realm.run(['./gcred', 'srv-hst', oprinc], env=fallback_canon,
+-          expected_msg=oprinc)
++testfc(oname, oname, '')
+ 
+ # Verify forward resolution before testing for it.
+ try:
+@@ -118,6 +99,48 @@ if canonname.lower() != fname:
+     skip_rest('sn2princ tests',
+               '%s forward resolves to %s, not %s' % (oname, canonname, fname))
+ 
++# Test fallback canonicalization in krb5_get_credentials().
++oprinc = 'host/' + oname
++fprinc = 'host/' + fname
++shutil.copy(realm.ccache, realm.ccache + '.save')
++# Test that we only try fprinc once if we enter it as input.
++out, trace = realm.run(['./gcred', 'srv-hst', fprinc + '@'],
++                       env=fallback_canon, expected_code=1, return_trace=True)
++msg = 'Requesting tickets for %s@R1, referrals on' % fprinc
++if trace.count(msg) != 1:
++    fail('Expected one try for %s' % fprinc)
++# Create fprinc, and verify that we get it as the canonicalized
++# fallback for oprinc.
++realm.addprinc(fprinc)
++msgs = ('Getting credentials user@R1 -> %s@ using' % oprinc,
++        'Requesting tickets for %s@R1' % oprinc,
++        'Requesting tickets for %s@R1' % fprinc,
++        'Received creds for desired service %s@R1' % fprinc)
++realm.run(['./gcred', 'srv-hst', oprinc + '@'], env=fallback_canon,
++          expected_msg=fprinc, expected_trace=msgs)
++realm.addprinc(oprinc)
++# oprinc now exists, but we still get the fprinc ticket from the cache.
++realm.run(['./gcred', 'srv-hst', oprinc + '@'], env=fallback_canon,
++          expected_msg=fprinc)
++# Without the cached result, we sould get oprinc in preference to fprinc.
++os.rename(realm.ccache + '.save', realm.ccache)
++realm.run(['./gcred', 'srv-hst', oprinc], env=fallback_canon,
++          expected_msg=oprinc)
++
++# Test fallback canonicalization for krb5_rd_req().
++realm.run([kadminl, 'ktadd', fprinc])
++msgs = ('Decrypted AP-REQ with server principal %s@R1' % fprinc,
++        'AP-REQ ticket: user@R1 -> %s@R1' % fprinc)
++realm.run(['./rdreq', fprinc, oprinc + '@'], env=fallback_canon,
++          expected_trace=msgs)
++
++# Test fallback canonicalization for getting initial creds with a keytab.
++msgs = ('Getting initial credentials for %s@' % oprinc,
++        'Found entries for %s@R1 in keytab' % fprinc,
++        'Retrieving %s@R1 from ' % fprinc)
++realm.run(['./icred', '-k', realm.keytab, '-S', 'host', oname],
++          env=fallback_canon, expected_trace=msgs)
++
+ # Test forward-only canonicalization (rdns=false).
+ mark('rdns=false')
+ testnr(oname, fname, 'R1')
