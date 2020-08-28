@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18.2
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 20%{?dist}
+Release: 21%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -578,7 +578,7 @@ exit 0
 %dir /etc/gss/mech.d
 %dir /etc/krb5.conf.d
 %config(noreplace) /etc/krb5.conf
-%config(noreplace) /etc/krb5.conf.d/crypto-policies
+%config(noreplace,missingok) /etc/krb5.conf.d/crypto-policies
 /%{_mandir}/man5/.k5identity.5*
 /%{_mandir}/man5/.k5login.5*
 /%{_mandir}/man5/k5identity.5*
@@ -632,6 +632,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Aug 28 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-21
+- Mark crypto-polices snippet as missingok
+- Resolves: #1868379
+
 * Thu Aug 13 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-20
 - Temporarily dns_canonicalize_hostname=fallback changes
 - Hopefully unbreak IPA while we debug further
