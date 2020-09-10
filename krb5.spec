@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18.2
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 22%{?dist}
+Release: 23%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -633,6 +633,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Sep 10 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-23
+- Use `systemctl reload` to HUP the KDC during logrotate
+- Resolves: #1877692
+
 * Wed Sep 09 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-22
 - Fix input length checking in SPNEGO DER decoding
 
