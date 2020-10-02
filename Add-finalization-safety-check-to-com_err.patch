@@ -1,4 +1,4 @@
-From 9b28e9bbadb775cf790092bc0b0fe9f6c880d215 Mon Sep 17 00:00:00 2001
+From 96a36ef54aecb48b71c1ae0cc85b83ef644c3bd0 Mon Sep 17 00:00:00 2001
 From: Jiri Sasek <Jiri.Sasek@Oracle.COM>
 Date: Fri, 13 Mar 2020 19:02:58 +0100
 Subject: [PATCH] Add finalization safety check to com_err

@@ -1,4 +1,4 @@
-From 15056939ae1e52b9c0b4e0f4ac59772b0d942647 Mon Sep 17 00:00:00 2001
+From bf8521bfaa4a4d54f6eb94f785c68942f4afa055 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 9 Nov 2018 15:12:21 -0500
 Subject: [PATCH] [downstream] FIPS with PRNG and RADIUS and MD4
@@ -17,24 +17,44 @@ AES is fine.  Shame about SPAKE though.
 
 post6 restores MD4 (and therefore keygen-only RC4).
 
+post7 restores MD5 and adds radius_md5_fips_override.
+
 Last-updated: krb5-1.17
 ---
+ doc/admin/conf_files/krb5_conf.rst            |  6 +++
  src/lib/crypto/krb/prng.c                     | 11 ++++-
  .../crypto/openssl/enc_provider/camellia.c    |  6 +++
  src/lib/crypto/openssl/enc_provider/rc4.c     | 13 +++++-
  .../crypto/openssl/hash_provider/hash_evp.c   | 12 +++++
  src/lib/crypto/openssl/hmac.c                 |  6 ++-
- src/lib/krad/attr.c                           | 45 ++++++++++++++-----
- src/lib/krad/attrset.c                        |  5 ++-
- src/lib/krad/internal.h                       | 13 +++++-
- src/lib/krad/packet.c                         | 22 ++++-----
- src/lib/krad/remote.c                         | 10 ++++-
+ src/lib/krad/attr.c                           | 46 ++++++++++++++-----
+ src/lib/krad/attrset.c                        |  5 +-
+ src/lib/krad/internal.h                       | 28 ++++++++++-
+ src/lib/krad/packet.c                         | 22 +++++----
+ src/lib/krad/remote.c                         | 10 +++-
  src/lib/krad/t_attr.c                         |  3 +-
  src/lib/krad/t_attrset.c                      |  4 +-
  src/plugins/preauth/spake/spake_client.c      |  6 +++
  src/plugins/preauth/spake/spake_kdc.c         |  6 +++
- 14 files changed, 129 insertions(+), 33 deletions(-)
+ 15 files changed, 151 insertions(+), 33 deletions(-)
 
+diff --git a/doc/admin/conf_files/krb5_conf.rst b/doc/admin/conf_files/krb5_conf.rst
+index 1d2aa7f68..3a8b9cf47 100644
+--- a/doc/admin/conf_files/krb5_conf.rst
++++ b/doc/admin/conf_files/krb5_conf.rst
+@@ -331,6 +331,12 @@ The libdefaults section may contain any of the following relations:
+     qualification of shortnames, set this relation to the empty string
+     with ``qualify_shortname = ""``.  (New in release 1.18.)
+ 
++**radius_md5_fips_override**
++    Downstream-only option to enable use of MD5 in RADIUS
++    communication (libkrad).  This allows for local (or protected
++    tunnel) communication with a RADIUS server that doesn't use krad
++    (e.g., freeradius) while in FIPS mode.
++
+ **rdns**
+     If this flag is true, reverse name lookup will be used in addition
+     to forward name lookup to canonicalizing hostnames for use in
 diff --git a/src/lib/crypto/krb/prng.c b/src/lib/crypto/krb/prng.c
 index cb9ca9b98..f0e9984ca 100644
 --- a/src/lib/crypto/krb/prng.c
@@ -129,15 +149,15 @@ index a65d57b7a..6ccaca94a 100644
       * The cipher state here is a saved pointer to a struct arcfour_state
       * object, rather than a flat byte array as in most enc providers.  The
 diff --git a/src/lib/crypto/openssl/hash_provider/hash_evp.c b/src/lib/crypto/openssl/hash_provider/hash_evp.c
-index 1e0fb8fc3..feb5eda99 100644
+index 1e0fb8fc3..2eb5139c0 100644
 --- a/src/lib/crypto/openssl/hash_provider/hash_evp.c
 +++ b/src/lib/crypto/openssl/hash_provider/hash_evp.c
 @@ -49,6 +49,11 @@ hash_evp(const EVP_MD *type, const krb5_crypto_iov *data, size_t num_data,
      if (ctx == NULL)
          return ENOMEM;
  
-+    if (type == EVP_md4()) {
-+        /* See comment below in hash_md4(). */
++    if (type == EVP_md4() || type == EVP_md5()) {
++        /* See comments below in hash_md4() and hash_md5(). */
 +        EVP_MD_CTX_set_flags(ctx, EVP_MD_CTX_FLAG_NON_FIPS_ALLOW);
 +    }
 +
@@ -159,8 +179,8 @@ index 1e0fb8fc3..feb5eda99 100644
  static krb5_error_code
  hash_md5(const krb5_crypto_iov *data, size_t num_data, krb5_data *output)
  {
-+    if (FIPS_mode())
-+        return KRB5_CRYPTO_INTERNAL;
++    /* MD5 is needed in FIPS mode for communication with RADIUS servers.  This
++     * is gated in libkrad by libdefaults->radius_md5_fips_override. */
      return hash_evp(EVP_md5(), data, num_data, output);
  }
  
@@ -182,18 +202,10 @@ index 7dc59dcc0..769a50c00 100644
      else if (!strncmp(hash->hash_name, "MD4", 3))
          return EVP_md4();
 diff --git a/src/lib/krad/attr.c b/src/lib/krad/attr.c
-index 9c13d9d75..275327e67 100644
+index 9c13d9d75..42d354a3b 100644
 --- a/src/lib/krad/attr.c
 +++ b/src/lib/krad/attr.c
-@@ -30,6 +30,7 @@
- #include <k5-int.h>
- #include "internal.h"
- 
-+#include <openssl/crypto.h>
- #include <string.h>
- 
- /* RFC 2865 */
-@@ -38,7 +39,8 @@
+@@ -38,7 +38,8 @@
  typedef krb5_error_code
  (*attribute_transform_fn)(krb5_context ctx, const char *secret,
                            const unsigned char *auth, const krb5_data *in,
@@ -203,7 +215,7 @@ index 9c13d9d75..275327e67 100644
  
  typedef struct {
      const char *name;
-@@ -51,12 +53,14 @@ typedef struct {
+@@ -51,12 +52,14 @@ typedef struct {
  static krb5_error_code
  user_password_encode(krb5_context ctx, const char *secret,
                       const unsigned char *auth, const krb5_data *in,
@@ -220,7 +232,7 @@ index 9c13d9d75..275327e67 100644
  
  static const attribute_record attributes[UCHAR_MAX] = {
      {"User-Name", 1, MAX_ATTRSIZE, NULL, NULL},
-@@ -128,7 +132,8 @@ static const attribute_record attributes[UCHAR_MAX] = {
+@@ -128,7 +131,8 @@ static const attribute_record attributes[UCHAR_MAX] = {
  static krb5_error_code
  user_password_encode(krb5_context ctx, const char *secret,
                       const unsigned char *auth, const krb5_data *in,
@@ -230,20 +242,21 @@ index 9c13d9d75..275327e67 100644
  {
      const unsigned char *indx;
      krb5_error_code retval;
-@@ -154,8 +159,14 @@ user_password_encode(krb5_context ctx, const char *secret,
+@@ -154,8 +158,15 @@ user_password_encode(krb5_context ctx, const char *secret,
      for (blck = 0, indx = auth; blck * BLOCKSIZE < len; blck++) {
          memcpy(tmp.data + seclen, indx, BLOCKSIZE);
  
 -        retval = krb5_c_make_checksum(ctx, CKSUMTYPE_RSA_MD5, NULL, 0, &tmp,
 -                                      &sum);
-+        if (FIPS_mode()) {
++        if (kr_use_fips(ctx)) {
 +            /* Skip encryption here.  Taint so that we won't pass it out of
 +             * the machine by accident. */
 +            *is_fips = TRUE;
 +            sum.contents = calloc(1, BLOCKSIZE);
-+        } else
++        } else {
 +            retval = krb5_c_make_checksum(ctx, CKSUMTYPE_RSA_MD5, NULL, 0, &tmp,
 +                                          &sum);
++        }
          if (retval != 0) {
              zap(tmp.data, tmp.length);
              zap(outbuf, len);
@@ -257,24 +270,25 @@ index 9c13d9d75..275327e67 100644
  {
      const unsigned char *indx;
      krb5_error_code retval;
-@@ -204,8 +216,14 @@ user_password_decode(krb5_context ctx, const char *secret,
+@@ -204,8 +216,15 @@ user_password_decode(krb5_context ctx, const char *secret,
      for (blck = 0, indx = auth; blck * BLOCKSIZE < in->length; blck++) {
          memcpy(tmp.data + seclen, indx, BLOCKSIZE);
  
 -        retval = krb5_c_make_checksum(ctx, CKSUMTYPE_RSA_MD5, NULL, 0,
 -                                      &tmp, &sum);
-+        if (FIPS_mode()) {
++        if (kr_use_fips(ctx)) {
 +            /* Skip encryption here.  Taint so that we won't pass it out of
 +             * the machine by accident. */
 +            *is_fips = TRUE;
 +            sum.contents = calloc(1, BLOCKSIZE);
-+        } else
++        } else {
 +            retval = krb5_c_make_checksum(ctx, CKSUMTYPE_RSA_MD5, NULL, 0,
 +                                          &tmp, &sum);
++        }
          if (retval != 0) {
              zap(tmp.data, tmp.length);
              zap(outbuf, in->length);
-@@ -248,7 +266,7 @@ krb5_error_code
+@@ -248,7 +267,7 @@ krb5_error_code
  kr_attr_encode(krb5_context ctx, const char *secret,
                 const unsigned char *auth, krad_attr type,
                 const krb5_data *in, unsigned char outbuf[MAX_ATTRSIZE],
@@ -283,7 +297,7 @@ index 9c13d9d75..275327e67 100644
  {
      krb5_error_code retval;
  
-@@ -265,7 +283,8 @@ kr_attr_encode(krb5_context ctx, const char *secret,
+@@ -265,7 +284,8 @@ kr_attr_encode(krb5_context ctx, const char *secret,
          return 0;
      }
  
@@ -293,7 +307,7 @@ index 9c13d9d75..275327e67 100644
  }
  
  krb5_error_code
-@@ -274,6 +293,7 @@ kr_attr_decode(krb5_context ctx, const char *secret, const unsigned char *auth,
+@@ -274,6 +294,7 @@ kr_attr_decode(krb5_context ctx, const char *secret, const unsigned char *auth,
                 unsigned char outbuf[MAX_ATTRSIZE], size_t *outlen)
  {
      krb5_error_code retval;
@@ -301,7 +315,7 @@ index 9c13d9d75..275327e67 100644
  
      retval = kr_attr_valid(type, in);
      if (retval != 0)
-@@ -288,7 +308,8 @@ kr_attr_decode(krb5_context ctx, const char *secret, const unsigned char *auth,
+@@ -288,7 +309,8 @@ kr_attr_decode(krb5_context ctx, const char *secret, const unsigned char *auth,
          return 0;
      }
  
@@ -335,10 +349,19 @@ index 03c613716..d89982a13 100644
              return retval;
  
 diff --git a/src/lib/krad/internal.h b/src/lib/krad/internal.h
-index 996a89372..a53ce31ce 100644
+index 996a89372..312dc8258 100644
 --- a/src/lib/krad/internal.h
 +++ b/src/lib/krad/internal.h
-@@ -49,6 +49,13 @@
+@@ -39,6 +39,8 @@
+ #include <sys/socket.h>
+ #include <netdb.h>
+ 
++#include <openssl/crypto.h>
++
+ #ifndef UCHAR_MAX
+ #define UCHAR_MAX 255
+ #endif
+@@ -49,6 +51,13 @@
  
  typedef struct krad_remote_st krad_remote;
  
@@ -352,7 +375,7 @@ index 996a89372..a53ce31ce 100644
  /* Validate constraints of an attribute. */
  krb5_error_code
  kr_attr_valid(krad_attr type, const krb5_data *data);
-@@ -57,7 +64,8 @@ kr_attr_valid(krad_attr type, const krb5_data *data);
+@@ -57,7 +66,8 @@ kr_attr_valid(krad_attr type, const krb5_data *data);
  krb5_error_code
  kr_attr_encode(krb5_context ctx, const char *secret, const unsigned char *auth,
                 krad_attr type, const krb5_data *in,
@@ -362,7 +385,7 @@ index 996a89372..a53ce31ce 100644
  
  /* Decode an attribute. */
  krb5_error_code
-@@ -69,7 +77,8 @@ kr_attr_decode(krb5_context ctx, const char *secret, const unsigned char *auth,
+@@ -69,7 +79,8 @@ kr_attr_decode(krb5_context ctx, const char *secret, const unsigned char *auth,
  krb5_error_code
  kr_attrset_encode(const krad_attrset *set, const char *secret,
                    const unsigned char *auth,
@@ -372,19 +395,29 @@ index 996a89372..a53ce31ce 100644
  
  /* Decode attributes from a buffer. */
  krb5_error_code
+@@ -152,4 +163,17 @@ gai_error_code(int err)
+     }
+ }
+ 
++static inline krb5_boolean
++kr_use_fips(krb5_context ctx)
++{
++    int val = 0;
++
++    if (!FIPS_mode())
++        return 0;
++
++    profile_get_boolean(ctx->profile, "libdefaults",
++                        "radius_md5_fips_override", NULL, 0, &val);
++    return !val;
++}
++
+ #endif /* INTERNAL_H_ */
 diff --git a/src/lib/krad/packet.c b/src/lib/krad/packet.c
-index c597174b6..794ac84c4 100644
+index c597174b6..fc2d24800 100644
 --- a/src/lib/krad/packet.c
 +++ b/src/lib/krad/packet.c
-@@ -32,6 +32,7 @@
- #include <string.h>
- 
- #include <arpa/inet.h>
-+#include <openssl/crypto.h>
- 
- typedef unsigned char uchar;
- 
-@@ -53,12 +54,6 @@ typedef unsigned char uchar;
+@@ -53,12 +53,6 @@ typedef unsigned char uchar;
  #define pkt_auth(p) ((uchar *)offset(&(p)->pkt, OFFSET_AUTH))
  #define pkt_attr(p) ((unsigned char *)offset(&(p)->pkt, OFFSET_ATTR))
  
@@ -397,19 +430,20 @@ index c597174b6..794ac84c4 100644
  typedef struct {
      uchar x[(UCHAR_MAX + 1) / 8];
  } idmap;
-@@ -187,8 +182,13 @@ auth_generate_response(krb5_context ctx, const char *secret,
+@@ -187,8 +181,14 @@ auth_generate_response(krb5_context ctx, const char *secret,
      memcpy(data.data + response->pkt.length, secret, strlen(secret));
  
      /* Hash it. */
 -    retval = krb5_c_make_checksum(ctx, CKSUMTYPE_RSA_MD5, NULL, 0, &data,
 -                                  &hash);
-+    if (FIPS_mode()) {
++    if (kr_use_fips(ctx)) {
 +        /* This checksum does very little security-wise anyway, so don't
 +         * taint. */
 +        hash.contents = calloc(1, AUTH_FIELD_SIZE);
-+    } else
++    } else {
 +        retval = krb5_c_make_checksum(ctx, CKSUMTYPE_RSA_MD5, NULL, 0, &data,
 +                                      &hash);
++    }
      free(data.data);
      if (retval != 0)
          return retval;

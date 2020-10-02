@@ -1,4 +1,4 @@
-From a34b7c50e62c19f80d39ece6a72017dac781df64 Mon Sep 17 00:00:00 2001
+From c90cef2ebfbefc595798dd5dbb805575e1be0fbf Mon Sep 17 00:00:00 2001
 From: Alexander Scheel <ascheel@redhat.com>
 Date: Fri, 30 Jun 2017 16:03:01 -0400
 Subject: [PATCH] Refactor krb5 GSS checksum handling

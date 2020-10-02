@@ -1,4 +1,4 @@
-From 07179e38e5ee72e82ebc77a1c8d73e34905268b7 Mon Sep 17 00:00:00 2001
+From c3d2c3bcafe0ac87d9cbbf37f1488ad642627fc3 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Wed, 27 May 2020 18:48:35 -0400
 Subject: [PATCH] Default dns_canonicalize_hostname to "fallback"
@@ -54,7 +54,7 @@ index 5232db9af..afdf30297 100644
  
  Configuration of hostnames varies by operating system.  On the
 diff --git a/doc/admin/conf_files/krb5_conf.rst b/doc/admin/conf_files/krb5_conf.rst
-index 1d2aa7f68..a7e7a29d1 100644
+index 3a8b9cf47..38f450367 100644
 --- a/doc/admin/conf_files/krb5_conf.rst
 +++ b/doc/admin/conf_files/krb5_conf.rst
 @@ -188,11 +188,10 @@ The libdefaults section may contain any of the following relations:

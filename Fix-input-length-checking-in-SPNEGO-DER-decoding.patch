@@ -1,4 +1,4 @@
-From 9504dd4de49938e4cdd56ce6df635b76eaf37e96 Mon Sep 17 00:00:00 2001
+From 5b42970afea248889fd3350448a40045d467ff3f Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Tue, 28 Jul 2020 12:58:26 -0400
 Subject: [PATCH] Fix input length checking in SPNEGO DER decoding

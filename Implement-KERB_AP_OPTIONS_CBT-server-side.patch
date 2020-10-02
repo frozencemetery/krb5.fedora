@@ -1,4 +1,4 @@
-From 6407bf087fe53088d91efd09df736e979cd4e8db Mon Sep 17 00:00:00 2001
+From bc89c6c720c4170d43010fead23550b80499c32a Mon Sep 17 00:00:00 2001
 From: Isaac Boukris <iboukris@gmail.com>
 Date: Mon, 9 Mar 2020 16:04:21 +0100
 Subject: [PATCH] Implement KERB_AP_OPTIONS_CBT (server side)

@@ -1,4 +1,4 @@
-From ee79bd43005245d3e5a2d3ec6d61146945e77717 Mon Sep 17 00:00:00 2001
+From 17d9b74328f247de5f9d820ae008726632d11d2a Mon Sep 17 00:00:00 2001
 From: Isaac Boukris <iboukris@gmail.com>
 Date: Tue, 28 Apr 2020 18:15:55 +0200
 Subject: [PATCH] Pass channel bindings through SPNEGO
