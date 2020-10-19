@@ -129,7 +129,6 @@ to install this package.
 %package libs
 Summary: The non-admin shared libraries used by Kerberos 5
 Requires: openssl-libs >= 1:1.1.1d-4
-Requires: openssl-libs < 1:3.0.0
 Requires: coreutils, gawk, grep, sed
 Requires: keyutils-libs >= 1.5.8
 Requires: /etc/crypto-policies/back-ends/krb5.config
