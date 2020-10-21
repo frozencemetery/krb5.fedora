@@ -1,4 +1,4 @@
-From 604135b5ad6bf954491413243eb305b82fec1c06 Mon Sep 17 00:00:00 2001
+From 5e79319edf3836d12dbc710ec1e2dd4405c9df35 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Fri, 25 Sep 2020 11:12:34 -0400
 Subject: [PATCH] Minimize usage of tgs_server in KDC
@@ -36,7 +36,7 @@ request.
  5 files changed, 46 insertions(+), 78 deletions(-)
 
 diff --git a/src/kdc/do_as_req.c b/src/kdc/do_as_req.c
-index 9ae7b0a5e..e243f50be 100644
+index c2dfea9b8..e0ac33649 100644
 --- a/src/kdc/do_as_req.c
 +++ b/src/kdc/do_as_req.c
 @@ -620,18 +620,6 @@ process_as_req(krb5_kdc_req *request, krb5_data *req_pkt,
@@ -75,7 +75,7 @@ index 9ae7b0a5e..e243f50be 100644
                              state->server, &state->local_tgt,
                              &state->local_tgt_storage, &state->local_tgt_key);
 diff --git a/src/kdc/do_tgs_req.c b/src/kdc/do_tgs_req.c
-index 74cd19e96..72525a462 100644
+index d345797c4..8ea418e43 100644
 --- a/src/kdc/do_tgs_req.c
 +++ b/src/kdc/do_tgs_req.c
 @@ -268,7 +268,7 @@ process_tgs_req(krb5_kdc_req *request, krb5_data *pkt,
@@ -120,7 +120,7 @@ index 74cd19e96..72525a462 100644
                             enc_tkt_reply.client)) {
          /* tgt issued by local realm or issued by realm of client */
 diff --git a/src/kdc/kdc_util.c b/src/kdc/kdc_util.c
-index a4a05b9fa..a631b498d 100644
+index b2042862a..e0b65a87c 100644
 --- a/src/kdc/kdc_util.c
 +++ b/src/kdc/kdc_util.c
 @@ -78,12 +78,6 @@ static krb5_error_code find_server_key(krb5_context,
@@ -258,7 +258,7 @@ index a4a05b9fa..a631b498d 100644
              *status = "XREALM_EVIDENCE_TICKET_MISMATCH";
              return KRB5KDC_ERR_BADOPTION;
 diff --git a/src/kdc/kdc_util.h b/src/kdc/kdc_util.h
-index 42b7ee208..c730409ae 100644
+index 04007a8f5..a6bac4388 100644
 --- a/src/kdc/kdc_util.h
 +++ b/src/kdc/kdc_util.h
 @@ -37,10 +37,9 @@
@@ -274,10 +274,10 @@ index 42b7ee208..c730409ae 100644
  add_to_transited (krb5_data *,
                    krb5_data *,
 diff --git a/src/kdc/tgs_policy.c b/src/kdc/tgs_policy.c
-index 554345ba5..59d60ca25 100644
+index 3f4fa8499..a5a00f0cc 100644
 --- a/src/kdc/tgs_policy.c
 +++ b/src/kdc/tgs_policy.c
-@@ -251,19 +251,21 @@ check_tgs_s4u2proxy(kdc_realm_t *kdc_active_realm,
+@@ -252,19 +252,21 @@ check_tgs_s4u2proxy(kdc_realm_t *kdc_active_realm,
  }
  
  static int
@@ -305,7 +305,7 @@ index 554345ba5..59d60ca25 100644
              *status = "2ND_TKT_NOT_TGS";
              return KDC_ERR_POLICY;
          }
-@@ -352,7 +354,7 @@ validate_tgs_request(kdc_realm_t *kdc_active_realm,
+@@ -353,7 +355,7 @@ validate_tgs_request(kdc_realm_t *kdc_active_realm,
          return(KRB_AP_ERR_REPEAT);
      }
  

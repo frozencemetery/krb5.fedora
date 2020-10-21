@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18.2
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 26%{?dist}
+Release: 27%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -78,7 +78,8 @@ Patch39: Improve-KDC-alias-checking-for-S4U-requests.patch
 Patch40: Adjust-KDC-alias-helper-function-contract.patch
 Patch41: Allow-aliases-when-matching-U2U-second-ticket.patch
 Patch42: Refactor-KDC-authdata-list-management-helpers.patch
-Patch43: Minimize-usage-of-tgs_server-in-KDC.patch
+Patch43: Avoid-passing-DB-entry-structures-in-KDC.patch
+Patch44: Minimize-usage-of-tgs_server-in-KDC.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -639,6 +640,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Oct 21 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-27
+- Fix build of previous
+
 * Wed Oct 21 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-26
 - Cross-realm s4u fixes for samba (#1836630)
 
