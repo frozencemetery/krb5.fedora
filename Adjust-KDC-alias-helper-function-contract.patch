@@ -1,0 +1,80 @@
+From 758f5031fe9d6c1e3eb33818bc6d57cf8b4a3a72 Mon Sep 17 00:00:00 2001
+From: Isaac Boukris <iboukris@gmail.com>
+Date: Tue, 22 Sep 2020 01:11:39 +0300
+Subject: [PATCH] Adjust KDC alias helper function contract
+
+Change the name of is_client_alias() to is_client_db_alias(), and
+change the contract so that the already-canonical principal name comes
+from a DB entry (which is less flexible, but clearer since DB entries
+always contain canonical principal names).  Make the function
+available outside of kdc_util.c.
+
+[ghudson@mit.edu: clarified commit message]
+
+(cherry picked from commit 9fb5f572dd6ce808b234cb60a573eac48136d7ca)
+---
+ src/kdc/kdc_util.c | 14 +++++++-------
+ src/kdc/kdc_util.h |  4 ++++
+ 2 files changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/src/kdc/kdc_util.c b/src/kdc/kdc_util.c
+index dcb2df8dc..6330387d0 100644
+--- a/src/kdc/kdc_util.c
++++ b/src/kdc/kdc_util.c
+@@ -1463,10 +1463,10 @@ cleanup:
+     return code;
+ }
+ 
+-/* Return true if princ canonicalizes to the same principal as canon. */
+-static krb5_boolean
+-is_client_alias(krb5_context context, krb5_const_principal canon,
+-                krb5_const_principal princ)
++/* Return true if princ canonicalizes to the same principal as entry's. */
++krb5_boolean
++is_client_db_alias(krb5_context context, const krb5_db_entry *entry,
++                   krb5_const_principal princ)
+ {
+     krb5_error_code ret;
+     krb5_db_entry *self;
+@@ -1475,7 +1475,7 @@ is_client_alias(krb5_context context, krb5_const_principal canon,
+     ret = krb5_db_get_principal(context, princ,
+                                 KRB5_KDB_FLAG_CLIENT_REFERRALS_ONLY, &self);
+     if (!ret) {
+-        is_self = krb5_principal_compare(context, canon, self->princ);
++        is_self = krb5_principal_compare(context, entry->princ, self->princ);
+         krb5_db_free_principal(context, self);
+     }
+ 
+@@ -1535,7 +1535,7 @@ kdc_process_s4u2self_req(kdc_realm_t *kdc_active_realm,
+ 
+     /* If the server is local, check that the request is for self. */
+     if (!isflagset(c_flags, KRB5_KDB_FLAG_ISSUING_REFERRAL) &&
+-        !is_client_alias(kdc_context, server->princ, client_princ)) {
++        !is_client_db_alias(kdc_context, server, client_princ)) {
+         *status = "INVALID_S4U2SELF_REQUEST_SERVER_MISMATCH";
+         return KRB5KDC_ERR_C_PRINCIPAL_UNKNOWN; /* match Windows error */
+     }
+@@ -1728,7 +1728,7 @@ kdc_process_s4u2proxy_req(kdc_realm_t *kdc_active_realm, unsigned int flags,
+         }
+ 
+         client_princ = *stkt_authdata_client;
+-    } else if (!is_client_alias(kdc_context, server->princ, server_princ)) {
++    } else if (!is_client_db_alias(kdc_context, server, server_princ)) {
+         *status = "EVIDENCE_TICKET_MISMATCH";
+         return KRB5KDC_ERR_SERVER_NOMATCH;
+     }
+diff --git a/src/kdc/kdc_util.h b/src/kdc/kdc_util.h
+index 384b21ad2..2c9d8cf69 100644
+--- a/src/kdc/kdc_util.h
++++ b/src/kdc/kdc_util.h
+@@ -344,6 +344,10 @@ log_tgs_badtrans(krb5_context ctx, krb5_principal cprinc,
+ void
+ log_tgs_alt_tgt(krb5_context context, krb5_principal p);
+ 
++krb5_boolean
++is_client_db_alias(krb5_context context, const krb5_db_entry *entry,
++                   krb5_const_principal princ);
++
+ /* FAST*/
+ enum krb5_fast_kdc_flags {
+     KRB5_FAST_REPLY_KEY_USED = 0x1,

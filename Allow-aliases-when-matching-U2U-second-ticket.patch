@@ -1,0 +1,65 @@
+From ccc5b9663e229f20421c01836aa5ecb06f1f2a48 Mon Sep 17 00:00:00 2001
+From: Isaac Boukris <iboukris@gmail.com>
+Date: Tue, 22 Sep 2020 01:17:11 +0300
+Subject: [PATCH] Allow aliases when matching U2U second ticket
+
+In process_tgs_req() when verifying the user-to-user second ticket,
+compare the canonical names of the request server and the second
+ticket client.
+
+[ghudson@mit.edu: expanded commit message; trimmed tests]
+
+ticket: 8951 (new)
+(cherry picked from commit afc494ef9418e6be7fbb887364efa6606b10034a)
+---
+ src/kdc/do_tgs_req.c |  2 +-
+ src/tests/t_u2u.py   | 25 +++++++++++++++++++++++++
+ 2 files changed, 26 insertions(+), 1 deletion(-)
+
+diff --git a/src/kdc/do_tgs_req.c b/src/kdc/do_tgs_req.c
+index 463a9c0dd..74cd19e96 100644
+--- a/src/kdc/do_tgs_req.c
++++ b/src/kdc/do_tgs_req.c
+@@ -666,7 +666,7 @@ process_tgs_req(krb5_kdc_req *request, krb5_data *pkt,
+          */
+         krb5_enc_tkt_part *t2enc = request->second_ticket[st_idx]->enc_part2;
+         krb5_principal client2 = t2enc->client;
+-        if (!krb5_principal_compare(kdc_context, request->server, client2)) {
++        if (!is_client_db_alias(kdc_context, server, client2)) {
+             altcprinc = client2;
+             errcode = KRB5KDC_ERR_SERVER_NOMATCH;
+             status = "2ND_TKT_MISMATCH";
+diff --git a/src/tests/t_u2u.py b/src/tests/t_u2u.py
+index 1ca6ac87e..4b8a82a2f 100644
+--- a/src/tests/t_u2u.py
++++ b/src/tests/t_u2u.py
+@@ -32,4 +32,29 @@ realm.run([kvno, '--u2u', realm.ccache, realm.user_princ])
+ 
+ realm.run([klist])
+ 
++realm.stop()
++
++# Load the test KDB module to test aliases
++testprincs = {'krbtgt/KRBTEST.COM': {'keys': 'aes128-cts'},
++              'user': {'keys': 'aes128-cts', 'flags': '+preauth'},
++              'WIN10': {'keys': 'aes128-cts'}}
++kdcconf = {'realms': {'$realm': {'database_module': 'test'}},
++           'dbmodules': {'test': {'db_library': 'test',
++                                  'princs': testprincs,
++                                  'alias': {'HOST/win10': 'WIN10'}}}}
++
++realm = K5Realm(kdc_conf=kdcconf, create_kdb=False)
++realm.start_kdc()
++
++# Create a second user principal and get tickets for it.
++u2u_ccache = 'FILE:' + os.path.join(realm.testdir, 'ccu2u')
++realm.extract_keytab('WIN10', realm.keytab)
++realm.kinit('WIN10', None, ['-k', '-c', u2u_ccache])
++
++realm.extract_keytab(realm.user_princ, realm.keytab)
++realm.kinit(realm.user_princ, None, ['-k'])
++
++realm.run([kvno, '--u2u', u2u_ccache, 'HOST/win10'], expected_msg='kvno = 0')
++realm.run([kvno, '--u2u', u2u_ccache, 'WIN10'], expected_msg='kvno = 0')
++
+ success('user-to-user tests')
