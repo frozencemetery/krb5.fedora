@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.17
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 46%{?dist}
+Release: 47%{?dist}
 
 # lookaside-cached sources; two downloads and a build artifact
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.17/krb5-%{version}%{prerelease}.tar.gz
@@ -125,6 +125,7 @@ Patch163: Squash-apparent-forward-null-in-clnttcp_create.patch
 Patch164: Remove-null-check-in-krb5_gss_duplicate_name.patch
 Patch165: Fix-KDC-crash-when-logging-PKINIT-enctypes.patch
 Patch166: Put-KDB-authdata-first.patch
+Patch167: Add-recursion-limit-for-ASN.1-indefinite-lengths.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -731,6 +732,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Nov 05 2020 Robbie Harwood <rharwood@redhat.com> - 1.17-47
+- Add recursion limit for ASN.1 indefinite lengths (CVE-2020-28196)
+
 * Thu Feb 06 2020 Robbie Harwood <rharwood@redhat.com> - 1.17-46
 - Put KDB authdata first
 
