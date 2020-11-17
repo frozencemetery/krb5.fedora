@@ -632,7 +632,7 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
-* Thu Nov 17 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-30
+* Tue Nov 17 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-30
 - Migrate /var/run to /run, an exercise in pointlessness
 - Resolves: #1898410
 
