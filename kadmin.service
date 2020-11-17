@@ -6,9 +6,9 @@ AssertPathExists=!/var/kerberos/krb5kdc/kpropd.acl
 
 [Service]
 Type=forking
-PIDFile=/var/run/kadmind.pid
+PIDFile=/run/kadmind.pid
 EnvironmentFile=-/etc/sysconfig/kadmin
-ExecStart=/usr/sbin/kadmind -P /var/run/kadmind.pid $KADMIND_ARGS
+ExecStart=/usr/sbin/kadmind -P /run/kadmind.pid $KADMIND_ARGS
 ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]

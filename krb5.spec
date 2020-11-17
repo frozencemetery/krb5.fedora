@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18.2
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 29%{?dist}
+Release: 30%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -258,9 +258,6 @@ sed -i -e s,7778,`expr "$PORT" + 1`,g $cfg
 source %{_libdir}/tclConfig.sh
 pushd src
 
-# Set this so that configure will have a value even if the current version of
-# autoconf doesn't set one.
-export runstatedir=%{_localstatedir}/run
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
 INCLUDES=-I%{_includedir}/et
 CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC -fno-strict-aliasing -fstack-protector-all`"
@@ -295,13 +292,6 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 # Now build it.
 make
 popd
-
-# Sanity check the KDC_RUN_DIR.
-configured_kdcrundir=`grep KDC_RUN_DIR src/include/osconf.h | awk '{print $NF}'`
-configured_kdcrundir=`eval echo $configured_kdcrundir`
-if test "$configured_kdcrundir" != %{_localstatedir}/run/krb5kdc ; then
-    exit 1
-fi
 
 # Build the docs.
 make -C src/doc paths.py version.py
@@ -642,6 +632,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Nov 17 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-30
+- Migrate /var/run to /run, an exercise in pointlessness
+- Resolves: #1898410
+
 * Thu Nov 05 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.2-29
 - Add recursion limit for ASN.1 indefinite lengths (CVE-2020-28196)
 
