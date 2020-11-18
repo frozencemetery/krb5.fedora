@@ -1,4 +1,4 @@
-From f8c70f6190a0573e2aca0b40964cf3b1a73ca8bb Mon Sep 17 00:00:00 2001
+From 2c4d04d1da4dbb1a312db965f3392d7d0bc67a17 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:30:53 -0400
 Subject: [PATCH] [downstream] SELinux integration
@@ -67,10 +67,10 @@ Last-updated: krb5-1.18-beta1
  create mode 100644 src/util/support/selinux.c
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
-index 830203683..6796fec53 100644
+index 59621e3e7..398eca7e4 100644
 --- a/src/aclocal.m4
 +++ b/src/aclocal.m4
-@@ -89,6 +89,7 @@ AC_SUBST_FILE(libnodeps_frag)
+@@ -85,6 +85,7 @@ AC_SUBST_FILE(libnodeps_frag)
  dnl
  KRB5_AC_PRAGMA_WEAK_REF
  WITH_LDAP
@@ -78,7 +78,7 @@ index 830203683..6796fec53 100644
  KRB5_LIB_PARAMS
  KRB5_AC_INITFINI
  KRB5_AC_ENABLE_THREADS
-@@ -1743,4 +1744,51 @@ AC_SUBST(PAM_LIBS)
+@@ -1739,4 +1740,51 @@ AC_SUBST(PAM_LIBS)
  AC_SUBST(PAM_MAN)
  AC_SUBST(NON_PAM_MAN)
  ])dnl
@@ -253,7 +253,7 @@ index 79761f6d2..e9435c693 100644
  
  #include <stdlib.h>
 diff --git a/src/kadmin/dbutil/dump.c b/src/kadmin/dbutil/dump.c
-index 301e3476d..19f2cc230 100644
+index ff2f25050..e3457622a 100644
 --- a/src/kadmin/dbutil/dump.c
 +++ b/src/kadmin/dbutil/dump.c
 @@ -148,12 +148,21 @@ create_ofile(char *ofile, char **tmpname)
@@ -288,7 +288,7 @@ index 301e3476d..19f2cc230 100644
          com_err(progname, errno, _("while creating 'ok' file, '%s'"), file_ok);
          goto cleanup;
 diff --git a/src/kdc/main.c b/src/kdc/main.c
-index fdcd694d7..1ede4bf2f 100644
+index 38d76b3b1..eb6966f2d 100644
 --- a/src/kdc/main.c
 +++ b/src/kdc/main.c
 @@ -872,7 +872,7 @@ write_pid_file(const char *path)

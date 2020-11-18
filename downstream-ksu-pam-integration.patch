@@ -1,4 +1,4 @@
-From 9feb7298b90d3e6a34821fce7315757c0bf81c9e Mon Sep 17 00:00:00 2001
+From a5a642c33a2f57d24c1cfa8ca3e286418206ab55 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:29:58 -0400
 Subject: [PATCH] [downstream] ksu pam integration
@@ -30,10 +30,10 @@ Last-updated: krb5-1.18-beta1
  create mode 100644 src/clients/ksu/pam.h
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
-index 2394f7e33..830203683 100644
+index 8709a7f5d..59621e3e7 100644
 --- a/src/aclocal.m4
 +++ b/src/aclocal.m4
-@@ -1675,3 +1675,72 @@ if test "$with_ldap" = yes; then
+@@ -1671,3 +1671,72 @@ if test "$with_ldap" = yes; then
    OPENLDAP_PLUGIN=yes
  fi
  ])dnl

@@ -1,4 +1,4 @@
-From cec820485e8b854fe3ee42d0a67a77e7ad20595e Mon Sep 17 00:00:00 2001
+From fb89e83451519aed051bb129f3cf9cc34cde702f Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Sun, 26 Apr 2020 19:55:54 -0400
 Subject: [PATCH] Pass gss_localname() through SPNEGO
@@ -30,7 +30,7 @@ index a93763314..066ec736f 100644
  (
  	OM_uint32 *minor_status,
 diff --git a/src/lib/gssapi/spnego/spnego_mech.c b/src/lib/gssapi/spnego/spnego_mech.c
-index ec0bae6a4..594fc5894 100644
+index b3010c201..f4a042478 100644
 --- a/src/lib/gssapi/spnego/spnego_mech.c
 +++ b/src/lib/gssapi/spnego/spnego_mech.c
 @@ -237,7 +237,7 @@ static struct gss_config spnego_mechanism =
@@ -42,7 +42,7 @@ index ec0bae6a4..594fc5894 100644
  	NULL,				/* gss_userok */
  	NULL,				/* gss_export_name */
  	spnego_gss_duplicate_name,	/* gss_duplicate_name */
-@@ -2371,6 +2371,13 @@ spnego_gss_wrap_size_limit(
+@@ -2372,6 +2372,13 @@ spnego_gss_wrap_size_limit(
  	return (ret);
  }
  

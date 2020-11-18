@@ -1,4 +1,4 @@
-From c6e103db0eb02c31a13b8cbcbae296c473074991 Mon Sep 17 00:00:00 2001
+From 126569bf428c546b938b9fec5b12851f09d61c94 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:49:25 -0400
 Subject: [PATCH] [downstream] fix debuginfo with y.tab.c

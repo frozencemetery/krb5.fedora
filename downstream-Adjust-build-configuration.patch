@@ -1,4 +1,4 @@
-From 30ece66508c8e10f704cd2860dfd421ebee15897 Mon Sep 17 00:00:00 2001
+From c06693e5a17daf0fd585e608e8bfd1eb3eef447c Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:45:26 -0400
 Subject: [PATCH] [downstream] Adjust build configuration

@@ -1,4 +1,4 @@
-From bf8567ed95991628f198e88403e30f78e2d74e15 Mon Sep 17 00:00:00 2001
+From 5399eaea6c5e00c4e96fa5507aa50dd643337194 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 14 May 2020 15:01:18 -0400
 Subject: [PATCH] Fix typo ("in in") in the ksu man page
@@ -23,7 +23,7 @@ index 8d6c7ef79..933738229 100644
  
  
 diff --git a/src/man/ksu.man b/src/man/ksu.man
-index 81e34815d..8d4c6a359 100644
+index a1972518c..b07a4b05d 100644
 --- a/src/man/ksu.man
 +++ b/src/man/ksu.man
 @@ -176,7 +176,7 @@ wrong password is typed in, ksu fails.

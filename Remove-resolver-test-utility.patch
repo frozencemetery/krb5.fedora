@@ -1,4 +1,4 @@
-From 3e75969e0c0a52ec3ca8195200fcdadaa63b324f Mon Sep 17 00:00:00 2001
+From 8a2cd84c047ef7500dc8149ed6ace8e9fa631cad Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Thu, 28 May 2020 18:41:02 -0400
 Subject: [PATCH] Remove resolver test utility

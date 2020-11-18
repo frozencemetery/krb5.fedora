@@ -1,4 +1,4 @@
-From f56afbeb7848322f3208edd55f2c12a9e32127f0 Mon Sep 17 00:00:00 2001
+From 24c5e1ad937505a03628547ed7a5c6060a2b0ff2 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Mon, 30 Mar 2020 15:26:02 -0400
 Subject: [PATCH] Correctly import "service@" GSS host-based name

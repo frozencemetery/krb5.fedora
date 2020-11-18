@@ -1,4 +1,4 @@
-From 6d36ea6fcfe281a8ce73fc5aa5c133f435d93fa4 Mon Sep 17 00:00:00 2001
+From 2c8494a1b89d69da9de46ca2cb17f9e8f12eb9b5 Mon Sep 17 00:00:00 2001
 From: Isaac Boukris <iboukris@gmail.com>
 Date: Fri, 20 Mar 2020 00:17:28 +0100
 Subject: [PATCH] Add channel bindings tests
@@ -10,17 +10,18 @@ changes]
 
 ticket: 8900
 (cherry picked from commit b0b21b6d25b06f3e2b365dfe9dd4c99b3d43bf57)
-[rharwood@redhat.com: .gitignore]
+[rharwood@redhat.com: slush around upstream not backporting reload,
+gitignore]
 ---
  src/plugins/gssapi/negoextest/main.c |  18 +++++
- src/tests/gssapi/Makefile.in         |  49 ++++++------
+ src/tests/gssapi/Makefile.in         |  57 +++++++-------
  src/tests/gssapi/common.c            |  25 ++++--
  src/tests/gssapi/common.h            |   9 +++
  src/tests/gssapi/deps                |   4 +
  src/tests/gssapi/t_bindings.c        | 111 +++++++++++++++++++++++++++
  src/tests/gssapi/t_bindings.py       |  43 +++++++++++
  src/tests/gssapi/t_negoex.py         |   7 ++
- 8 files changed, 237 insertions(+), 29 deletions(-)
+ 8 files changed, 242 insertions(+), 32 deletions(-)
  create mode 100644 src/tests/gssapi/t_bindings.c
  create mode 100644 src/tests/gssapi/t_bindings.py
 
@@ -61,23 +62,25 @@ index 6c340f41b..72fc5273a 100644
       * The unwrapped token sits at the end and is just one byte giving the
       * remaining number of hops.  The final octet of the mech encoding should
 diff --git a/src/tests/gssapi/Makefile.in b/src/tests/gssapi/Makefile.in
-index 5cc1e0f58..68c132b79 100644
+index 22a2f9480..cf7bcf451 100644
 --- a/src/tests/gssapi/Makefile.in
 +++ b/src/tests/gssapi/Makefile.in
-@@ -9,33 +9,33 @@ LOCALINCLUDES = -I$(srcdir)/../../lib/gssapi/mechglue \
+@@ -8,34 +8,36 @@ LOCALINCLUDES = -I$(srcdir)/../../lib/gssapi/mechglue \
+ 	-I$(srcdir)/../../lib/gssapi/generic -I../../lib/gssapi/krb5 \
  	-I../../lib/gssapi/generic
  
- SRCS=	$(srcdir)/ccinit.c $(srcdir)/ccrefresh.c $(srcdir)/common.c \
+-SRCS=	$(srcdir)/ccinit.c $(srcdir)/ccrefresh.c $(srcdir)/common.c $(srcdir)/reload.c \
 -	$(srcdir)/t_accname.c $(srcdir)/t_add_cred.c $(srcdir)/t_ccselect.c \
 -	$(srcdir)/t_ciflags.c $(srcdir)/t_context.c $(srcdir)/t_credstore.c \
 -	$(srcdir)/t_enctypes.c $(srcdir)/t_err.c $(srcdir)/t_export_cred.c \
 -	$(srcdir)/t_export_name.c $(srcdir)/t_gssexts.c \
 -	$(srcdir)/t_imp_cred.c $(srcdir)/t_imp_name.c $(srcdir)/t_invalid.c \
 -	$(srcdir)/t_inq_cred.c $(srcdir)/t_inq_ctx.c \
-+	$(srcdir)/t_accname.c $(srcdir)/t_add_cred.c $(srcdir)/t_bindings.c \
-+	$(srcdir)/t_ccselect.c $(srcdir)/t_ciflags.c $(srcdir)/t_context.c \
-+	$(srcdir)/t_credstore.c $(srcdir)/t_enctypes.c $(srcdir)/t_err.c \
-+	$(srcdir)/t_export_cred.c $(srcdir)/t_export_name.c \
++SRCS=	$(srcdir)/ccinit.c $(srcdir)/ccrefresh.c $(srcdir)/common.c \
++	$(srcdir)/reload.c $(srcdir)/t_accname.c $(srcdir)/t_add_cred.c \
++	$(srcdir)/t_bindings.c $(srcdir)/t_ccselect.c $(srcdir)/t_ciflags.c \
++	$(srcdir)/t_context.c $(srcdir)/t_credstore.c $(srcdir)/t_enctypes.c \
++	$(srcdir)/t_err.c $(srcdir)/t_export_cred.c $(srcdir)/t_export_name.c \
 +	$(srcdir)/t_gssexts.c $(srcdir)/t_imp_cred.c $(srcdir)/t_imp_name.c \
 +	$(srcdir)/t_invalid.c $(srcdir)/t_inq_cred.c $(srcdir)/t_inq_ctx.c \
  	$(srcdir)/t_inq_mechs_name.c $(srcdir)/t_iov.c \
@@ -86,18 +89,20 @@ index 5cc1e0f58..68c132b79 100644
  	$(srcdir)/t_s4u2proxy_krb5.c $(srcdir)/t_saslname.c \
  	$(srcdir)/t_spnego.c $(srcdir)/t_srcattrs.c
  
--OBJS=	ccinit.o ccrefresh.o common.o t_accname.o t_add_cred.o t_ccselect.o \
+-OBJS=	ccinit.o ccrefresh.o common.o reload.o t_accname.o t_add_cred.o t_ccselect.o \
 -	t_ciflags.o t_context.o t_credstore.o t_enctypes.o t_err.o \
 -	t_export_cred.o t_export_name.o t_gssexts.o t_imp_cred.o t_imp_name.o \
 -	t_invalid.o t_inq_cred.o t_inq_ctx.o t_inq_mechs_name.o t_iov.o \
 -	t_lifetime.o t_namingexts.o t_oid.o t_pcontok.o t_prf.o t_s4u.o \
 -	t_s4u2proxy_krb5.o t_saslname.o t_spnego.o t_srcattrs.o
-+OBJS=	ccinit.o ccrefresh.o common.o t_accname.o t_add_cred.o t_bindings.o \
-+	t_ccselect.o t_ciflags.o t_context.o t_credstore.o t_enctypes.o \
-+	t_err.o t_export_cred.o t_export_name.o t_gssexts.o t_imp_cred.o \
-+	t_imp_name.o t_invalid.o t_inq_cred.o t_inq_ctx.o t_inq_mechs_name.o \
-+	t_iov.o t_lifetime.o t_namingexts.o t_oid.o t_pcontok.o t_prf.o \
-+	t_s4u.o t_s4u2proxy_krb5.o t_saslname.o t_spnego.o t_srcattrs.o
++
++OBJS=	ccinit.o ccrefresh.o common.o reload.o t_accname.o t_add_cred.o \
++	t_bindings.o t_ccselect.o t_ciflags.o t_context.o t_credstore.o \
++	t_enctypes.o t_err.o t_export_cred.o t_export_name.o t_gssexts.o \
++	t_imp_cred.o t_imp_name.o t_invalid.o t_inq_cred.o t_inq_ctx.o \
++	t_inq_mechs_name.o t_iov.o t_lifetime.o t_namingexts.o t_oid.o \
++	t_pcontok.o t_prf.o t_s4u.o t_s4u2proxy_krb5.o t_saslname.o \
++	t_spnego.o t_srcattrs.o
  
  COMMON_DEPS= common.o $(GSS_DEPLIBS) $(KRB5_BASE_DEPLIBS)
  COMMON_LIBS= common.o $(GSS_LIBS) $(KRB5_BASE_LIBS)
@@ -113,11 +118,11 @@ index 5cc1e0f58..68c132b79 100644
 +	t_inq_mechs_name t_iov t_lifetime t_namingexts t_oid t_pcontok t_prf \
 +	t_s4u t_s4u2proxy_krb5 t_saslname t_spnego t_srcattrs
  
- check-unix: t_oid
+ check-unix: t_oid reload
  	$(RUN_TEST) ./t_invalid
-@@ -43,11 +43,12 @@ check-unix: t_oid
- 	$(RUN_TEST) ./t_prf
+@@ -44,11 +46,12 @@ check-unix: t_oid reload
  	$(RUN_TEST) ./t_imp_name
+ 	if [ -r $(TOPLIBD)/libgssapi_krb5.so ]; then $(RUN_TEST) ./reload; fi
  
 -check-pytests: ccinit ccrefresh t_accname t_add_cred t_ccselect t_ciflags \
 -	t_context t_credstore t_enctypes t_err t_export_cred t_export_name \
@@ -132,7 +137,7 @@ index 5cc1e0f58..68c132b79 100644
  	$(RUNPYTEST) $(srcdir)/t_ccselect.py $(PYTESTFLAGS)
  	$(RUNPYTEST) $(srcdir)/t_client_keytab.py $(PYTESTFLAGS)
  	$(RUNPYTEST) $(srcdir)/t_enctypes.py $(PYTESTFLAGS)
-@@ -64,6 +65,8 @@ t_accname: t_accname.o $(COMMON_DEPS)
+@@ -67,6 +70,8 @@ t_accname: t_accname.o $(COMMON_DEPS)
  	$(CC_LINK) -o $@ t_accname.o $(COMMON_LIBS)
  t_add_cred: t_add_cred.o $(COMMON_DEPS)
  	$(CC_LINK) -o $@ t_add_cred.o $(COMMON_LIBS)
@@ -141,17 +146,20 @@ index 5cc1e0f58..68c132b79 100644
  t_ccselect: t_ccselect.o $(COMMON_DEPS)
  	$(CC_LINK) -o $@ t_ccselect.o $(COMMON_LIBS)
  t_ciflags: t_ciflags.o $(COMMON_DEPS)
-@@ -118,8 +121,8 @@ t_srcattrs: t_srcattrs.o $(COMMON_DEPS)
+@@ -121,9 +126,9 @@ t_srcattrs: t_srcattrs.o $(COMMON_DEPS)
  	$(CC_LINK) -o $@ t_srcattrs.o $(COMMON_LIBS)
  
  clean:
--	$(RM) ccinit ccrefresh t_accname t_add_cred t_ccselect t_ciflags
+-	$(RM) ccinit ccrefresh reload t_accname t_add_cred t_ccselect t_ciflags
 -	$(RM) t_context t_credstore t_enctypes t_err t_export_cred
-+	$(RM) ccinit ccrefresh t_accname t_add_cred t_bindings t_ccselect
-+	$(RM) t_ciflags t_context t_credstore t_enctypes t_err t_export_cred
- 	$(RM) t_export_name t_gssexts t_imp_cred t_imp_name t_invalid
- 	$(RM) t_inq_cred t_inq_ctx t_inq_mechs_name t_iov t_lifetime
+-	$(RM) t_export_name t_gssexts t_imp_cred t_imp_name t_invalid
+-	$(RM) t_inq_cred t_inq_ctx t_inq_mechs_name t_iov t_lifetime
++	$(RM) ccinit ccrefresh reload t_accname t_add_cred t_bindings
++	$(RM) t_ccselect t_ciflags t_context t_credstore t_enctypes t_err
++	$(RM) t_export_cred t_export_name t_gssexts t_imp_cred t_imp_name
++	$(RM) t_invalid t_inq_cred t_inq_ctx t_inq_mechs_name t_iov t_lifetime
  	$(RM) t_namingexts t_oid t_pcontok t_prf t_s4u t_s4u2proxy_krb5
+ 	$(RM) t_saslname t_spnego t_srcattrs
 diff --git a/src/tests/gssapi/common.c b/src/tests/gssapi/common.c
 index 83e9d9bb8..7ba72f7b2 100644
 --- a/src/tests/gssapi/common.c
@@ -221,10 +229,10 @@ index ae11b51d4..a5c8f87e6 100644
   * the token. */
  void export_import_cred(gss_cred_id_t *cred);
 diff --git a/src/tests/gssapi/deps b/src/tests/gssapi/deps
-index acd0e96f8..73e4d9a74 100644
+index 55586de53..ca1d6e22a 100644
 --- a/src/tests/gssapi/deps
 +++ b/src/tests/gssapi/deps
-@@ -33,6 +33,10 @@ $(OUTPRE)t_add_cred.$(OBJEXT): $(BUILDTOP)/include/gssapi/gssapi.h \
+@@ -35,6 +35,10 @@ $(OUTPRE)t_add_cred.$(OBJEXT): $(BUILDTOP)/include/gssapi/gssapi.h \
    $(BUILDTOP)/include/gssapi/gssapi_ext.h $(BUILDTOP)/include/gssapi/gssapi_krb5.h \
    $(BUILDTOP)/include/krb5/krb5.h $(COM_ERR_DEPS) $(top_srcdir)/include/krb5.h \
    common.h t_add_cred.c

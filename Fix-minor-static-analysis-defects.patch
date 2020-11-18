@@ -1,4 +1,4 @@
-From c3d96fca46cb2cc3ee9f4c2e2a4ed98bad3e310a Mon Sep 17 00:00:00 2001
+From ae153c1dbb91782e1c8d5e80be9e133766eb81fd Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 15 Oct 2020 18:15:29 -0400
 Subject: [PATCH] Fix minor static analysis defects

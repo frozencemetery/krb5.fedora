@@ -1,4 +1,4 @@
-From 17d9b74328f247de5f9d820ae008726632d11d2a Mon Sep 17 00:00:00 2001
+From 19ef4a378a8fe483e82b1b4f979a7ffcb264325e Mon Sep 17 00:00:00 2001
 From: Isaac Boukris <iboukris@gmail.com>
 Date: Tue, 28 Apr 2020 18:15:55 +0200
 Subject: [PATCH] Pass channel bindings through SPNEGO
@@ -125,7 +125,7 @@ index 18d9d4147..8848ee4db 100644
      if (major != GSS_S_COMPLETE && mech_output_token.length == 0)
          goto cleanup;
 diff --git a/src/lib/gssapi/spnego/spnego_mech.c b/src/lib/gssapi/spnego/spnego_mech.c
-index 594fc5894..4cf011143 100644
+index f4a042478..2327cd927 100644
 --- a/src/lib/gssapi/spnego/spnego_mech.c
 +++ b/src/lib/gssapi/spnego/spnego_mech.c
 @@ -130,6 +130,7 @@ init_ctx_reselect(OM_uint32 *, spnego_gss_ctx_id_t, OM_uint32,
@@ -147,7 +147,7 @@ index 594fc5894..4cf011143 100644
  
  static gss_OID
  negotiate_mech(spnego_gss_ctx_id_t, gss_OID_set, OM_uint32 *);
-@@ -905,6 +906,7 @@ init_ctx_call_init(OM_uint32 *minor_status,
+@@ -906,6 +907,7 @@ init_ctx_call_init(OM_uint32 *minor_status,
  		   OM_uint32 req_flags,
  		   OM_uint32 time_req,
  		   gss_buffer_t mechtok_in,
@@ -155,7 +155,7 @@ index 594fc5894..4cf011143 100644
  		   gss_buffer_t mechtok_out,
  		   OM_uint32 *time_rec,
  		   send_token_flag *send_token)
-@@ -921,15 +923,14 @@ init_ctx_call_init(OM_uint32 *minor_status,
+@@ -922,15 +924,14 @@ init_ctx_call_init(OM_uint32 *minor_status,
  	if (gss_oid_equal(sc->internal_mech, &negoex_mech)) {
  		ret = negoex_init(minor_status, sc, mcred, target_name,
  				  mech_req_flags, time_req, mechtok_in,
@@ -175,7 +175,7 @@ index 594fc5894..4cf011143 100644
  	}
  
  	/* Bail out if the acceptor gave us an error token but the mech didn't
-@@ -981,8 +982,8 @@ init_ctx_call_init(OM_uint32 *minor_status,
+@@ -982,8 +983,8 @@ init_ctx_call_init(OM_uint32 *minor_status,
  	gss_delete_sec_context(&tmpmin, &sc->ctx_handle, GSS_C_NO_BUFFER);
  	tmpret = init_ctx_call_init(&tmpmin, sc, spcred, acc_negState,
  				    target_name, req_flags, time_req,
@@ -186,7 +186,7 @@ index 594fc5894..4cf011143 100644
  	if (HARD_ERROR(tmpret))
  		goto fail;
  	*minor_status = tmpmin;
-@@ -1004,7 +1005,7 @@ spnego_gss_init_sec_context(
+@@ -1005,7 +1006,7 @@ spnego_gss_init_sec_context(
  			gss_OID mech_type,
  			OM_uint32 req_flags,
  			OM_uint32 time_req,
@@ -195,7 +195,7 @@ index 594fc5894..4cf011143 100644
  			gss_buffer_t input_token,
  			gss_OID *actual_mech,
  			gss_buffer_t output_token,
-@@ -1084,8 +1085,8 @@ spnego_gss_init_sec_context(
+@@ -1085,8 +1086,8 @@ spnego_gss_init_sec_context(
  	if (!spnego_ctx->mech_complete) {
  		ret = init_ctx_call_init(minor_status, spnego_ctx, spcred,
  					 acc_negState, target_name, req_flags,
@@ -206,7 +206,7 @@ index 594fc5894..4cf011143 100644
  		if (ret != GSS_S_COMPLETE)
  			goto cleanup;
  
-@@ -1542,8 +1543,9 @@ cleanup:
+@@ -1543,8 +1544,9 @@ cleanup:
  static OM_uint32
  acc_ctx_call_acc(OM_uint32 *minor_status, spnego_gss_ctx_id_t sc,
  		 spnego_gss_cred_id_t spcred, gss_buffer_t mechtok_in,
@@ -218,7 +218,7 @@ index 594fc5894..4cf011143 100644
  {
  	OM_uint32 ret, tmpmin;
  	gss_OID_desc mechoid;
-@@ -1568,13 +1570,12 @@ acc_ctx_call_acc(OM_uint32 *minor_status, spnego_gss_ctx_id_t sc,
+@@ -1569,13 +1571,12 @@ acc_ctx_call_acc(OM_uint32 *minor_status, spnego_gss_ctx_id_t sc,
  	mcred = (spcred == NULL) ? GSS_C_NO_CREDENTIAL : spcred->mcred;
  	if (negoex) {
  		ret = negoex_accept(minor_status, sc, mcred, mechtok_in,
@@ -234,7 +234,7 @@ index 594fc5894..4cf011143 100644
  					     &sc->internal_name,
  					     &sc->actual_mech, mechtok_out,
  					     &sc->ctx_flags, time_rec,
-@@ -1620,7 +1621,7 @@ spnego_gss_accept_sec_context(
+@@ -1621,7 +1622,7 @@ spnego_gss_accept_sec_context(
  			    gss_ctx_id_t *context_handle,
  			    gss_cred_id_t verifier_cred_handle,
  			    gss_buffer_t input_token,
@@ -243,7 +243,7 @@ index 594fc5894..4cf011143 100644
  			    gss_name_t *src_name,
  			    gss_OID *mech_type,
  			    gss_buffer_t output_token,
-@@ -1734,8 +1735,8 @@ spnego_gss_accept_sec_context(
+@@ -1735,8 +1736,8 @@ spnego_gss_accept_sec_context(
  	 */
  	if (negState != REQUEST_MIC && mechtok_in != GSS_C_NO_BUFFER) {
  		ret = acc_ctx_call_acc(minor_status, sc, spcred, mechtok_in,

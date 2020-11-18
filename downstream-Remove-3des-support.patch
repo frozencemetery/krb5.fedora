@@ -1,4 +1,4 @@
-From c920b585b8400ef44684c673c54264657195f3ce Mon Sep 17 00:00:00 2001
+From 603a735ba52b50541520e53b031be47817de2fd5 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 26 Mar 2019 18:51:10 -0400
 Subject: [PATCH] [downstream] Remove 3des support
@@ -5552,7 +5552,7 @@ index 85a9574f3..3ce2a90ce 100644
          code = 0;
          retval = GSS_S_BAD_SIG;
 diff --git a/src/lib/gssapi/krb5/util_crypt.c b/src/lib/gssapi/krb5/util_crypt.c
-index 80954aff7..f7d3e92c4 100644
+index ddb0af8fc..d6c71aeb8 100644
 --- a/src/lib/gssapi/krb5/util_crypt.c
 +++ b/src/lib/gssapi/krb5/util_crypt.c
 @@ -97,17 +97,6 @@ kg_setup_keys(krb5_context context, krb5_gss_ctx_id_rec *ctx, krb5_key subkey,

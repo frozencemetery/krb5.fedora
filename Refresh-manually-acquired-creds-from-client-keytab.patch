@@ -1,4 +1,4 @@
-From 7316aaa0e9249a88e919f2596d881f78970548bc Mon Sep 17 00:00:00 2001
+From e1762f16fe4d900903c5395cc3268f9b78835100 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Wed, 26 Feb 2020 18:27:17 -0500
 Subject: [PATCH] Refresh manually acquired creds from client keytab

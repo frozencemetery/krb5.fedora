@@ -1,4 +1,4 @@
-From 5e79319edf3836d12dbc710ec1e2dd4405c9df35 Mon Sep 17 00:00:00 2001
+From 62f5a8c4ef97f0f0f3ceddff8e0a768c5f3b544e Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Fri, 25 Sep 2020 11:12:34 -0400
 Subject: [PATCH] Minimize usage of tgs_server in KDC
