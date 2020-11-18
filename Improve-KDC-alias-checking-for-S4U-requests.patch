@@ -1,4 +1,4 @@
-From ec23f914a4be4f4ce5a8960ea72f0f45f7c8cf59 Mon Sep 17 00:00:00 2001
+From dc03b33af17f2014baaa29412a1787cbcb140a62 Mon Sep 17 00:00:00 2001
 From: Isaac Boukris <iboukris@gmail.com>
 Date: Fri, 4 Sep 2020 14:05:50 +0300
 Subject: [PATCH] Improve KDC alias checking for S4U requests

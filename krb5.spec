@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18.3
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 1%{?dist}
+Release: 2%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -627,6 +627,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Nov 18 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.3-2
+- Fix build failure in -1
+
 * Wed Nov 18 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.3-1
 - New upstream version (1.18.3)
 

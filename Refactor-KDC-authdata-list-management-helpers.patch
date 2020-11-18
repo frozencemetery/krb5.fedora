@@ -1,4 +1,4 @@
-From 227828eb22ff0383f76b918899a03e1c7c97a7c0 Mon Sep 17 00:00:00 2001
+From 00245d789edc6cf6263540d7c9d7ee45bbac58ce Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Wed, 5 Feb 2020 18:46:11 -0500
 Subject: [PATCH] Refactor KDC authdata list management helpers

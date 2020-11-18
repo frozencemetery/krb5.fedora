@@ -1,4 +1,4 @@
-From f5987c71188138626030eef62145a126a84b62fb Mon Sep 17 00:00:00 2001
+From e0fc680b2fb51513993c4cdaa2c25b292f57a073 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Wed, 30 Sep 2020 02:12:00 -0400
 Subject: [PATCH] Avoid passing DB entry structures in KDC
