@@ -1,4 +1,4 @@
-From fb89e83451519aed051bb129f3cf9cc34cde702f Mon Sep 17 00:00:00 2001
+From 723f4c746293f064a32961ad77b57f901dd54a67 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Sun, 26 Apr 2020 19:55:54 -0400
 Subject: [PATCH] Pass gss_localname() through SPNEGO

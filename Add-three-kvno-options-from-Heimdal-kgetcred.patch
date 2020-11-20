@@ -1,4 +1,4 @@
-From 4da87d7fe288f3f7087dca8396d42abfd958b8e4 Mon Sep 17 00:00:00 2001
+From ea2ad3330aa39ef4e62d8856ea7e8eed2843b3f2 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Wed, 17 Jun 2020 20:48:38 -0400
 Subject: [PATCH] Add three kvno options from Heimdal kgetcred

@@ -1,4 +1,4 @@
-From a9144f5238b91949f32355f5ab88e2ade734eb06 Mon Sep 17 00:00:00 2001
+From cd99c7829a43074cec8afe5c7021778a5a2ebd31 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Wed, 6 May 2020 16:03:13 -0400
 Subject: [PATCH] Omit KDC indicator check for S4U2Self requests

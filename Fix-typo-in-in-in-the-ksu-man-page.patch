@@ -1,4 +1,4 @@
-From 5399eaea6c5e00c4e96fa5507aa50dd643337194 Mon Sep 17 00:00:00 2001
+From 5952a06a594c4dc0f20f7ba2854b25f76734aa27 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Thu, 14 May 2020 15:01:18 -0400
 Subject: [PATCH] Fix typo ("in in") in the ksu man page

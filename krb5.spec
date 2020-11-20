@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18.3
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 2%{?dist}
+Release: 3%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -41,7 +41,6 @@ Source39: krb5-krb5kdc.conf
 
 Patch0: downstream-ksu-pam-integration.patch
 Patch1: downstream-SELinux-integration.patch
-Patch2: downstream-Adjust-build-configuration.patch
 Patch3: downstream-netlib-and-dns.patch
 Patch4: downstream-fix-debuginfo-with-y.tab.c.patch
 Patch5: downstream-Remove-3des-support.patch
@@ -77,6 +76,7 @@ Patch42: Refactor-KDC-authdata-list-management-helpers.patch
 Patch43: Avoid-passing-DB-entry-structures-in-KDC.patch
 Patch44: Minimize-usage-of-tgs_server-in-KDC.patch
 Patch45: Fix-minor-static-analysis-defects.patch
+Patch46: Install-shared-libraries-as-executable.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -627,6 +627,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Fri Nov 20 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.3-3
+- Upstream executable shared libraries patch
+
 * Wed Nov 18 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.3-2
 - Fix build failure in -1
 

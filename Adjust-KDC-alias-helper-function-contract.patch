@@ -1,4 +1,4 @@
-From 833dfff1a11da3b1b9cf45a2bb09f17efa49cdba Mon Sep 17 00:00:00 2001
+From d27cef7eb6f099fb1ec4e2d49625aee0d8dc1007 Mon Sep 17 00:00:00 2001
 From: Isaac Boukris <iboukris@gmail.com>
 Date: Tue, 22 Sep 2020 01:11:39 +0300
 Subject: [PATCH] Adjust KDC alias helper function contract

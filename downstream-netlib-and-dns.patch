@@ -1,4 +1,4 @@
-From 23bce0aef64454bf808b9885967b04abafcf7917 Mon Sep 17 00:00:00 2001
+From 29f58a8059cb73ca586514b57458b2b17e091f36 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:46:21 -0400
 Subject: [PATCH] [downstream] netlib and dns
