@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18.3
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 3%{?dist}
+Release: 4%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -77,6 +77,7 @@ Patch43: Avoid-passing-DB-entry-structures-in-KDC.patch
 Patch44: Minimize-usage-of-tgs_server-in-KDC.patch
 Patch45: Fix-minor-static-analysis-defects.patch
 Patch46: Install-shared-libraries-as-executable.patch
+Patch47: Document-k-option-in-kvno-1-synopsis.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -627,6 +628,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Nov 24 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.3-4
+- Document -k option in kvno(1) synopsis
+
 * Fri Nov 20 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.3-3
 - Upstream executable shared libraries patch
 
