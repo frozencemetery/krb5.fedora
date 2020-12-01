@@ -81,7 +81,7 @@ Patch47: Document-k-option-in-kvno-1-synopsis.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
-BuildRequires: autoconf, bison, cmake, flex, gawk, gettext, pkgconfig, sed
+BuildRequires: autoconf, bison, make, flex, gawk, gettext, pkgconfig, sed
 BuildRequires: gcc, gcc-c++
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
 BuildRequires: gzip, ncurses-devel
