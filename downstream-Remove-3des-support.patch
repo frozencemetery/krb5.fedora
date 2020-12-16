@@ -1,4 +1,4 @@
-From 0ef71d2bef3efcb38b20fc8b3050944286ada726 Mon Sep 17 00:00:00 2001
+From 3af536f114e1c1b33b1579f9f16bbb3f497d4a1d Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 26 Mar 2019 18:51:10 -0400
 Subject: [PATCH] [downstream] Remove 3des support
@@ -8,11 +8,11 @@ des3-hmac-sha1, des3-cbc-sha1-kd).  Update all tests and documentation
 to user other enctypes.  Mark the 3DES enctypes UNSUPPORTED and retain
 their constants.
 
-Last-updated: 1.18-beta2
+Last-updated: 1.19-beta1
 ---
  doc/admin/advanced/retiring-des.rst           |  11 +
  doc/admin/conf_files/kdc_conf.rst             |   7 +-
- doc/admin/enctypes.rst                        |  13 +-
+ doc/admin/enctypes.rst                        |  10 +-
  doc/admin/troubleshoot.rst                    |   9 +-
  doc/appdev/refs/macros/index.rst              |   1 -
  doc/conf.py                                   |   2 +-
@@ -28,7 +28,7 @@ Last-updated: 1.18-beta2
  src/lib/crypto/builtin/des/Makefile.in        |  80 ----
  src/lib/crypto/builtin/des/d3_aead.c          | 133 ------
  src/lib/crypto/builtin/des/d3_kysched.c       |  51 ---
- src/lib/crypto/builtin/des/deps               | 148 -------
+ src/lib/crypto/builtin/des/deps               | 150 -------
  src/lib/crypto/builtin/des/des_int.h          | 285 -------------
  src/lib/crypto/builtin/des/des_keys.c         |  40 --
  src/lib/crypto/builtin/des/destest.c          | 240 -----------
@@ -45,7 +45,7 @@ Last-updated: 1.18-beta2
  src/lib/crypto/builtin/des/t_verify.c         | 395 ------------------
  src/lib/crypto/builtin/des/weak_key.c         |  86 ----
  .../crypto/builtin/enc_provider/Makefile.in   |   6 +-
- src/lib/crypto/builtin/enc_provider/deps      |  12 -
+ src/lib/crypto/builtin/enc_provider/deps      |  13 -
  src/lib/crypto/builtin/enc_provider/des3.c    | 105 -----
  src/lib/crypto/crypto_tests/t_cf2.expected    |   1 -
  src/lib/crypto/crypto_tests/t_cf2.in          |   5 -
@@ -83,7 +83,6 @@ Last-updated: 1.18-beta2
  .../api.current/randkey-principal-v2.exp      |   4 +-
  src/lib/krb5/krb/init_ctx.c                   |   3 -
  src/lib/krb5/krb/s4u_creds.c                  |   2 -
- src/lib/krb5/krb/t_copy_context.c             |   2 +-
  src/lib/krb5/krb/t_etypes.c                   |  48 +--
  src/lib/krb5/os/t_trace.c                     |   4 +-
  src/lib/krb5/os/t_trace.ref                   |   2 +-
@@ -106,7 +105,7 @@ Last-updated: 1.18-beta2
  src/tests/t_salt.py                           |   5 +-
  src/util/k5test.py                            |   7 -
  .../leash/htmlhelp/html/Encryption_Types.htm  |  13 -
- 96 files changed, 163 insertions(+), 4834 deletions(-)
+ 95 files changed, 160 insertions(+), 4835 deletions(-)
  delete mode 100644 src/lib/crypto/builtin/des/ISSUES
  delete mode 100644 src/lib/crypto/builtin/des/Makefile.in
  delete mode 100644 src/lib/crypto/builtin/des/d3_aead.c
@@ -135,7 +134,7 @@ Last-updated: 1.18-beta2
  delete mode 100644 src/lib/crypto/openssl/enc_provider/des3.c
 
 diff --git a/doc/admin/advanced/retiring-des.rst b/doc/admin/advanced/retiring-des.rst
-index 4a964c15c..cb6258d77 100644
+index 38f76d3f4..d5e3c30c0 100644
 --- a/doc/admin/advanced/retiring-des.rst
 +++ b/doc/admin/advanced/retiring-des.rst
 @@ -10,6 +10,13 @@ ability have rendered DES vulnerable to brute force attacks on its 56-bit
@@ -164,19 +163,19 @@ index 4a964c15c..cb6258d77 100644
  -------------
  
 diff --git a/doc/admin/conf_files/kdc_conf.rst b/doc/admin/conf_files/kdc_conf.rst
-index 9759756a2..cf8a12547 100644
+index 1dc958d62..3a72aabef 100644
 --- a/doc/admin/conf_files/kdc_conf.rst
 +++ b/doc/admin/conf_files/kdc_conf.rst
-@@ -843,8 +843,6 @@ Encryption types marked as "weak" are available for compatibility but
- not recommended for use.
+@@ -848,8 +848,6 @@ Encryption types marked as "weak" and "deprecated" are available for
+ compatibility but not recommended for use.
  
  ==================================================== =========================================================
 -des3-cbc-raw                                         Triple DES cbc mode raw (weak)
--des3-cbc-sha1 des3-hmac-sha1 des3-cbc-sha1-kd        Triple DES cbc mode with HMAC/sha1
+-des3-cbc-sha1 des3-hmac-sha1 des3-cbc-sha1-kd        Triple DES cbc mode with HMAC/sha1 (deprecated)
  aes256-cts-hmac-sha1-96 aes256-cts aes256-sha1       AES-256 CTS mode with 96-bit SHA-1 HMAC
  aes128-cts-hmac-sha1-96 aes128-cts aes128-sha1       AES-128 CTS mode with 96-bit SHA-1 HMAC
  aes256-cts-hmac-sha384-192 aes256-sha2               AES-256 CTS mode with 192-bit SHA-384 HMAC
-@@ -853,7 +851,6 @@ arcfour-hmac rc4-hmac arcfour-hmac-md5               RC4 with HMAC/MD5
+@@ -858,7 +856,6 @@ arcfour-hmac rc4-hmac arcfour-hmac-md5               RC4 with HMAC/MD5 (deprecat
  arcfour-hmac-exp rc4-hmac-exp arcfour-hmac-md5-exp   Exportable RC4 with HMAC/MD5 (weak)
  camellia256-cts-cmac camellia256-cts                 Camellia-256 CTS mode with CMAC
  camellia128-cts-cmac camellia128-cts                 Camellia-128 CTS mode with CMAC
@@ -184,7 +183,7 @@ index 9759756a2..cf8a12547 100644
  aes                                                  The AES family: aes256-cts-hmac-sha1-96, aes128-cts-hmac-sha1-96, aes256-cts-hmac-sha384-192, and aes128-cts-hmac-sha256-128
  rc4                                                  The RC4 family: arcfour-hmac
  camellia                                             The Camellia family: camellia256-cts-cmac and camellia128-cts-cmac
-@@ -865,8 +862,8 @@ from the current list by prefixing them with a minus sign ("-").
+@@ -870,8 +867,8 @@ from the current list by prefixing them with a minus sign ("-").
  Types or families can be prefixed with a plus sign ("+") for symmetry;
  it has the same meaning as just listing the type or family.  For
  example, "``DEFAULT -rc4``" would be the default set of encryption
@@ -196,35 +195,35 @@ index 9759756a2..cf8a12547 100644
  
  While **aes128-cts** and **aes256-cts** are supported for all Kerberos
 diff --git a/doc/admin/enctypes.rst b/doc/admin/enctypes.rst
-index caf6d9267..65b55cdb9 100644
+index 047185afb..b08d954d9 100644
 --- a/doc/admin/enctypes.rst
 +++ b/doc/admin/enctypes.rst
-@@ -129,7 +129,7 @@ enctype                    weak? krb5     Windows
- des-cbc-crc                weak  <1.18    >=2000
- des-cbc-md4                weak  <1.18    ?
- des-cbc-md5                weak  <1.18    >=2000
--des3-cbc-sha1                    >=1.1    none
-+des3-cbc-sha1                    <1.18    none
- arcfour-hmac                     >=1.3    >=2000
- arcfour-hmac-exp           weak  >=1.3    >=2000
- aes128-cts-hmac-sha1-96          >=1.3    >=Vista
-@@ -140,7 +140,10 @@ camellia128-cts-cmac             >=1.9    none
- camellia256-cts-cmac             >=1.9    none
- ========================== ===== ======== =======
- 
--krb5 releases 1.18 and later do not support single-DES.  krb5 releases
--1.8 and later disable the single-DES enctypes by default.  Microsoft
--Windows releases Windows 7 and later disable single-DES enctypes by
--default.
-+krb5 releases 1.8 and later disable the single-DES enctypes by
-+default.  Microsoft Windows releases Windows 7 and later disable
-+single-DES enctypes by default.
+@@ -129,7 +129,7 @@ enctype                    weak?      krb5     Windows
+ des-cbc-crc                weak       <1.18    >=2000
+ des-cbc-md4                weak       <1.18    ?
+ des-cbc-md5                weak       <1.18    >=2000
+-des3-cbc-sha1              deprecated >=1.1    none
++des3-cbc-sha1              deprecated <1.18    none
+ arcfour-hmac               deprecated >=1.3    >=2000
+ arcfour-hmac-exp           weak       >=1.3    >=2000
+ aes128-cts-hmac-sha1-96               >=1.3    >=Vista
+@@ -148,9 +148,11 @@ default.
+ krb5 releases 1.17 and later flag deprecated encryption types
+ (including ``des3-cbc-sha1`` and ``arcfour-hmac``) in KDC logs and
+ kadmin output.  krb5 release 1.19 issues a warning during initial
+-authentication if ``des3-cbc-sha1`` is used.  Future releases will
+-disable ``des3-cbc-sha1`` by default and eventually remove support for
+-it.
++authentication if ``des3-cbc-sha1`` is used.
 +
 +krb5 releases 1.18 and later remove single-DES and 3DES
 +(downstream-only patch) enctype support.  Microsoft Windows never
 +supported 3DES.
+ 
+ 
+ Migrating away from older encryption types
 diff --git a/doc/admin/troubleshoot.rst b/doc/admin/troubleshoot.rst
-index 6a0c7f89b..263fc9c97 100644
+index ade5e1f87..e4dc54f7e 100644
 --- a/doc/admin/troubleshoot.rst
 +++ b/doc/admin/troubleshoot.rst
 @@ -73,11 +73,10 @@ credential verification failed: KDC has no support for encryption type
@@ -244,7 +243,7 @@ index 6a0c7f89b..263fc9c97 100644
  
  .. _err_cert_chain_cert_expired:
 diff --git a/doc/appdev/refs/macros/index.rst b/doc/appdev/refs/macros/index.rst
-index 68debe714..788d094bf 100644
+index cebb6644c..4d51e795c 100644
 --- a/doc/appdev/refs/macros/index.rst
 +++ b/doc/appdev/refs/macros/index.rst
 @@ -36,7 +36,6 @@ Public
@@ -256,10 +255,10 @@ index 68debe714..788d094bf 100644
     CKSUMTYPE_NIST_SHA.rst
     CKSUMTYPE_RSA_MD4.rst
 diff --git a/doc/conf.py b/doc/conf.py
-index c32b2882a..5eeafc30f 100644
+index 9226b8e01..19cf38326 100644
 --- a/doc/conf.py
 +++ b/doc/conf.py
-@@ -272,7 +272,7 @@ else:
+@@ -271,7 +271,7 @@ else:
      rst_epilog += '''
  .. |krb5conf| replace:: ``/etc/krb5.conf``
  .. |defkeysalts| replace:: ``aes256-cts-hmac-sha1-96:normal aes128-cts-hmac-sha1-96:normal``
@@ -269,7 +268,7 @@ index c32b2882a..5eeafc30f 100644
  .. |copy| unicode:: U+000A9
  '''
 diff --git a/doc/mitK5features.rst b/doc/mitK5features.rst
-index 5d286b6ee..f4594ed13 100644
+index 4954bb3aa..92ce2a772 100644
 --- a/doc/mitK5features.rst
 +++ b/doc/mitK5features.rst
 @@ -37,7 +37,7 @@ Database backends: LDAP, DB2, LMDB
@@ -282,7 +281,7 @@ index 5d286b6ee..f4594ed13 100644
  Interoperability
  ----------------
 diff --git a/src/Makefile.in b/src/Makefile.in
-index 56c7a4e6f..70db82a30 100644
+index f9270aba2..c958da60f 100644
 --- a/src/Makefile.in
 +++ b/src/Makefile.in
 @@ -130,7 +130,7 @@ WINMAKEFILES=Makefile \
@@ -304,10 +303,10 @@ index 56c7a4e6f..70db82a30 100644
  ##DOS##	$(WCONFIG) config < $@.in > $@
  ##DOS##lib\crypto\builtin\camellia\Makefile: lib\crypto\builtin\camellia\Makefile.in $(MKFDEP)
 diff --git a/src/configure.ac b/src/configure.ac
-index 440a22bd9..d4e4da525 100644
+index bd151ca26..27c2383d7 100644
 --- a/src/configure.ac
 +++ b/src/configure.ac
-@@ -1481,7 +1481,6 @@ V5_AC_OUTPUT_MAKEFILE(.
+@@ -1480,7 +1480,6 @@ V5_AC_OUTPUT_MAKEFILE(.
  	lib/crypto lib/crypto/krb lib/crypto/$CRYPTO_IMPL
  	lib/crypto/$CRYPTO_IMPL/enc_provider
  	lib/crypto/$CRYPTO_IMPL/hash_provider
@@ -316,7 +315,7 @@ index 440a22bd9..d4e4da525 100644
          lib/crypto/$CRYPTO_IMPL/sha1 lib/crypto/$CRYPTO_IMPL/sha2
  	lib/crypto/$CRYPTO_IMPL/aes lib/crypto/$CRYPTO_IMPL/camellia
 diff --git a/src/include/krb5/krb5.hin b/src/include/krb5/krb5.hin
-index e9435c693..6355e6540 100644
+index db80063eb..63e67a2ba 100644
 --- a/src/include/krb5/krb5.hin
 +++ b/src/include/krb5/krb5.hin
 @@ -426,8 +426,8 @@ typedef struct _krb5_crypto_iov {
@@ -365,10 +364,10 @@ index 8a4b87de1..d7f1d076b 100644
 +		supported_enctypes = aes256-cts:normal aes128-cts:normal aes256-sha2:normal aes128-sha2:normal
  	}
 diff --git a/src/kdc/kdc_util.c b/src/kdc/kdc_util.c
-index ba0ce0b71..e3352f9cc 100644
+index 60f30c4f4..c65375aef 100644
 --- a/src/kdc/kdc_util.c
 +++ b/src/kdc/kdc_util.c
-@@ -1103,8 +1103,6 @@ enctype_name(krb5_enctype ktype, char *buf, size_t buflen)
+@@ -1017,8 +1017,6 @@ enctype_name(krb5_enctype ktype, char *buf, size_t buflen)
          name = "rsaEncryption-EnvOID";
      else if (ktype == ENCTYPE_RSA_ES_OAEP_ENV)
          name = "id-RSAES-OAEP-EnvOID";
@@ -377,7 +376,7 @@ index ba0ce0b71..e3352f9cc 100644
      else
          return krb5_enctype_to_name(ktype, FALSE, buf, buflen);
  
-@@ -1826,8 +1824,6 @@ krb5_boolean
+@@ -1605,8 +1603,6 @@ krb5_boolean
  enctype_requires_etype_info_2(krb5_enctype enctype)
  {
      switch(enctype) {
@@ -470,7 +469,7 @@ index 157891103..000000000
 -const?
 diff --git a/src/lib/crypto/builtin/des/Makefile.in b/src/lib/crypto/builtin/des/Makefile.in
 deleted file mode 100644
-index ed25dab7c..000000000
+index 54b329d0f..000000000
 --- a/src/lib/crypto/builtin/des/Makefile.in
 +++ /dev/null
 @@ -1,80 +0,0 @@
@@ -527,7 +526,7 @@ index ed25dab7c..000000000
 -verify$(EXEEXT): t_verify.$(OBJEXT) $(TOBJS) f_parity.$(OBJEXT) \
 -	$(COM_ERR_DEPLIB) $(SUPPORT_DEPLIB)
 -	$(CC_LINK) -o $@ t_verify.$(OBJEXT) $(TOBJS) f_parity.$(OBJEXT) \
--		-lcom_err $(SUPPORT_LIB)
+-		$(COM_ERR_LIB) $(SUPPORT_LIB)
 -
 -destest$(EXEEXT): destest.$(OBJEXT) $(TOBJS) $(SUPPORT_DEPLIB)
 -	$(CC_LINK) -o $@ destest.$(OBJEXT) $(TOBJS) $(SUPPORT_LIB)
@@ -752,17 +751,18 @@ index ebd1050b1..000000000
 -}
 diff --git a/src/lib/crypto/builtin/des/deps b/src/lib/crypto/builtin/des/deps
 deleted file mode 100644
-index df2a31dac..000000000
+index a1db1f36e..000000000
 --- a/src/lib/crypto/builtin/des/deps
 +++ /dev/null
-@@ -1,148 +0,0 @@
+@@ -1,150 +0,0 @@
 -#
 -# Generated makefile dependencies follow.
 -#
 -d3_aead.so d3_aead.po $(OUTPRE)d3_aead.$(OBJEXT): $(BUILDTOP)/include/autoconf.h \
 -  $(BUILDTOP)/include/krb5/krb5.h $(BUILDTOP)/include/osconf.h \
 -  $(BUILDTOP)/include/profile.h $(COM_ERR_DEPS) $(srcdir)/../../krb/crypto_int.h \
--  $(srcdir)/../aes/aes.h $(srcdir)/../crypto_mod.h $(srcdir)/../sha2/sha2.h \
+-  $(srcdir)/../aes/aes.h $(srcdir)/../aes/brg_types.h \
+-  $(srcdir)/../crypto_mod.h $(srcdir)/../sha2/sha2.h \
 -  $(top_srcdir)/include/k5-buf.h $(top_srcdir)/include/k5-err.h \
 -  $(top_srcdir)/include/k5-gmt_mktime.h $(top_srcdir)/include/k5-int-pkinit.h \
 -  $(top_srcdir)/include/k5-int.h $(top_srcdir)/include/k5-platform.h \
@@ -786,19 +786,20 @@ index df2a31dac..000000000
 -  $(BUILDTOP)/include/autoconf.h $(BUILDTOP)/include/krb5/krb5.h \
 -  $(BUILDTOP)/include/osconf.h $(BUILDTOP)/include/profile.h \
 -  $(COM_ERR_DEPS) $(srcdir)/../../krb/crypto_int.h $(srcdir)/../aes/aes.h \
--  $(srcdir)/../crypto_mod.h $(srcdir)/../sha2/sha2.h \
--  $(top_srcdir)/include/k5-buf.h $(top_srcdir)/include/k5-err.h \
--  $(top_srcdir)/include/k5-gmt_mktime.h $(top_srcdir)/include/k5-int-pkinit.h \
--  $(top_srcdir)/include/k5-int.h $(top_srcdir)/include/k5-platform.h \
--  $(top_srcdir)/include/k5-plugin.h $(top_srcdir)/include/k5-thread.h \
--  $(top_srcdir)/include/k5-trace.h $(top_srcdir)/include/krb5.h \
--  $(top_srcdir)/include/krb5/authdata_plugin.h $(top_srcdir)/include/krb5/plugin.h \
--  $(top_srcdir)/include/port-sockets.h $(top_srcdir)/include/socket-utils.h \
--  des_int.h des_keys.c
+-  $(srcdir)/../aes/brg_types.h $(srcdir)/../crypto_mod.h \
+-  $(srcdir)/../sha2/sha2.h $(top_srcdir)/include/k5-buf.h \
+-  $(top_srcdir)/include/k5-err.h $(top_srcdir)/include/k5-gmt_mktime.h \
+-  $(top_srcdir)/include/k5-int-pkinit.h $(top_srcdir)/include/k5-int.h \
+-  $(top_srcdir)/include/k5-platform.h $(top_srcdir)/include/k5-plugin.h \
+-  $(top_srcdir)/include/k5-thread.h $(top_srcdir)/include/k5-trace.h \
+-  $(top_srcdir)/include/krb5.h $(top_srcdir)/include/krb5/authdata_plugin.h \
+-  $(top_srcdir)/include/krb5/plugin.h $(top_srcdir)/include/port-sockets.h \
+-  $(top_srcdir)/include/socket-utils.h des_int.h des_keys.c
 -f_aead.so f_aead.po $(OUTPRE)f_aead.$(OBJEXT): $(BUILDTOP)/include/autoconf.h \
 -  $(BUILDTOP)/include/krb5/krb5.h $(BUILDTOP)/include/osconf.h \
 -  $(BUILDTOP)/include/profile.h $(COM_ERR_DEPS) $(srcdir)/../../krb/crypto_int.h \
--  $(srcdir)/../aes/aes.h $(srcdir)/../crypto_mod.h $(srcdir)/../sha2/sha2.h \
+-  $(srcdir)/../aes/aes.h $(srcdir)/../aes/brg_types.h \
+-  $(srcdir)/../crypto_mod.h $(srcdir)/../sha2/sha2.h \
 -  $(top_srcdir)/include/k5-buf.h $(top_srcdir)/include/k5-err.h \
 -  $(top_srcdir)/include/k5-gmt_mktime.h $(top_srcdir)/include/k5-int-pkinit.h \
 -  $(top_srcdir)/include/k5-int.h $(top_srcdir)/include/k5-platform.h \
@@ -1489,7 +1490,7 @@ index 52114304e..000000000
 -}
 diff --git a/src/lib/crypto/builtin/des/doc/libdes.doc b/src/lib/crypto/builtin/des/doc/libdes.doc
 deleted file mode 100644
-index 19c03c1d3..000000000
+index 6e9431ed2..000000000
 --- a/src/lib/crypto/builtin/des/doc/libdes.doc
 +++ /dev/null
 @@ -1,208 +0,0 @@
@@ -1644,7 +1645,7 @@ index 19c03c1d3..000000000
 -	by "*key", then after getting a new key, call the des_set_key() 
 -	routine when needed.
 -
--	No meaningfull value is returned.  Void is not used for compatibility
+-	No meaningful value is returned.  Void is not used for compatibility
 -	with other compilers.
 -
 -
@@ -3625,7 +3626,7 @@ index 7ff34eedc..000000000
 -1C587F1C13924FEF 305532286D6F295A 63FAC0D034D9F793
 diff --git a/src/lib/crypto/builtin/des/t_verify.c b/src/lib/crypto/builtin/des/t_verify.c
 deleted file mode 100644
-index f4332f5c0..000000000
+index 4a19933ca..000000000
 --- a/src/lib/crypto/builtin/des/t_verify.c
 +++ /dev/null
 @@ -1,395 +0,0 @@
@@ -3956,7 +3957,7 @@ index f4332f5c0..000000000
 -        printf("%02x ",cipher_text[j]);
 -    printf("\n\n");
 -    if ( memcmp((char *)cipher_text, (char *)checksum, 8) ) {
--        printf("verify: error in CBC cheksum\n");
+-        printf("verify: error in CBC checksum\n");
 -        exit(-1);
 -    }
 -    else
@@ -4150,17 +4151,18 @@ index 3459e1d0e..af6276b96 100644
  	$(srcdir)/camellia.c	\
  	$(srcdir)/rc4.c
 diff --git a/src/lib/crypto/builtin/enc_provider/deps b/src/lib/crypto/builtin/enc_provider/deps
-index 7a3324c44..c1201cc1a 100644
+index ea4ffecd8..061289a91 100644
 --- a/src/lib/crypto/builtin/enc_provider/deps
 +++ b/src/lib/crypto/builtin/enc_provider/deps
-@@ -1,18 +1,6 @@
+@@ -1,19 +1,6 @@
  #
  # Generated makefile dependencies follow.
  #
 -des3.so des3.po $(OUTPRE)des3.$(OBJEXT): $(BUILDTOP)/include/autoconf.h \
 -  $(BUILDTOP)/include/krb5/krb5.h $(BUILDTOP)/include/osconf.h \
 -  $(BUILDTOP)/include/profile.h $(COM_ERR_DEPS) $(srcdir)/../../krb/crypto_int.h \
--  $(srcdir)/../aes/aes.h $(srcdir)/../crypto_mod.h $(srcdir)/../des/des_int.h \
+-  $(srcdir)/../aes/aes.h $(srcdir)/../aes/brg_types.h \
+-  $(srcdir)/../crypto_mod.h $(srcdir)/../des/des_int.h \
 -  $(srcdir)/../sha2/sha2.h $(top_srcdir)/include/k5-buf.h \
 -  $(top_srcdir)/include/k5-err.h $(top_srcdir)/include/k5-gmt_mktime.h \
 -  $(top_srcdir)/include/k5-int-pkinit.h $(top_srcdir)/include/k5-int.h \
@@ -4311,7 +4313,7 @@ index 73e2f8fbc..c4d23b506 100644
  key1
  key2
 diff --git a/src/lib/crypto/crypto_tests/t_cksums.c b/src/lib/crypto/crypto_tests/t_cksums.c
-index 4da14ea43..84408fb68 100644
+index 8297fcbf5..3063d12ec 100644
 --- a/src/lib/crypto/crypto_tests/t_cksums.c
 +++ b/src/lib/crypto/crypto_tests/t_cksums.c
 @@ -59,16 +59,6 @@ struct test {
@@ -4593,7 +4595,7 @@ index ecc2e08c9..f5fbe8a2a 100644
        "hmac-md5-rc4", { "hmac-md5-enc", "hmac-md5-earcfour" },
        "Microsoft HMAC MD5",
 diff --git a/src/lib/crypto/krb/crypto_int.h b/src/lib/crypto/krb/crypto_int.h
-index ba693f8a4..5cc1f8e43 100644
+index 19f808749..4bc430c7a 100644
 --- a/src/lib/crypto/krb/crypto_int.h
 +++ b/src/lib/crypto/krb/crypto_int.h
 @@ -276,10 +276,6 @@ krb5_error_code krb5int_aes2_string_to_key(const struct krb5_keytypes *enc,
@@ -4814,7 +4816,7 @@ index 157462526..863090beb 100644
 -    return 0;
 -}
 diff --git a/src/lib/crypto/libk5crypto.exports b/src/lib/crypto/libk5crypto.exports
-index 451d5e035..9db181381 100644
+index d6cc1b423..f44cb9170 100644
 --- a/src/lib/crypto/libk5crypto.exports
 +++ b/src/lib/crypto/libk5crypto.exports
 @@ -86,7 +86,6 @@ krb5_k_verify_checksum
@@ -5193,10 +5195,10 @@ index 1c439c2cd..000000000
 -    krb5int_default_free_state
 -};
 diff --git a/src/lib/gssapi/krb5/accept_sec_context.c b/src/lib/gssapi/krb5/accept_sec_context.c
-index c821cc830..c5bddb1e8 100644
+index 636ee303f..e2c5e2b59 100644
 --- a/src/lib/gssapi/krb5/accept_sec_context.c
 +++ b/src/lib/gssapi/krb5/accept_sec_context.c
-@@ -1010,7 +1010,6 @@ kg_accept_krb5(minor_status, context_handle,
+@@ -1039,7 +1039,6 @@ kg_accept_krb5(minor_status, context_handle,
              }
  
              switch (negotiated_etype) {
@@ -5205,7 +5207,7 @@ index c821cc830..c5bddb1e8 100644
              case ENCTYPE_ARCFOUR_HMAC_EXP:
                  /* RFC 4121 accidentally omits RC4-HMAC-EXP as a "not-newer"
 diff --git a/src/lib/gssapi/krb5/gssapiP_krb5.h b/src/lib/gssapi/krb5/gssapiP_krb5.h
-index 2e2c775d6..f5b0fede6 100644
+index a7e0e63ec..3bacdcd35 100644
 --- a/src/lib/gssapi/krb5/gssapiP_krb5.h
 +++ b/src/lib/gssapi/krb5/gssapiP_krb5.h
 @@ -125,14 +125,14 @@ enum sgn_alg {
@@ -5552,7 +5554,7 @@ index 85a9574f3..3ce2a90ce 100644
          code = 0;
          retval = GSS_S_BAD_SIG;
 diff --git a/src/lib/gssapi/krb5/util_crypt.c b/src/lib/gssapi/krb5/util_crypt.c
-index ddb0af8fc..d6c71aeb8 100644
+index 84f194988..32150f5e3 100644
 --- a/src/lib/gssapi/krb5/util_crypt.c
 +++ b/src/lib/gssapi/krb5/util_crypt.c
 @@ -97,17 +97,6 @@ kg_setup_keys(krb5_context context, krb5_gss_ctx_id_rec *ctx, krb5_key subkey,
@@ -5623,7 +5625,7 @@ index 2925c1c43..2f76c8b43 100644
      if { ! [cmd {kadm5_destroy $server_handle}]} {
  	perror "$test: unexpected failure in destroy"
 diff --git a/src/lib/krb5/krb/init_ctx.c b/src/lib/krb5/krb/init_ctx.c
-index e7d67cca4..9a4741fa6 100644
+index 21d5cb1ca..a8ba6fc5b 100644
 --- a/src/lib/krb5/krb/init_ctx.c
 +++ b/src/lib/krb5/krb/init_ctx.c
 @@ -59,7 +59,6 @@
@@ -5634,7 +5636,7 @@ index e7d67cca4..9a4741fa6 100644
      ENCTYPE_ARCFOUR_HMAC,
      ENCTYPE_CAMELLIA128_CTS_CMAC, ENCTYPE_CAMELLIA256_CTS_CMAC,
      0
-@@ -479,8 +478,6 @@ krb5int_parse_enctype_list(krb5_context context, const char *profkey,
+@@ -456,8 +455,6 @@ krb5int_parse_enctype_list(krb5_context context, const char *profkey,
              /* Set all enctypes in the default list. */
              for (i = 0; default_list[i]; i++)
                  mod_list(default_list[i], sel, weak, &list);
@@ -5644,10 +5646,10 @@ index e7d67cca4..9a4741fa6 100644
              mod_list(ENCTYPE_AES256_CTS_HMAC_SHA1_96, sel, weak, &list);
              mod_list(ENCTYPE_AES128_CTS_HMAC_SHA1_96, sel, weak, &list);
 diff --git a/src/lib/krb5/krb/s4u_creds.c b/src/lib/krb5/krb/s4u_creds.c
-index 504eb557f..fc5c886d6 100644
+index 44d113e7c..966278578 100644
 --- a/src/lib/krb5/krb/s4u_creds.c
 +++ b/src/lib/krb5/krb/s4u_creds.c
-@@ -287,8 +287,6 @@ verify_s4u2self_reply(krb5_context context,
+@@ -288,8 +288,6 @@ verify_s4u2self_reply(krb5_context context,
      assert(req_s4u_user != NULL);
  
      switch (subkey->enctype) {
@@ -5656,21 +5658,8 @@ index 504eb557f..fc5c886d6 100644
      case ENCTYPE_ARCFOUR_HMAC:
      case ENCTYPE_ARCFOUR_HMAC_EXP :
          not_newer = TRUE;
-diff --git a/src/lib/krb5/krb/t_copy_context.c b/src/lib/krb5/krb/t_copy_context.c
-index 2970a8cea..fb82daf19 100644
---- a/src/lib/krb5/krb/t_copy_context.c
-+++ b/src/lib/krb5/krb/t_copy_context.c
-@@ -113,7 +113,7 @@ main(int argc, char **argv)
- {
-     krb5_context ctx, ctx2;
-     krb5_plugin_initvt_fn *mods;
--    const krb5_enctype etypes1[] = { ENCTYPE_DES3_CBC_SHA1, 0 };
-+    const krb5_enctype etypes1[] = { ENCTYPE_AES128_CTS_HMAC_SHA256_128, 0 };
-     const krb5_enctype etypes2[] = { ENCTYPE_AES128_CTS_HMAC_SHA1_96,
-                                      ENCTYPE_AES256_CTS_HMAC_SHA1_96, 0 };
-     krb5_prompt_type ptypes[] = { KRB5_PROMPT_TYPE_PASSWORD };
 diff --git a/src/lib/krb5/krb/t_etypes.c b/src/lib/krb5/krb/t_etypes.c
-index f609e938a..248ffea90 100644
+index 90c9f626c..935aca12f 100644
 --- a/src/lib/krb5/krb/t_etypes.c
 +++ b/src/lib/krb5/krb/t_etypes.c
 @@ -50,17 +50,6 @@ static struct {
@@ -5787,7 +5776,7 @@ index e3d284631..586661bb7 100644
  #define CKK_CAST3		(0x17)
  #define CKK_CAST128		(0x18)
 diff --git a/src/plugins/preauth/pkinit/pkinit_clnt.c b/src/plugins/preauth/pkinit/pkinit_clnt.c
-index 1a642139a..2f0431991 100644
+index 2817cc213..a385da7c3 100644
 --- a/src/plugins/preauth/pkinit/pkinit_clnt.c
 +++ b/src/plugins/preauth/pkinit/pkinit_clnt.c
 @@ -212,14 +212,6 @@ pkinit_as_req_create(krb5_context context,
@@ -5806,7 +5795,7 @@ index 1a642139a..2f0431991 100644
      case DH_PROTOCOL:
          TRACE_PKINIT_CLIENT_REQ_DH(context);
 diff --git a/src/plugins/preauth/pkinit/pkinit_crypto.h b/src/plugins/preauth/pkinit/pkinit_crypto.h
-index 8064a07d0..a291889b0 100644
+index 77d5c61fe..1f9868351 100644
 --- a/src/plugins/preauth/pkinit/pkinit_crypto.h
 +++ b/src/plugins/preauth/pkinit/pkinit_crypto.h
 @@ -380,18 +380,6 @@ krb5_error_code server_process_dh
@@ -5829,10 +5818,10 @@ index 8064a07d0..a291889b0 100644
   * this functions takes in crypto specific representation of
   * trustedCertifiers and creates a list of
 diff --git a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
-index 8c7fd0cca..52976895b 100644
+index d7d1593f4..0a67c44ef 100644
 --- a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
 +++ b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
-@@ -5487,44 +5487,6 @@ cleanup:
+@@ -5488,44 +5488,6 @@ cleanup:
      return retval;
  }
  
@@ -5963,7 +5952,7 @@ index 2279202d3..96b0307d7 100644
        /* initial key, w, x, y, T, S, K */
        "8846F7EAEE8FB117AD06BDD830B7586C",
 diff --git a/src/tests/dejagnu/config/default.exp b/src/tests/dejagnu/config/default.exp
-index b047ef1f7..4d8c917cd 100644
+index 619fcce48..0a2ed723d 100644
 --- a/src/tests/dejagnu/config/default.exp
 +++ b/src/tests/dejagnu/config/default.exp
 @@ -15,8 +15,6 @@ set timeout 100
@@ -6042,7 +6031,7 @@ index b047ef1f7..4d8c917cd 100644
  	{allow_weak_crypto(kdc)=false}
  	{allow_weak_crypto(replica)=false}
  	{allow_weak_crypto(client)=false}
-@@ -946,7 +911,6 @@ proc setup_kerberos_db { standalone } {
+@@ -945,7 +910,6 @@ proc setup_kerberos_db { standalone } {
      global REALMNAME KDB5_UTIL KADMIN_LOCAL KEY
      global tmppwd hostname
      global spawn_id
@@ -6050,7 +6039,7 @@ index b047ef1f7..4d8c917cd 100644
      global multipass_name last_passname_db
  
      set failall 0
-@@ -1143,48 +1107,6 @@ proc setup_kerberos_db { standalone } {
+@@ -1142,48 +1106,6 @@ proc setup_kerberos_db { standalone } {
  	}
      }
  
@@ -6100,7 +6089,7 @@ index b047ef1f7..4d8c917cd 100644
  
      # create the admin database lock file
 diff --git a/src/tests/dejagnu/krb-standalone/kprop.exp b/src/tests/dejagnu/krb-standalone/kprop.exp
-index f71ee8638..8c08cf42f 100644
+index 661e3fd9a..2b8f60045 100644
 --- a/src/tests/dejagnu/krb-standalone/kprop.exp
 +++ b/src/tests/dejagnu/krb-standalone/kprop.exp
 @@ -54,7 +54,7 @@ proc doit { } {
@@ -6258,7 +6247,7 @@ index f71774cdc..d1857c433 100644
        "3BB3AE288C12B3B9D06B208A4151B3B6",
        "9AEA11A3BCF3C53F1F91F5A0BA2132E2501ADF5F3C28"
 diff --git a/src/tests/t_authdata.py b/src/tests/t_authdata.py
-index c589adf2a..4fbdbec05 100644
+index 3fa957ad2..2e01f46bc 100644
 --- a/src/tests/t_authdata.py
 +++ b/src/tests/t_authdata.py
 @@ -174,7 +174,7 @@ realm.run([kvno, 'restricted'])
@@ -6271,7 +6260,7 @@ index c589adf2a..4fbdbec05 100644
  realm.run(['./forward'])
  realm.run([kvno, realm.host_princ])
 diff --git a/src/tests/t_etype_info.py b/src/tests/t_etype_info.py
-index 2a052fc17..ace0edc3c 100644
+index c982508d8..96e90a69d 100644
 --- a/src/tests/t_etype_info.py
 +++ b/src/tests/t_etype_info.py
 @@ -1,6 +1,6 @@
@@ -6282,7 +6271,7 @@ index 2a052fc17..ace0edc3c 100644
  conf = {'libdefaults': {'allow_weak_crypto': 'true'},
          'realms': {'$realm': {'supported_enctypes': supported_enctypes}}}
  realm = K5Realm(create_host=False, get_creds=False, krb5_conf=conf)
-@@ -24,9 +24,9 @@ def test_etinfo(princ, enctypes, expected_lines):
+@@ -26,9 +26,9 @@ def test_etinfo(princ, enctypes, expected_lines):
  # With no newer enctypes in the request, PA-ETYPE-INFO2,
  # PA-ETYPE-INFO, and PA-PW-SALT appear in the AS-REP, each listing one
  # key for the most preferred matching enctype.
@@ -6295,7 +6284,7 @@ index 2a052fc17..ace0edc3c 100644
               'asrep pw_salt KRBTEST.COMuser'])
  
  # With a newer enctype in the request (even if it is not the most
-@@ -37,9 +37,9 @@ test_etinfo('user', 'rc4 aes256-cts',
+@@ -39,9 +39,9 @@ test_etinfo('user', 'rc4 aes256-cts',
  
  # In preauth-required errors, PA-PW-SALT does not appear, but the same
  # etype-info2 values are expected.
@@ -6308,7 +6297,7 @@ index 2a052fc17..ace0edc3c 100644
  test_etinfo('preauthuser', 'rc4 aes256-cts',
              ['error etype_info2 rc4-hmac KRBTEST.COMpreauthuser'])
  
-@@ -48,8 +48,8 @@ test_etinfo('preauthuser', 'rc4 aes256-cts',
+@@ -50,8 +50,8 @@ test_etinfo('preauthuser', 'rc4 aes256-cts',
  # (to allow for preauth mechs which don't depend on long-term keys).
  # An AS-REP cannot be generated without preauth as there is no reply
  # key.
@@ -6348,7 +6337,7 @@ index 2c825a692..f29e0d550 100755
  
  realm.stop()
 diff --git a/src/tests/t_mkey.py b/src/tests/t_mkey.py
-index 99273c907..f84041ca4 100755
+index 32f4070bc..da0ed1831 100755
 --- a/src/tests/t_mkey.py
 +++ b/src/tests/t_mkey.py
 @@ -7,7 +7,6 @@ import struct
@@ -6421,10 +6410,10 @@ index 65084bbf3..55ca89745 100755
  # Test using different salt types in a principal's key list.
  # Parameters from one key in the list must not leak over to later ones.
 diff --git a/src/util/k5test.py b/src/util/k5test.py
-index 442a4e4f7..eea92275d 100644
+index 10f6b0a25..d234a5667 100644
 --- a/src/util/k5test.py
 +++ b/src/util/k5test.py
-@@ -1299,13 +1299,6 @@ _passes = [
+@@ -1277,13 +1277,6 @@ _passes = [
      # No special settings; exercises AES256.
      ('default', None, None, None),
  

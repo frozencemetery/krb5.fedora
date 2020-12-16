@@ -1,4 +1,4 @@
-From 29f58a8059cb73ca586514b57458b2b17e091f36 Mon Sep 17 00:00:00 2001
+From df80ded9756b0637ab7cca706e1520f3f372c2e2 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:46:21 -0400
 Subject: [PATCH] [downstream] netlib and dns
@@ -11,10 +11,10 @@ Last-updated: krb5-1.3.1
  1 file changed, 1 insertion(+)
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
-index 398eca7e4..7ef2db56b 100644
+index 5afb96e58..4a4d460e3 100644
 --- a/src/aclocal.m4
 +++ b/src/aclocal.m4
-@@ -720,6 +720,7 @@ AC_HELP_STRING([--with-netlib=LIBS], use user defined resolver library),
+@@ -718,6 +718,7 @@ AC_HELP_STRING([--with-netlib=LIBS], use user defined resolver library),
  	LIBS="$LIBS $withval"
  	AC_MSG_RESULT("netlib will use \'$withval\'")
    fi

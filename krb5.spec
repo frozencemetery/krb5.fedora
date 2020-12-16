@@ -1,5 +1,3 @@
-%global WITH_DIRSRV 1
-
 # Set this so that find-lang.sh will recognize the .po files.
 %global gettext_domain mit-krb5
 # Guess where the -libs subpackage's docs are going to go.
@@ -8,21 +6,24 @@
 %global configure_default_ccache_name 1
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 
-# leave empty or set to e.g., -beta2
-%global prerelease %{nil}
+# either beta1 or % { nil }
+%global prerelease beta1
+%if %{defined prerelease}
+%global dashpre -%{prerelease}
+%global zdpd 0.%{prerelease}.
+%endif
 
 # Should be in form 5.0, 6.1, etc.
 %global kdbversion 8.0
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.18.3
-# for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 5%{?dist}
+Version: 1.19
+Release: %{?zdpd}2%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
-Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
-Source1: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz.asc
+Source0: https://web.mit.edu/kerberos/dist/krb5/%{version}/krb5-%{version}%{?dashpre}.tar.gz
+Source1: https://web.mit.edu/kerberos/dist/krb5/%{version}/krb5-%{version}%{?dashpre}.tar.gz.asc
 
 # Numbering is a relic of old init systems etc.  It's easiest to just leave.
 Source2: kprop.service
@@ -46,37 +47,6 @@ Patch4: downstream-fix-debuginfo-with-y.tab.c.patch
 Patch5: downstream-Remove-3des-support.patch
 Patch6: downstream-Use-backported-version-of-OpenSSL-3-KDF-i.patch
 Patch7: downstream-FIPS-with-PRNG-and-RADIUS-and-MD4.patch
-Patch9: Allow-certauth-modules-to-set-hw-authent-flag.patch
-Patch11: Refresh-manually-acquired-creds-from-client-keytab.patch
-Patch13: Add-finalization-safety-check-to-com_err.patch
-Patch15: Correctly-import-service-GSS-host-based-name.patch
-Patch16: Do-expiration-warnings-for-all-init_creds-APIs.patch
-Patch17: Pass-gss_localname-through-SPNEGO.patch
-Patch18: Omit-KDC-indicator-check-for-S4U2Self-requests.patch
-Patch19: Fix-typo-in-in-in-the-ksu-man-page.patch
-Patch21: Replace-gssrpc-tests-with-a-Python-script.patch
-Patch22: Default-dns_canonicalize_hostname-to-fallback.patch
-Patch23: Remove-resolver-test-utility.patch
-Patch24: Omit-PA_FOR_USER-if-we-can-t-compute-its-checksum.patch
-Patch25: Improve-negoex_parse_token-code-hygiene.patch
-Patch26: Refactor-krb5-GSS-checksum-handling.patch
-Patch27: Implement-GSS_C_CHANNEL_BOUND_FLAG.patch
-Patch28: Implement-KERB_AP_OPTIONS_CBT-server-side.patch
-Patch29: Add-client_aware_channel_bindings-option.patch
-Patch30: Pass-channel-bindings-through-SPNEGO.patch
-Patch31: Add-channel-bindings-tests.patch
-Patch32: Use-two-queues-for-concurrent-t_otp.py-daemons.patch
-Patch34: Ignore-bad-enctypes-in-krb5_string_to_keysalts.patch
-Patch35: Fix-leak-in-KERB_AP_OPTIONS_CBT-server-support.patch
-Patch37: Add-three-kvno-options-from-Heimdal-kgetcred.patch
-Patch39: Improve-KDC-alias-checking-for-S4U-requests.patch
-Patch40: Adjust-KDC-alias-helper-function-contract.patch
-Patch41: Allow-aliases-when-matching-U2U-second-ticket.patch
-Patch42: Refactor-KDC-authdata-list-management-helpers.patch
-Patch43: Avoid-passing-DB-entry-structures-in-KDC.patch
-Patch44: Minimize-usage-of-tgs_server-in-KDC.patch
-Patch45: Fix-minor-static-analysis-defects.patch
-Patch46: Install-shared-libraries-as-executable.patch
 Patch47: Document-k-option-in-kvno-1-synopsis.patch
 
 License: MIT
@@ -211,7 +181,7 @@ contains only the libkadm5clnt and libkadm5serv shared objects. This
 interface is not considered stable.
 
 %prep
-%autosetup -S git -n %{name}-%{version}%{prerelease}
+%autosetup -S git -n %{name}-%{version}%{?dashpre}
 ln NOTICE LICENSE
 
 # Generate an FDS-compatible LDIF file.
@@ -276,9 +246,7 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
     --with-tcl \
     --enable-dns-for-realm \
     --with-ldap \
-%if %{WITH_DIRSRV}
     --with-dirsrv-account-locking \
-%endif
     --enable-pkinit \
     --with-crypto-impl=openssl \
     --with-tls-impl=openssl \
@@ -317,13 +285,17 @@ rm -fr build-html/_sources
 %ifnarch s390x
 pushd src
 
-# ugh.  COPR doesn't expose the keyring, so try to cope.
-KEYCTL=keyctl
-keyctl list @u &>/dev/null || KEYCTL=:
+# ugh.  COPR doesn't work right with the tests.  I suspect keyring issues, but
+# can't actually debug, so...
+%if 0%{?copr_username:1}
+%global keyctl :
+%else
+%global keyctl keyctl
+%endif
 
 # The build system may give us a revoked session keyring, so run affected
 # tests with a new one.
-$KEYCTL session - make check OFFLINE=yes TMPDIR=%{_tmppath}
+%{keyctl} session - make check OFFLINE=yes TMPDIR=%{_tmppath}
 popd
 %endif
 
@@ -639,6 +611,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Dec 16 2020 Robbie Harwood <rharwood@redhat.com> - 1.19-0.beta1.2
+- New upstream version (1.19-beta1)
+
 * Wed Dec 16 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.3-5
 - Fix runstatedir configuration
 - Why couldn't systemd just leave it alone?

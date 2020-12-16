@@ -1,4 +1,4 @@
-From a89e833a2ae26197a0edf864bb9274d776003c60 Mon Sep 17 00:00:00 2001
+From 7b22d94779ff340db5f9f25cf7b55aeb365091e1 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 15 Nov 2019 20:05:16 +0000
 Subject: [PATCH] [downstream] Use backported version of OpenSSL-3 KDF
@@ -12,7 +12,7 @@ Last-updated: krb5-1.17
  3 files changed, 428 insertions(+), 189 deletions(-)
 
 diff --git a/src/configure.ac b/src/configure.ac
-index d4e4da525..29be532cb 100644
+index 27c2383d7..d3e022274 100644
 --- a/src/configure.ac
 +++ b/src/configure.ac
 @@ -282,6 +282,10 @@ AC_SUBST(CRYPTO_IMPL)
@@ -441,7 +441,7 @@ index 6707a7308..915a173dd 100644
          return k5_sp800_108_counter_hmac(hash, inkey, outrnd, in_constant,
                                           &empty);
 diff --git a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
-index 52976895b..dd718c2be 100644
+index 0a67c44ef..dbb054378 100644
 --- a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
 +++ b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
 @@ -38,6 +38,13 @@

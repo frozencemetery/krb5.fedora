@@ -1,4 +1,4 @@
-From 2c4d04d1da4dbb1a312db965f3392d7d0bc67a17 Mon Sep 17 00:00:00 2001
+From 289615de0c73969574e3d48611deda66989c36c0 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:30:53 -0400
 Subject: [PATCH] [downstream] SELinux integration
@@ -67,7 +67,7 @@ Last-updated: krb5-1.18-beta1
  create mode 100644 src/util/support/selinux.c
 
 diff --git a/src/aclocal.m4 b/src/aclocal.m4
-index 59621e3e7..398eca7e4 100644
+index ca9fcf664..5afb96e58 100644
 --- a/src/aclocal.m4
 +++ b/src/aclocal.m4
 @@ -85,6 +85,7 @@ AC_SUBST_FILE(libnodeps_frag)
@@ -78,7 +78,7 @@ index 59621e3e7..398eca7e4 100644
  KRB5_LIB_PARAMS
  KRB5_AC_INITFINI
  KRB5_AC_ENABLE_THREADS
-@@ -1739,4 +1740,51 @@ AC_SUBST(PAM_LIBS)
+@@ -1745,4 +1746,51 @@ AC_SUBST(PAM_LIBS)
  AC_SUBST(PAM_MAN)
  AC_SUBST(NON_PAM_MAN)
  ])dnl
@@ -131,7 +131,7 @@ index 59621e3e7..398eca7e4 100644
 +AC_SUBST(SELINUX_LIBS)
 +])dnl
 diff --git a/src/build-tools/krb5-config.in b/src/build-tools/krb5-config.in
-index f6184da3f..c17cb5eb5 100755
+index 9f96a8719..120922ac3 100755
 --- a/src/build-tools/krb5-config.in
 +++ b/src/build-tools/krb5-config.in
 @@ -41,6 +41,7 @@ DL_LIB='@DL_LIB@'
@@ -152,7 +152,7 @@ index f6184da3f..c17cb5eb5 100755
  
      echo $lib_flags
 diff --git a/src/config/pre.in b/src/config/pre.in
-index ce87e21ca..917357df9 100644
+index 7b3a583cc..0c51e6966 100644
 --- a/src/config/pre.in
 +++ b/src/config/pre.in
 @@ -177,6 +177,7 @@ LD = $(PURE) @LD@
@@ -173,10 +173,10 @@ index ce87e21ca..917357df9 100644
  GSS_LIBS	= $(GSS_KRB5_LIB)
  # needs fixing if ever used on macOS!
 diff --git a/src/configure.ac b/src/configure.ac
-index d1f576124..440a22bd9 100644
+index fdaba0ce7..bd151ca26 100644
 --- a/src/configure.ac
 +++ b/src/configure.ac
-@@ -1392,6 +1392,8 @@ AC_PATH_PROG(GROFF, groff)
+@@ -1391,6 +1391,8 @@ AC_PATH_PROG(GROFF, groff)
  
  KRB5_WITH_PAM
  
@@ -186,7 +186,7 @@ index d1f576124..440a22bd9 100644
  if test "${localedir+set}" != set; then
      localedir='$(datadir)/locale'
 diff --git a/src/include/k5-int.h b/src/include/k5-int.h
-index 9616b24bf..0d9af3d95 100644
+index b3e346991..93d3a1f97 100644
 --- a/src/include/k5-int.h
 +++ b/src/include/k5-int.h
 @@ -128,6 +128,7 @@ typedef unsigned char   u_char;
@@ -236,7 +236,7 @@ index 000000000..dfaaa847c
 +#endif
 +#endif
 diff --git a/src/include/krb5/krb5.hin b/src/include/krb5/krb5.hin
-index 79761f6d2..e9435c693 100644
+index 045334a08..db80063eb 100644
 --- a/src/include/krb5/krb5.hin
 +++ b/src/include/krb5/krb5.hin
 @@ -87,6 +87,12 @@
@@ -288,7 +288,7 @@ index ff2f25050..e3457622a 100644
          com_err(progname, errno, _("while creating 'ok' file, '%s'"), file_ok);
          goto cleanup;
 diff --git a/src/kdc/main.c b/src/kdc/main.c
-index 38d76b3b1..eb6966f2d 100644
+index 27aa10da0..b5916b147 100644
 --- a/src/kdc/main.c
 +++ b/src/kdc/main.c
 @@ -872,7 +872,7 @@ write_pid_file(const char *path)
@@ -301,7 +301,7 @@ index 38d76b3b1..eb6966f2d 100644
          return errno;
      pid = (unsigned long) getpid();
 diff --git a/src/kprop/kpropd.c b/src/kprop/kpropd.c
-index 5622d56e1..356e3e0e6 100644
+index 874ba1305..9d6378cc0 100644
 --- a/src/kprop/kpropd.c
 +++ b/src/kprop/kpropd.c
 @@ -487,6 +487,9 @@ doit(int fd)
@@ -416,7 +416,7 @@ index 7b100a0ec..5683a0433 100644
                    _("Credential cache directory %s does not exist"),
                    dirname);
 diff --git a/src/lib/krb5/keytab/kt_file.c b/src/lib/krb5/keytab/kt_file.c
-index 021c94398..aaf573439 100644
+index e510211fc..f3ea28c8e 100644
 --- a/src/lib/krb5/keytab/kt_file.c
 +++ b/src/lib/krb5/keytab/kt_file.c
 @@ -735,14 +735,14 @@ krb5_ktfileint_open(krb5_context context, krb5_keytab id, int mode)
@@ -463,7 +463,7 @@ index 7db30a33b..2b9d01921 100644
               * maybe someone took away write permission so we could only
               * get shared locks?
 diff --git a/src/plugins/kdb/db2/kdb_db2.c b/src/plugins/kdb/db2/kdb_db2.c
-index 5106a5c99..e481e8121 100644
+index 1a476b586..b40bb2240 100644
 --- a/src/plugins/kdb/db2/kdb_db2.c
 +++ b/src/plugins/kdb/db2/kdb_db2.c
 @@ -694,8 +694,8 @@ ctx_create_db(krb5_context context, krb5_db2_context *dbc)
@@ -542,7 +542,7 @@ index d8b26e701..b0daa7c02 100644
  
  	if (fname != NULL && fcntl(rfd, F_SETFD, 1) == -1) {
 diff --git a/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c b/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c
-index b92cb58c7..0a95101ad 100644
+index e87688d66..30f7c00ab 100644
 --- a/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c
 +++ b/src/plugins/kdb/ldap/ldap_util/kdb5_ldap_services.c
 @@ -190,7 +190,7 @@ kdb5_ldap_stash_service_password(int argc, char **argv)

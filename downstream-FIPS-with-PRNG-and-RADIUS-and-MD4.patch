@@ -1,4 +1,4 @@
-From 3a83d2b4c2a3eea5dde8de883ee9b41630a6a487 Mon Sep 17 00:00:00 2001
+From 146967416993f66c3ba32cbf3881e43e7bc1ed1c Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 9 Nov 2018 15:12:21 -0500
 Subject: [PATCH] [downstream] FIPS with PRNG and RADIUS and MD4
@@ -39,10 +39,10 @@ Last-updated: krb5-1.17
  15 files changed, 151 insertions(+), 33 deletions(-)
 
 diff --git a/doc/admin/conf_files/krb5_conf.rst b/doc/admin/conf_files/krb5_conf.rst
-index 1d2aa7f68..3a8b9cf47 100644
+index e4e2443ed..af3df5871 100644
 --- a/doc/admin/conf_files/krb5_conf.rst
 +++ b/doc/admin/conf_files/krb5_conf.rst
-@@ -331,6 +331,12 @@ The libdefaults section may contain any of the following relations:
+@@ -330,6 +330,12 @@ The libdefaults section may contain any of the following relations:
      qualification of shortnames, set this relation to the empty string
      with ``qualify_shortname = ""``.  (New in release 1.18.)
  
@@ -111,7 +111,7 @@ index 2da691329..f79679a0b 100644
      state->data = (void *) malloc(16);
      if (state->data == NULL)
 diff --git a/src/lib/crypto/openssl/enc_provider/rc4.c b/src/lib/crypto/openssl/enc_provider/rc4.c
-index a65d57b7a..6ccaca94a 100644
+index bc87c6f42..9bf407899 100644
 --- a/src/lib/crypto/openssl/enc_provider/rc4.c
 +++ b/src/lib/crypto/openssl/enc_provider/rc4.c
 @@ -66,6 +66,9 @@ k5_arcfour_docrypt(krb5_key key, const krb5_data *state, krb5_crypto_iov *data,
@@ -349,7 +349,7 @@ index 03c613716..d89982a13 100644
              return retval;
  
 diff --git a/src/lib/krad/internal.h b/src/lib/krad/internal.h
-index 996a89372..312dc8258 100644
+index 0143d155a..223ffd730 100644
 --- a/src/lib/krad/internal.h
 +++ b/src/lib/krad/internal.h
 @@ -39,6 +39,8 @@
@@ -475,7 +475,7 @@ index c597174b6..fc2d24800 100644
  }
  
 diff --git a/src/lib/krad/remote.c b/src/lib/krad/remote.c
-index 437f7e91a..0f90443ce 100644
+index c96a9b4ee..eca432424 100644
 --- a/src/lib/krad/remote.c
 +++ b/src/lib/krad/remote.c
 @@ -263,7 +263,7 @@ on_io_write(krad_remote *rr)
