@@ -18,7 +18,7 @@ Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.18.3
 # for prerelease, should be e.g., 0.% {prerelease}.1% { ?dist } (without spaces)
-Release: 4%{?dist}
+Release: 5%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/1.18/krb5-%{version}%{prerelease}.tar.gz
@@ -254,6 +254,9 @@ sed -i -e s,7778,`expr "$PORT" + 1`,g $cfg
 source %{_libdir}/tclConfig.sh
 pushd src
 
+# Set this so that configure will have a value - upstream defaults it from
+# localstatedir, which is wrong for us.
+export runstatedir=/run
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
 INCLUDES=-I%{_includedir}/et
 CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC -fno-strict-aliasing -fstack-protector-all`"
@@ -288,6 +291,14 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
 # Now build it.
 make
 popd
+
+# Sanity check the KDC_RUN_DIR.
+configured_dir=`grep KDC_RUN_DIR src/include/osconf.h | awk '{print $NF}'`
+configured_dir=`eval echo $configured_dir`
+if test "$configured_dir" != /run/krb5kdc ; then
+    echo Failed to configure KDC_RUN_DIR.
+    exit 1
+fi
 
 # Build the docs.
 make -C src/doc paths.py version.py
@@ -628,6 +639,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Dec 16 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.3-5
+- Fix runstatedir configuration
+- Why couldn't systemd just leave it alone?
+
 * Tue Nov 24 2020 Robbie Harwood <rharwood@redhat.com> - 1.18.3-4
 - Document -k option in kvno(1) synopsis
 
