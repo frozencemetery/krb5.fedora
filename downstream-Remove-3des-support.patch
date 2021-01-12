@@ -1,4 +1,4 @@
-From 3af536f114e1c1b33b1579f9f16bbb3f497d4a1d Mon Sep 17 00:00:00 2001
+From 329c97793a3e96e79f618bc54914ec89a9e99828 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 26 Mar 2019 18:51:10 -0400
 Subject: [PATCH] [downstream] Remove 3des support
@@ -255,7 +255,7 @@ index cebb6644c..4d51e795c 100644
     CKSUMTYPE_NIST_SHA.rst
     CKSUMTYPE_RSA_MD4.rst
 diff --git a/doc/conf.py b/doc/conf.py
-index 9226b8e01..19cf38326 100644
+index 543202bf4..4fb6aae14 100644
 --- a/doc/conf.py
 +++ b/doc/conf.py
 @@ -271,7 +271,7 @@ else:
@@ -281,7 +281,7 @@ index 4954bb3aa..92ce2a772 100644
  Interoperability
  ----------------
 diff --git a/src/Makefile.in b/src/Makefile.in
-index f9270aba2..c958da60f 100644
+index 7d2507ef8..c16715ac7 100644
 --- a/src/Makefile.in
 +++ b/src/Makefile.in
 @@ -130,7 +130,7 @@ WINMAKEFILES=Makefile \
@@ -303,7 +303,7 @@ index f9270aba2..c958da60f 100644
  ##DOS##	$(WCONFIG) config < $@.in > $@
  ##DOS##lib\crypto\builtin\camellia\Makefile: lib\crypto\builtin\camellia\Makefile.in $(MKFDEP)
 diff --git a/src/configure.ac b/src/configure.ac
-index bd151ca26..27c2383d7 100644
+index dd2cad3ee..3e1052db7 100644
 --- a/src/configure.ac
 +++ b/src/configure.ac
 @@ -1480,7 +1480,6 @@ V5_AC_OUTPUT_MAKEFILE(.
@@ -5195,7 +5195,7 @@ index 1c439c2cd..000000000
 -    krb5int_default_free_state
 -};
 diff --git a/src/lib/gssapi/krb5/accept_sec_context.c b/src/lib/gssapi/krb5/accept_sec_context.c
-index 636ee303f..e2c5e2b59 100644
+index 75f071c3e..fcf2c2152 100644
 --- a/src/lib/gssapi/krb5/accept_sec_context.c
 +++ b/src/lib/gssapi/krb5/accept_sec_context.c
 @@ -1039,7 +1039,6 @@ kg_accept_krb5(minor_status, context_handle,
@@ -5625,7 +5625,7 @@ index 2925c1c43..2f76c8b43 100644
      if { ! [cmd {kadm5_destroy $server_handle}]} {
  	perror "$test: unexpected failure in destroy"
 diff --git a/src/lib/krb5/krb/init_ctx.c b/src/lib/krb5/krb/init_ctx.c
-index 21d5cb1ca..a8ba6fc5b 100644
+index be31eb31e..d2b70acad 100644
 --- a/src/lib/krb5/krb/init_ctx.c
 +++ b/src/lib/krb5/krb/init_ctx.c
 @@ -59,7 +59,6 @@
@@ -5952,7 +5952,7 @@ index 2279202d3..96b0307d7 100644
        /* initial key, w, x, y, T, S, K */
        "8846F7EAEE8FB117AD06BDD830B7586C",
 diff --git a/src/tests/dejagnu/config/default.exp b/src/tests/dejagnu/config/default.exp
-index 619fcce48..0a2ed723d 100644
+index 85bbf478a..302dee74c 100644
 --- a/src/tests/dejagnu/config/default.exp
 +++ b/src/tests/dejagnu/config/default.exp
 @@ -15,8 +15,6 @@ set timeout 100
@@ -6031,7 +6031,7 @@ index 619fcce48..0a2ed723d 100644
  	{allow_weak_crypto(kdc)=false}
  	{allow_weak_crypto(replica)=false}
  	{allow_weak_crypto(client)=false}
-@@ -945,7 +910,6 @@ proc setup_kerberos_db { standalone } {
+@@ -946,7 +911,6 @@ proc setup_kerberos_db { standalone } {
      global REALMNAME KDB5_UTIL KADMIN_LOCAL KEY
      global tmppwd hostname
      global spawn_id
@@ -6039,7 +6039,7 @@ index 619fcce48..0a2ed723d 100644
      global multipass_name last_passname_db
  
      set failall 0
-@@ -1142,48 +1106,6 @@ proc setup_kerberos_db { standalone } {
+@@ -1143,48 +1107,6 @@ proc setup_kerberos_db { standalone } {
  	}
      }
  
@@ -6410,10 +6410,10 @@ index 65084bbf3..55ca89745 100755
  # Test using different salt types in a principal's key list.
  # Parameters from one key in the list must not leak over to later ones.
 diff --git a/src/util/k5test.py b/src/util/k5test.py
-index 10f6b0a25..d234a5667 100644
+index 6afe4b92c..789b0f4b9 100644
 --- a/src/util/k5test.py
 +++ b/src/util/k5test.py
-@@ -1277,13 +1277,6 @@ _passes = [
+@@ -1278,13 +1278,6 @@ _passes = [
      # No special settings; exercises AES256.
      ('default', None, None, None),
  

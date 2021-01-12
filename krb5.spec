@@ -7,7 +7,7 @@
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 
 # either beta1 or % { nil }
-%global prerelease beta1
+%global prerelease beta2
 %if %{defined prerelease}
 %global dashpre -%{prerelease}
 %global zdpd 0.%{prerelease}.
@@ -19,7 +19,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.19
-Release: %{?zdpd}2%{?dist}
+Release: %{?zdpd}1%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/%{version}/krb5-%{version}%{?dashpre}.tar.gz
@@ -47,7 +47,6 @@ Patch4: downstream-fix-debuginfo-with-y.tab.c.patch
 Patch5: downstream-Remove-3des-support.patch
 Patch6: downstream-Use-backported-version-of-OpenSSL-3-KDF-i.patch
 Patch7: downstream-FIPS-with-PRNG-and-RADIUS-and-MD4.patch
-Patch47: Document-k-option-in-kvno-1-synopsis.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -611,6 +610,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Jan 12 2021 Robbie Harwood <rharwood@redhat.com> - 1.19-1
+- New upstream version (1.19-beta2)
+
 * Wed Dec 16 2020 Robbie Harwood <rharwood@redhat.com> - 1.19-0.beta1.2
 - New upstream version (1.19-beta1)
 

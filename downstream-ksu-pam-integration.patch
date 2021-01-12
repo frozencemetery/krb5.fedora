@@ -1,4 +1,4 @@
-From f7749ad59d75c2da64f4e9defdbfbc0c1e345bfb Mon Sep 17 00:00:00 2001
+From 25f948637140fb6aade80f99d9e7e096250135cd Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:29:58 -0400
 Subject: [PATCH] [downstream] ksu pam integration
@@ -760,7 +760,7 @@ index 000000000..0ab76569c
 +void appl_pam_cleanup(void);
 +#endif
 diff --git a/src/configure.ac b/src/configure.ac
-index 49814922f..fdaba0ce7 100644
+index 4eb080784..693f76a81 100644
 --- a/src/configure.ac
 +++ b/src/configure.ac
 @@ -1389,6 +1389,8 @@ AC_SUBST([VERTO_VERSION])

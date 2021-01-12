@@ -1,4 +1,4 @@
-From 7b22d94779ff340db5f9f25cf7b55aeb365091e1 Mon Sep 17 00:00:00 2001
+From 120e84b63c322c227fb8c6ee8a2f56f47d3e57f5 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 15 Nov 2019 20:05:16 +0000
 Subject: [PATCH] [downstream] Use backported version of OpenSSL-3 KDF
@@ -12,7 +12,7 @@ Last-updated: krb5-1.17
  3 files changed, 428 insertions(+), 189 deletions(-)
 
 diff --git a/src/configure.ac b/src/configure.ac
-index 27c2383d7..d3e022274 100644
+index 3e1052db7..ea708491b 100644
 --- a/src/configure.ac
 +++ b/src/configure.ac
 @@ -282,6 +282,10 @@ AC_SUBST(CRYPTO_IMPL)

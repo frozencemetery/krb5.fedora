@@ -1,4 +1,4 @@
-From 289615de0c73969574e3d48611deda66989c36c0 Mon Sep 17 00:00:00 2001
+From 1de6ec4cb5b2a1b7b88680ae0f72551a3b5178e6 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:30:53 -0400
 Subject: [PATCH] [downstream] SELinux integration
@@ -152,7 +152,7 @@ index 9f96a8719..120922ac3 100755
  
      echo $lib_flags
 diff --git a/src/config/pre.in b/src/config/pre.in
-index 7b3a583cc..0c51e6966 100644
+index 3752174c7..0d2068575 100644
 --- a/src/config/pre.in
 +++ b/src/config/pre.in
 @@ -177,6 +177,7 @@ LD = $(PURE) @LD@
@@ -163,7 +163,7 @@ index 7b3a583cc..0c51e6966 100644
  
  INSTALL=@INSTALL@
  INSTALL_STRIP=
-@@ -402,7 +403,7 @@ SUPPORT_LIB			= -l$(SUPPORT_LIBNAME)
+@@ -403,7 +404,7 @@ SUPPORT_LIB			= -l$(SUPPORT_LIBNAME)
  # HESIOD_LIBS is -lhesiod...
  HESIOD_LIBS	= @HESIOD_LIBS@
  
@@ -173,7 +173,7 @@ index 7b3a583cc..0c51e6966 100644
  GSS_LIBS	= $(GSS_KRB5_LIB)
  # needs fixing if ever used on macOS!
 diff --git a/src/configure.ac b/src/configure.ac
-index fdaba0ce7..bd151ca26 100644
+index 693f76a81..dd2cad3ee 100644
 --- a/src/configure.ac
 +++ b/src/configure.ac
 @@ -1391,6 +1391,8 @@ AC_PATH_PROG(GROFF, groff)
@@ -186,7 +186,7 @@ index fdaba0ce7..bd151ca26 100644
  if test "${localedir+set}" != set; then
      localedir='$(datadir)/locale'
 diff --git a/src/include/k5-int.h b/src/include/k5-int.h
-index b3e346991..93d3a1f97 100644
+index cf524252f..efb523689 100644
 --- a/src/include/k5-int.h
 +++ b/src/include/k5-int.h
 @@ -128,6 +128,7 @@ typedef unsigned char   u_char;
