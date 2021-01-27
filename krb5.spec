@@ -19,7 +19,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.19
-Release: %{?zdpd}1%{?dist}.1
+Release: %{?zdpd}1%{?dist}.2
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/%{version}/krb5-%{version}%{?dashpre}.tar.gz
@@ -223,9 +223,6 @@ sed -i -e s,7778,`expr "$PORT" + 1`,g $cfg
 source %{_libdir}/tclConfig.sh
 pushd src
 
-# Set this so that configure will have a value - upstream defaults it from
-# localstatedir, which is wrong for us.
-export runstatedir=/run
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
 INCLUDES=-I%{_includedir}/et
 CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC -fno-strict-aliasing -fstack-protector-all`"
@@ -236,6 +233,7 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
     CPPFLAGS="$CPPFLAGS" \
     SS_LIB="-lss" \
     --enable-shared \
+    --runstatedir=/run \
     --localstatedir=%{_var}/kerberos \
     --disable-rpath \
     --without-krb5-config \
@@ -610,6 +608,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Wed Jan 27 2021 Robbie Harwood <rharwood@redhat.com> - 1.19.0.beta2.1.2
+- Cope with new autotools behavior wrt runstatedir
+
 * Tue Jan 26 2021 Fedora Release Engineering <releng@fedoraproject.org> - 1.19-0.beta2.1.1
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
 
