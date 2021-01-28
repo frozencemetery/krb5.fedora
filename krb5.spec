@@ -19,7 +19,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.19
-Release: %{?zdpd}2%{?dist}.2
+Release: %{?zdpd}3%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/%{version}/krb5-%{version}%{?dashpre}.tar.gz
@@ -609,10 +609,13 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
-* Thu Jan 28 2021 Robbie Harwood <rharwood@redhat.com> - 1.19-2
+* Thu Jan 28 2021 Robbie Harwood <rharwood@redhat.com> - 1.19-0.beta2.3
+- Fix up weird mass rebuild versioning
+
+* Thu Jan 28 2021 Robbie Harwood <rharwood@redhat.com> - 1.19-0.beta2.2.2
 - Add APIs for marshalling credentials
 
-* Wed Jan 27 2021 Robbie Harwood <rharwood@redhat.com> - 1.19.0.beta2.1.2
+* Wed Jan 27 2021 Robbie Harwood <rharwood@redhat.com> - 1.19-0.beta2.1.2
 - Cope with new autotools behavior wrt runstatedir
 
 * Tue Jan 26 2021 Fedora Release Engineering <releng@fedoraproject.org> - 1.19-0.beta2.1.1
