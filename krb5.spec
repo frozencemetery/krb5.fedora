@@ -19,7 +19,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.19
-Release: %{?zdpd}4%{?dist}
+Release: %{?zdpd}5%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/%{version}/krb5-%{version}%{?dashpre}.tar.gz
@@ -48,6 +48,8 @@ Patch5: downstream-Remove-3des-support.patch
 Patch6: downstream-Use-backported-version-of-OpenSSL-3-KDF-i.patch
 Patch7: downstream-FIPS-with-PRNG-and-RADIUS-and-MD4.patch
 Patch8: Add-APIs-for-marshalling-credentials.patch
+Patch9: Add-hostname-canonicalization-helper-to-k5test.py.patch
+Patch10: Support-host-based-GSS-initiator-names.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -611,6 +613,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Jan 28 2021 Robbie Harwood <rharwood@redhat.com> - 1.19-5
+- Support host-based GSS initiator names
+
 * Thu Jan 28 2021 Robbie Harwood <rharwood@redhat.com> - 1.19-0.beta2.4
 - Require krb5-pkinit from krb5-{server,workstation}
 
