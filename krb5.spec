@@ -19,7 +19,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.19
-Release: %{?zdpd}3%{?dist}
+Release: %{?zdpd}4%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/%{version}/krb5-%{version}%{?dashpre}.tar.gz
@@ -115,6 +115,7 @@ Kerberos, you need to install this package.
 %package server
 Summary: The KDC and related programs for Kerberos 5
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
+Requires: %{name}-pkinit%{?_isa} = %{version}-%{release}
 Requires(post): systemd-units
 Requires(preun): systemd-units
 Requires(postun): systemd-units
@@ -151,6 +152,7 @@ realm, you need to install this package.
 %package workstation
 Summary: Kerberos 5 programs for use on workstations
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
+Requires: %{name}-pkinit%{?_isa} = %{version}-%{release}
 Requires: libkadm5%{?_isa} = %{version}-%{release}
 
 %description workstation
@@ -609,6 +611,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Jan 28 2021 Robbie Harwood <rharwood@redhat.com> - 1.19-0.beta2.4
+- Require krb5-pkinit from krb5-{server,workstation}
+
 * Thu Jan 28 2021 Robbie Harwood <rharwood@redhat.com> - 1.19-0.beta2.3
 - Fix up weird mass rebuild versioning
 
