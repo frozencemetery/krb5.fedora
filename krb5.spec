@@ -1,3 +1,27 @@
+%bcond_without check
+%if %{without check}
+%global skipcheck 1
+%endif
+
+# COPR doesn't work right with the tests.  I suspect keyring issues,
+# but can't actually debug, so...
+%if 0%{?copr_username:1}
+%global skipcheck 1
+%endif
+
+# There are 0 test machines for this architecture, very few builders, and
+# they're not very well provisioned / maintained.  I can't support it.
+# Patches welcome, but there's nothing I can do - it fails more than half the
+# for "infrastructure issues" that I can't hope to debug.
+%ifarch s390x
+%global skipcheck 1
+%endif
+
+# RHEL runs upstream's test suite in a separate pass after build.
+%if 0%{?rhel}
+%global skipcheck 1
+%endif
+
 # Set this so that find-lang.sh will recognize the .po files.
 %global gettext_domain mit-krb5
 # Guess where the -libs subpackage's docs are going to go.
@@ -278,26 +302,14 @@ sphinx-build -a -b man   -t pathsubs doc build-man
 sphinx-build -a -b html  -t pathsubs doc build-html
 rm -fr build-html/_sources
 
-%check
-
-# There are 0 test machines for this architecture, very few builders, and
-# they're not very well provisioned / maintained.  I can't support it.
-# Patches welcome, but there's nothing I can do - it fails more than half the
-# time for no discernable reason.
-%ifnarch s390x
-pushd src
-
-# ugh.  COPR doesn't work right with the tests.  I suspect keyring issues, but
-# can't actually debug, so...
-%if 0%{?copr_username:1}
-%global keyctl :
+%if 0%{?skipcheck}
 %else
-%global keyctl keyctl
-%endif
+%check
+pushd src
 
 # The build system may give us a revoked session keyring, so run affected
 # tests with a new one.
-%{keyctl} session - make check OFFLINE=yes TMPDIR=%{_tmppath}
+keyctl session - make check OFFLINE=yes TMPDIR=%{_tmppath}
 popd
 %endif
 
