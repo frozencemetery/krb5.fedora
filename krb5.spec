@@ -30,8 +30,7 @@
 %global configure_default_ccache_name 1
 %global configured_default_ccache_name KEYRING:persistent:%%{uid}
 
-# either beta1 or % { nil }
-%global prerelease beta2
+# for prereleases, % global prerelease beta1
 %if %{defined prerelease}
 %global dashpre -%{prerelease}
 %global zdpd 0.%{prerelease}.
@@ -43,7 +42,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.19
-Release: %{?zdpd}5%{?dist}
+Release: %{?zdpd}1%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/%{version}/krb5-%{version}%{?dashpre}.tar.gz
@@ -209,7 +208,7 @@ contains only the libkadm5clnt and libkadm5serv shared objects. This
 interface is not considered stable.
 
 %prep
-%autosetup -S git -n %{name}-%{version}%{?dashpre}
+%autosetup -S git_am -n %{name}-%{version}%{?dashpre}
 ln NOTICE LICENSE
 
 # Generate an FDS-compatible LDIF file.
@@ -282,8 +281,8 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
     --with-prng-alg=os \
     --with-lmdb \
     || (cat config.log; exit 1)
-# Now build it.
-make
+# Build fast, but get better errors if we fail
+make %{?_smp_mflags} || make -j1
 popd
 
 # Sanity check the KDC_RUN_DIR.
@@ -625,7 +624,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
-* Thu Jan 28 2021 Robbie Harwood <rharwood@redhat.com> - 1.19-5
+* Tue Feb 02 2021 Robbie Harwood <rharwood@redhat.com> - 1.19-1
+- New upstream version (1.19)
+
+* Thu Jan 28 2021 Robbie Harwood <rharwood@redhat.com> - 1.19-0.beta2.5
 - Support host-based GSS initiator names
 
 * Thu Jan 28 2021 Robbie Harwood <rharwood@redhat.com> - 1.19-0.beta2.4

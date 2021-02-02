@@ -1,4 +1,4 @@
-From 3204462c480484845513f2d7f323e367efde62cd Mon Sep 17 00:00:00 2001
+From 1d7b365e670f19beae319fde2abf1de0601a2a34 Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Fri, 15 Jan 2021 14:43:34 -0500
 Subject: [PATCH] Add hostname canonicalization helper to k5test.py
