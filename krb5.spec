@@ -251,6 +251,9 @@ sed -i -e s,7778,`expr "$PORT" + 1`,g $cfg
 source %{_libdir}/tclConfig.sh
 pushd src
 
+# This should be safe to remove once we have autoconf >= 2.70
+export runstatedir=/run
+
 # Work out the CFLAGS and CPPFLAGS which we intend to use.
 INCLUDES=-I%{_includedir}/et
 CFLAGS="`echo $RPM_OPT_FLAGS $DEFINES $INCLUDES -fPIC -fno-strict-aliasing -fstack-protector-all`"
