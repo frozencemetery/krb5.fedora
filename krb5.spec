@@ -284,17 +284,21 @@ CPPFLAGS="`echo $DEFINES $INCLUDES`"
     --with-prng-alg=os \
     --with-lmdb \
     || (cat config.log; exit 1)
-# Build fast, but get better errors if we fail
-make %{?_smp_mflags} || make -j1
-popd
 
 # Sanity check the KDC_RUN_DIR.
-configured_dir=`grep KDC_RUN_DIR src/include/osconf.h | awk '{print $NF}'`
+pushd include
+make osconf.h
+popd
+configured_dir=`grep KDC_RUN_DIR include/osconf.h | awk '{print $NF}'`
 configured_dir=`eval echo $configured_dir`
 if test "$configured_dir" != /run/krb5kdc ; then
     echo Failed to configure KDC_RUN_DIR.
     exit 1
 fi
+
+# Build fast, but get better errors if we fail
+make %{?_smp_mflags} || make -j1
+popd
 
 # Build the docs.
 make -C src/doc paths.py version.py
