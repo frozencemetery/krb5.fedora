@@ -1,4 +1,4 @@
-From b57c3a8fbeb0e83c9faa63ac49c5ed58971aa934 Mon Sep 17 00:00:00 2001
+From 4a62aeae7b747cd289548949f940525365fe0947 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 9 Nov 2018 15:12:21 -0500
 Subject: [PATCH] [downstream] FIPS with PRNG and RADIUS and MD4
@@ -39,7 +39,7 @@ Last-updated: krb5-1.17
  15 files changed, 151 insertions(+), 33 deletions(-)
 
 diff --git a/doc/admin/conf_files/krb5_conf.rst b/doc/admin/conf_files/krb5_conf.rst
-index cb17a8485..29ddca3a4 100644
+index 675175955..adba8238d 100644
 --- a/doc/admin/conf_files/krb5_conf.rst
 +++ b/doc/admin/conf_files/krb5_conf.rst
 @@ -330,6 +330,12 @@ The libdefaults section may contain any of the following relations:

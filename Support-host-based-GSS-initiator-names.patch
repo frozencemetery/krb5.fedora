@@ -1,4 +1,4 @@
-From c1df10d60512e1697ef18b343c237c6a96baf62c Mon Sep 17 00:00:00 2001
+From 8c57937f3ca793fe3f8fdd636be0bc11c24069bc Mon Sep 17 00:00:00 2001
 From: Greg Hudson <ghudson@mit.edu>
 Date: Fri, 15 Jan 2021 13:51:34 -0500
 Subject: [PATCH] Support host-based GSS initiator names
@@ -418,7 +418,7 @@ index 8f5872116..760216d05 100644
  
  /* Store the error state for code from context into errsave, but only if code
 diff --git a/src/lib/krb5/libkrb5.exports b/src/lib/krb5/libkrb5.exports
-index 9de0fcdb3..25141dfc5 100644
+index adbfa332b..df6e2ffbe 100644
 --- a/src/lib/krb5/libkrb5.exports
 +++ b/src/lib/krb5/libkrb5.exports
 @@ -181,6 +181,7 @@ k5_size_authdata_context

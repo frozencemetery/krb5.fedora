@@ -1,4 +1,4 @@
-From 387ae61e2b6384eba692e777cc1bcc3d34bfa8c6 Mon Sep 17 00:00:00 2001
+From 687bb26cb0877fa5497e90f7d325de42b456da2a Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Fri, 15 Nov 2019 20:05:16 +0000
 Subject: [PATCH] [downstream] Use backported version of OpenSSL-3 KDF
@@ -441,7 +441,7 @@ index 6707a7308..915a173dd 100644
          return k5_sp800_108_counter_hmac(hash, inkey, outrnd, in_constant,
                                           &empty);
 diff --git a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
-index 0a67c44ef..dbb054378 100644
+index e1153344e..911e74fd9 100644
 --- a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
 +++ b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
 @@ -38,6 +38,13 @@

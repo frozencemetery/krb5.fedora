@@ -1,4 +1,4 @@
-From 99e57d4cbf0eb060162b7038d6e7b202d2716784 Mon Sep 17 00:00:00 2001
+From e787771b618a344d45ac515927e914602f48946f Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 23 Aug 2016 16:30:53 -0400
 Subject: [PATCH] [downstream] SELinux integration
@@ -131,7 +131,7 @@ index ca9fcf664..5afb96e58 100644
 +AC_SUBST(SELINUX_LIBS)
 +])dnl
 diff --git a/src/build-tools/krb5-config.in b/src/build-tools/krb5-config.in
-index 9f96a8719..120922ac3 100755
+index dead0dddc..fef3e054f 100755
 --- a/src/build-tools/krb5-config.in
 +++ b/src/build-tools/krb5-config.in
 @@ -41,6 +41,7 @@ DL_LIB='@DL_LIB@'
@@ -142,7 +142,7 @@ index 9f96a8719..120922ac3 100755
  
  LIBS='@LIBS@'
  GEN_LIB=@GEN_LIB@
-@@ -255,7 +256,7 @@ if test -n "$do_libs"; then
+@@ -254,7 +255,7 @@ if test -n "$do_libs"; then
      fi
  
      # If we ever support a flag to generate output suitable for static
@@ -253,7 +253,7 @@ index 045334a08..db80063eb 100644
  
  #include <stdlib.h>
 diff --git a/src/kadmin/dbutil/dump.c b/src/kadmin/dbutil/dump.c
-index ff2f25050..e3457622a 100644
+index 634ba4a8b..cea7939f4 100644
 --- a/src/kadmin/dbutil/dump.c
 +++ b/src/kadmin/dbutil/dump.c
 @@ -148,12 +148,21 @@ create_ofile(char *ofile, char **tmpname)
@@ -288,7 +288,7 @@ index ff2f25050..e3457622a 100644
          com_err(progname, errno, _("while creating 'ok' file, '%s'"), file_ok);
          goto cleanup;
 diff --git a/src/kdc/main.c b/src/kdc/main.c
-index 27aa10da0..b5916b147 100644
+index 3be6dcb07..24d441e16 100644
 --- a/src/kdc/main.c
 +++ b/src/kdc/main.c
 @@ -872,7 +872,7 @@ write_pid_file(const char *path)
@@ -301,7 +301,7 @@ index 27aa10da0..b5916b147 100644
          return errno;
      pid = (unsigned long) getpid();
 diff --git a/src/kprop/kpropd.c b/src/kprop/kpropd.c
-index 874ba1305..9d6378cc0 100644
+index 498ca599a..c6b8efc28 100644
 --- a/src/kprop/kpropd.c
 +++ b/src/kprop/kpropd.c
 @@ -487,6 +487,9 @@ doit(int fd)

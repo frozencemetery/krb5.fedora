@@ -41,8 +41,8 @@
 
 Summary: The Kerberos network authentication system
 Name: krb5
-Version: 1.19
-Release: %{?zdpd}3%{?dist}
+Version: 1.19.1
+Release: %{?zdpd}1%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/%{version}/krb5-%{version}%{?dashpre}.tar.gz
@@ -73,7 +73,6 @@ Patch7: downstream-FIPS-with-PRNG-and-RADIUS-and-MD4.patch
 Patch8: Add-APIs-for-marshalling-credentials.patch
 Patch9: Add-hostname-canonicalization-helper-to-k5test.py.patch
 Patch10: Support-host-based-GSS-initiator-names.patch
-Patch11: Restore-krb5_set_default_tgs_ktypes.patch
 
 License: MIT
 URL: https://web.mit.edu/kerberos/www/
@@ -632,6 +631,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Thu Feb 18 2021 Robbie Harwood <rharwood@redhat.com> - 1.19.1-1
+- New upstream version (1.19.1)
+
 * Wed Feb 17 2021 Robbie Harwood <rharwood@redhat.com> - 1.19-3
 - Restore krb5_set_default_tgs_ktypes()
 

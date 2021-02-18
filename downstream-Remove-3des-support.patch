@@ -1,4 +1,4 @@
-From 5ff60c965583977ee4a4f98555973f9920fc79cd Mon Sep 17 00:00:00 2001
+From fef4e551d3d2dcb55e58cc182304254c36aa8949 Mon Sep 17 00:00:00 2001
 From: Robbie Harwood <rharwood@redhat.com>
 Date: Tue, 26 Mar 2019 18:51:10 -0400
 Subject: [PATCH] [downstream] Remove 3des support
@@ -5625,7 +5625,7 @@ index 2925c1c43..2f76c8b43 100644
      if { ! [cmd {kadm5_destroy $server_handle}]} {
  	perror "$test: unexpected failure in destroy"
 diff --git a/src/lib/krb5/krb/init_ctx.c b/src/lib/krb5/krb/init_ctx.c
-index be31eb31e..d2b70acad 100644
+index aa35baa3c..bfa99d9eb 100644
 --- a/src/lib/krb5/krb/init_ctx.c
 +++ b/src/lib/krb5/krb/init_ctx.c
 @@ -59,7 +59,6 @@
@@ -5636,7 +5636,7 @@ index be31eb31e..d2b70acad 100644
      ENCTYPE_ARCFOUR_HMAC,
      ENCTYPE_CAMELLIA128_CTS_CMAC, ENCTYPE_CAMELLIA256_CTS_CMAC,
      0
-@@ -456,8 +455,6 @@ krb5int_parse_enctype_list(krb5_context context, const char *profkey,
+@@ -467,8 +466,6 @@ krb5int_parse_enctype_list(krb5_context context, const char *profkey,
              /* Set all enctypes in the default list. */
              for (i = 0; default_list[i]; i++)
                  mod_list(default_list[i], sel, weak, &list);
@@ -5818,10 +5818,10 @@ index 77d5c61fe..1f9868351 100644
   * this functions takes in crypto specific representation of
   * trustedCertifiers and creates a list of
 diff --git a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
-index d7d1593f4..0a67c44ef 100644
+index e5940a513..e1153344e 100644
 --- a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
 +++ b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
-@@ -5488,44 +5488,6 @@ cleanup:
+@@ -5486,44 +5486,6 @@ cleanup:
      return retval;
  }
  
