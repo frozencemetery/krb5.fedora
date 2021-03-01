@@ -42,7 +42,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.19.1
-Release: %{?zdpd}2%{?dist}
+Release: %{?zdpd}3%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/%{version}/krb5-%{version}%{?dashpre}.tar.gz
@@ -80,25 +80,26 @@ BuildRequires: autoconf, bison, make, flex, gawk, gettext, pkgconfig, sed
 BuildRequires: gcc, gcc-c++
 BuildRequires: libcom_err-devel, libedit-devel, libss-devel
 BuildRequires: gzip, ncurses-devel
-BuildRequires: python3-sphinx
+BuildRequires: python3, python3-sphinx
 BuildRequires: keyutils, keyutils-libs-devel >= 1.5.8
 BuildRequires: libselinux-devel
 BuildRequires: pam-devel
 BuildRequires: systemd-units
+BuildRequires: tcl-devel
+BuildRequires: libverto-devel
+BuildRequires: openldap-devel
+BuildRequires: lmdb-devel
+BuildRequires: perl-interpreter
 
 # For autosetup
 BuildRequires: git
 
 %if 0%{?skipcheck}
 %else
-# For the test framework.
-BuildRequires: perl-interpreter, dejagnu, tcl-devel, python3
+BuildRequires: dejagnu
 BuildRequires: net-tools, rpcbind
 BuildRequires: hostname
 BuildRequires: iproute
-BuildRequires: libverto-devel
-BuildRequires: openldap-devel
-BuildRequires: lmdb-devel
 BuildRequires: python3-pyrad
 %endif
 
@@ -634,6 +635,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Mar 01 2021 Robbie Harwood <rharwood@redhat.com> - 1.19.1-3
+- Further test dependency fixes; no code changes
+
 * Mon Mar 01 2021 Robbie Harwood <rharwood@redhat.com> - 1.19.1-2
 - Make test dependencies contingent on skipcheck; no code changes
 
