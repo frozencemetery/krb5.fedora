@@ -42,7 +42,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.19.1
-Release: %{?zdpd}1%{?dist}
+Release: %{?zdpd}2%{?dist}
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/%{version}/krb5-%{version}%{?dashpre}.tar.gz
@@ -89,6 +89,8 @@ BuildRequires: systemd-units
 # For autosetup
 BuildRequires: git
 
+%if 0%{?skipcheck}
+%else
 # For the test framework.
 BuildRequires: perl-interpreter, dejagnu, tcl-devel, python3
 BuildRequires: net-tools, rpcbind
@@ -98,6 +100,7 @@ BuildRequires: libverto-devel
 BuildRequires: openldap-devel
 BuildRequires: lmdb-devel
 BuildRequires: python3-pyrad
+%endif
 
 # Need KDFs.  This is the backported version
 BuildRequires: openssl-devel >= 1:1.1.1d-4
@@ -631,6 +634,9 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Mon Mar 01 2021 Robbie Harwood <rharwood@redhat.com> - 1.19.1-2
+- Make test dependencies contingent on skipcheck; no code changes
+
 * Thu Feb 18 2021 Robbie Harwood <rharwood@redhat.com> - 1.19.1-1
 - New upstream version (1.19.1)
 
