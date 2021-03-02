@@ -42,7 +42,7 @@
 Summary: The Kerberos network authentication system
 Name: krb5
 Version: 1.19.1
-Release: %{?zdpd}3%{?dist}
+Release: %{?zdpd}3%{?dist}.1
 
 # rharwood has trust path to signing key and verifies on check-in
 Source0: https://web.mit.edu/kerberos/dist/krb5/%{version}/krb5-%{version}%{?dashpre}.tar.gz
@@ -635,6 +635,10 @@ exit 0
 %{_libdir}/libkadm5srv_mit.so.*
 
 %changelog
+* Tue Mar 02 2021 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 1.19.1-3.1
+- Rebuilt for updated systemd-rpm-macros
+  See https://pagure.io/fesco/issue/2583.
+
 * Mon Mar 01 2021 Robbie Harwood <rharwood@redhat.com> - 1.19.1-3
 - Further test dependency fixes; no code changes
 
