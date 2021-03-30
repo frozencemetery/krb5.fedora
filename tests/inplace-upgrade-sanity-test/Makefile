@@ -55,6 +55,7 @@ $(METADATA): Makefile
 	@echo "TestTime:        20m" >> $(METADATA)
 	@echo "RunFor:          krb5" >> $(METADATA)
 	@echo "Requires:        expect krb5-server krb5-workstation openssh-clients openssh-server rng-tools" >> $(METADATA)
+    @echo "Requires:        setools-console" >> $(METADATA)
 	@echo "Priority:        Normal" >> $(METADATA)
 	@echo "License:         GPLv2" >> $(METADATA)
 	@echo "Confidential:    no" >> $(METADATA)
